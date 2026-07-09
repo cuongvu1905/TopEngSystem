@@ -1,5 +1,3 @@
-const { query } = require('../config/db');
-
 exports.getDocumentCategories = async (req, res, next) => {
   try {
     // Document categories table is deleted, return empty array to prevent crashes

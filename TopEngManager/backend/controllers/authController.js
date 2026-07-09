@@ -1,5 +1,32 @@
 const crypto = require('crypto');
-const { query } = require('../config/db');
+const prisma = require('../config/prisma');
+const fs = require('fs');
+const path = require('path');
+
+const configPath = path.join(__dirname, '../config/roles_permissions.json');
+
+function getRolesPermissionsConfig() {
+  try {
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error('Error reading roles_permissions.json:', err);
+  }
+  return {
+    roles: [
+      { id: 'role-admin', name: 'Quản trị viên (Admin)' },
+      { id: 'role-hr', name: 'Nhân sự (HR)' },
+      { id: 'role-staff', name: 'Nhân viên (Staff)' },
+      { id: 'role-leader', name: 'Leader/Part Leader' },
+      { id: 'role-sales', name: 'Kinh doanh (Sales)' },
+      { id: 'role-bod', name: 'Ban điều hành (BOD)' }
+    ],
+    permissions: [],
+    role_permissions: {}
+  };
+}
 
 function hashPassword(password) {
   return crypto.createHash('md5').update(password).digest('hex');
@@ -13,12 +40,12 @@ exports.login = async (req, res, next) => {
     }
 
     const passwordHash = hashPassword(password);
-    const users = await query(
-      `SELECT u.* 
-       FROM User u 
-       WHERE u.email = ? AND u.password = ?`,
-      [email, passwordHash]
-    );
+    const users = await prisma.user.findMany({
+      where: {
+        email: email,
+        password: passwordHash
+      }
+    });
 
     if (users.length === 0) {
       return res.status(400).json({ error: 'Email hoặc mật khẩu không chính xác.' });
@@ -50,15 +77,22 @@ exports.signup = async (req, res, next) => {
     const passwordHash = hashPassword(password);
     const userId = 'usr-' + Date.now();
 
-    const existing = await query('SELECT user_id FROM User WHERE email = ?', [email]);
-    if (existing.length > 0) {
+    const existing = await prisma.user.findUnique({
+      where: { email: email }
+    });
+    if (existing) {
       return res.status(400).json({ error: 'Email đã được đăng ký bởi tài khoản khác.' });
     }
 
-    await query(
-      'INSERT INTO User (user_id, full_name, email, password, role) VALUES (?, ?, ?, ?, ?)',
-      [userId, fullName, email, passwordHash, 'Nhân viên (Staff)']
-    );
+    await prisma.user.create({
+      data: {
+        user_id: userId,
+        full_name: fullName,
+        email: email,
+        password: passwordHash,
+        role: 'Nhân viên (Staff)'
+      }
+    });
 
     res.json({
       user: {
@@ -74,10 +108,15 @@ exports.signup = async (req, res, next) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const users = await query(
-      `SELECT u.user_id as id, u.full_name as name, u.email, u.role as system_role, u.department_id, '#1E40AF' as color 
-       FROM User u`
-    );
+    const dbUsers = await prisma.user.findMany();
+    const users = dbUsers.map(u => ({
+      id: u.user_id,
+      name: u.full_name,
+      email: u.email,
+      system_role: u.role,
+      department_id: u.department_id,
+      color: '#1E40AF'
+    }));
     res.json(users);
   } catch (err) {
     next(err);
@@ -86,14 +125,35 @@ exports.getUsers = async (req, res, next) => {
 
 exports.getRoles = async (req, res, next) => {
   try {
-    res.json([
-      { id: 'role-admin', name: 'Quản trị viên (Admin)' },
-      { id: 'role-hr', name: 'Nhân sự (HR)' },
-      { id: 'role-staff', name: 'Nhân viên (Staff)' },
-      { id: 'role-leader', name: 'Leader/Part Leader' },
-      { id: 'role-sales', name: 'Kinh doanh (Sales)' },
-      { id: 'role-bod', name: 'Ban điều hành (BOD)' }
-    ]);
+    const config = getRolesPermissionsConfig();
+    res.json(config.roles);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getRolesPermissions = async (req, res, next) => {
+  try {
+    const config = getRolesPermissionsConfig();
+    res.json(config);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.saveRolesPermissions = async (req, res, next) => {
+  try {
+    const { roles, role_permissions } = req.body;
+    if (!roles || !role_permissions) {
+      return res.status(400).json({ error: 'Thiếu thông tin phân quyền cần lưu' });
+    }
+
+    const config = getRolesPermissionsConfig();
+    config.roles = roles;
+    config.role_permissions = role_permissions;
+
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }
@@ -125,15 +185,22 @@ exports.createUser = async (req, res, next) => {
     const passwordHash = hashPassword(password);
     const userId = 'usr-' + Date.now();
 
-    const existing = await query('SELECT user_id FROM User WHERE email = ?', [email]);
-    if (existing.length > 0) {
+    const existing = await prisma.user.findUnique({
+      where: { email: email }
+    });
+    if (existing) {
       return res.status(400).json({ error: 'Email đã được đăng ký bởi tài khoản khác.' });
     }
 
-    await query(
-      'INSERT INTO User (user_id, full_name, email, password, role) VALUES (?, ?, ?, ?, ?)',
-      [userId, fullName, email, passwordHash, systemRole]
-    );
+    await prisma.user.create({
+      data: {
+        user_id: userId,
+        full_name: fullName,
+        email: email,
+        password: passwordHash,
+        role: systemRole
+      }
+    });
 
     res.json({ success: true });
   } catch (err) {
@@ -143,11 +210,11 @@ exports.createUser = async (req, res, next) => {
 
 exports.testConnection = async (req, res, next) => {
   try {
-    const result = await query('SELECT 1 + 1 as val');
+    const result = await prisma.$queryRaw`SELECT 1 + 1 as val`;
     if (result && result.length > 0) {
-      res.json({ success: true, message: 'Kết nối cơ sở dữ liệu MySQL thành công!' });
+      res.json({ success: true, message: 'Kết nối cơ sở dữ liệu MySQL thành công qua Prisma!' });
     } else {
-      res.status(500).json({ error: 'Không thể truy vấn cơ sở dữ liệu.' });
+      res.status(500).json({ error: 'Không thể truy vấn cơ sở dữ liệu qua Prisma.' });
     }
   } catch (err) {
     res.status(500).json({ error: 'Kết nối thất bại: ' + err.message });

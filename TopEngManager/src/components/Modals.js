@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, MySQLAdapter, MockDB } from '@/utils/db';
+import { useApp } from '@/context/AppContext';
 
 // Modal Backdrop Wrapper
 const ModalWrapper = ({ isOpen, children, onClose }) => {
@@ -251,13 +252,10 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
   const [newSubtask, setNewSubtask] = useState('');
   const [newComment, setNewComment] = useState('');
 
-  const isAdmin = currentUser.system_role.includes("Admin");
-  const isLeader = currentUser.system_role.includes("Leader");
-  const isBOD = currentUser.system_role.includes("Ban điều hành");
-  const isPM = isAdmin || isLeader || isBOD; // can edit/delete tasks
-
-  const canUpdateStatus = isAdmin || isLeader || currentUser.system_role.includes("Kinh doanh") || currentUser.system_role.includes("Nhân sự") || currentUser.system_role.includes("Nhân viên");
-  const disableStatusSelect = isBOD || !canUpdateStatus;
+  const { hasPermission } = useApp();
+  const isPM = hasPermission('edit_task'); // can edit/delete tasks
+  const canUpdateStatus = hasPermission('update_task_status');
+  const disableStatusSelect = !canUpdateStatus;
 
   const loadCollabData = async () => {
     if (!taskId) return;

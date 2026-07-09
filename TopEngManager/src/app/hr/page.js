@@ -24,25 +24,46 @@ export default function HRManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchScope, setSearchScope] = useState('all');
 
+  // Permission states
+  const [localRoles, setLocalRoles] = useState([]);
+  const [localPermissions, setLocalPermissions] = useState([]);
+  const [localRolePermissions, setLocalRolePermissions] = useState({});
+  const [newRoleName, setNewRoleName] = useState('');
+  const [savingPermissions, setSavingPermissions] = useState(false);
+
+  const isAdmin = currentUser?.system_role?.includes("Admin");
+  const isHR = currentUser?.system_role?.includes("Nhân sự");
+
+  const loadRoles = async () => {
+    try {
+      const list = await db.getRoles();
+      setRoles(list);
+      if (list.length > 0 && !roleId) {
+        setRoleId(list[0].id);
+      }
+    } catch (err) {
+      console.error("Failed to load roles:", err);
+    }
+  };
+
   useEffect(() => {
-    const loadRoles = async () => {
+    loadRoles();
+  }, [activeTab]);
+
+  useEffect(() => {
+    const loadPermissionsData = async () => {
+      if (!isAdmin) return;
       try {
-        const list = await db.getRoles();
-        setRoles(list);
-        if (list.length > 0) {
-          setRoleId(list[0].id);
-        }
+        const rp = await db.getRolesPermissions();
+        setLocalRoles(rp.roles || []);
+        setLocalPermissions(rp.permissions || []);
+        setLocalRolePermissions(rp.role_permissions || {});
       } catch (err) {
-        console.error("Failed to load roles:", err);
+        console.error("Failed to load permissions data:", err);
       }
     };
-    loadRoles();
-  }, []);
-
-  if (!currentUser) return null;
-
-  const isAdmin = currentUser.system_role.includes("Admin");
-  const isHR = currentUser.system_role.includes("Nhân sự");
+    loadPermissionsData();
+  }, [activeTab, isOpen]);
 
   // Enforce access control: only Admin or HR can see this
   if (!isAdmin && !isHR) {
@@ -144,9 +165,11 @@ export default function HRManagement() {
         <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
           <i className="fa-solid fa-users"></i> Nhân sự & Tài khoản
         </button>
-        <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
-          <i className="fa-solid fa-shield-halved"></i> Bảng Phân Quyền
-        </button>
+        {isAdmin && (
+          <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
+            <i className="fa-solid fa-shield-halved"></i> Bảng Phân Quyền
+          </button>
+        )}
         <button className={`tab-btn ${activeTab === 'lookup' ? 'active' : ''}`} onClick={() => setActiveTab('lookup')}>
           <i className="fa-solid fa-magnifying-glass"></i> Tra cứu Dữ liệu
         </button>
@@ -197,77 +220,153 @@ export default function HRManagement() {
       )}
 
       {/* ================= TAB 2: SYSTEM PERMISSIONS MATRIX ================= */}
-      {activeTab === 'permissions' && (
+      {activeTab === 'permissions' && isAdmin && (
         <div className="card" style={{ padding: '20px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>Ma trận Phân quyền Chức năng</h3>
-          <p className="text-muted" style={{ fontSize: '12.5px', marginBottom: '16px' }}>Cấu hình phân quyền hệ thống cho 6 nhóm đối tượng vai trò nghiệp vụ doanh nghiệp.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>Ma trận Phân quyền Chức năng</h3>
+              <p className="text-muted" style={{ fontSize: '12.5px', margin: 0 }}>Cấu hình bật/tắt quyền hạn chi tiết cho từng vai trò và thêm vai trò mới để mở rộng người dùng.</p>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!newRoleName.trim()) return;
+
+              const trimmed = newRoleName.trim();
+              if (localRoles.some(r => r.name.toLowerCase() === trimmed.toLowerCase())) {
+                alert("Vai trò này đã tồn tại!");
+                return;
+              }
+
+              const newId = `role-${Date.now()}`;
+              const updatedRoles = [...localRoles, { id: newId, name: trimmed }];
+              const updatedRolePerms = {
+                ...localRolePermissions,
+                [trimmed]: ["view_dashboard"]
+              };
+
+              setLocalRoles(updatedRoles);
+              setLocalRolePermissions(updatedRolePerms);
+              setNewRoleName('');
+
+              try {
+                await db.saveRolesPermissions(updatedRoles, updatedRolePerms);
+                await db.logActivity(
+                  currentUser.id, 
+                  "CREATE_ROLE", 
+                  "Role", 
+                  newId, 
+                  `đã thêm vai trò người dùng mới '${trimmed}'`
+                );
+                await reloadAll();
+                alert(`Đã thêm vai trò '${trimmed}' thành công! Hãy cấu hình quyền hạn cho vai trò này.`);
+              } catch (err) {
+                alert("Lỗi thêm vai trò: " + err.message);
+              }
+            }} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input 
+                type="text" 
+                placeholder="Tên vai trò mới..." 
+                value={newRoleName}
+                onChange={(e) => setNewRoleName(e.target.value)}
+                style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', width: '180px' }}
+                required
+              />
+              <button type="submit" className="btn btn-secondary btn-sm" style={{ padding: '7px 12px' }}>
+                <i className="fa-solid fa-plus"></i> Thêm Vai Trò
+              </button>
+            </form>
+          </div>
           
-          <div className="data-table-wrapper">
+          <div className="data-table-wrapper" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             <table className="data-table" style={{ fontSize: '12px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f1f5f9' }}>
-                  <th>Phân hệ</th>
-                  <th>Tên chức năng</th>
-                  <th style={{ textAlign: 'center' }}>Admin</th>
-                  <th style={{ textAlign: 'center' }}>Nhân sự</th>
-                  <th style={{ textAlign: 'center' }}>Nhân viên</th>
-                  <th style={{ textAlign: 'center' }}>Leader</th>
-                  <th style={{ textAlign: 'center' }}>Kinh doanh</th>
-                  <th style={{ textAlign: 'center' }}>Ban điều hành</th>
+                <tr style={{ backgroundColor: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
+                  <th style={{ minWidth: '150px' }}>Phân hệ</th>
+                  <th style={{ minWidth: '220px' }}>Quyền hạn / Chức năng</th>
+                  {localRoles.map(role => (
+                    <th key={role.id} style={{ textAlign: 'center', minWidth: '100px' }}>
+                      {role.name}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {[
-                  // System Admin
-                  { mod: "Quản trị hệ thống", name: "Cấu hình hệ thống", r1: "Có", r2: "Không", r3: "Không", r4: "Không", r5: "Không", r6: "Không" },
-                  { mod: "Quản trị hệ thống", name: "Quản lý người dùng", r1: "Có", r2: "Có", r3: "Không", r4: "Không", r5: "Không", r6: "Không" },
-                  { mod: "Quản trị hệ thống", name: "Phân quyền", r1: "Có", r2: "Có", r3: "Không", r4: "Không", r5: "Không", r6: "Không" },
-                  { mod: "Quản trị hệ thống", name: "Tra cứu dữ liệu", r1: "Có", r2: "Có", r3: "Không", r4: "Không", r5: "Không", r6: "Không" },
-                  { mod: "Quản trị hệ thống", name: "Xem nhật ký hệ thống (Log)", r1: "Có", r2: "Không", r3: "Không", r4: "Không", r5: "Không", r6: "Không" },
-                  // Project
-                  { mod: "Dự án", name: "Thêm dự án mới", r1: "Có", r2: "Không", r3: "Không", r4: "Không", r5: "Có", r6: "Có" },
-                  { mod: "Dự án", name: "Điều chỉnh plan dự án (ngày kết thúc, sửa yêu cầu...)", r1: "Có", r2: "Không", r3: "Không", r4: "Không", r5: "Có", r6: "Có" },
-                  { mod: "Dự án", name: "Xóa dự án", r1: "Có", r2: "Không", r3: "Không", r4: "Không", r5: "Có", r6: "Có" },
-                  { mod: "Dự án", name: "Cập nhật tiến trình dự án", r1: "Có", r2: "Không", r3: "Không", r4: "Có", r5: "Không", r6: "Không" },
-                  { mod: "Dự án", name: "Giao task cho nhân viên", r1: "Có", r2: "Không", r3: "Không", r4: "Có", r5: "Không", r6: "Không" },
-                  { mod: "Dự án", name: "Dashboard danh sách dự án (Tất cả)", r1: "Có", r2: "Không", r3: "Không", r4: "Có", r5: "Có", r6: "Có" },
-                  { mod: "Dự án", name: "Dashboard danh sách dự án tham gia", r1: "Có", r2: "Không", r3: "Có", r4: "Có", r5: "Không", r6: "Không" },
-                  { mod: "Dự án", name: "Báo cáo lỗi/vấn đề mới (Issues)", r1: "Có", r2: "Không", r3: "Có", r4: "Có", r5: "Không", r6: "Không" },
-                  { mod: "Dự án", name: "Cập nhật trạng thái Issue (chỉ người đăng/được tag)", r1: "Có", r2: "Không", r3: "Có", r4: "Không", r5: "Không", r6: "Không" },
-                  // Tasks
-                  { mod: "Công việc", name: "Xem danh sách việc được giao", r1: "Có", r2: "Có", r3: "Có", r4: "Có", r5: "Có", r6: "Không" },
-                  { mod: "Công việc", name: "Cập nhật trạng thái việc (Task status)", r1: "Có", r2: "Có", r3: "Có", r4: "Có", r5: "Có", r6: "Không" },
-                  { mod: "Công việc", name: "Xóa công việc", r1: "Có", r2: "Không", r3: "Không", r4: "Có", r5: "Không", r6: "Có" },
-                  { mod: "Công việc", name: "Chỉnh sửa nội dung công việc", r1: "Có", r2: "Không", r3: "Không", r4: "Có", r5: "Không", r6: "Có" },
-                  { mod: "Công việc", name: "Bình luận & Chat trực tiếp trên Task", r1: "Có", r2: "Có", r3: "Có", r4: "Có", r5: "Có", r6: "Không" },
-                  { mod: "Công việc", name: "Xem trang tiến độ công khai", r1: "Có", r2: "Có", r3: "Có", r4: "Có", r5: "Có", r6: "Có" },
-                  // Chats
-                  { mod: "Kênh Chat", name: "Trò chuyện kênh chung công ty", r1: "Có", r2: "Có", r3: "Không", r4: "Có", r5: "Có", r6: "Có" },
-                  { mod: "Kênh Chat", name: "Trò chuyện kênh dự án (thành viên)", r1: "Có", r2: "Có", r3: "Không", r4: "Có", r5: "Có", r6: "Có" },
-                  { mod: "Kênh Chat", name: "Tự động tag @all kênh chung", r1: "Có", r2: "Không", r3: "Không", r4: "Không", r5: "Có", r6: "Có" },
-                  { mod: "Kênh Chat", name: "Tự động tag @all kênh dự án", r1: "Có", r2: "Không", r3: "Không", r4: "Có", r5: "Có", r6: "Không" },
-                  { mod: "Kênh Chat", name: "Hỏi xác nhận trước khi gửi tin", r1: "Có", r2: "Có", r3: "Không", r4: "Không", r5: "Có", r6: "Có" }
-                ].map((item, idx) => {
-                  const styleVal = (val) => ({
-                    textAlign: 'center',
-                    fontWeight: 600,
-                    color: val === 'Có' ? 'var(--success-color)' : '#94a3b8'
-                  });
-                  return (
-                    <tr key={idx}>
-                      <td style={{ fontWeight: '600', color: '#475569' }}>{item.mod}</td>
-                      <td>{item.name}</td>
-                      <td style={styleVal(item.r1)}>{item.r1}</td>
-                      <td style={styleVal(item.r2)}>{item.r2}</td>
-                      <td style={styleVal(item.r3)}>{item.r3}</td>
-                      <td style={styleVal(item.r4)}>{item.r4}</td>
-                      <td style={styleVal(item.r5)}>{item.r5}</td>
-                      <td style={styleVal(item.r6)}>{item.r6}</td>
-                    </tr>
-                  );
-                })}
+                {localPermissions.map(perm => (
+                  <tr key={perm.key}>
+                    <td style={{ fontWeight: '600', color: '#475569' }}>{perm.module}</td>
+                    <td>
+                      <div style={{ fontWeight: '500' }}>{perm.name}</div>
+                      <code style={{ fontSize: '10px', color: 'var(--neutral-muted)' }}>{perm.key}</code>
+                    </td>
+                    {localRoles.map(role => {
+                      const isChecked = (localRolePermissions[role.name] || []).includes(perm.key);
+                      const isAdminRole = role.name.includes("Admin") || role.name.includes("Owner");
+                      const isDisabled = isAdminRole && (perm.key === 'view_hr' || perm.key === 'view_activity_logs');
+                      
+                      return (
+                        <td key={role.id} style={{ textAlign: 'center' }}>
+                          <input 
+                            type="checkbox"
+                            checked={isChecked || isAdminRole}
+                            disabled={isDisabled || isAdminRole}
+                            onChange={() => {
+                              setLocalRolePermissions(prev => {
+                                const currentPerms = prev[role.name] || [];
+                                let nextPerms;
+                                if (currentPerms.includes(perm.key)) {
+                                  nextPerms = currentPerms.filter(k => k !== perm.key);
+                                } else {
+                                  nextPerms = [...currentPerms, perm.key];
+                                }
+                                return {
+                                  ...prev,
+                                  [role.name]: nextPerms
+                                };
+                              });
+                            }}
+                            style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
               </tbody>
             </table>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <button 
+              className="btn btn-primary" 
+              onClick={async () => {
+                try {
+                  setSavingPermissions(true);
+                  await db.saveRolesPermissions(localRoles, localRolePermissions);
+                  await db.logActivity(
+                    currentUser.id, 
+                    "UPDATE_PERMISSIONS", 
+                    "RolePermissions", 
+                    "system", 
+                    `đã cập nhật ma trận phân quyền hệ thống`
+                  );
+                  await reloadAll();
+                  alert("Đã lưu cấu hình phân quyền hệ thống thành công!");
+                } catch (err) {
+                  alert("Lỗi lưu phân quyền: " + err.message);
+                } finally {
+                  setSavingPermissions(false);
+                }
+              }}
+              disabled={savingPermissions}
+              style={{ padding: '8px 24px' }}
+            >
+              {savingPermissions ? (
+                <span><i className="fa-solid fa-spinner fa-spin"></i> Đang lưu...</span>
+              ) : (
+                <span><i className="fa-solid fa-cloud-arrow-up"></i> Lưu cấu hình phân quyền</span>
+              )}
+            </button>
           </div>
         </div>
       )}

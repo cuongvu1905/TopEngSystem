@@ -301,5 +301,25 @@ export const MySQLAdapter = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Upload error');
     return data;
+  },
+
+  getDailyReports: async function(userId, userRole) {
+    return await callApi('getDailyReports', { userId, userRole });
+  },
+
+  createDailyReport: async function(report) {
+    return await callApi('createDailyReport', report);
+  },
+
+  updateDailyReportStatus: async function(reportId, status, comment) {
+    return await callApi('updateDailyReportStatus', { reportId, status, comment });
+  },
+
+  getRolesPermissions: async function() {
+    return await callApi('getRolesPermissions');
+  },
+
+  saveRolesPermissions: async function(roles, rolePermissions) {
+    return await callApi('saveRolesPermissions', { roles, role_permissions: rolePermissions });
   }
 };

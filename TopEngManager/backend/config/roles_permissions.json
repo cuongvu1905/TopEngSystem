@@ -1,0 +1,59 @@
+{
+  "roles": [
+    { "id": "role-admin", "name": "Quản trị viên (Admin)" },
+    { "id": "role-hr", "name": "Nhân sự (HR)" },
+    { "id": "role-staff", "name": "Nhân viên (Staff)" },
+    { "id": "role-leader", "name": "Leader/Part Leader" },
+    { "id": "role-sales", "name": "Kinh doanh (Sales)" },
+    { "id": "role-bod", "name": "Ban điều hành (BOD)" }
+  ],
+  "permissions": [
+    { "key": "view_dashboard", "name": "Xem Dashboard", "module": "Dashboard" },
+    { "key": "view_all_projects", "name": "Xem toàn bộ dự án", "module": "Dự án" },
+    { "key": "create_project", "name": "Thêm dự án mới", "module": "Dự án" },
+    { "key": "edit_project", "name": "Điều chỉnh plan dự án (sửa/xóa dự án)", "module": "Dự án" },
+    { "key": "manage_project_members", "name": "Quản lý thành viên dự án", "module": "Dự án" },
+    { "key": "create_task", "name": "Giao việc mới (Tạo Task)", "module": "Công việc" },
+    { "key": "edit_task", "name": "Chỉnh sửa nội dung công việc", "module": "Công việc" },
+    { "key": "delete_task", "name": "Xóa công việc", "module": "Công việc" },
+    { "key": "update_task_status", "name": "Cập nhật trạng thái việc (Task status)", "module": "Công việc" },
+    { "key": "create_issue", "name": "Báo cáo lỗi/vấn đề mới (Issues)", "module": "Dự án" },
+    { "key": "edit_issue", "name": "Cập nhật trạng thái Issue (Reporter/Tagged)", "module": "Dự án" },
+    { "key": "view_documents", "name": "Xem tài liệu chung và tài liệu dự án", "module": "Tài liệu" },
+    { "key": "upload_documents", "name": "Tải lên/Cập nhật tài liệu mới", "module": "Tài liệu" },
+    { "key": "view_hr", "name": "Truy cập Quản trị nhân sự", "module": "Quản trị hệ thống" },
+    { "key": "view_activity_logs", "name": "Xem nhật ký hệ thống (Log)", "module": "Quản trị hệ thống" },
+    { "key": "chat_tag_all_global", "name": "Tự động tag @all phòng chat chung", "module": "Kênh Chat" },
+    { "key": "chat_tag_all_project", "name": "Tự động tag @all phòng chat dự án", "module": "Kênh Chat" },
+    { "key": "chat_confirm_send", "name": "Hỏi xác nhận trước khi gửi tin nhắn", "module": "Kênh Chat" }
+  ],
+  "role_permissions": {
+    "Quản trị viên (Admin)": [
+      "view_dashboard", "view_all_projects", "create_project", "edit_project", "manage_project_members",
+      "create_task", "edit_task", "delete_task", "update_task_status", "create_issue", "edit_issue",
+      "view_documents", "upload_documents", "view_hr", "view_activity_logs", "chat_tag_all_global",
+      "chat_tag_all_project", "chat_confirm_send"
+    ],
+    "Ban điều hành (BOD)": [
+      "view_dashboard", "view_all_projects", "create_project", "edit_project",
+      "edit_task", "delete_task", "view_documents", "chat_tag_all_global", "chat_confirm_send"
+    ],
+    "Leader/Part Leader": [
+      "view_dashboard", "view_all_projects", "create_task", "edit_task", "delete_task",
+      "update_task_status", "create_issue", "edit_issue", "view_documents", "upload_documents",
+      "chat_tag_all_project"
+    ],
+    "Nhân viên (Staff)": [
+      "view_dashboard", "update_task_status", "create_issue", "edit_issue",
+      "view_documents", "upload_documents"
+    ],
+    "Kinh doanh (Sales)": [
+      "view_dashboard", "view_all_projects", "create_project", "edit_project",
+      "update_task_status", "view_documents", "upload_documents", "chat_tag_all_global",
+      "chat_tag_all_project", "chat_confirm_send"
+    ],
+    "Nhân sự (HR)": [
+      "view_hr", "view_documents", "upload_documents", "chat_confirm_send"
+    ]
+  }
+}

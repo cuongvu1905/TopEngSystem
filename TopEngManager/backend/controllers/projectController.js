@@ -1,18 +1,20 @@
-const { query } = require('../config/db');
+const prisma = require('../config/prisma');
 
 exports.getProjects = async (req, res, next) => {
   try {
-    const projects = await query(`
-      SELECT project_id as id, project_name as name, project_description as description, 
-             project_key, 'Thực thi' as status, '2026-06-01' as start_date, '2026-12-31' as end_date, 
-             create_by, 1 as is_public 
-      FROM Project
-    `);
-    res.json(projects.map(p => ({
-      ...p,
-      project_key: p.project_key || p.id.split('-').pop().toUpperCase().slice(0, 5),
-      is_public: !!p.is_public
-    })));
+    const dbProjects = await prisma.project.findMany();
+    const projects = dbProjects.map(p => ({
+      id: p.project_id,
+      name: p.project_name,
+      description: p.project_description,
+      project_key: p.project_key || p.project_id.split('-').pop().toUpperCase().slice(0, 5),
+      status: 'Thực thi',
+      start_date: '2026-06-01',
+      end_date: '2026-12-31',
+      create_by: p.create_by,
+      is_public: true
+    }));
+    res.json(projects);
   } catch (err) {
     next(err);
   }
@@ -20,7 +22,13 @@ exports.getProjects = async (req, res, next) => {
 
 exports.getProjectMembers = async (req, res, next) => {
   try {
-    const members = await query('SELECT id, project_id, userId as user_id, role as project_role FROM ProjectMember');
+    const dbMembers = await prisma.projectmember.findMany();
+    const members = dbMembers.map(m => ({
+      id: m.id,
+      project_id: m.project_id,
+      user_id: m.userId,
+      project_role: m.role
+    }));
     res.json(members);
   } catch (err) {
     next(err);
@@ -48,37 +56,58 @@ exports.saveProject = async (req, res, next) => {
       }
 
       // Check unique
-      const existing = await query('SELECT project_id FROM Project WHERE project_key = ?', [projectKey]);
-      if (existing.length > 0) {
+      const existing = await prisma.project.findFirst({
+        where: { project_key: projectKey }
+      });
+      if (existing) {
         projectKey = `${projectKey}${Date.now().toString().slice(-2)}`;
       }
 
-      await query(
-        'INSERT INTO Project (project_id, project_name, project_description, project_key, create_by) VALUES (?, ?, ?, ?, ?)',
-        [id, proj.name, proj.description, projectKey, proj.create_by || null]
-      );
+      await prisma.project.create({
+        data: {
+          project_id: id,
+          project_name: proj.name,
+          project_description: proj.description,
+          project_key: projectKey,
+          create_by: proj.create_by || null
+        }
+      });
     } else {
-      await query(
-        'UPDATE Project SET project_name = ?, project_description = ? WHERE project_id = ?',
-        [proj.name, proj.description, id]
-      );
+      await prisma.project.update({
+        where: { project_id: id },
+        data: {
+          project_name: proj.name,
+          project_description: proj.description
+        }
+      });
     }
 
     // Sync project members
     if (membersList && membersList.length > 0) {
-      await query('DELETE FROM ProjectMember WHERE project_id = ?', [id]);
+      await prisma.projectmember.deleteMany({
+        where: { project_id: id }
+      });
       for (const m of membersList) {
-        await query(
-          'INSERT INTO ProjectMember (project_id, userId, role) VALUES (?, ?, ?)',
-          [id, m.user_id, m.project_role]
-        );
+        await prisma.projectmember.create({
+          data: {
+            project_id: id,
+            userId: m.user_id,
+            role: m.project_role
+          }
+        });
       }
     }
 
-    const saved = await query('SELECT project_id as id, project_name as name, project_description as description, project_key, create_by FROM Project WHERE project_id = ?', [id]);
+    const saved = await prisma.project.findUnique({
+      where: { project_id: id }
+    });
+
     res.json({
-      ...saved[0],
-      project_key: saved[0].project_key || 'PRJ',
+      id: saved.project_id,
+      name: saved.project_name,
+      description: saved.project_description,
+      project_key: saved.project_key || 'PRJ',
+      create_by: saved.create_by,
       status: proj.status || 'Thực thi',
       start_date: proj.start_date || '2026-06-01',
       end_date: proj.end_date || '2026-12-31',
@@ -92,11 +121,19 @@ exports.saveProject = async (req, res, next) => {
 exports.addProjectMember = async (req, res, next) => {
   try {
     const { projectId, userId, projectRole } = req.body;
-    await query('DELETE FROM ProjectMember WHERE project_id = ? AND userId = ?', [projectId, userId]);
-    await query(
-      'INSERT INTO ProjectMember (project_id, userId, role) VALUES (?, ?, ?)',
-      [projectId, userId, projectRole]
-    );
+    await prisma.projectmember.deleteMany({
+      where: {
+        project_id: projectId,
+        userId: userId
+      }
+    });
+    await prisma.projectmember.create({
+      data: {
+        project_id: projectId,
+        userId: userId,
+        role: projectRole
+      }
+    });
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -106,7 +143,12 @@ exports.addProjectMember = async (req, res, next) => {
 exports.removeProjectMember = async (req, res, next) => {
   try {
     const { projectId, userId } = req.body;
-    await query('DELETE FROM ProjectMember WHERE project_id = ? AND userId = ?', [projectId, userId]);
+    await prisma.projectmember.deleteMany({
+      where: {
+        project_id: projectId,
+        userId: userId
+      }
+    });
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -115,7 +157,9 @@ exports.removeProjectMember = async (req, res, next) => {
 
 exports.getCustomers = async (req, res, next) => {
   try {
-    const customers = await query('SELECT * FROM Customer ORDER BY customer_name ASC');
+    const customers = await prisma.customer.findMany({
+      orderBy: { customer_name: 'asc' }
+    });
     res.json(customers);
   } catch (err) {
     next(err);
@@ -124,7 +168,9 @@ exports.getCustomers = async (req, res, next) => {
 
 exports.getDepartments = async (req, res, next) => {
   try {
-    const depts = await query('SELECT * FROM Department ORDER BY name ASC');
+    const depts = await prisma.department.findMany({
+      orderBy: { name: 'asc' }
+    });
     res.json(depts);
   } catch (err) {
     next(err);

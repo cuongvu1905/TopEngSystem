@@ -7,14 +7,43 @@ import { StreamChatAdapter } from '@/utils/streamChatClient';
 import { ProjectModal, TaskModal, DocumentModal } from '@/components/Modals';
 import Link from 'next/link';
 
+function parseDescription(desc) {
+  try {
+    const data = JSON.parse(desc);
+    if (data && typeof data === 'object') {
+      return {
+        text: data.text || '',
+        issueTasks: data.issueTasks || [],
+        assigneesText: data.assigneesText || ''
+      };
+    }
+  } catch (e) {
+    // Not JSON
+  }
+  return {
+    text: desc || '',
+    issueTasks: [],
+    assigneesText: ''
+  };
+}
+
 export default function ProjectDetail({ params }) {
   const { id: projectId } = use(params);
-  const { currentUser, projects, tasks, documents, documentVersions, documentCategories, projectMembers, users, chatRooms, chatRoomMembers, reloadAll } = useApp();
+  const { currentUser, projects, tasks, documents, documentVersions, documentCategories, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState('kanban');
   
   // Chat state inside project room
   const [chatRoomId, setChatRoomId] = useState(null);
+  
+  // Project reports states
+  const [projectReports, setProjectReports] = useState([]);
+  const [isReportsLoading, setIsReportsLoading] = useState(false);
+
+  // Project tasks states (JIRA Issue sub-tasks & solutions)
+  const [projectTasks, setProjectTasks] = useState([]);
+  const [activeSubTaskData, setActiveSubTaskData] = useState(null);
+  const [isSubTaskPopupOpen, setIsSubTaskPopupOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatSearchQuery, setChatSearchQuery] = useState('');
@@ -34,6 +63,157 @@ export default function ProjectDetail({ params }) {
   const [issueStatus, setIssueStatus] = useState('TO_DO');
   const [issuePriority, setIssuePriority] = useState('MEDIUM');
   const [issueAssigneeId, setIssueAssigneeId] = useState('');
+
+  const [detailText, setDetailText] = useState('');
+
+  // Mentions inside the assignee text area
+  const [activeMentionInput, setActiveMentionInput] = useState(null); // { modal: 'create'|'detail', field: 'assignee', elementId: string } or null
+  const [issueAssigneesText, setIssueAssigneesText] = useState('');
+  const [detailAssigneesText, setDetailAssigneesText] = useState('');
+  const [isEditingAssignee, setIsEditingAssignee] = useState(false);
+
+
+
+  const handleAssigneesTextChange = (val) => {
+    setIssueAssigneesText(val);
+    const textarea = document.getElementById('create-assignee-text');
+    if (!textarea) return;
+    const cursor = textarea.selectionStart || 0;
+    const beforeText = val.slice(0, cursor);
+    const lastAt = beforeText.lastIndexOf('@');
+
+    if (lastAt !== -1 && !beforeText.slice(lastAt).includes(' ')) {
+      const query = beforeText.slice(lastAt + 1).toLowerCase();
+      setMentionQuery(query);
+      const pMembers = projectMembers.filter(m => m.project_id === projectId);
+      const pUsers = pMembers.map(m => users.find(u => u.id === m.user_id)).filter(Boolean);
+      setMentionList(pUsers.filter(u => u.name.toLowerCase().includes(query)));
+      setActiveMentionInput({ modal: 'create', field: 'assignee', elementId: 'create-assignee-text' });
+    } else {
+      setMentionQuery(null);
+      setActiveMentionInput(null);
+    }
+  };
+
+  const handleDetailAssigneesTextChange = (val) => {
+    setDetailAssigneesText(val);
+    const textarea = document.getElementById('detail-assignee-text');
+    if (!textarea) return;
+    const cursor = textarea.selectionStart || 0;
+    const beforeText = val.slice(0, cursor);
+    const lastAt = beforeText.lastIndexOf('@');
+
+    if (lastAt !== -1 && !beforeText.slice(lastAt).includes(' ')) {
+      const query = beforeText.slice(lastAt + 1).toLowerCase();
+      setMentionQuery(query);
+      const pMembers = projectMembers.filter(m => m.project_id === projectId);
+      const pUsers = pMembers.map(m => users.find(u => u.id === m.user_id)).filter(Boolean);
+      setMentionList(pUsers.filter(u => u.name.toLowerCase().includes(query)));
+      setActiveMentionInput({ modal: 'detail', field: 'assignee', elementId: 'detail-assignee-text' });
+    } else {
+      setMentionQuery(null);
+      setActiveMentionInput(null);
+    }
+  };
+
+  const selectGridMention = (user) => {
+    if (!activeMentionInput) return;
+    const { modal, field, elementId } = activeMentionInput;
+    const textarea = document.getElementById(elementId);
+    if (!textarea) return;
+
+    const val = textarea.value;
+    const cursor = textarea.selectionStart || 0;
+    const beforeText = val.slice(0, cursor);
+    const lastAt = beforeText.lastIndexOf('@');
+
+    if (lastAt !== -1) {
+      const replaced = val.slice(0, lastAt) + `@${user.name} ` + val.slice(cursor);
+      if (field === 'assignee') {
+        if (modal === 'create') {
+          setIssueAssigneesText(replaced);
+        } else {
+          setDetailAssigneesText(replaced);
+        }
+      }
+      setMentionQuery(null);
+      setActiveMentionInput(null);
+      setTimeout(() => {
+        const el = document.getElementById(elementId);
+        if (el) {
+          el.focus();
+          const newCursor = lastAt + user.name.length + 2;
+          el.setSelectionRange(newCursor, newCursor);
+        }
+      }, 50);
+    }
+  };
+
+  const notifyMentionedUsers = async (assigneeText, issueKey, issueSummary) => {
+    const notifiedUserIds = new Set();
+    const parts = assigneeText.split('@');
+    for (let i = 1; i < parts.length; i++) {
+      const part = parts[i];
+      const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
+      if (matchedUser && matchedUser.id !== currentUser.id) {
+        notifiedUserIds.add(matchedUser.id);
+      }
+    }
+
+    for (const userId of notifiedUserIds) {
+      try {
+        await db.createNotification(
+          userId,
+          "Được nhắc tên trong Issue (Người chịu trách nhiệm)",
+          `${currentUser.name} đã giao trách nhiệm cho bạn trong Issue "${issueSummary}" (${issueKey})`,
+          `#projects/${projectId}`
+        );
+      } catch (err) {
+        console.error("Failed to send notification to user", userId, err);
+      }
+    }
+  };
+
+  const handleSaveAssigneeText = async () => {
+    if (!activeIssueDetail) return;
+    
+    // Parse to find mentioned users
+    const mentionedUsers = [];
+    const parts = detailAssigneesText.split('@');
+    for (let i = 1; i < parts.length; i++) {
+      const part = parts[i];
+      const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
+      if (matchedUser) {
+        mentionedUsers.push(matchedUser);
+      }
+    }
+
+    const firstUserId = mentionedUsers.length > 0 ? mentionedUsers[0].id : null;
+
+    const newDescription = JSON.stringify({
+      text: detailText,
+      issueTasks: projectTasks,
+      assigneesText: detailAssigneesText
+    });
+
+    try {
+      const updatedIssue = { 
+        ...activeIssueDetail, 
+        assignee_id: firstUserId,
+        description: newDescription
+      };
+      await db.updateIssue(updatedIssue, currentUser.id);
+      
+      // Send notifications
+      await notifyMentionedUsers(detailAssigneesText, activeIssueDetail.issue_key, activeIssueDetail.summary);
+
+      loadIssueDetail(activeIssueDetail.id);
+      loadIssues();
+      setIsEditingAssignee(false);
+    } catch (err) {
+      alert("Lỗi cập nhật người chịu trách nhiệm: " + err.message);
+    }
+  };
 
   // Filters for issues board
   const [issueSearchQuery, setIssueSearchQuery] = useState('');
@@ -114,6 +294,25 @@ export default function ProjectDetail({ params }) {
     }
   }, [project, activeSubTab, issueSearchQuery, issueFilterAssignee, issueFilterPriority, issueFilterType]);
 
+  const loadProjectReports = async () => {
+    try {
+      setIsReportsLoading(true);
+      const list = await db.getDailyReports(currentUser.id, currentUser.system_role);
+      const filtered = list.filter(r => r.project_id === projectId);
+      setProjectReports(filtered);
+    } catch (e) {
+      console.error("Failed to load project reports:", e);
+    } finally {
+      setIsReportsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (project && activeSubTab === 'reports') {
+      loadProjectReports();
+    }
+  }, [project, activeSubTab]);
+
   // Issue Detail & Comments & History handlers
   const loadIssueDetail = async (issueId) => {
     try {
@@ -121,9 +320,179 @@ export default function ProjectDetail({ params }) {
       setActiveIssueDetail(res.issue);
       setIssueComments(res.comments);
       setIssueHistory(res.history);
-      setEditIssueDesc(res.issue.description || '');
+      
+      let parsed = { text: '', issueTasks: [], assigneesText: '' };
+      try {
+        parsed = JSON.parse(res.issue.description);
+      } catch (e) {
+        parsed = { text: res.issue.description || '', issueTasks: [] };
+      }
+      
+      setDetailText(parsed.text || '');
+      setEditIssueDesc(parsed.text || '');
+      setDetailAssigneesText(parsed.assigneesText || (res.issue.assignee_id ? `@${users.find(u => u.id === res.issue.assignee_id)?.name || ''} ` : ''));
+      
+      if (parsed.issueTasks && Array.isArray(parsed.issueTasks)) {
+        setProjectTasks(parsed.issueTasks);
+      } else {
+        setProjectTasks([
+          {
+            id: 'task-1',
+            name: 'Công việc 1',
+            deadline: '2026-07-20',
+            assignee: '@Nguyễn Đình Thắng',
+            creator: currentUser?.full_name || currentUser?.name || 'Admin',
+            contentNeeded: '- Làm việc a\n- Làm việc b\n- Làm việc c',
+            solutions: [
+              { id: 'sol-1-1', action: 'Nội dung thực hiện mẫu 1', executor: currentUser?.full_name || currentUser?.name || 'Admin', date: new Date().toISOString().split('T')[0] },
+              { id: 'sol-1-2', action: '', executor: '', date: '' }
+            ]
+          },
+          {
+            id: 'task-2',
+            name: '',
+            deadline: '',
+            assignee: '',
+            creator: currentUser?.full_name || currentUser?.name || 'Admin',
+            contentNeeded: '',
+            solutions: [
+              { id: 'sol-2-1', action: '', executor: '', date: '' },
+              { id: 'sol-2-2', action: '', executor: '', date: '' }
+            ]
+          }
+        ]);
+      }
     } catch (e) {
       console.error("Failed to load issue detail:", e);
+    }
+  };
+
+  const handleIssueTaskChange = (taskId, field, value) => {
+    setProjectTasks(prev => prev.map(t => {
+      if (t.id === taskId) {
+        const updated = { ...t, [field]: value };
+        if (!updated.creator) {
+          updated.creator = currentUser?.full_name || currentUser?.name || 'User';
+        }
+        return updated;
+      }
+      return t;
+    }));
+  };
+
+  const handleAddIssueTaskRow = () => {
+    setProjectTasks(prev => [
+      ...prev,
+      {
+        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        name: '',
+        deadline: '',
+        assignee: '',
+        creator: currentUser?.full_name || currentUser?.name || 'User',
+        contentNeeded: '',
+        solutions: [
+          { id: `sol-${Date.now()}-1`, action: '', executor: '', date: '' },
+          { id: `sol-${Date.now()}-2`, action: '', executor: '', date: '' }
+        ]
+      }
+    ]);
+  };
+
+  const handleRemoveIssueTaskRow = (taskId) => {
+    setProjectTasks(prev => prev.filter(t => t.id !== taskId));
+  };
+
+  const handleOpenTaskPopup = (task) => {
+    setActiveSubTaskData(JSON.parse(JSON.stringify(task)));
+    setIsSubTaskPopupOpen(true);
+  };
+
+  const handleSubTaskFieldChange = (field, value) => {
+    setActiveSubTaskData(prev => {
+      if (!prev) return null;
+      return { ...prev, [field]: value };
+    });
+  };
+
+  const handleSolutionChange = (solId, field, value) => {
+    setActiveSubTaskData(prev => {
+      if (!prev) return null;
+      const updatedSolutions = prev.solutions.map(s => {
+        if (s.id === solId) {
+          const updatedSol = { ...s, [field]: value };
+          if (field === 'action' && value.trim() !== '') {
+            if (!updatedSol.executor) {
+              updatedSol.executor = currentUser?.full_name || currentUser?.name || 'User';
+            }
+            if (!updatedSol.date) {
+              updatedSol.date = new Date().toISOString().split('T')[0];
+            }
+          }
+          return updatedSol;
+        }
+        return s;
+      });
+      return { ...prev, solutions: updatedSolutions };
+    });
+  };
+
+  const handleAddSolutionRow = () => {
+    setActiveSubTaskData(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        solutions: [
+          ...prev.solutions,
+          {
+            id: `sol-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            action: '',
+            executor: '',
+            date: ''
+          }
+        ]
+      };
+    });
+  };
+
+  const handleRemoveSolutionRow = (solId) => {
+    setActiveSubTaskData(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        solutions: prev.solutions.filter(s => s.id !== solId)
+      };
+    });
+  };
+
+  const handleSaveTaskPopup = () => {
+    if (!activeSubTaskData) return;
+    setProjectTasks(prev => prev.map(t => {
+      if (t.id === activeSubTaskData.id) {
+        return activeSubTaskData;
+      }
+      return t;
+    }));
+    setIsSubTaskPopupOpen(false);
+  };
+
+  const handleSaveAllIssueTasks = async () => {
+    if (!activeIssueDetail) return;
+    try {
+      const newDescription = JSON.stringify({
+        text: detailText,
+        issueTasks: projectTasks,
+        assigneesText: detailAssigneesText
+      });
+      const updatedIssue = { 
+        ...activeIssueDetail, 
+        description: newDescription
+      };
+      await db.updateIssue(updatedIssue, currentUser.id);
+      await loadIssueDetail(activeIssueDetail.id);
+      loadIssues();
+      alert("Đã lưu bảng chi tiết công việc thành công!");
+    } catch (err) {
+      alert("Lỗi lưu bảng chi tiết: " + err.message);
     }
   };
 
@@ -266,9 +635,9 @@ export default function ProjectDetail({ params }) {
     );
   }
 
-  // Staff can only access if they are members of the project
+  // Check access permission
   const isProjectMember = projectMembers.some(m => m.project_id === projectId && m.user_id === currentUser.id);
-  const hasAccess = isAdmin || isLeader || isSales || isBOD || (isStaff && isProjectMember);
+  const hasAccess = hasPermission('view_all_projects') || isProjectMember;
 
   if (!hasAccess) {
     return (
@@ -281,9 +650,9 @@ export default function ProjectDetail({ params }) {
   }
 
   // Define granular action checkers
-  const canManageProject = isAdmin || isSales || isBOD; // Thêm / Xóa / Điều chỉnh plan dự án
-  const canManageTasks = isAdmin || isLeader; // Giao task, cập nhật tiến độ
-  const canPostIssue = isAdmin || isStaff || isLeader; // Đăng issue
+  const canManageProject = hasPermission('edit_project'); // Thêm / Xóa / Điều chỉnh plan dự án
+  const canManageTasks = hasPermission('create_task'); // Giao task, cập nhật tiến độ
+  const canPostIssue = hasPermission('create_issue'); // Đăng issue
 
   // Calculations
   const pTasks = tasks.filter(t => t.project_id === projectId);
@@ -303,13 +672,7 @@ export default function ProjectDetail({ params }) {
     const task = tasks.find(t => t.id === draggedTaskId);
     if (!task) return;
 
-    // Permissions check for status update:
-    // Admin, Staff (Assignee only), Leader, Sales can update task status. BOD cannot update task status!
-    const isAssignee = task.assignee_id === currentUser.id;
-    const canUpdateStatus = isAdmin || isLeader || isSales || isStaff || isHR; // HR is already blocked from entering anyway
-    const isRestrictedBOD = isBOD; // BOD is prohibited from status updates!
-    
-    if (isRestrictedBOD || !canUpdateStatus) {
+    if (!hasPermission('update_task_status')) {
       alert("Bạn không có quyền cập nhật trạng thái công việc này!");
       return;
     }
@@ -534,6 +897,7 @@ export default function ProjectDetail({ params }) {
         <button className={`tab-btn ${activeSubTab === 'issues' ? 'active' : ''}`} onClick={() => setActiveSubTab('issues')}><i className="fa-solid fa-triangle-exclamation"></i> Vấn đề (Issues)</button>
         <button className={`tab-btn ${activeSubTab === 'members' ? 'active' : ''}`} onClick={() => setActiveSubTab('members')}><i className="fa-solid fa-users"></i> Thành viên</button>
         <button className={`tab-btn ${activeSubTab === 'documents' ? 'active' : ''}`} onClick={() => setActiveSubTab('documents')}><i className="fa-solid fa-file-invoice"></i> Tài liệu</button>
+        <button className={`tab-btn ${activeSubTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveSubTab('reports')}><i className="fa-solid fa-file-signature"></i> Báo cáo</button>
         <button className={`tab-btn ${activeSubTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveSubTab('chat')}><i className="fa-solid fa-comments"></i> Kênh Thảo luận</button>
       </div>
 
@@ -1052,12 +1416,88 @@ export default function ProjectDetail({ params }) {
             </div>
           </div>
         )}
+
+        {/* ================= TABS: REPORTS ================= */}
+        {activeSubTab === 'reports' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>Báo cáo hàng ngày thuộc dự án</h3>
+              <Link href="/daily-reports" className="btn btn-primary btn-sm">
+                <i className="fa-solid fa-plus"></i> Viết báo cáo mới
+              </Link>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {isReportsLoading ? (
+                <div className="flex-center" style={{ padding: '40px', flexDirection: 'column', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid var(--neutral-border)' }}>
+                  <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '24px', color: 'var(--primary-color)' }}></i>
+                  <p style={{ marginTop: '10px', color: 'var(--neutral-muted)', fontSize: '13px' }}>Đang tải báo cáo...</p>
+                </div>
+              ) : projectReports.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid var(--neutral-border)', color: 'var(--neutral-muted)' }}>
+                  <i className="fa-solid fa-folder-open" style={{ fontSize: '32px', marginBottom: '8px', display: 'block' }}></i>
+                  Chưa có báo cáo nào liên kết với dự án này.
+                </div>
+              ) : (
+                projectReports.map(report => {
+                  const userColor = users.find(u => u.id === report.user_id)?.color || '#3b82f6';
+                  return (
+                    <div 
+                      key={report.id} 
+                      className="card" 
+                      style={{ padding: '16px', borderRadius: '8px', border: '1px solid var(--neutral-border)', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', gap: '12px' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: userColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px' }}>
+                            {report.user_name.split(' ').pop().charAt(0)}
+                          </div>
+                          <div>
+                            <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: 0 }}>
+                              {report.user_name}
+                            </h4>
+                            <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', fontWeight: '500' }}>
+                              {report.user_role}
+                            </span>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '11.5px', color: 'var(--neutral-muted)' }}>
+                          {new Date(report.created_at).toLocaleString('vi-VN')}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: '13.5px', color: '#334155', whiteSpace: 'pre-wrap', lineHeight: '1.6', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                        {report.content}
+                      </div>
+
+                      {report.file_url && (
+                        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', display: 'flex', alignItems: 'center' }}>
+                          <a 
+                            href={report.file_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            style={{ fontSize: '12px', color: 'var(--primary-color)', display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', fontWeight: '500' }}
+                            onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            <i className="fa-solid fa-paperclip"></i>
+                            Xem tệp đính kèm tài liệu
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Issues Creation Modal */}
       {isIssueModalOpen && (
         <div className="modal show" style={{ display: 'flex' }}>
-          <div className="modal-dialog">
+          <div className="modal-dialog" style={{ maxWidth: '950px', width: '95%' }}>
             <div className="modal-content">
               <div className="modal-header">
                 <h3>Báo cáo vấn đề mới (Tạo Issue)</h3>
@@ -1068,22 +1508,71 @@ export default function ProjectDetail({ params }) {
                 if (!issueTitle.trim()) return;
                 
                 try {
-                  await db.createIssue({
+                  const serializedDescription = JSON.stringify({
+                    text: issueDesc,
+                    issueTasks: projectTasks,
+                    assigneesText: issueAssigneesText
+                  });
+
+                  // Parse to find mentioned users
+                  const mentionedUsers = [];
+                  const parts = issueAssigneesText.split('@');
+                  for (let i = 1; i < parts.length; i++) {
+                    const part = parts[i];
+                    const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
+                    if (matchedUser) {
+                      mentionedUsers.push(matchedUser);
+                    }
+                  }
+                  const firstUserId = mentionedUsers.length > 0 ? mentionedUsers[0].id : null;
+
+                  const newIssue = await db.createIssue({
                     project_id: projectId,
                     summary: issueTitle,
-                    description: issueDesc,
+                    description: serializedDescription,
                     type: issueType,
                     status: issueStatus,
                     priority: issuePriority,
                     reporter_id: currentUser.id,
-                    assignee_id: issueAssigneeId || null
+                    assignee_id: firstUserId
                   });
 
                   await db.logActivity(currentUser.id, "CREATE_ISSUE", "Issue", `iss-${Date.now()}`, `đã báo cáo issue mới '${issueTitle}'`);
+
+                  if (newIssue && newIssue.issue_key) {
+                    await notifyMentionedUsers(issueAssigneesText, newIssue.issue_key, issueTitle);
+                  }
                   
                   loadIssues();
                   setIssueTitle('');
                   setIssueDesc('');
+                  setProjectTasks([
+                    {
+                      id: 'task-1',
+                      name: 'Công việc 1',
+                      deadline: '2026-07-20',
+                      assignee: '@Nguyễn Đình Thắng',
+                      creator: currentUser?.full_name || currentUser?.name || 'Admin',
+                      contentNeeded: '- Làm việc a\n- Làm việc b\n- Làm việc c',
+                      solutions: [
+                        { id: 'sol-1-1', action: 'Nội dung thực hiện mẫu 1', executor: currentUser?.full_name || currentUser?.name || 'Admin', date: new Date().toISOString().split('T')[0] },
+                        { id: 'sol-1-2', action: '', executor: '', date: '' }
+                      ]
+                    },
+                    {
+                      id: 'task-2',
+                      name: '',
+                      deadline: '',
+                      assignee: '',
+                      creator: currentUser?.full_name || currentUser?.name || 'Admin',
+                      contentNeeded: '',
+                      solutions: [
+                        { id: 'sol-2-1', action: '', executor: '', date: '' },
+                        { id: 'sol-2-2', action: '', executor: '', date: '' }
+                      ]
+                    }
+                  ]);
+                  setIssueAssigneesText('');
                   setIssueType('TASK');
                   setIssueStatus('TO_DO');
                   setIssuePriority('MEDIUM');
@@ -1093,27 +1582,15 @@ export default function ProjectDetail({ params }) {
                   alert("Lỗi tạo issue: " + err.message);
                 }
               }}>
-                <div className="modal-body">
-                  <div className="form-group">
-                    <label>Tiêu đề tóm tắt (Summary) <span className="required">*</span></label>
-                    <input type="text" value={issueTitle} onChange={(e) => setIssueTitle(e.target.value)} required placeholder="Ví dụ: Thiết kế giao diện thanh toán..." />
-                  </div>
-                  <div className="form-group">
-                    <label>Mô tả chi tiết</label>
-                    <textarea value={issueDesc} onChange={(e) => setIssueDesc(e.target.value)} placeholder="Nhập mô tả chi tiết, các bước tái hiện..." rows="3" />
-                  </div>
-                  
-                  <div className="form-row">
-                    <div className="form-group col-6" style={{ width: '48%' }}>
-                      <label>Loại Issue (Type)</label>
-                      <select value={issueType} onChange={(e) => setIssueType(e.target.value)} className="doc-select-filter" style={{ width: '100%', height: '36px' }}>
-                        <option value="STORY">STORY</option>
-                        <option value="TASK">TASK</option>
-                        <option value="BUG">BUG</option>
-                        <option value="EPIC">EPIC</option>
-                      </select>
+                <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px', padding: '20px' }}>
+                  {/* Left Column: Fields */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="form-group">
+                      <label>Tiêu đề tóm tắt (Summary) <span className="required">*</span></label>
+                      <input type="text" value={issueTitle} onChange={(e) => setIssueTitle(e.target.value)} required placeholder="Ví dụ: Thiết kế giao diện thanh toán..." style={{ width: '100%' }} />
                     </div>
-                    <div className="form-group col-6" style={{ width: '48%' }}>
+                    
+                    <div className="form-group">
                       <label>Độ ưu tiên (Priority)</label>
                       <select value={issuePriority} onChange={(e) => setIssuePriority(e.target.value)} className="doc-select-filter" style={{ width: '100%', height: '36px' }}>
                         <option value="LOW">LOW (Thấp)</option>
@@ -1122,31 +1599,114 @@ export default function ProjectDetail({ params }) {
                         <option value="CRITICAL">CRITICAL (Khẩn cấp)</option>
                       </select>
                     </div>
+
+                    <div className="form-group">
+                      <label>Mô tả chi tiết</label>
+                      <textarea value={issueDesc} onChange={(e) => setIssueDesc(e.target.value)} placeholder="Nhập mô tả chi tiết, các bước tái hiện..." rows="4" style={{ width: '100%', minHeight: '80px' }} />
+                    </div>
+
+                    <div className="form-group" style={{ position: 'relative' }}>
+                      <label>Người chịu trách nhiệm (Assignee)</label>
+                      <textarea
+                        id="create-assignee-text"
+                        value={issueAssigneesText}
+                        onChange={(e) => handleAssigneesTextChange(e.target.value)}
+                        placeholder="Gõ @ để tag người chịu trách nhiệm..."
+                        style={{ width: '100%', minHeight: '36px', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', resize: 'vertical', fontSize: '13px' }}
+                        rows="1"
+                      />
+                      {activeMentionInput?.modal === 'create' && activeMentionInput?.field === 'assignee' && mentionQuery !== null && (
+                        <div className="mentions-popup" style={{ display: 'block', position: 'absolute', zIndex: 100, top: '100%', left: '0', right: '0' }}>
+                          {mentionList.map(u => (
+                            <div className="mention-user-option" onClick={() => selectGridMention(u)} key={u.id}>
+                              <div className="men-avatar" style={{ backgroundColor: u.color }}>{u.name.split(" ").pop().charAt(0)}</div>
+                              <span>{u.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="form-row" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px' }}>
-                    <div className="form-group col-6" style={{ width: '48%' }}>
-                      <label>Trạng thái ban đầu</label>
-                      <select value={issueStatus} onChange={(e) => setIssueStatus(e.target.value)} className="doc-select-filter" style={{ width: '100%', height: '36px' }}>
-                        <option value="BACKLOG">BACKLOG</option>
-                        <option value="TO_DO">TO DO</option>
-                        <option value="IN_PROGRESS">IN PROGRESS</option>
-                        <option value="DONE">DONE</option>
-                      </select>
-                    </div>
-                    <div className="form-group col-6" style={{ width: '48%' }}>
-                      <label>Người chịu trách nhiệm (Assignee)</label>
-                      <select value={issueAssigneeId} onChange={(e) => setIssueAssigneeId(e.target.value)} className="doc-select-filter" style={{ width: '100%', height: '36px' }}>
-                        <option value="">-- Chưa giao việc --</option>
-                        {pMembers.map(m => {
-                          const u = users.find(usr => usr.id === m.user_id);
-                          return u ? <option key={u.id} value={u.id}>{u.name}</option> : null;
-                        })}
-                      </select>
+                  {/* Right Column: Grid Table */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <label style={{ fontWeight: '600', fontSize: '13.5px', color: '#475569' }}>Bảng chi tiết công việc</label>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', fontSize: '13px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#135274', color: '#ffffff' }}>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '35%', fontWeight: '700' }}>Tên công việc</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Deadline</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Người thực hiện</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Người tạo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {projectTasks.map(row => (
+                          <tr key={row.id}>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                  type="text"
+                                  value={row.name}
+                                  onChange={(e) => handleIssueTaskChange(row.id, 'name', e.target.value)}
+                                  placeholder="Công việc..."
+                                  style={{ flex: 1, border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px' }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenTaskPopup(row)}
+                                  title="Xem & sửa nội dung chi tiết/solution"
+                                  style={{ border: 'none', background: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '15px', padding: '2px' }}
+                                >
+                                  <i className="fa-solid fa-circle-info"></i>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveIssueTaskRow(row.id)}
+                                  title="Xóa công việc"
+                                  style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                >
+                                  <i className="fa-solid fa-trash"></i>
+                                </button>
+                              </div>
+                            </td>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
+                              <input
+                                type="date"
+                                value={row.deadline}
+                                onChange={(e) => handleIssueTaskChange(row.id, 'deadline', e.target.value)}
+                                style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '12.5px' }}
+                              />
+                            </td>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
+                              <input
+                                type="text"
+                                value={row.assignee}
+                                onChange={(e) => handleIssueTaskChange(row.id, 'assignee', e.target.value)}
+                                placeholder="Gán tên..."
+                                style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px' }}
+                              />
+                            </td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle', fontSize: '12.5px' }}>
+                              {row.creator}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div style={{ display: 'flex', marginTop: '6px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleAddIssueTaskRow}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '50%', width: '32px', height: '32px', padding: 0, justifyContent: 'center', fontSize: '16px', fontWeight: 'bold' }}
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', padding: '15px 20px', borderTop: '1px solid var(--neutral-border)' }}>
                   <button type="button" className="btn btn-secondary" onClick={() => setIsIssueModalOpen(false)}>Hủy</button>
                   <button type="submit" className="btn btn-primary">Tạo mới</button>
                 </div>
@@ -1159,18 +1719,18 @@ export default function ProjectDetail({ params }) {
       {/* JIRA Issue Detail Modal */}
       {isDetailModalOpen && activeIssueDetail && (
         <div className="modal show" style={{ display: 'flex' }}>
-          <div className="modal-dialog" style={{ maxWidth: '850px', width: '90%' }}>
-            <div className="modal-content">
-              <div className="modal-header">
+          <div className="modal-dialog" style={{ maxWidth: 'none', width: '100vw', height: '100vh', maxHeight: '100vh', margin: 0, borderRadius: 0 }}>
+            <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div className="modal-header" style={{ padding: '16px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', backgroundColor: '#e2e8f0', padding: '2px 8px', borderRadius: '4px' }}>
                     {activeIssueDetail.issue_key}
                   </span>
-                  <h3 style={{ margin: 0 }}>Chi tiết Issue</h3>
+                  <h3 style={{ margin: 0, fontSize: '18px' }}>Chi tiết Issue</h3>
                 </div>
-                <button className="btn-close-modal" onClick={() => setIsDetailModalOpen(false)}><i className="fa-solid fa-xmark"></i></button>
+                <button className="btn-close-modal" onClick={() => setIsDetailModalOpen(false)} style={{ fontSize: '24px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
               </div>
-              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '20px', maxHeight: '70vh', overflowY: 'auto', padding: '20px' }}>
+              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '30px', flex: 1, maxHeight: 'none', overflowY: 'auto', padding: '24px 32px' }}>
                 
                 {/* Left Column: Summary, Description, Comments */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1192,7 +1752,11 @@ export default function ProjectDetail({ params }) {
                             type="button" 
                             className="btn btn-primary btn-sm" 
                             onClick={async () => {
-                              await handleUpdateIssueField('description', editIssueDesc);
+                              const newDescription = JSON.stringify({
+                                text: editIssueDesc,
+                                issueTasks: projectTasks
+                              });
+                              await handleUpdateIssueField('description', newDescription);
                               setIsEditingIssue(false);
                             }}
                           >
@@ -1202,7 +1766,7 @@ export default function ProjectDetail({ params }) {
                             type="button" 
                             className="btn btn-secondary btn-sm" 
                             onClick={() => {
-                              setEditIssueDesc(activeIssueDetail.description || '');
+                              setEditIssueDesc(detailText || '');
                               setIsEditingIssue(false);
                             }}
                           >
@@ -1217,13 +1781,98 @@ export default function ProjectDetail({ params }) {
                         onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--neutral-border)'}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
                       >
-                        {activeIssueDetail.description ? (
-                          <p style={{ whiteSpace: 'pre-wrap', fontSize: '13.5px', color: '#334155', margin: 0 }}>{activeIssueDetail.description}</p>
+                        {detailText ? (
+                          <p style={{ whiteSpace: 'pre-wrap', fontSize: '13.5px', color: '#334155', margin: 0 }}>{detailText}</p>
                         ) : (
                           <span style={{ color: 'var(--neutral-muted)', fontSize: '13px', fontStyle: 'italic' }}>Thêm mô tả chi tiết...</span>
                         )}
                       </div>
                     )}
+                  </div>
+
+                  {/* Grid Table in Details Modal */}
+                  <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '16px' }}>
+                    <label style={{ fontWeight: '600', fontSize: '13.5px', display: 'block', marginBottom: '10px', color: '#475569' }}>Bảng chi tiết công việc</label>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', fontSize: '13px', marginBottom: '10px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#135274', color: '#ffffff' }}>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '35%', fontWeight: '700' }}>Tên công việc</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Deadline</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Người thực hiện</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Người tạo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {projectTasks.map(row => (
+                          <tr key={row.id}>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                  type="text"
+                                  value={row.name}
+                                  onChange={(e) => handleIssueTaskChange(row.id, 'name', e.target.value)}
+                                  placeholder="Công việc..."
+                                  style={{ flex: 1, border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px' }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenTaskPopup(row)}
+                                  title="Xem & sửa nội dung chi tiết/solution"
+                                  style={{ border: 'none', background: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '15px', padding: '2px' }}
+                                >
+                                  <i className="fa-solid fa-circle-info"></i>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveIssueTaskRow(row.id)}
+                                  title="Xóa công việc"
+                                  style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                >
+                                  <i className="fa-solid fa-trash"></i>
+                                </button>
+                              </div>
+                            </td>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
+                              <input
+                                type="date"
+                                value={row.deadline}
+                                onChange={(e) => handleIssueTaskChange(row.id, 'deadline', e.target.value)}
+                                style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '12.5px' }}
+                              />
+                            </td>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
+                              <input
+                                type="text"
+                                value={row.assignee}
+                                onChange={(e) => handleIssueTaskChange(row.id, 'assignee', e.target.value)}
+                                placeholder="Gán tên..."
+                                style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px' }}
+                              />
+                            </td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle', fontSize: '12.5px' }}>
+                              {row.creator}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleAddIssueTaskRow}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '50%', width: '32px', height: '32px', padding: 0, justifyContent: 'center', fontSize: '16px', fontWeight: 'bold' }}
+                      >
+                        +
+                      </button>
+                      <button 
+                        type="button" 
+                        className="btn btn-primary btn-sm" 
+                        onClick={handleSaveAllIssueTasks}
+                      >
+                        Lưu bảng công việc
+                      </button>
+                    </div>
                   </div>
 
                   {/* Comments section */}
@@ -1308,20 +1957,63 @@ export default function ProjectDetail({ params }) {
                     </select>
                   </div>
 
-                  <div className="form-group">
-                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Người thực hiện (Assignee)</label>
-                    <select 
-                      value={activeIssueDetail.assignee_id || ''} 
-                      onChange={(e) => handleUpdateIssueField('assignee_id', e.target.value || null)}
-                      className="doc-select-filter"
-                      style={{ width: '100%', height: '34px', fontSize: '13px' }}
-                    >
-                      <option value="">-- Chưa giao việc --</option>
-                      {pMembers.map(m => {
-                        const u = users.find(usr => usr.id === m.user_id);
-                        return u ? <option key={u.id} value={u.id}>{u.name}</option> : null;
-                      })}
-                    </select>
+                  <div className="form-group" style={{ position: 'relative' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Người chịu trách nhiệm (Assignee)</label>
+                    {isEditingAssignee ? (
+                      <div>
+                        <textarea
+                          id="detail-assignee-text"
+                          value={detailAssigneesText}
+                          onChange={(e) => handleDetailAssigneesTextChange(e.target.value)}
+                          placeholder="Gõ @ để tag người chịu trách nhiệm..."
+                          style={{ width: '100%', minHeight: '36px', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', resize: 'vertical', fontSize: '13px' }}
+                          rows="1"
+                        />
+                        {activeMentionInput?.modal === 'detail' && activeMentionInput?.field === 'assignee' && mentionQuery !== null && (
+                          <div className="mentions-popup" style={{ display: 'block', position: 'absolute', zIndex: 100, top: '100%', left: '0', right: '0' }}>
+                            {mentionList.map(u => (
+                              <div className="mention-user-option" onClick={() => selectGridMention(u)} key={u.id}>
+                                <div className="men-avatar" style={{ backgroundColor: u.color }}>{u.name.split(" ").pop().charAt(0)}</div>
+                                <span>{u.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                          <button 
+                            type="button" 
+                            className="btn btn-primary btn-sm" 
+                            onClick={handleSaveAssigneeText}
+                          >
+                            Lưu
+                          </button>
+                          <button 
+                            type="button" 
+                            className="btn btn-secondary btn-sm" 
+                            onClick={() => {
+                              const parsed = parseDescription(activeIssueDetail.description);
+                              setDetailAssigneesText(parsed.assigneesText || (activeIssueDetail.assignee_id ? `@${users.find(u => u.id === activeIssueDetail.assignee_id)?.name || ''} ` : ''));
+                              setIsEditingAssignee(false);
+                            }}
+                          >
+                            Hủy
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => setIsEditingAssignee(true)} 
+                        style={{ padding: '8px 12px', border: '1px solid transparent', borderRadius: '4px', cursor: 'pointer', backgroundColor: '#f8fafc', transition: 'all 0.2s', minHeight: '34px', fontSize: '13px' }}
+                        onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--neutral-border)'}
+                        onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+                      >
+                        {detailAssigneesText ? (
+                          <span style={{ color: '#334155', fontWeight: '500' }}>{detailAssigneesText}</span>
+                        ) : (
+                          <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Chưa giao việc...</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -1386,6 +2078,96 @@ export default function ProjectDetail({ params }) {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setIsDetailModalOpen(false)}>Đóng</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* JIRA Issue Task Detail Popup (75% of screen) */}
+      {isSubTaskPopupOpen && activeSubTaskData && (
+        <div className="modal show" style={{ display: 'flex', zIndex: 310 }}>
+          <div className="modal-dialog" style={{ maxWidth: 'none', width: '75vw', height: '75vh', maxHeight: '75vh', margin: 'auto', borderRadius: '8px' }}>
+            <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div className="modal-header" style={{ padding: '16px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--neutral-border)' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
+                  {activeSubTaskData.name || 'Chi tiết công việc'}
+                </h3>
+                <button className="btn-close-modal" onClick={() => setIsSubTaskPopupOpen(false)} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
+              </div>
+              <div className="modal-body" style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* 1. TextBox: Nội dung cần thực hiện */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontWeight: '600', fontSize: '13.5px', color: '#475569' }}>Nội dung cần thực hiện</label>
+                  <textarea
+                    value={activeSubTaskData.contentNeeded || ''}
+                    onChange={(e) => handleSubTaskFieldChange('contentNeeded', e.target.value)}
+                    placeholder="Nhập nội dung chi tiết cần thực hiện..."
+                    rows="4"
+                    style={{ width: '100%', border: '1px solid #cbd5e1', padding: '10px', borderRadius: '4px', outline: 'none', resize: 'vertical', fontSize: '13.5px', lineHeight: '1.6' }}
+                  />
+                </div>
+
+                {/* 2. Solution Table: 3 columns (Nội dung thực hiện, Người thực hiện, Ngày thực hiện) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <h4 style={{ fontWeight: '600', fontSize: '14px', margin: 0, color: '#1e293b' }}>Solution</h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#0f766e', color: '#ffffff' }}>
+                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '50%', fontWeight: '700' }}>Nội dung thực hiện</th>
+                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Người thực hiện</th>
+                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Ngày thực hiện</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeSubTaskData.solutions && activeSubTaskData.solutions.map(sol => (
+                        <tr key={sol.id}>
+                          <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              <textarea
+                                value={sol.action}
+                                onChange={(e) => handleSolutionChange(sol.id, 'action', e.target.value)}
+                                placeholder="Nhập nội dung thực hiện (tự động ghi người & ngày)..."
+                                rows="2"
+                                style={{ flex: 1, border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px', resize: 'vertical' }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSolutionRow(sol.id)}
+                                title="Xóa giải pháp"
+                                style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                              >
+                                <i className="fa-solid fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                          <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle' }}>
+                            {sol.executor}
+                          </td>
+                          <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle' }}>
+                            {sol.date ? new Date(sol.date).toLocaleDateString('vi-VN') : ''}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div style={{ display: 'flex', marginTop: '6px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleAddSolutionRow}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '50%', width: '32px', height: '32px', padding: 0, justifyContent: 'center', fontSize: '16px', fontWeight: 'bold' }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+              <div className="modal-footer" style={{ borderTop: '1px solid var(--neutral-border)', padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsSubTaskPopupOpen(false)}>Hủy</button>
+                <button type="button" className="btn btn-primary" onClick={handleSaveTaskPopup}>Đồng ý</button>
               </div>
             </div>
           </div>

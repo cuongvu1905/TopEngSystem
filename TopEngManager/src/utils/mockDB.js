@@ -817,26 +817,107 @@ export const MockDB = {
   },
 
   getRoles: async function() {
-    return [
-      { id: 'role-admin', name: 'Admin/Owner' },
+    const defaultRoles = [
+      { id: 'role-admin', name: 'Quản trị viên (Admin)' },
       { id: 'role-hr', name: 'Nhân sự (HR)' },
       { id: 'role-staff', name: 'Nhân viên (Staff)' },
       { id: 'role-leader', name: 'Leader/Part Leader' },
       { id: 'role-sales', name: 'Kinh doanh (Sales)' },
       { id: 'role-bod', name: 'Ban điều hành (BOD)' }
     ];
+    if (typeof window === 'undefined') return defaultRoles;
+    const stored = localStorage.getItem("ems_roles");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return defaultRoles;
+  },
+
+  getRolesPermissions: async function() {
+    const roles = await this.getRoles();
+    const DEFAULT_PERMISSIONS = [
+      { key: "view_dashboard", name: "Xem Dashboard", module: "Dashboard" },
+      { key: "view_all_projects", name: "Xem toàn bộ dự án", module: "Dự án" },
+      { key: "create_project", name: "Thêm dự án mới", module: "Dự án" },
+      { key: "edit_project", name: "Điều chỉnh plan dự án (sửa/xóa dự án)", module: "Dự án" },
+      { key: "manage_project_members", name: "Quản lý thành viên dự án", module: "Dự án" },
+      { key: "create_task", name: "Giao việc mới (Tạo Task)", module: "Công việc" },
+      { key: "edit_task", name: "Chỉnh sửa nội dung công việc", module: "Công việc" },
+      { key: "delete_task", name: "Xóa công việc", module: "Công việc" },
+      { key: "update_task_status", name: "Cập nhật trạng thái việc (Task status)", module: "Công việc" },
+      { key: "create_issue", name: "Báo cáo lỗi/vấn đề mới (Issues)", module: "Dự án" },
+      { key: "edit_issue", name: "Cập nhật trạng thái Issue (Reporter/Tagged)", module: "Dự án" },
+      { key: "view_documents", name: "Xem tài liệu chung và tài liệu dự án", module: "Tài liệu" },
+      { key: "upload_documents", name: "Tải lên/Cập nhật tài liệu mới", module: "Tài liệu" },
+      { key: "view_hr", name: "Truy cập Quản trị nhân sự", module: "Quản trị hệ thống" },
+      { key: "view_activity_logs", name: "Xem nhật ký hệ thống (Log)", module: "Quản trị hệ thống" },
+      { key: "chat_tag_all_global", name: "Tự động tag @all phòng chat chung", module: "Kênh Chat" },
+      { key: "chat_tag_all_project", name: "Tự động tag @all phòng chat dự án", module: "Kênh Chat" },
+      { key: "chat_confirm_send", name: "Hỏi xác nhận trước khi gửi tin nhắn", module: "Kênh Chat" }
+    ];
+
+    const DEFAULT_ROLE_PERMISSIONS = {
+      "Quản trị viên (Admin)": [
+        "view_dashboard", "view_all_projects", "create_project", "edit_project", "manage_project_members",
+        "create_task", "edit_task", "delete_task", "update_task_status", "create_issue", "edit_issue",
+        "view_documents", "upload_documents", "view_hr", "view_activity_logs", "chat_tag_all_global",
+        "chat_tag_all_project", "chat_confirm_send"
+      ],
+      "Ban điều hành (BOD)": [
+        "view_dashboard", "view_all_projects", "create_project", "edit_project",
+        "edit_task", "delete_task", "view_documents", "chat_tag_all_global", "chat_confirm_send"
+      ],
+      "Leader/Part Leader": [
+        "view_dashboard", "view_all_projects", "create_task", "edit_task", "delete_task",
+        "update_task_status", "create_issue", "edit_issue", "view_documents", "upload_documents",
+        "chat_tag_all_project"
+      ],
+      "Nhân viên (Staff)": [
+        "view_dashboard", "update_task_status", "create_issue", "edit_issue",
+        "view_documents", "upload_documents"
+      ],
+      "Kinh doanh (Sales)": [
+        "view_dashboard", "view_all_projects", "create_project", "edit_project",
+        "update_task_status", "view_documents", "upload_documents", "chat_tag_all_global",
+        "chat_tag_all_project", "chat_confirm_send"
+      ],
+      "Nhân sự (HR)": [
+        "view_hr", "view_documents", "upload_documents", "chat_confirm_send"
+      ]
+    };
+
+    if (typeof window === 'undefined') {
+      return { roles, permissions: DEFAULT_PERMISSIONS, role_permissions: DEFAULT_ROLE_PERMISSIONS };
+    }
+    const stored = localStorage.getItem("ems_role_permissions");
+    let role_permissions = DEFAULT_ROLE_PERMISSIONS;
+    if (stored) {
+      try {
+        role_permissions = JSON.parse(stored);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return { roles, permissions: DEFAULT_PERMISSIONS, role_permissions };
+  },
+
+  saveRolesPermissions: async function(roles, rolePermissions) {
+    if (typeof window === 'undefined') return true;
+    localStorage.setItem("ems_roles", JSON.stringify(roles));
+    localStorage.setItem("ems_role_permissions", JSON.stringify(rolePermissions));
+    return true;
   },
 
   createUser: async function(email, password, fullName, roleId) {
     const list = await this.getUsers();
-    const roleMap = {
-      'role-admin': 'Admin/Owner',
-      'role-hr': 'Nhân sự (HR)',
-      'role-staff': 'Nhân viên (Staff)',
-      'role-leader': 'Leader/Part Leader',
-      'role-sales': 'Kinh doanh (Sales)',
-      'role-bod': 'Ban điều hành (BOD)'
-    };
+    const roles = await this.getRoles();
+    const roleObj = roles.find(r => r.id === roleId || r.name === roleId);
+    const systemRole = roleObj ? roleObj.name : 'Nhân viên (Staff)';
+    
     const colors = ['#1E40AF', '#D97706', '#059669', '#DC2626', '#7C3AED'];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     
@@ -844,7 +925,7 @@ export const MockDB = {
       id: 'usr-' + Date.now(),
       name: fullName,
       email: email,
-      system_role: roleMap[roleId] || 'Nhân viên (Staff)',
+      system_role: systemRole,
       color: randomColor
     });
     this.setUsers(list);
@@ -876,6 +957,72 @@ export const MockDB = {
     return { success: true, fileUrl: `/uploads/mock-${Date.now()}-${file.name}` };
   },
 
+  getDailyReports: async function(userId, userRole) {
+    const list = loadFromLocalStorage("daily_reports", []);
+    const users = loadFromLocalStorage("users", INITIAL_USERS);
+    
+    const isAdminOrManagement = 
+      userRole?.includes("Admin") || 
+      userRole?.includes("HR") || 
+      userRole?.includes("BOD") || 
+      userRole?.includes("Leader");
+
+    let filtered = list;
+    if (!isAdminOrManagement && userId) {
+      filtered = list.filter(r => r.user_id === userId);
+    }
+    
+    return filtered.map(r => {
+      const u = users.find(usr => usr.id === r.user_id);
+      return {
+        ...r,
+        user_name: u ? u.name : 'Unknown',
+        user_email: u ? u.email : '',
+        user_role: u ? u.system_role : ''
+      };
+    });
+  },
+
+  createDailyReport: async function(report) {
+    const list = loadFromLocalStorage("daily_reports", []);
+    const newId = list.length > 0 ? Math.max(...list.map(r => r.id)) + 1 : 1;
+    const newReport = {
+      id: newId,
+      user_id: report.userId,
+      project_id: report.projectId || null,
+      content: report.content,
+      file_url: report.fileUrl || null,
+      created_at: new Date().toISOString()
+    };
+    list.push(newReport);
+    saveToLocalStorage("daily_reports", list);
+    
+    // Log activity
+    const logs = loadFromLocalStorage("activity_logs", INITIAL_ACTIVITY_LOGS);
+    logs.push({
+      id: logs.length + 1,
+      user_id: report.userId,
+      action_type: "CREATE_REPORT",
+      entity_type: "DailyReport",
+      description: `đã gửi báo cáo ngày mới`,
+      create_at: new Date().toISOString()
+    });
+    saveToLocalStorage("activity_logs", logs);
+    
+    return { success: true, report: newReport };
+  },
+
+  updateDailyReportStatus: async function(reportId, status, comment) {
+    const list = loadFromLocalStorage("daily_reports", []);
+    const idx = list.findIndex(r => r.id === parseInt(reportId));
+    if (idx !== -1) {
+      list[idx].status = status;
+      list[idx].comment = comment || null;
+      saveToLocalStorage("daily_reports", list);
+    }
+    return { success: true };
+  },
+
   resetAll: () => {
     saveToLocalStorage("users", INITIAL_USERS);
     saveToLocalStorage("projects", INITIAL_PROJECTS);
@@ -894,5 +1041,6 @@ export const MockDB = {
     saveToLocalStorage("document_versions", INITIAL_DOCUMENT_VERSIONS);
     saveToLocalStorage("activity_logs", INITIAL_ACTIVITY_LOGS);
     saveToLocalStorage("notifications", INITIAL_NOTIFICATIONS);
+    saveToLocalStorage("daily_reports", []);
   }
 };

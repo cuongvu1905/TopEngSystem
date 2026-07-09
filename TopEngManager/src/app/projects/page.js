@@ -6,33 +6,29 @@ import { useRouter } from 'next/navigation';
 import { ProjectModal } from '@/components/Modals';
 
 export default function Projects() {
-  const { currentUser, projects, tasks, projectMembers, users, reloadAll } = useApp();
+  const { currentUser, projects, tasks, projectMembers, users, reloadAll, hasPermission } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
 
   if (!currentUser) return null;
 
   const isAdmin = currentUser.system_role.includes("Admin");
-  const isLeader = currentUser.system_role.includes("Leader");
-  const isSales = currentUser.system_role.includes("Kinh doanh");
-  const isBOD = currentUser.system_role.includes("Ban điều hành");
-  const isStaff = currentUser.system_role.includes("Nhân viên");
   const isHR = currentUser.system_role.includes("Nhân sự");
 
   const isMemberOfProject = (projId) => {
-    if (isAdmin || isLeader || isSales || isBOD) return true; // these roles can view all projects
+    if (hasPermission('view_all_projects')) return true;
     return projectMembers.some(m => m.project_id === projId && m.user_id === currentUser.id);
   };
 
   const handleProjectClick = (pId) => {
-    if (isStaff && !projectMembers.some(m => m.project_id === pId && m.user_id === currentUser.id)) {
+    if (!hasPermission('view_all_projects') && !projectMembers.some(m => m.project_id === pId && m.user_id === currentUser.id)) {
       alert("Bạn không có quyền truy cập vì không thuộc dự án này.");
       return;
     }
     router.push(`/projects/${pId}`);
   };
 
-  const showCreateBtn = isAdmin || isSales || isBOD;
+  const showCreateBtn = hasPermission('create_project');
   
   if (isHR) {
     return (
@@ -48,9 +44,8 @@ export default function Projects() {
 
   // Filter projects by permission
   const visibleProjects = projects.filter(p => {
-    if (isAdmin || isLeader || isSales || isBOD) return true;
-    if (isStaff) return projectMembers.some(m => m.project_id === p.id && m.user_id === currentUser.id);
-    return false;
+    if (hasPermission('view_all_projects')) return true;
+    return projectMembers.some(m => m.project_id === p.id && m.user_id === currentUser.id);
   });
 
   return (

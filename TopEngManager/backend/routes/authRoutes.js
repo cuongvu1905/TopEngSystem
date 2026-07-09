@@ -6,6 +6,8 @@ router.post('/login', authController.login);
 router.post('/signup', authController.signup);
 router.post('/getUsers', authController.getUsers);
 router.post('/getRoles', authController.getRoles);
+router.post('/getRolesPermissions', authController.getRolesPermissions);
+router.post('/saveRolesPermissions', authController.saveRolesPermissions);
 router.post('/createUser', authController.createUser);
 router.post('/testConnection', authController.testConnection);
 

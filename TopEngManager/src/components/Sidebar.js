@@ -8,7 +8,7 @@ import { db, MockDB } from '@/utils/db';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { currentUser, reloadAll } = useApp();
+  const { currentUser, reloadAll, hasPermission } = useApp();
 
   const handleResetData = async () => {
     if (confirm("Bạn có chắc chắn muốn thiết lập lại toàn bộ dữ liệu mẫu ban đầu? Tất cả thay đổi của bạn sẽ bị mất.")) {
@@ -61,13 +61,17 @@ export default function Sidebar() {
           <i className="fa-solid fa-file-lines"></i>
           <span>Tài liệu</span>
         </Link>
-        {isAdmin && (
+        <Link href="/daily-reports" className={`menu-item ${pathname === '/daily-reports' ? 'active' : ''}`}>
+          <i className="fa-solid fa-file-invoice"></i>
+          <span>Báo cáo ngày</span>
+        </Link>
+        {hasPermission('view_activity_logs') && (
           <Link href="/activity-logs" className={`menu-item ${pathname === '/activity-logs' ? 'active' : ''}`}>
             <i className="fa-solid fa-clock-rotate-left"></i>
             <span>Lịch sử làm việc</span>
           </Link>
         )}
-        {(isAdmin || isHR) && (
+        {hasPermission('view_hr') && (
           <Link href="/hr" className={`menu-item ${pathname === '/hr' ? 'active' : ''}`}>
             <i className="fa-solid fa-user-gear"></i>
             <span>Quản lý nhân sự</span>

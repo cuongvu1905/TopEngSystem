@@ -1,32 +1,35 @@
-const { query } = require('../config/db');
+const prisma = require('../config/prisma');
 
 exports.getIssues = async (req, res, next) => {
   try {
     const { projectId, searchQuery, assigneeId, priority, type } = req.body;
-    let sql = `SELECT i.id, i.issue_key, i.project_id, i.summary, i.description, i.type, i.status, i.priority, i.reporter_id, i.assignee_id, i.epic_id, i.parent_id, i.created_at, i.updated_at 
-               FROM Issue i 
-               WHERE i.project_id = ?`;
-    const params = [projectId];
+    
+    const where = {};
+    if (projectId) {
+      where.project_id = projectId;
+    }
 
     if (searchQuery) {
-      sql += ` AND (i.summary LIKE ? OR i.description LIKE ?)`;
-      params.push(`%${searchQuery}%`, `%${searchQuery}%`);
+      where.OR = [
+        { summary: { contains: searchQuery } },
+        { description: { contains: searchQuery } }
+      ];
     }
     if (assigneeId) {
-      sql += ` AND i.assignee_id = ?`;
-      params.push(assigneeId);
+      where.assignee_id = assigneeId;
     }
     if (priority) {
-      sql += ` AND i.priority = ?`;
-      params.push(priority);
+      where.priority = priority;
     }
     if (type) {
-      sql += ` AND i.type = ?`;
-      params.push(type);
+      where.type = type;
     }
 
-    sql += ` ORDER BY i.created_at DESC`;
-    const issues = await query(sql, params);
+    const issues = await prisma.issue.findMany({
+      where,
+      orderBy: { created_at: 'desc' }
+    });
+    
     res.json(issues);
   } catch (err) {
     next(err);
@@ -36,29 +39,45 @@ exports.getIssues = async (req, res, next) => {
 exports.getIssueDetail = async (req, res, next) => {
   try {
     const { issueId } = req.body;
-    const issues = await query('SELECT * FROM Issue WHERE id = ?', [issueId]);
-    if (issues.length === 0) {
+    const issue = await prisma.issue.findUnique({
+      where: { id: parseInt(issueId) }
+    });
+    
+    if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
-    const issue = issues[0];
 
-    const comments = await query(
-      `SELECT ic.id, ic.issue_id, ic.user_id, ic.content, ic.created_at, u.full_name as user_name 
-       FROM IssueComments ic 
-       LEFT JOIN User u ON ic.user_id = u.user_id 
-       WHERE ic.issue_id = ? 
-       ORDER BY ic.created_at ASC`,
-      [issueId]
-    );
+    const dbComments = await prisma.issuecomments.findMany({
+      where: { issue_id: parseInt(issueId) },
+      orderBy: { created_at: 'asc' },
+      include: { user: true }
+    });
 
-    const history = await query(
-      `SELECT ih.id, ih.issue_id, ih.user_id, ih.field_changed, ih.old_value, ih.new_value, ih.changed_at, u.full_name as user_name 
-       FROM IssueHistory ih 
-       LEFT JOIN User u ON ih.user_id = u.user_id 
-       WHERE ih.issue_id = ? 
-       ORDER BY ih.changed_at DESC`,
-      [issueId]
-    );
+    const comments = dbComments.map(ic => ({
+      id: ic.id,
+      issue_id: ic.issue_id,
+      user_id: ic.user_id,
+      content: ic.content,
+      created_at: ic.created_at,
+      user_name: ic.user ? ic.user.full_name : null
+    }));
+
+    const dbHistory = await prisma.issuehistory.findMany({
+      where: { issue_id: parseInt(issueId) },
+      orderBy: { changed_at: 'desc' },
+      include: { user: true }
+    });
+
+    const history = dbHistory.map(ih => ({
+      id: ih.id,
+      issue_id: ih.issue_id,
+      user_id: ih.user_id,
+      field_changed: ih.field_changed,
+      old_value: ih.old_value,
+      new_value: ih.new_value,
+      changed_at: ih.changed_at,
+      user_name: ih.user ? ih.user.full_name : null
+    }));
 
     res.json({ issue, comments, history });
   } catch (err) {
@@ -71,49 +90,62 @@ exports.createIssue = async (req, res, next) => {
     const { project_id, summary, description, type, status, priority, reporter_id, assignee_id, epic_id, parent_id } = req.body;
 
     // Get project key
-    const proj = await query('SELECT project_key FROM Project WHERE project_id = ?', [project_id]);
-    let projKey = 'PRJ';
-    if (proj.length > 0 && proj[0].project_key) {
-      projKey = proj[0].project_key;
-    }
+    const proj = await prisma.project.findUnique({
+      where: { project_id: project_id }
+    });
+    const projKey = proj?.project_key || 'PRJ';
 
     // Get maximum issue key number
-    const maxResult = await query(
-      `SELECT MAX(CAST(SUBSTRING_INDEX(issue_key, '-', -1) AS UNSIGNED)) as max_num 
-       FROM Issue 
-       WHERE project_id = ?`,
-      [project_id]
-    );
+    const maxResult = await prisma.$queryRaw`
+      SELECT MAX(CAST(SUBSTRING_INDEX(issue_key, '-', -1) AS UNSIGNED)) as max_num 
+      FROM Issue 
+      WHERE project_id = ${project_id}
+    `;
 
-    const nextNum = (maxResult[0].max_num || 100) + 1; // start from 101 like JIRA
+    const maxNum = maxResult[0]?.max_num;
+    const nextNum = (Number(maxNum) || 100) + 1; // start from 101 like JIRA
     const issueKey = `${projKey}-${nextNum}`;
 
-    const result = await query(
-      `INSERT INTO Issue (issue_key, project_id, summary, description, type, status, priority, reporter_id, assignee_id, epic_id, parent_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [issueKey, project_id, summary, description, type, status || 'TO_DO', priority || 'MEDIUM', reporter_id, assignee_id || null, epic_id || null, parent_id || null]
-    );
+    const result = await prisma.issue.create({
+      data: {
+        issue_key: issueKey,
+        project_id: project_id,
+        summary,
+        description,
+        type,
+        status: status || 'TO_DO',
+        priority: priority || 'MEDIUM',
+        reporter_id: reporter_id,
+        assignee_id: assignee_id || null,
+        epic_id: epic_id ? parseInt(epic_id) : null,
+        parent_id: parent_id ? parseInt(parent_id) : null
+      }
+    });
 
-    const newId = result.insertId;
+    const newId = result.id;
 
     // Save initial history
-    await query(
-      'INSERT INTO IssueHistory (issue_id, user_id, field_changed, old_value, new_value) VALUES (?, ?, ?, ?, ?)',
-      [newId, reporter_id, 'created', null, issueKey]
-    );
+    await prisma.issuehistory.create({
+      data: {
+        issue_id: newId,
+        user_id: reporter_id,
+        field_changed: 'created',
+        old_value: null,
+        new_value: issueKey
+      }
+    });
 
     // If assignee is set, notify them
     if (assignee_id) {
-      await query(
-        'INSERT INTO Notificyations (user_id, title, content, link_url, is_read) VALUES (?, ?, ?, ?, ?)',
-        [
-          assignee_id,
-          'Bạn được phân công một Issue mới',
-          `Bạn vừa được phân công giải quyết Issue: "${summary}" (${issueKey})`,
-          `#projects/${project_id}`,
-          false
-        ]
-      );
+      await prisma.notificyations.create({
+        data: {
+          user_id: assignee_id,
+          title: 'Bạn được phân công một Issue mới',
+          content: `Bạn vừa được phân công giải quyết Issue: "${summary}" (${issueKey})`,
+          link_url: `#projects/${project_id}`,
+          is_read: false
+        }
+      });
     }
 
     res.json({ success: true, id: newId, issue_key: issueKey });
@@ -126,25 +158,38 @@ exports.updateIssue = async (req, res, next) => {
   try {
     const { id, summary, description, type, status, priority, assignee_id, epic_id, parent_id, userId } = req.body;
 
-    const oldIssues = await query('SELECT * FROM Issue WHERE id = ?', [id]);
-    if (oldIssues.length === 0) {
+    const old = await prisma.issue.findUnique({
+      where: { id: parseInt(id) }
+    });
+    if (!old) {
       return res.status(404).json({ error: 'Issue not found' });
     }
-    const old = oldIssues[0];
 
-    await query(
-      `UPDATE Issue 
-       SET summary = ?, description = ?, type = ?, status = ?, priority = ?, assignee_id = ?, epic_id = ?, parent_id = ? 
-       WHERE id = ?`,
-      [summary, description, type, status, priority, assignee_id || null, epic_id || null, parent_id || null, id]
-    );
+    await prisma.issue.update({
+      where: { id: parseInt(id) },
+      data: {
+        summary,
+        description,
+        type,
+        status,
+        priority,
+        assignee_id: assignee_id || null,
+        epic_id: epic_id ? parseInt(epic_id) : null,
+        parent_id: parent_id ? parseInt(parent_id) : null
+      }
+    });
 
     const trackChange = async (field, oldVal, newVal) => {
       if (oldVal !== newVal) {
-        await query(
-          'INSERT INTO IssueHistory (issue_id, user_id, field_changed, old_value, new_value) VALUES (?, ?, ?, ?, ?)',
-          [id, userId, field, oldVal ? String(oldVal) : null, newVal ? String(newVal) : null]
-        );
+        await prisma.issuehistory.create({
+          data: {
+            issue_id: parseInt(id),
+            user_id: userId,
+            field_changed: field,
+            old_value: oldVal ? String(oldVal) : null,
+            new_value: newVal ? String(newVal) : null
+          }
+        });
       }
     };
 
@@ -159,16 +204,15 @@ exports.updateIssue = async (req, res, next) => {
 
     // If assignee was changed, notify new assignee
     if (assignee_id && old.assignee_id !== assignee_id) {
-      await query(
-        'INSERT INTO Notificyations (user_id, title, content, link_url, is_read) VALUES (?, ?, ?, ?, ?)',
-        [
-          assignee_id,
-          'Bạn được phân công một Issue',
-          `Bạn vừa được phân công giải quyết Issue: "${summary}" (${old.issue_key})`,
-          `#projects/${old.project_id}`,
-          false
-        ]
-      );
+      await prisma.notificyations.create({
+        data: {
+          user_id: assignee_id,
+          title: 'Bạn được phân công một Issue',
+          content: `Bạn vừa được phân công giải quyết Issue: "${summary}" (${old.issue_key})`,
+          link_url: `#projects/${old.project_id}`,
+          is_read: false
+        }
+      });
     }
 
     res.json({ success: true });
@@ -181,19 +225,29 @@ exports.updateIssueStatus = async (req, res, next) => {
   try {
     const { issueId, status, userId } = req.body;
 
-    const oldIssues = await query('SELECT status, issue_key, project_id FROM Issue WHERE id = ?', [issueId]);
-    if (oldIssues.length === 0) {
+    const old = await prisma.issue.findUnique({
+      where: { id: parseInt(issueId) },
+      select: { status: true, issue_key: true, project_id: true }
+    });
+    if (!old) {
       return res.status(404).json({ error: 'Issue not found' });
     }
-    const old = oldIssues[0];
 
-    await query('UPDATE Issue SET status = ? WHERE id = ?', [status, issueId]);
+    await prisma.issue.update({
+      where: { id: parseInt(issueId) },
+      data: { status: status }
+    });
 
     if (old.status !== status) {
-      await query(
-        'INSERT INTO IssueHistory (issue_id, user_id, field_changed, old_value, new_value) VALUES (?, ?, ?, ?, ?)',
-        [issueId, userId, 'status', old.status, status]
-      );
+      await prisma.issuehistory.create({
+        data: {
+          issue_id: parseInt(issueId),
+          user_id: userId,
+          field_changed: 'status',
+          old_value: old.status,
+          new_value: status
+        }
+      });
     }
 
     res.json({ success: true });
@@ -205,7 +259,9 @@ exports.updateIssueStatus = async (req, res, next) => {
 exports.deleteIssue = async (req, res, next) => {
   try {
     const { issueId } = req.body;
-    await query('DELETE FROM Issue WHERE id = ?', [issueId]);
+    await prisma.issue.delete({
+      where: { id: parseInt(issueId) }
+    });
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -215,11 +271,14 @@ exports.deleteIssue = async (req, res, next) => {
 exports.addComment = async (req, res, next) => {
   try {
     const { issueId, userId, content } = req.body;
-    const result = await query(
-      'INSERT INTO IssueComments (issue_id, user_id, content) VALUES (?, ?, ?)',
-      [issueId, userId, content]
-    );
-    res.json({ success: true, commentId: result.insertId });
+    const result = await prisma.issuecomments.create({
+      data: {
+        issue_id: parseInt(issueId),
+        user_id: userId,
+        content: content
+      }
+    });
+    res.json({ success: true, commentId: result.id });
   } catch (err) {
     next(err);
   }
@@ -228,7 +287,9 @@ exports.addComment = async (req, res, next) => {
 exports.deleteComment = async (req, res, next) => {
   try {
     const { commentId } = req.body;
-    await query('DELETE FROM IssueComments WHERE id = ?', [commentId]);
+    await prisma.issuecomments.delete({
+      where: { id: parseInt(commentId) }
+    });
     res.json({ success: true });
   } catch (err) {
     next(err);

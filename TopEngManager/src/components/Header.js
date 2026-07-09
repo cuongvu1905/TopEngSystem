@@ -42,10 +42,8 @@ export default function Header() {
 
   const handleLogout = async () => {
     setIsSwitcherOpen(false);
-    if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?")) {
-      await logout();
-      router.push("/");
-    }
+    await logout();
+    router.push("/");
   };
 
   const handleMarkAllRead = async () => {

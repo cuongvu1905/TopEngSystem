@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model activitylogs {
+  id          Int      @id @default(autoincrement())
+  user_id     String?  @db.VarChar(36)
+  action_type String   @db.VarChar(50)
+  entity_type String   @db.VarChar(50)
+  description String?  @db.Text
+  meta_data   String?  @db.LongText
+  create_at   DateTime @default(now()) @db.Timestamp(0)
+  user        user?    @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "fk_log_user")
+
+  @@index([user_id], map: "fk_log_user")
+}
+
+model chatroommember {
+  id           Int       @id @default(autoincrement())
+  user_id      String    @db.VarChar(36)
+  room_id      String    @db.VarChar(36)
+  join_at      DateTime  @default(now()) @db.Timestamp(0)
+  last_read_at DateTime  @default(now()) @db.Timestamp(0)
+  chatrooms    chatrooms @relation(fields: [room_id], references: [room_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_crm_chatroom")
+  user         user      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_crm_member_user")
+
+  @@unique([room_id, user_id], map: "unique_room_member")
+  @@index([user_id], map: "fk_crm_member_user")
+}
+
+model chatrooms {
+  id             Int              @id @default(autoincrement())
+  room_id        String           @unique(map: "room_id") @db.VarChar(36)
+  type           String           @default("project") @db.VarChar(50)
+  room_name      String?          @db.VarChar(255)
+  project_id     String?          @db.VarChar(36)
+  create_at      DateTime         @default(now()) @db.Timestamp(0)
+  chatroommember chatroommember[]
+  project        project?         @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_chatroom_project")
+  messages       messages[]
+
+  @@index([project_id], map: "fk_chatroom_project")
+}
+
+model customer {
+  id            Int       @id @default(autoincrement())
+  customer_id   String    @unique(map: "customer_id") @db.VarChar(36)
+  customer_name String    @db.VarChar(255)
+  project       project[]
+}
+
+model dailyreport {
+  id         Int      @id @default(autoincrement())
+  user_id    String   @db.VarChar(36)
+  content    String?  @db.Text
+  file_url   String?  @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  project_id String?  @db.VarChar(36)
+  status     String?  @default("Pending") @db.VarChar(50)
+  comment    String?  @db.Text
+  project    project? @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_report_project")
+  user       user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_report_user")
+
+  @@index([user_id], map: "fk_report_user")
+  @@index([project_id], map: "fk_report_project")
+}
+
+model department {
+  id            Int    @id @default(autoincrement())
+  department_id String @unique(map: "department_id") @db.VarChar(36)
+  name          String @db.VarChar(100)
+  user          user[]
+}
+
+model issue {
+  id                                 Int             @id @default(autoincrement())
+  issue_key                          String          @unique(map: "issue_key") @db.VarChar(50)
+  project_id                         String          @db.VarChar(36)
+  summary                            String          @db.VarChar(255)
+  description                        String?         @db.Text
+  type                               String          @default("TASK") @db.VarChar(50)
+  status                             String          @default("TO_DO") @db.VarChar(50)
+  priority                           String          @default("MEDIUM") @db.VarChar(50)
+  reporter_id                        String          @db.VarChar(36)
+  assignee_id                        String?         @db.VarChar(36)
+  epic_id                            Int?
+  parent_id                          Int?
+  created_at                         DateTime        @default(now()) @db.Timestamp(0)
+  updated_at                         DateTime        @default(now()) @db.Timestamp(0)
+  user_issue_assignee_idTouser       user?           @relation("issue_assignee_idTouser", fields: [assignee_id], references: [user_id], onUpdate: Restrict, map: "fk_issue_assignee")
+  issue_issue_epic_idToissue         issue?          @relation("issue_epic_idToissue", fields: [epic_id], references: [id], onUpdate: Restrict, map: "fk_issue_epic")
+  other_issue_issue_epic_idToissue   issue[]         @relation("issue_epic_idToissue")
+  issue_issue_parent_idToissue       issue?          @relation("issue_parent_idToissue", fields: [parent_id], references: [id], onUpdate: Restrict, map: "fk_issue_parent")
+  other_issue_issue_parent_idToissue issue[]         @relation("issue_parent_idToissue")
+  project                            project         @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_issue_project")
+  user_issue_reporter_idTouser       user            @relation("issue_reporter_idTouser", fields: [reporter_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_issue_reporter")
+  issuecomments                      issuecomments[]
+  issuehistory                       issuehistory[]
+
+  @@index([assignee_id], map: "fk_issue_assignee")
+  @@index([epic_id], map: "fk_issue_epic")
+  @@index([parent_id], map: "fk_issue_parent")
+  @@index([project_id], map: "fk_issue_project")
+  @@index([reporter_id], map: "fk_issue_reporter")
+}
+
+model messages {
+  id                 BigInt               @id @default(autoincrement())
+  message_id         String               @unique(map: "message_id") @db.VarChar(36)
+  room_id            String               @db.VarChar(36)
+  sender_id          String               @db.VarChar(36)
+  is_edited          Boolean?             @default(false)
+  content            String               @db.Text
+  last_content       String?              @db.Text
+  created_at         DateTime             @default(now()) @db.Timestamp(0)
+  chatrooms          chatrooms            @relation(fields: [room_id], references: [room_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_chatroom")
+  user               user                 @relation(fields: [sender_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_msg_sender")
+  messagesattachment messagesattachment[]
+
+  @@index([room_id], map: "fk_msg_chatroom")
+  @@index([sender_id], map: "fk_msg_sender")
+}
+
+model messagesattachment {
+  id         Int      @id @default(autoincrement())
+  message_id String   @db.VarChar(36)
+  file_url   String   @db.Text
+  file_type  String?  @db.VarChar(100)
+  messages   messages @relation(fields: [message_id], references: [message_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_attachment_message")
+
+  @@index([message_id], map: "fk_attachment_message")
+}
+
+model notificyations {
+  id        Int      @id @default(autoincrement())
+  user_id   String   @db.VarChar(36)
+  title     String   @db.VarChar(255)
+  content   String?  @db.Text
+  link_url  String?  @db.Text
+  is_read   Boolean? @default(false)
+  create_at DateTime @default(now()) @db.Timestamp(0)
+  user      user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_notification_user")
+
+  @@index([user_id], map: "fk_notification_user")
+}
+
+model position {
+  id            Int    @id @default(autoincrement())
+  position_id   String @unique(map: "position_id") @db.VarChar(36)
+  position_name String @db.VarChar(100)
+  user          user[]
+}
+
+model project {
+  id                  Int             @id @default(autoincrement())
+  project_id          String          @unique(map: "project_id") @db.VarChar(36)
+  project_name        String          @db.VarChar(255)
+  project_description String?         @db.Text
+  project_key         String?         @unique(map: "project_key") @db.VarChar(10)
+  create_by           String?         @db.VarChar(36)
+  customer_id         String?         @db.VarChar(36)
+  chatrooms           chatrooms[]
+  dailyreport         dailyreport[]
+  issue               issue[]
+  user                user?           @relation(fields: [create_by], references: [user_id], onUpdate: Restrict, map: "fk_project_creator")
+  customer            customer?       @relation(fields: [customer_id], references: [customer_id], onUpdate: Restrict, map: "fk_project_customer")
+  projectmember       projectmember[]
+  task                task[]
+
+  @@index([create_by], map: "fk_project_creator")
+  @@index([customer_id], map: "fk_project_customer")
+}
+
+model projectmember {
+  id         Int     @id @default(autoincrement())
+  project_id String  @db.VarChar(36)
+  userId     String  @db.VarChar(36)
+  role       String? @default("Member") @db.VarChar(50)
+  project    project @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_member_project")
+  user       user    @relation(fields: [userId], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_member_user")
+
+  @@unique([project_id, userId], map: "unique_project_member")
+  @@index([userId], map: "fk_member_user")
+}
+
+model subtask {
+  id      Int      @id @default(autoincrement())
+  task_id String   @db.VarChar(36)
+  title   String   @db.VarChar(255)
+  is_done Boolean? @default(false)
+  task    task     @relation(fields: [task_id], references: [task_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_subtask_task")
+
+  @@index([task_id], map: "fk_subtask_task")
+}
+
+model task {
+  id          Int       @id @default(autoincrement())
+  task_id     String    @unique(map: "task_id") @db.VarChar(36)
+  project_id  String    @db.VarChar(36)
+  assignee_id String?   @db.VarChar(36)
+  title       String    @db.VarChar(255)
+  description String?   @db.Text
+  priority    String    @default("Trung bình") @db.VarChar(50)
+  due_date    DateTime? @db.Date
+  create_at   DateTime  @default(now()) @db.Timestamp(0)
+  update_at   DateTime  @default(now()) @db.Timestamp(0)
+  subtask     subtask[]
+  user        user?     @relation(fields: [assignee_id], references: [user_id], onUpdate: Restrict, map: "fk_task_assignee")
+  project     project   @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_task_project")
+
+  @@index([assignee_id], map: "fk_task_assignee")
+  @@index([project_id], map: "fk_task_project")
+}
+
+model user {
+  id                            Int              @id @default(autoincrement())
+  user_id                       String           @unique(map: "user_id") @db.VarChar(36)
+  department_id                 String?          @db.VarChar(36)
+  position_id                   String?          @db.VarChar(36)
+  full_name                     String           @db.VarChar(100)
+  email                         String           @unique(map: "email") @db.VarChar(100)
+  jandi_link                    String?          @db.VarChar(255)
+  create_at                     DateTime         @default(now()) @db.Timestamp(0)
+  password                      String           @db.VarChar(255)
+  role                          String           @default("Staff") @db.VarChar(100)
+  activitylogs                  activitylogs[]
+  chatroommember                chatroommember[]
+  dailyreport                   dailyreport[]
+  issue_issue_assignee_idTouser issue[]          @relation("issue_assignee_idTouser")
+  issue_issue_reporter_idTouser issue[]          @relation("issue_reporter_idTouser")
+  issuecomments                 issuecomments[]
+  issuehistory                  issuehistory[]
+  messages                      messages[]
+  notificyations                notificyations[]
+  project                       project[]
+  projectmember                 projectmember[]
+  task                          task[]
+  department                    department?      @relation(fields: [department_id], references: [department_id], onUpdate: Restrict, map: "fk_user_department")
+  position                      position?        @relation(fields: [position_id], references: [position_id], onUpdate: Restrict, map: "fk_user_position")
+
+  @@index([department_id], map: "fk_user_department")
+  @@index([position_id], map: "fk_user_position")
+}
+
+model issuecomments {
+  id         Int      @id @default(autoincrement())
+  issue_id   Int
+  user_id    String   @db.VarChar(36)
+  content    String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  issue      issue    @relation(fields: [issue_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_comments_issue")
+  user       user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_comments_user")
+
+  @@index([issue_id], map: "fk_comments_issue")
+  @@index([user_id], map: "fk_comments_user")
+}
+
+model issuehistory {
+  id            Int      @id @default(autoincrement())
+  issue_id      Int
+  user_id       String   @db.VarChar(36)
+  field_changed String   @db.VarChar(50)
+  old_value     String?  @db.Text
+  new_value     String?  @db.Text
+  changed_at    DateTime @default(now()) @db.Timestamp(0)
+  issue         issue    @relation(fields: [issue_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_history_issue")
+  user          user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_history_user")
+
+  @@index([issue_id], map: "fk_history_issue")
+  @@index([user_id], map: "fk_history_user")
+}

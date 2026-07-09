@@ -1,17 +1,25 @@
-const { query } = require('../config/db');
+const prisma = require('../config/prisma');
 
 exports.getTasks = async (req, res, next) => {
   try {
     const { projectId } = req.body;
-    let tasks;
-    if (projectId) {
-      tasks = await query("SELECT task_id as id, project_id, assignee_id, title, description, priority, 'Todo' as status, due_date, create_at as created_at, update_at as updated_at FROM Task WHERE project_id = ? ORDER BY due_date ASC", [projectId]);
-    } else {
-      tasks = await query("SELECT task_id as id, project_id, assignee_id, title, description, priority, 'Todo' as status, due_date, create_at as created_at, update_at as updated_at FROM Task ORDER BY due_date ASC");
-    }
     
-    res.json(tasks.map(t => ({
-      ...t,
+    const tasksRaw = await prisma.task.findMany({
+      where: projectId ? { project_id: projectId } : undefined,
+      orderBy: { due_date: 'asc' }
+    });
+
+    res.json(tasksRaw.map(t => ({
+      id: t.task_id,
+      project_id: t.project_id,
+      assignee_id: t.assignee_id,
+      title: t.title,
+      description: t.description,
+      priority: t.priority,
+      status: 'Todo',
+      due_date: t.due_date,
+      created_at: t.create_at,
+      updated_at: t.update_at,
       attachments: []
     })));
   } catch (err) {
@@ -22,13 +30,15 @@ exports.getTasks = async (req, res, next) => {
 exports.getSubtasks = async (req, res, next) => {
   try {
     const { taskId } = req.body;
-    let subs;
-    if (taskId) {
-      subs = await query('SELECT * FROM Subtask WHERE task_id = ?', [taskId]);
-    } else {
-      subs = await query('SELECT * FROM Subtask');
-    }
-    res.json(subs.map(s => ({ ...s, is_done: !!s.is_done })));
+    
+    const subsRaw = await prisma.subtask.findMany({
+      where: taskId ? { task_id: taskId } : undefined
+    });
+
+    res.json(subsRaw.map(s => ({
+      ...s,
+      is_done: !!s.is_done
+    })));
   } catch (err) {
     next(err);
   }
@@ -50,20 +60,42 @@ exports.saveTask = async (req, res, next) => {
     const id = task.id || 'task-' + Date.now();
 
     if (isNew) {
-      await query(
-        'INSERT INTO Task (task_id, project_id, title, description, assignee_id, priority, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, task.project_id, task.title, task.description, task.assignee_id || null, task.priority || 'Trung bình', task.due_date || null]
-      );
+      await prisma.task.create({
+        data: {
+          task_id: id,
+          project_id: task.project_id,
+          title: task.title,
+          description: task.description,
+          assignee_id: task.assignee_id || null,
+          priority: task.priority || 'Trung bình',
+          due_date: task.due_date ? new Date(task.due_date) : null
+        }
+      });
     } else {
-      await query(
-        'UPDATE Task SET title = ?, description = ?, assignee_id = ?, priority = ?, due_date = ? WHERE task_id = ?',
-        [task.title, task.description, task.assignee_id || null, task.priority, task.due_date || null, id]
-      );
+      await prisma.task.update({
+        where: { task_id: id },
+        data: {
+          title: task.title,
+          description: task.description,
+          assignee_id: task.assignee_id || null,
+          priority: task.priority,
+          due_date: task.due_date ? new Date(task.due_date) : null
+        }
+      });
     }
 
-    const saved = await query('SELECT task_id as id, project_id, assignee_id, title, description, priority, due_date FROM Task WHERE task_id = ?', [id]);
+    const saved = await prisma.task.findUnique({
+      where: { task_id: id }
+    });
+
     res.json({
-      ...saved[0],
+      id: saved.task_id,
+      project_id: saved.project_id,
+      assignee_id: saved.assignee_id,
+      title: saved.title,
+      description: saved.description,
+      priority: saved.priority,
+      due_date: saved.due_date,
       status: task.status || 'Todo',
       attachments: []
     });
@@ -74,7 +106,6 @@ exports.saveTask = async (req, res, next) => {
 
 exports.updateTaskStatus = async (req, res, next) => {
   try {
-    const { taskId, status } = req.body;
     // Task status column is mapped dynamically or saved locally, here we return success
     res.json({ success: true });
   } catch (err) {
@@ -87,15 +118,21 @@ exports.saveSubtask = async (req, res, next) => {
     const { subtask } = req.body;
     const isNew = !subtask.id;
     if (isNew) {
-      await query(
-        'INSERT INTO Subtask (task_id, title, is_done) VALUES (?, ?, ?)',
-        [subtask.task_id, subtask.title, !!subtask.is_done]
-      );
+      await prisma.subtask.create({
+        data: {
+          task_id: subtask.task_id,
+          title: subtask.title,
+          is_done: !!subtask.is_done
+        }
+      });
     } else {
-      await query(
-        'UPDATE Subtask SET title = ?, is_done = ? WHERE id = ?',
-        [subtask.title, !!subtask.is_done, subtask.id]
-      );
+      await prisma.subtask.update({
+        where: { id: subtask.id },
+        data: {
+          title: subtask.title,
+          is_done: !!subtask.is_done
+        }
+      });
     }
     res.json({ success: true });
   } catch (err) {
@@ -106,7 +143,9 @@ exports.saveSubtask = async (req, res, next) => {
 exports.deleteSubtask = async (req, res, next) => {
   try {
     const { subId } = req.body;
-    await query('DELETE FROM Subtask WHERE id = ?', [subId]);
+    await prisma.subtask.delete({
+      where: { id: subId }
+    });
     res.json({ success: true });
   } catch (err) {
     next(err);

@@ -1,10 +1,23 @@
-const { query } = require('../config/db');
+const prisma = require('../config/prisma');
 
 exports.getNotifications = async (req, res, next) => {
   try {
     const { userId } = req.body;
-    const notifs = await query('SELECT id, user_id, title, content, link_url, is_read, create_at as created_at FROM Notificyations WHERE user_id = ? ORDER BY create_at DESC', [userId]);
-    res.json(notifs.map(n => ({ ...n, is_read: !!n.is_read })));
+    
+    const notifsRaw = await prisma.notificyations.findMany({
+      where: { user_id: userId },
+      orderBy: { create_at: 'desc' }
+    });
+
+    res.json(notifsRaw.map(n => ({
+      id: n.id,
+      user_id: n.user_id,
+      title: n.title,
+      content: n.content,
+      link_url: n.link_url,
+      is_read: !!n.is_read,
+      created_at: n.create_at
+    })));
   } catch (err) {
     next(err);
   }
@@ -13,10 +26,17 @@ exports.getNotifications = async (req, res, next) => {
 exports.createNotification = async (req, res, next) => {
   try {
     const { userId, title, content, linkUrl } = req.body;
-    await query(
-      'INSERT INTO Notificyations (user_id, title, content, link_url, is_read) VALUES (?, ?, ?, ?, ?)',
-      [userId, title, content, linkUrl || '', false]
-    );
+    
+    await prisma.notificyations.create({
+      data: {
+        user_id: userId,
+        title: title,
+        content: content,
+        link_url: linkUrl || '',
+        is_read: false
+      }
+    });
+
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -26,7 +46,12 @@ exports.createNotification = async (req, res, next) => {
 exports.markNotificationRead = async (req, res, next) => {
   try {
     const { notificationId } = req.body;
-    await query('UPDATE Notificyations SET is_read = ? WHERE id = ?', [true, notificationId]);
+    
+    await prisma.notificyations.update({
+      where: { id: parseInt(notificationId) },
+      data: { is_read: true }
+    });
+
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -36,7 +61,12 @@ exports.markNotificationRead = async (req, res, next) => {
 exports.markAllNotificationsRead = async (req, res, next) => {
   try {
     const { userId } = req.body;
-    await query('UPDATE Notificyations SET is_read = ? WHERE user_id = ?', [true, userId]);
+    
+    await prisma.notificyations.updateMany({
+      where: { user_id: userId },
+      data: { is_read: true }
+    });
+
     res.json({ success: true });
   } catch (err) {
     next(err);
@@ -45,17 +75,29 @@ exports.markAllNotificationsRead = async (req, res, next) => {
 
 exports.getActivityLogs = async (req, res, next) => {
   try {
-    const logs = await query('SELECT id, user_id, action_type, entity_type, description, meta_data as metadata, create_at as created_at FROM ActivityLogs ORDER BY create_at DESC LIMIT 100');
-    res.json(logs.map(log => {
+    const logsRaw = await prisma.activitylogs.findMany({
+      orderBy: { create_at: 'desc' },
+      take: 100
+    });
+
+    res.json(logsRaw.map(log => {
       let meta = {};
-      if (log.metadata) {
+      if (log.meta_data) {
         try {
-          meta = typeof log.metadata === 'string' ? JSON.parse(log.metadata) : log.metadata;
+          meta = typeof log.meta_data === 'string' ? JSON.parse(log.meta_data) : log.meta_data;
         } catch (e) {
           meta = {};
         }
       }
-      return { ...log, metadata: meta };
+      return {
+        id: log.id,
+        user_id: log.user_id,
+        action_type: log.action_type,
+        entity_type: log.entity_type,
+        description: log.description,
+        metadata: meta,
+        created_at: log.create_at
+      };
     }));
   } catch (err) {
     next(err);
@@ -67,10 +109,17 @@ exports.logActivity = async (req, res, next) => {
     const { userId, actionType, entityType, entityId, description, metadata } = req.body;
     const completeMetadata = { ...metadata, entity_id: entityId };
     const metaStr = JSON.stringify(completeMetadata);
-    await query(
-      'INSERT INTO ActivityLogs (user_id, action_type, entity_type, description, meta_data) VALUES (?, ?, ?, ?, ?)',
-      [userId, actionType, entityType, description, metaStr]
-    );
+
+    await prisma.activitylogs.create({
+      data: {
+        user_id: userId,
+        action_type: actionType,
+        entity_type: entityType,
+        description: description,
+        meta_data: metaStr
+      }
+    });
+
     res.json({ success: true });
   } catch (err) {
     next(err);

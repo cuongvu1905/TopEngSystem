@@ -20,6 +20,7 @@ export const AppContextProvider = ({ children }) => {
   const [projectMembers, setProjectMembers] = useState([]);
   const [chatRoomMembers, setChatRoomMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [rolePermissions, setRolePermissions] = useState({});
 
   const reloadAll = async () => {
     if (!db.isEnabled()) {
@@ -92,6 +93,14 @@ export const AppContextProvider = ({ children }) => {
 
       const logs = await db.getActivityLogs().catch(() => []);
       setActivityLogs(logs);
+
+      // Load roles & permissions mapping
+      try {
+        const rpConfig = await db.getRolesPermissions();
+        setRolePermissions(rpConfig.role_permissions || {});
+      } catch (err) {
+        console.error("Failed to load role permissions:", err);
+      }
 
     } catch (e) {
       console.error("Context reload failed: ", e);
@@ -177,6 +186,14 @@ export const AppContextProvider = ({ children }) => {
     setActivityLogs([]);
   };
 
+  const hasPermission = (permissionName) => {
+    if (!currentUser) return false;
+    const role = currentUser.system_role;
+    if (role?.includes("Admin") || role?.includes("Owner")) return true;
+    const permissions = rolePermissions[role] || [];
+    return permissions.includes(permissionName);
+  };
+
   const value = {
     currentUser,
     users,
@@ -191,6 +208,8 @@ export const AppContextProvider = ({ children }) => {
     projectMembers,
     chatRoomMembers,
     isLoading,
+    rolePermissions,
+    hasPermission,
     login,
     signup,
     logout,

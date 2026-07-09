@@ -7,7 +7,7 @@ import { db, MockDB } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
 
 function Chat() {
-  const { currentUser, projects, projectMembers, users, chatRooms, chatRoomMembers, reloadAll } = useApp();
+  const { currentUser, projects, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
 
   const isAdmin = currentUser?.system_role?.includes("Admin") || false;
   const isMemberOfProject = (projId) => {
@@ -134,14 +134,8 @@ function Chat() {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    const isAdmin = currentUser.system_role.includes("Admin");
-    const isHR = currentUser.system_role.includes("Nhân sự");
-    const isSales = currentUser.system_role.includes("Kinh doanh");
-    const isBOD = currentUser.system_role.includes("Ban điều hành");
-    const isLeader = currentUser.system_role.includes("Leader");
-
-    // Ask before sending message for Admin, HR, Sales, BOD
-    const shouldConfirm = isAdmin || isHR || isSales || isBOD;
+    // Ask before sending message based on dynamic permission
+    const shouldConfirm = hasPermission('chat_confirm_send');
     if (shouldConfirm) {
       if (!confirm("Bạn có chắc chắn muốn gửi tin nhắn này?")) {
         return;
@@ -152,13 +146,13 @@ function Chat() {
     if (chatInput.includes("@all")) {
       const roomType = activeRoomObj?.type || 'global';
       if (roomType === 'global') {
-        const canTagAll = isAdmin || isSales || isBOD;
+        const canTagAll = hasPermission('chat_tag_all_global');
         if (!canTagAll) {
           alert("Bạn không có quyền tag @all trong phòng chat chung doanh nghiệp.");
           return;
         }
       } else if (roomType === 'project') {
-        const canTagAll = isAdmin || isLeader || isSales;
+        const canTagAll = hasPermission('chat_tag_all_project');
         if (!canTagAll) {
           alert("Bạn không có quyền tag @all trong phòng chat dự án.");
           return;
