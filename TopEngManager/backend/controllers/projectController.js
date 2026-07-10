@@ -2,15 +2,15 @@ const prisma = require('../config/prisma');
 
 exports.getProjects = async (req, res, next) => {
   try {
-    const dbProjects = await prisma.project.findMany();
+    const dbProjects = await prisma.$queryRaw`SELECT * FROM Project`;
     const projects = dbProjects.map(p => ({
       id: p.project_id,
       name: p.project_name,
       description: p.project_description,
       project_key: p.project_key || p.project_id.split('-').pop().toUpperCase().slice(0, 5),
-      status: 'Thực thi',
-      start_date: '2026-06-01',
-      end_date: '2026-12-31',
+      status: p.status || 'Thực thi',
+      start_date: p.start_date || '2026-06-01',
+      end_date: p.end_date || '2026-12-31',
       create_by: p.create_by,
       is_public: true
     }));
@@ -63,27 +63,30 @@ exports.saveProject = async (req, res, next) => {
         projectKey = `${projectKey}${Date.now().toString().slice(-2)}`;
       }
 
-      await prisma.project.create({
-        data: {
-          project_id: id,
-          project_name: proj.name,
-          project_description: proj.description,
-          project_key: projectKey,
-          create_by: proj.create_by || null
-        }
-      });
+      await prisma.$executeRaw`
+        INSERT INTO Project (project_id, project_name, project_description, project_key, create_by, customer_id, status, start_date, end_date)
+        VALUES (${id}, ${proj.name}, ${proj.description}, ${projectKey}, ${proj.create_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'})
+      `;
     } else {
-      await prisma.project.update({
-        where: { project_id: id },
-        data: {
-          project_name: proj.name,
-          project_description: proj.description
-        }
-      });
+      await prisma.$executeRaw`
+        UPDATE Project 
+        SET project_name = ${proj.name}, 
+            project_description = ${proj.description}, 
+            customer_id = ${proj.customer_id || null},
+            status = ${proj.status || 'Thực thi'}, 
+            start_date = ${proj.start_date || '2026-06-01'}, 
+            end_date = ${proj.end_date || '2026-12-31'}
+        WHERE project_id = ${id}
+      `;
     }
 
     // Sync project members
     if (membersList && membersList.length > 0) {
+      const oldMembers = await prisma.projectmember.findMany({
+        where: { project_id: id }
+      });
+      const oldUserIds = oldMembers.map(om => om.userId);
+
       await prisma.projectmember.deleteMany({
         where: { project_id: id }
       });
@@ -95,23 +98,38 @@ exports.saveProject = async (req, res, next) => {
             role: m.project_role
           }
         });
+
+        if (!oldUserIds.includes(m.user_id)) {
+          try {
+            await prisma.notificyations.create({
+              data: {
+                user_id: m.user_id,
+                title: 'Bạn được thêm vào dự án mới',
+                content: `Bạn vừa được thêm vào dự án "${proj.name}" với vai trò ${m.project_role || 'Member'}.`,
+                link_url: `#projects/${id}`,
+                is_read: false
+              }
+            });
+          } catch (notifErr) {
+            console.error("Failed to send bulk member notification:", notifErr);
+          }
+        }
       }
     }
 
-    const saved = await prisma.project.findUnique({
-      where: { project_id: id }
-    });
+    const savedList = await prisma.$queryRaw`SELECT * FROM Project WHERE project_id = ${id}`;
+    const saved = savedList[0];
 
     res.json({
       id: saved.project_id,
       name: saved.project_name,
       description: saved.project_description,
       project_key: saved.project_key || 'PRJ',
+      status: saved.status || 'Thực thi',
+      start_date: saved.start_date || '2026-06-01',
+      end_date: saved.end_date || '2026-12-31',
       create_by: saved.create_by,
-      status: proj.status || 'Thực thi',
-      start_date: proj.start_date || '2026-06-01',
-      end_date: proj.end_date || '2026-12-31',
-      is_public: !!proj.is_public
+      is_public: true
     });
   } catch (err) {
     next(err);
@@ -134,6 +152,24 @@ exports.addProjectMember = async (req, res, next) => {
         role: projectRole
       }
     });
+
+    try {
+      const proj = await prisma.project.findUnique({
+        where: { project_id: projectId }
+      });
+      await prisma.notificyations.create({
+        data: {
+          user_id: userId,
+          title: 'Bạn được thêm vào dự án mới',
+          content: `Bạn vừa được thêm vào dự án "${proj?.project_name || 'Dự án'}" với vai trò ${projectRole || 'Member'}.`,
+          link_url: `#projects/${projectId}`,
+          is_read: false
+        }
+      });
+    } catch (notifErr) {
+      console.error("Failed to send single member notification:", notifErr);
+    }
+
     res.json({ success: true });
   } catch (err) {
     next(err);

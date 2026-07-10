@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { db } from '@/utils/db';
+import Swal from 'sweetalert2';
 
 export default function DailyReportsPage() {
   const { currentUser, users, projects } = useApp();
@@ -54,7 +55,7 @@ export default function DailyReportsPage() {
       setFileUrl(res.fileUrl);
       setAttachedFileName(file.name);
     } catch (err) {
-      alert("Lỗi tải tệp: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi tải tệp: " + err.message });
     } finally {
       setUploadingFile(false);
     }
@@ -83,9 +84,9 @@ export default function DailyReportsPage() {
       setSelectedProjectId('');
       handleClearAttachment();
       await loadReports();
-      alert("Đã gửi báo cáo ngày thành công!");
+      Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã gửi báo cáo ngày thành công!" });
     } catch (err) {
-      alert("Lỗi gửi báo cáo: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi gửi báo cáo: " + err.message });
     } finally {
       setIsSubmitting(false);
     }

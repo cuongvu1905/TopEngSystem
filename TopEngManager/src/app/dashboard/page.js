@@ -5,6 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import { db } from '@/utils/db';
 import { TaskModal } from '@/components/Modals';
+import Swal from 'sweetalert2';
 
 // Helper to check if a user is mentioned in an issue
 const isMentionedInIssue = (issue, user, users) => {
@@ -309,13 +310,13 @@ export default function Dashboard() {
     if (!selectedReportForPopup) return;
     const isMock = String(selectedReportForPopup.id).startsWith('mock-');
     if (isMock) {
-      alert("Không thể duyệt hoặc từ chối báo cáo mẫu.");
+      Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Không thể duyệt hoặc từ chối báo cáo mẫu." });
       return;
     }
     try {
       setSubmittingReview(true);
       await db.updateDailyReportStatus(selectedReportForPopup.id, status, reportCommentText);
-      alert(`Đã ${status === 'Approved' ? 'Duyệt' : 'Từ chối'} báo cáo thành công!`);
+      Swal.fire({ icon: 'success', title: 'Thành công', text: `Đã ${status === 'Approved' ? 'Duyệt' : 'Từ chối'} báo cáo thành công!` });
       
       // Reload reports and find the updated report
       await loadDashboardData();
@@ -328,7 +329,7 @@ export default function Dashboard() {
         setSelectedReportForPopup(null);
       }
     } catch (err) {
-      alert("Lỗi cập nhật trạng thái báo cáo: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật trạng thái báo cáo: " + err.message });
     } finally {
       setSubmittingReview(false);
     }

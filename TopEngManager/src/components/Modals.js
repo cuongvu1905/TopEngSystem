@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, MySQLAdapter, MockDB } from '@/utils/db';
 import { useApp } from '@/context/AppContext';
+import Swal from 'sweetalert2';
 
 // Modal Backdrop Wrapper
 const ModalWrapper = ({ isOpen, children, onClose }) => {
@@ -34,6 +35,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [customerId, setCustomerId] = useState('');
+  const [status, setStatus] = useState('Thực thi');
+  const [startDate, setStartDate] = useState('2026-06-01');
+  const [endDate, setEndDate] = useState('2026-12-31');
   const [customers, setCustomers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [systemUsers, setSystemUsers] = useState([]);
@@ -61,6 +65,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
             setName(p.name);
             setDescription(p.description || '');
             setCustomerId(p.customer_id || '');
+            setStatus(p.status || 'Thực thi');
+            setStartDate(p.start_date || '2026-06-01');
+            setEndDate(p.end_date || '2026-12-31');
             
             const pMembers = (await db.getProjectMembers()).filter(m => m.project_id === projectId);
             const membersMap = {};
@@ -73,6 +80,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
           setName('');
           setDescription('');
           setCustomerId('');
+          setStatus('Thực thi');
+          setStartDate('2026-06-01');
+          setEndDate('2026-12-31');
           // Default: check the creator
           setSelectedMembers({ [currentUser.id]: 'PM' });
         }
@@ -112,6 +122,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
         name,
         description,
         customer_id: customerId || null,
+        status,
+        start_date: startDate,
+        end_date: endDate,
         created_by: currentUser.id
       };
 
@@ -132,7 +145,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
       onSaved();
       onClose();
     } catch (e) {
-      alert("Lỗi lưu dự án: " + e.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu dự án: " + e.message });
     }
   };
 
@@ -168,6 +181,30 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                   <option key={c.customer_id} value={c.customer_id}>{c.customer_name}</option>
                 ))}
               </select>
+            </div>
+            
+            <div className="form-row">
+              <div className="form-group col-6" style={{ flex: 1 }}>
+                <label>Trạng thái dự án</label>
+                <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', width: '100%', outline: 'none' }}>
+                  <option value="Khởi tạo">Khởi tạo</option>
+                  <option value="Lập kế hoạch">Lập kế hoạch</option>
+                  <option value="Thực thi">Thực thi</option>
+                  <option value="Giám sát">Giám sát</option>
+                  <option value="Kết thúc">Kết thúc</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row" style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+              <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                <label>Ngày bắt đầu</label>
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} />
+              </div>
+              <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                <label>Ngày kết thúc</label>
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} />
+              </div>
             </div>
             
             <div className="form-group">
@@ -245,6 +282,9 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
   const [status, setStatus] = useState('Todo');
 
   const [projectMembers, setProjectMembers] = useState([]);
+  const [assigneeSearchQuery, setAssigneeSearchQuery] = useState('');
+  const [assigneeSelectedDept, setAssigneeSelectedDept] = useState('');
+  const [departments, setDepartments] = useState([]);
   const [subtasks, setSubtasks] = useState([]);
   const [comments, setComments] = useState([]);
   const [attachments, setAttachments] = useState([]);
@@ -283,6 +323,11 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
     const loadTaskDetails = async () => {
       if (!isOpen) return;
       try {
+        setAssigneeSearchQuery('');
+        setAssigneeSelectedDept('');
+        const depts = await db.getDepartments();
+        setDepartments(depts);
+
         // Load assignees based on project
         const membersList = (await db.getProjectMembers()).filter(m => m.project_id === projId);
         const users = await db.getUsers();
@@ -358,7 +403,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
       onSaved();
       onClose();
     } catch (e) {
-      alert("Lỗi lưu task: " + e.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu task: " + e.message });
     }
   };
 
@@ -467,6 +512,13 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
     }
   };
 
+  const filteredMembers = projectMembers.filter(m => {
+    const matchesSearch = m.name.toLowerCase().includes(assigneeSearchQuery.toLowerCase()) || 
+                          m.email.toLowerCase().includes(assigneeSearchQuery.toLowerCase());
+    const matchesDept = !assigneeSelectedDept || m.department_id === assigneeSelectedDept;
+    return matchesSearch && matchesDept;
+  });
+
   // Progress subtasks calculation
   const doneSubtasks = subtasks.filter(s => s.is_done).length;
   const progressPercent = subtasks.length > 0 ? Math.round((doneSubtasks / subtasks.length) * 100) : 0;
@@ -474,9 +526,26 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
   return (
     <ModalWrapperLg isOpen={isOpen} onClose={onClose}>
       <div className="modal-content">
-        <div className="modal-header">
-          <h3>{taskId ? 'Chi tiết công việc' : 'Giao việc mới'}</h3>
-          <button className="btn-close-modal" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
+        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--neutral-border)' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
+            {taskId ? 'Chi tiết công việc' : 'Giao việc mới'}
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', marginRight: '16px' }}>
+            <label style={{ fontWeight: '600', fontSize: '13px', color: '#475569', margin: 0 }}>Trạng thái:</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              disabled={disableStatusSelect}
+              className="doc-select-filter"
+              style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
+            >
+              <option value="Todo">To do</option>
+              <option value="InProgress">In progress</option>
+              <option value="Review">Review</option>
+              <option value="Done">Done</option>
+            </select>
+          </div>
+          <button className="btn-close-modal" onClick={onClose} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
         </div>
         <div className="modal-body modal-body-split">
           <div className="modal-split-left">
@@ -489,37 +558,71 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                 <label>Mô tả công việc</label>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={!isPM} rows="4" placeholder="Nhập mô tả chi tiết..."></textarea>
               </div>
-              <div className="form-row">
-                <div className="form-group col-6">
+              <div className="form-row" style={{ display: 'flex', gap: '16px' }}>
+                <div className="form-group col-6" style={{ flex: 1 }}>
                   <label>Người thực hiện</label>
-                  <select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} disabled={!isPM}>
-                    <option value="">-- Chọn người thực hiện --</option>
-                    {projectMembers.map(m => (
-                      <option value={m.id} key={m.id}>{m.name} ({m.project_role})</option>
-                    ))}
-                  </select>
+                  {isPM ? (
+                    <div>
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                        <input 
+                          type="text" 
+                          placeholder="Tìm kiếm thành viên..." 
+                          value={assigneeSearchQuery} 
+                          onChange={(e) => setAssigneeSearchQuery(e.target.value)} 
+                          style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                        />
+                        <select 
+                          value={assigneeSelectedDept} 
+                          onChange={(e) => setAssigneeSelectedDept(e.target.value)} 
+                          style={{ width: '130px', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                        >
+                          <option value="">Tất cả phòng ban</option>
+                          {departments.map(dept => (
+                            <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#fff' }}>
+                        {filteredMembers.length === 0 ? (
+                          <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '12px', textAlign: 'center' }}>Không tìm thấy nhân viên phù hợp</div>
+                        ) : (
+                          filteredMembers.map(m => {
+                            const isChecked = assigneeId === m.id;
+                            return (
+                              <div className="member-select-row" key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
+                                <div className="member-select-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <input 
+                                    type="checkbox" 
+                                    id={`task-assignee-check-${m.id}`} 
+                                    checked={isChecked} 
+                                    onChange={() => setAssigneeId(isChecked ? '' : m.id)}
+                                  />
+                                  <label htmlFor={`task-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>{m.name} ({m.project_role})</label>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '8px 12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', backgroundColor: '#f8fafc', fontSize: '13px' }}>
+                      {projectMembers.find(m => m.id === assigneeId)?.name || 'Chưa giao việc cho ai.'}
+                    </div>
+                  )}
                 </div>
-                <div className="form-group col-6">
+                <div className="form-group col-6" style={{ width: '50%' }}>
                   <label>Hạn chót (Deadline)</label>
-                  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={!isPM} />
+                  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={!isPM} style={{ width: '100%' }} />
                 </div>
               </div>
               <div className="form-row">
-                <div className="form-group col-6">
+                <div className="form-group col-12" style={{ width: '100%' }}>
                   <label>Độ ưu tiên</label>
-                  <select value={priority} onChange={(e) => setPriority(e.target.value)} disabled={!isPM}>
+                  <select value={priority} onChange={(e) => setPriority(e.target.value)} disabled={!isPM} style={{ width: '100%' }}>
                     <option value="Thấp">Thấp</option>
                     <option value="Trung bình">Trung bình</option>
                     <option value="Cao">Cao</option>
-                  </select>
-                </div>
-                <div className="form-group col-6">
-                  <label>Trạng thái</label>
-                  <select value={status} onChange={(e) => setStatus(e.target.value)} disabled={disableStatusSelect}>
-                    <option value="Todo">To do</option>
-                    <option value="InProgress">In progress</option>
-                    <option value="Review">Review</option>
-                    <option value="Done">Done</option>
                   </select>
                 </div>
               </div>
@@ -528,36 +631,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
               </div>
             </form>
 
-            {taskId && (
-              <div className="task-subtasks-section">
-                <h4 className="section-title">Danh sách kiểm tra (Checklist)</h4>
-                <div className="subtask-progress-wrapper">
-                  <div className="subtask-progress-bar">
-                    <div className="subtask-progress-fill" style={{ width: `${progressPercent}%` }}></div>
-                  </div>
-                  <span>{progressPercent}%</span>
-                </div>
-                <ul className="subtask-list">
-                  {subtasks.map(s => (
-                    <li className="subtask-item" key={s.id}>
-                      <div className={`subtask-item-left ${s.is_done ? 'done' : ''}`}>
-                        <input type="checkbox" checked={s.is_done} onChange={() => handleToggleSubtask(s)} />
-                        <span>{s.title}</span>
-                      </div>
-                      {isPM && (
-                        <button className="btn-delete-subtask" onClick={() => handleDeleteSubtask(s.id)}><i className="fa-solid fa-trash"></i></button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {isPM && (
-                  <form className="add-subtask-form" onSubmit={handleAddSubtask}>
-                    <input type="text" value={newSubtask} onChange={(e) => setNewSubtask(e.target.value)} placeholder="Thêm công việc phụ..." />
-                    <button type="submit" className="btn btn-secondary btn-sm">Thêm</button>
-                  </form>
-                )}
-              </div>
-            )}
+
           </div>
 
           {taskId && (
@@ -734,7 +808,7 @@ export const DocumentModal = ({ isOpen, onClose, docId, projId, currentUser, cur
       onSaved();
       onClose();
     } catch (e) {
-      alert("Lỗi tải lên tài liệu: " + e.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi tải lên tài liệu: " + e.message });
     }
   };
 
@@ -826,12 +900,12 @@ export const DatabaseModal = ({ isOpen, onClose, onSaved }) => {
       const adapter = dbType === 'mysql' ? MySQLAdapter : MockDB;
       const result = await adapter.testConnection();
       if (result.success) {
-        alert("Thành công: " + result.message);
+        Swal.fire({ icon: 'success', title: 'Thành công', text: result.message });
       } else {
-        alert("Lỗi kết nối: " + (result.error || "Không rõ nguyên nhân"));
+        Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi kết nối: " + (result.error || "Không rõ nguyên nhân") });
       }
     } catch (err) {
-      alert("Kết nối thất bại: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Kết nối thất bại: " + err.message });
     } finally {
       setIsTesting(false);
     }
@@ -841,9 +915,9 @@ export const DatabaseModal = ({ isOpen, onClose, onSaved }) => {
     e.preventDefault();
     localStorage.setItem('ems_db_type', dbType);
     if (dbType === 'mysql') {
-      alert("Đã chuyển sang chế độ MySQL Database (Backend API)! Ứng dụng sẽ kết nối đến MySQL thông qua Route Handlers.");
+      Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã chuyển sang chế độ MySQL Database (Backend API)! Ứng dụng sẽ kết nối đến MySQL thông qua Route Handlers." });
     } else {
-      alert("Đã chuyển sang chế độ Mock Database cục bộ!");
+      Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã chuyển sang chế độ Mock Database cục bộ!" });
     }
     onSaved();
     onClose();

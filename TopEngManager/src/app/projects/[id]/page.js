@@ -6,6 +6,8 @@ import { db, MockDB } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
 import { ProjectModal, TaskModal, DocumentModal } from '@/components/Modals';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 function parseDescription(desc) {
   try {
@@ -13,6 +15,11 @@ function parseDescription(desc) {
     if (data && typeof data === 'object') {
       return {
         text: data.text || '',
+        hientrang: data.hientrang || '',
+        nguyennhan: data.nguyennhan || '',
+        huonggiaiquyet: data.huonggiaiquyet || '',
+        ketqua: data.ketqua || '',
+        deadline: data.deadline || '',
         issueTasks: data.issueTasks || [],
         assigneesText: data.assigneesText || ''
       };
@@ -22,6 +29,11 @@ function parseDescription(desc) {
   }
   return {
     text: desc || '',
+    hientrang: '',
+    nguyennhan: '',
+    huonggiaiquyet: '',
+    ketqua: '',
+    deadline: '',
     issueTasks: [],
     assigneesText: ''
   };
@@ -29,9 +41,18 @@ function parseDescription(desc) {
 
 export default function ProjectDetail({ params }) {
   const { id: projectId } = use(params);
+  const searchParams = useSearchParams();
+  const queryIssueId = searchParams.get('issueId');
   const { currentUser, projects, tasks, documents, documentVersions, documentCategories, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState('kanban');
+
+  useEffect(() => {
+    if (queryIssueId) {
+      setActiveSubTab('issues');
+      handleOpenIssueDetail(queryIssueId);
+    }
+  }, [queryIssueId]);
   
   // Chat state inside project room
   const [chatRoomId, setChatRoomId] = useState(null);
@@ -63,6 +84,23 @@ export default function ProjectDetail({ params }) {
   const [issueStatus, setIssueStatus] = useState('TO_DO');
   const [issuePriority, setIssuePriority] = useState('MEDIUM');
   const [issueAssigneeId, setIssueAssigneeId] = useState('');
+  const [jiraCreateDeadline, setJiraCreateDeadline] = useState('');
+  const [jiraCreateHienTrang, setJiraCreateHienTrang] = useState('');
+  const [jiraCreateNguyenNhan, setJiraCreateNguyenNhan] = useState('');
+  const [jiraCreateHuongGiaiQuyet, setJiraCreateHuongGiaiQuyet] = useState('');
+  const [jiraCreateKetQua, setJiraCreateKetQua] = useState('');
+
+  const [isReportPopupOpen, setIsReportPopupOpen] = useState(false);
+  const [tempNguyenNhan, setTempNguyenNhan] = useState('');
+  const [tempHuongGiaiQuyet, setTempHuongGiaiQuyet] = useState('');
+  const [tempKetQua, setTempKetQua] = useState('');
+  const [reportModalSource, setReportModalSource] = useState('create'); // 'create' | 'detail'
+
+  const [jiraDetailDeadline, setJiraDetailDeadline] = useState('');
+  const [jiraDetailHienTrang, setJiraDetailHienTrang] = useState('');
+  const [jiraDetailNguyenNhan, setJiraDetailNguyenNhan] = useState('');
+  const [jiraDetailHuongGiaiQuyet, setJiraDetailHuongGiaiQuyet] = useState('');
+  const [jiraDetailKetQua, setJiraDetailKetQua] = useState('');
 
   const [detailText, setDetailText] = useState('');
 
@@ -71,6 +109,10 @@ export default function ProjectDetail({ params }) {
   const [issueAssigneesText, setIssueAssigneesText] = useState('');
   const [detailAssigneesText, setDetailAssigneesText] = useState('');
   const [isEditingAssignee, setIsEditingAssignee] = useState(false);
+  const [jiraCreateAssigneeSearchQuery, setJiraCreateAssigneeSearchQuery] = useState('');
+  const [jiraCreateAssigneeSelectedDept, setJiraCreateAssigneeSelectedDept] = useState('');
+  const [jiraDetailAssigneeSearchQuery, setJiraDetailAssigneeSearchQuery] = useState('');
+  const [jiraDetailAssigneeSelectedDept, setJiraDetailAssigneeSelectedDept] = useState('');
 
 
 
@@ -118,7 +160,7 @@ export default function ProjectDetail({ params }) {
 
   const selectGridMention = (user) => {
     if (!activeMentionInput) return;
-    const { modal, field, elementId } = activeMentionInput;
+    const { modal, field, elementId, rowId } = activeMentionInput;
     const textarea = document.getElementById(elementId);
     if (!textarea) return;
 
@@ -135,6 +177,8 @@ export default function ProjectDetail({ params }) {
         } else {
           setDetailAssigneesText(replaced);
         }
+      } else if (field === 'grid-assignee') {
+        handleIssueTaskChange(rowId, 'assignee', replaced);
       }
       setMentionQuery(null);
       setActiveMentionInput(null);
@@ -149,7 +193,61 @@ export default function ProjectDetail({ params }) {
     }
   };
 
-  const notifyMentionedUsers = async (assigneeText, issueKey, issueSummary) => {
+  const handleGridAssigneeChange = (rowId, val, modalType = 'detail') => {
+    handleIssueTaskChange(rowId, 'assignee', val);
+
+    const elementId = `grid-assignee-${modalType}-${rowId}`;
+    const textarea = document.getElementById(elementId);
+    if (!textarea) return;
+    const cursor = textarea.selectionStart || 0;
+    const beforeText = val.slice(0, cursor);
+    const lastAt = beforeText.lastIndexOf('@');
+
+    if (lastAt !== -1 && !beforeText.slice(lastAt).includes(' ')) {
+      const query = beforeText.slice(lastAt + 1).toLowerCase();
+      setMentionQuery(query);
+      const pMembers = projectMembers.filter(m => m.project_id === projectId);
+      const pUsers = pMembers.map(m => users.find(u => u.id === m.user_id)).filter(Boolean);
+      setMentionList(pUsers.filter(u => u.name.toLowerCase().includes(query)));
+      setActiveMentionInput({ modal: `${modalType}-grid`, field: 'grid-assignee', elementId, rowId });
+    } else {
+      setMentionQuery(null);
+      setActiveMentionInput(null);
+    }
+  };
+
+  const notifyMentionedUsersInGrid = async (tasks, issueKey, issueSummary, issueId) => {
+    const targetIssueId = issueId || (activeIssueDetail ? activeIssueDetail.id : '');
+    const notifiedUserIds = new Set();
+    tasks.forEach(t => {
+      if (t.assignee) {
+        const parts = t.assignee.split('@');
+        for (let i = 1; i < parts.length; i++) {
+          const part = parts[i];
+          const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
+          if (matchedUser && matchedUser.id !== currentUser.id) {
+            notifiedUserIds.add(matchedUser.id);
+          }
+        }
+      }
+    });
+
+    for (const userId of notifiedUserIds) {
+      try {
+        await db.createNotification(
+          userId,
+          "Được nhắc tên trong chi tiết công việc Issue",
+          `${currentUser.name} đã giao một công việc cho bạn trong chi tiết của Issue "${issueSummary}" (${issueKey})`,
+          `#projects/${projectId}?issueId=${targetIssueId}`
+        );
+      } catch (err) {
+        console.error("Failed to send grid mention notification", userId, err);
+      }
+    }
+  };
+
+  const notifyMentionedUsers = async (assigneeText, issueKey, issueSummary, issueId) => {
+    const targetIssueId = issueId || (activeIssueDetail ? activeIssueDetail.id : '');
     const notifiedUserIds = new Set();
     const parts = assigneeText.split('@');
     for (let i = 1; i < parts.length; i++) {
@@ -166,7 +264,7 @@ export default function ProjectDetail({ params }) {
           userId,
           "Được nhắc tên trong Issue (Người chịu trách nhiệm)",
           `${currentUser.name} đã giao trách nhiệm cho bạn trong Issue "${issueSummary}" (${issueKey})`,
-          `#projects/${projectId}`
+          `#projects/${projectId}?issueId=${targetIssueId}`
         );
       } catch (err) {
         console.error("Failed to send notification to user", userId, err);
@@ -174,44 +272,33 @@ export default function ProjectDetail({ params }) {
     }
   };
 
-  const handleSaveAssigneeText = async () => {
+  const handleSaveAssigneeText = async (targetId) => {
     if (!activeIssueDetail) return;
-    
-    // Parse to find mentioned users
-    const mentionedUsers = [];
-    const parts = detailAssigneesText.split('@');
-    for (let i = 1; i < parts.length; i++) {
-      const part = parts[i];
-      const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
-      if (matchedUser) {
-        mentionedUsers.push(matchedUser);
-      }
-    }
-
-    const firstUserId = mentionedUsers.length > 0 ? mentionedUsers[0].id : null;
+    const assigneeUser = users.find(u => u.id === targetId);
+    const calculatedAssigneesText = assigneeUser ? `@${assigneeUser.name} ` : '';
 
     const newDescription = JSON.stringify({
       text: detailText,
       issueTasks: projectTasks,
-      assigneesText: detailAssigneesText
+      assigneesText: calculatedAssigneesText
     });
 
     try {
       const updatedIssue = { 
         ...activeIssueDetail, 
-        assignee_id: firstUserId,
+        assignee_id: targetId || null,
         description: newDescription
       };
       await db.updateIssue(updatedIssue, currentUser.id);
       
       // Send notifications
-      await notifyMentionedUsers(detailAssigneesText, activeIssueDetail.issue_key, activeIssueDetail.summary);
+      await notifyMentionedUsers(calculatedAssigneesText, activeIssueDetail.issue_key, activeIssueDetail.summary, activeIssueDetail.id);
 
-      loadIssueDetail(activeIssueDetail.id);
+      await loadIssueDetail(activeIssueDetail.id);
       loadIssues();
       setIsEditingAssignee(false);
     } catch (err) {
-      alert("Lỗi cập nhật người chịu trách nhiệm: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật người chịu trách nhiệm: " + err.message });
     }
   };
 
@@ -253,6 +340,34 @@ export default function ProjectDetail({ params }) {
   const [draggedTaskId, setDraggedTaskId] = useState(null);
 
   const project = projects.find(p => p.id === projectId);
+
+  const filteredCreateAssignees = projectMembers
+    .filter(m => m.project_id === projectId)
+    .map(m => {
+      const u = users.find(usr => usr.id === m.user_id);
+      return u ? { ...u, project_role: m.project_role } : null;
+    })
+    .filter(Boolean)
+    .filter(u => {
+      const matchesSearch = u.name.toLowerCase().includes(jiraCreateAssigneeSearchQuery.toLowerCase()) ||
+                            u.email.toLowerCase().includes(jiraCreateAssigneeSearchQuery.toLowerCase());
+      const matchesDept = !jiraCreateAssigneeSelectedDept || u.department_id === jiraCreateAssigneeSelectedDept;
+      return matchesSearch && matchesDept;
+    });
+
+  const filteredDetailAssignees = projectMembers
+    .filter(m => m.project_id === projectId)
+    .map(m => {
+      const u = users.find(usr => usr.id === m.user_id);
+      return u ? { ...u, project_role: m.project_role } : null;
+    })
+    .filter(Boolean)
+    .filter(u => {
+      const matchesSearch = u.name.toLowerCase().includes(jiraDetailAssigneeSearchQuery.toLowerCase()) ||
+                            u.email.toLowerCase().includes(jiraDetailAssigneeSearchQuery.toLowerCase());
+      const matchesDept = !jiraDetailAssigneeSelectedDept || u.department_id === jiraDetailAssigneeSelectedDept;
+      return matchesSearch && matchesDept;
+    });
 
   // Resolve chat room linked to project
   useEffect(() => {
@@ -321,15 +436,15 @@ export default function ProjectDetail({ params }) {
       setIssueComments(res.comments);
       setIssueHistory(res.history);
       
-      let parsed = { text: '', issueTasks: [], assigneesText: '' };
-      try {
-        parsed = JSON.parse(res.issue.description);
-      } catch (e) {
-        parsed = { text: res.issue.description || '', issueTasks: [] };
-      }
+      const parsed = parseDescription(res.issue.description);
       
       setDetailText(parsed.text || '');
       setEditIssueDesc(parsed.text || '');
+      setJiraDetailDeadline(parsed.deadline || '');
+      setJiraDetailHienTrang(parsed.hientrang || '');
+      setJiraDetailNguyenNhan(parsed.nguyennhan || '');
+      setJiraDetailHuongGiaiQuyet(parsed.huonggiaiquyet || '');
+      setJiraDetailKetQua(parsed.ketqua || '');
       setDetailAssigneesText(parsed.assigneesText || (res.issue.assignee_id ? `@${users.find(u => u.id === res.issue.assignee_id)?.name || ''} ` : ''));
       
       if (parsed.issueTasks && Array.isArray(parsed.issueTasks)) {
@@ -388,6 +503,7 @@ export default function ProjectDetail({ params }) {
         name: '',
         deadline: '',
         assignee: '',
+        status: 'Chưa thực hiện',
         creator: currentUser?.full_name || currentUser?.name || 'User',
         contentNeeded: '',
         solutions: [
@@ -477,9 +593,20 @@ export default function ProjectDetail({ params }) {
 
   const handleSaveAllIssueTasks = async () => {
     if (!activeIssueDetail) return;
+    if (activeIssueDetail.status === 'DONE') {
+      if (!jiraDetailHienTrang.trim() || !jiraDetailNguyenNhan.trim() || !jiraDetailHuongGiaiQuyet.trim() || !jiraDetailKetQua.trim()) {
+        Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Lỗi: Trạng thái Issue hiện tại là DONE. Chỉ khi cả 4 mục (Hiện trạng, Nguyên nhân, Hướng giải quyết, Kết quả) đều có thông tin mới có thể lưu!" });
+        return;
+      }
+    }
     try {
       const newDescription = JSON.stringify({
-        text: detailText,
+        text: editIssueDesc,
+        hientrang: jiraDetailHienTrang,
+        nguyennhan: jiraDetailNguyenNhan,
+        huonggiaiquyet: jiraDetailHuongGiaiQuyet,
+        ketqua: jiraDetailKetQua,
+        deadline: jiraDetailDeadline,
         issueTasks: projectTasks,
         assigneesText: detailAssigneesText
       });
@@ -488,11 +615,15 @@ export default function ProjectDetail({ params }) {
         description: newDescription
       };
       await db.updateIssue(updatedIssue, currentUser.id);
+      
+      // Send notifications for mentions in grid
+      await notifyMentionedUsersInGrid(projectTasks, activeIssueDetail.issue_key, activeIssueDetail.summary, activeIssueDetail.id);
+
       await loadIssueDetail(activeIssueDetail.id);
       loadIssues();
-      alert("Đã lưu bảng chi tiết công việc thành công!");
+      Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã lưu thay đổi thành công!" });
     } catch (err) {
-      alert("Lỗi lưu bảng chi tiết: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu thay đổi: " + err.message });
     }
   };
 
@@ -510,29 +641,46 @@ export default function ProjectDetail({ params }) {
       setNewCommentText('');
       loadIssueDetail(activeIssueDetail.id);
     } catch (err) {
-      alert("Lỗi thêm bình luận: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi thêm bình luận: " + err.message });
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa bình luận này?")) return;
+    const confirmResult = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: "Bạn có chắc chắn muốn xóa bình luận này?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy'
+    });
+    if (!confirmResult.isConfirmed) return;
     try {
       await db.deleteComment(commentId);
       loadIssueDetail(activeIssueDetail.id);
     } catch (err) {
-      alert("Lỗi xóa bình luận: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi xóa bình luận: " + err.message });
     }
   };
 
   const handleUpdateIssueField = async (field, value) => {
     if (!activeIssueDetail) return;
+    if (field === 'status' && value === 'DONE') {
+      const parsed = parseDescription(activeIssueDetail.description);
+      if (!parsed.hientrang?.trim() || !parsed.nguyennhan?.trim() || !parsed.huonggiaiquyet?.trim() || !parsed.ketqua?.trim()) {
+        Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Lỗi: Chỉ khi cả 4 mục (Hiện trạng, Nguyên nhân, Hướng giải quyết, Kết quả) đều có thông tin mới có thể chuyển Issue sang trạng thái DONE!" });
+        return;
+      }
+    }
     try {
       const updatedIssue = { ...activeIssueDetail, [field]: value };
       await db.updateIssue(updatedIssue, currentUser.id);
       loadIssueDetail(activeIssueDetail.id);
       loadIssues();
     } catch (err) {
-      alert("Lỗi cập nhật issue: " + err.message);
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật issue: " + err.message });
     }
   };
 
@@ -673,7 +821,7 @@ export default function ProjectDetail({ params }) {
     if (!task) return;
 
     if (!hasPermission('update_task_status')) {
-      alert("Bạn không có quyền cập nhật trạng thái công việc này!");
+      Swal.fire({ icon: 'error', title: 'Từ chối truy cập', text: "Bạn không có quyền cập nhật trạng thái công việc này!" });
       return;
     }
 
@@ -710,7 +858,17 @@ export default function ProjectDetail({ params }) {
   };
 
   const handleRemoveMember = async (userId, name) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa thành viên ${name} khỏi dự án?`)) {
+    const confirmResult = await Swal.fire({
+      title: 'Xác nhận xóa',
+      text: `Bạn có chắc chắn muốn xóa thành viên ${name} khỏi dự án?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy'
+    });
+    if (confirmResult.isConfirmed) {
       await db.removeProjectMember(projectId, userId);
       await db.logActivity(currentUser.id, "REMOVE_MEMBER", "Project", projectId, `đã xóa thành viên '${name}' khỏi dự án`);
       await reloadAll();
@@ -726,13 +884,23 @@ export default function ProjectDetail({ params }) {
     if (chatInput.includes("@all")) {
       const canTagAll = isAdmin || isLeader || isSales; // project chat tag @all
       if (!canTagAll) {
-        alert("Bạn không có quyền tag @all trong nhóm dự án.");
+        Swal.fire({ icon: 'error', title: 'Quyền hạn', text: "Bạn không có quyền tag @all trong nhóm dự án." });
         return;
       }
       
       const shouldAsk = isAdmin || isSales || isBOD;
       if (shouldAsk) {
-        if (!confirm("Bạn có chắc chắn muốn gửi tin nhắn có tag @all đến toàn nhóm dự án?")) {
+        const confirmResult = await Swal.fire({
+          title: 'Xác nhận gửi',
+          text: "Bạn có chắc chắn muốn gửi tin nhắn có tag @all đến toàn nhóm dự án?",
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Gửi',
+          cancelButtonText: 'Hủy'
+        });
+        if (!confirmResult.isConfirmed) {
           return;
         }
       }
@@ -828,7 +996,11 @@ export default function ProjectDetail({ params }) {
   };
 
   const handleDownloadDoc = (att) => {
-    alert(`Đang tải file: ${att.file_url}\nDung lượng: ${att.file_size || 'N/A'}`);
+    Swal.fire({ 
+      icon: 'info', 
+      title: 'Đang tải file', 
+      html: `Đang tải file: <code>${att.file_url}</code><br>Dung lượng: <b>${att.file_size || 'N/A'}</b>` 
+    });
   };
 
   const openTaskDetail = (taskId) => {
@@ -870,11 +1042,74 @@ export default function ProjectDetail({ params }) {
       <div className="project-meta-strip">
         <div className="project-meta-item">
           <label>Trạng thái</label>
-          <span><span className="badge badge-info">{project.status}</span></span>
+          {canManageProject ? (
+            <select
+              value={project.status || 'Thực thi'}
+              onChange={async (e) => {
+                try {
+                  const updatedProj = { ...project, status: e.target.value };
+                  const pMembers = projectMembers.filter(m => m.project_id === projectId);
+                  const membersList = pMembers.map(m => ({ user_id: m.user_id, project_role: m.project_role }));
+                  await db.saveProject(updatedProj, membersList);
+                  await reloadAll();
+                } catch (err) {
+                  Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật trạng thái: " + err.message });
+                }
+              }}
+              className="doc-select-filter"
+              style={{ padding: '2px 6px', borderRadius: '4px', height: '26px', fontSize: '12px', border: '1px solid var(--neutral-border)' }}
+            >
+              <option value="Khởi tạo">Khởi tạo</option>
+              <option value="Lập kế hoạch">Lập kế hoạch</option>
+              <option value="Thực thi">Thực thi</option>
+              <option value="Giám sát">Giám sát</option>
+              <option value="Kết thúc">Kết thúc</option>
+            </select>
+          ) : (
+            <span><span className="badge badge-info">{project.status}</span></span>
+          )}
         </div>
         <div className="project-meta-item">
           <label>Thời gian</label>
-          <span>{project.start_date} ~ {project.end_date}</span>
+          {canManageProject ? (
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <input
+                type="date"
+                value={project.start_date || ''}
+                onChange={async (e) => {
+                  try {
+                    const updatedProj = { ...project, start_date: e.target.value };
+                    const pMembers = projectMembers.filter(m => m.project_id === projectId);
+                    const membersList = pMembers.map(m => ({ user_id: m.user_id, project_role: m.project_role }));
+                    await db.saveProject(updatedProj, membersList);
+                    await reloadAll();
+                  } catch (err) {
+                    Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật ngày bắt đầu: " + err.message });
+                  }
+                }}
+                style={{ padding: '2px 4px', fontSize: '12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', outline: 'none' }}
+              />
+              <span>~</span>
+              <input
+                type="date"
+                value={project.end_date || ''}
+                onChange={async (e) => {
+                  try {
+                    const updatedProj = { ...project, end_date: e.target.value };
+                    const pMembers = projectMembers.filter(m => m.project_id === projectId);
+                    const membersList = pMembers.map(m => ({ user_id: m.user_id, project_role: m.project_role }));
+                    await db.saveProject(updatedProj, membersList);
+                    await reloadAll();
+                  } catch (err) {
+                    Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật ngày kết thúc: " + err.message });
+                  }
+                }}
+                style={{ padding: '2px 4px', fontSize: '12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', outline: 'none' }}
+              />
+            </div>
+          ) : (
+            <span>{project.start_date} ~ {project.end_date}</span>
+          )}
         </div>
         <div className="project-meta-item">
           <label>Số lượng việc</label>
@@ -1024,6 +1259,15 @@ export default function ProjectDetail({ params }) {
                   setIssueStatus('TO_DO');
                   setIssuePriority('MEDIUM');
                   setIssueAssigneeId('');
+                  setIssueAssigneesText('');
+                  setProjectTasks([]);
+                  setJiraCreateAssigneeSearchQuery('');
+                  setJiraCreateAssigneeSelectedDept('');
+                  setJiraCreateDeadline('');
+                  setJiraCreateHienTrang('');
+                  setJiraCreateNguyenNhan('');
+                  setJiraCreateHuongGiaiQuyet('');
+                  setJiraCreateKetQua('');
                   setIsIssueModalOpen(true);
                 }}>
                   <i className="fa-solid fa-plus"></i> Tạo Issue mới
@@ -1101,10 +1345,10 @@ export default function ProjectDetail({ params }) {
                 { id: "IN_PROGRESS", title: "ĐANG LÀM (IN PROGRESS)", class: "inprogress" },
                 { id: "DONE", title: "HOÀN THÀNH (DONE)", class: "done" }
               ].map(col => {
-                // Group issues for this column (BACKLOG + TO_DO go to TO_DO)
+                // Group issues for this column
                 const colIssues = issues.filter(iss => {
                   if (col.id === "TO_DO") {
-                    return iss.status === "TO_DO" || iss.status === "BACKLOG";
+                    return iss.status === "TO_DO";
                   }
                   return iss.status === col.id;
                 });
@@ -1125,13 +1369,11 @@ export default function ProjectDetail({ params }) {
 
                     <div 
                       className="kanban-cards-container" 
-                      onDragOver={handleDragOver} 
-                      onDrop={(e) => handleIssueDrop(e, col.id)}
                       style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '380px' }}
                     >
                       {colIssues.length === 0 ? (
                         <div style={{ border: '2px dashed #cbd5e1', borderRadius: '6px', height: '100%', minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '12px' }}>
-                          Kéo thả vào đây
+                          Chưa có vấn đề nào
                         </div>
                       ) : (
                         colIssues.map(iss => {
@@ -1160,8 +1402,6 @@ export default function ProjectDetail({ params }) {
                           return (
                             <div 
                               className="task-card" 
-                              draggable 
-                              onDragStart={(e) => handleIssueDragStart(e, iss.id)} 
                               onClick={() => handleOpenIssueDetail(iss.id)}
                               key={iss.id}
                               style={{ padding: '12px', cursor: 'pointer', borderLeft: `4px solid ${typeColor}`, backgroundColor: '#fff', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}
@@ -1507,24 +1747,35 @@ export default function ProjectDetail({ params }) {
                 e.preventDefault();
                 if (!issueTitle.trim()) return;
                 
+                if (!jiraCreateDeadline) {
+                  Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Vui lòng gắn Hạn chót (Deadline) cho Issue!" });
+                  return;
+                }
+                if (!issueAssigneeId) {
+                  Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Vui lòng chọn Người chịu trách nhiệm cho Issue!" });
+                  return;
+                }
+                if (issueStatus === 'DONE') {
+                  if (!jiraCreateHienTrang.trim() || !jiraCreateNguyenNhan.trim() || !jiraCreateHuongGiaiQuyet.trim() || !jiraCreateKetQua.trim()) {
+                    Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Lỗi: Chỉ khi cả 4 mục (Hiện trạng, Nguyên nhân, Hướng giải quyết, Kết quả) đều có thông tin mới có thể tạo Issue ở trạng thái DONE!" });
+                    return;
+                  }
+                }
+
                 try {
+                  const assigneeUser = users.find(u => u.id === issueAssigneeId);
+                  const calculatedAssigneesText = assigneeUser ? `@${assigneeUser.name} ` : '';
+
                   const serializedDescription = JSON.stringify({
                     text: issueDesc,
+                    hientrang: jiraCreateHienTrang,
+                    nguyennhan: jiraCreateNguyenNhan,
+                    huonggiaiquyet: jiraCreateHuongGiaiQuyet,
+                    ketqua: jiraCreateKetQua,
+                    deadline: jiraCreateDeadline,
                     issueTasks: projectTasks,
-                    assigneesText: issueAssigneesText
+                    assigneesText: calculatedAssigneesText
                   });
-
-                  // Parse to find mentioned users
-                  const mentionedUsers = [];
-                  const parts = issueAssigneesText.split('@');
-                  for (let i = 1; i < parts.length; i++) {
-                    const part = parts[i];
-                    const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
-                    if (matchedUser) {
-                      mentionedUsers.push(matchedUser);
-                    }
-                  }
-                  const firstUserId = mentionedUsers.length > 0 ? mentionedUsers[0].id : null;
 
                   const newIssue = await db.createIssue({
                     project_id: projectId,
@@ -1534,52 +1785,29 @@ export default function ProjectDetail({ params }) {
                     status: issueStatus,
                     priority: issuePriority,
                     reporter_id: currentUser.id,
-                    assignee_id: firstUserId
+                    assignee_id: issueAssigneeId || null
                   });
 
                   await db.logActivity(currentUser.id, "CREATE_ISSUE", "Issue", `iss-${Date.now()}`, `đã báo cáo issue mới '${issueTitle}'`);
 
                   if (newIssue && newIssue.issue_key) {
-                    await notifyMentionedUsers(issueAssigneesText, newIssue.issue_key, issueTitle);
+                    await notifyMentionedUsers(calculatedAssigneesText, newIssue.issue_key, issueTitle, newIssue.id);
+                    await notifyMentionedUsersInGrid(projectTasks, newIssue.issue_key, issueTitle, newIssue.id);
                   }
                   
                   loadIssues();
                   setIssueTitle('');
                   setIssueDesc('');
-                  setProjectTasks([
-                    {
-                      id: 'task-1',
-                      name: 'Công việc 1',
-                      deadline: '2026-07-20',
-                      assignee: '@Nguyễn Đình Thắng',
-                      creator: currentUser?.full_name || currentUser?.name || 'Admin',
-                      contentNeeded: '- Làm việc a\n- Làm việc b\n- Làm việc c',
-                      solutions: [
-                        { id: 'sol-1-1', action: 'Nội dung thực hiện mẫu 1', executor: currentUser?.full_name || currentUser?.name || 'Admin', date: new Date().toISOString().split('T')[0] },
-                        { id: 'sol-1-2', action: '', executor: '', date: '' }
-                      ]
-                    },
-                    {
-                      id: 'task-2',
-                      name: '',
-                      deadline: '',
-                      assignee: '',
-                      creator: currentUser?.full_name || currentUser?.name || 'Admin',
-                      contentNeeded: '',
-                      solutions: [
-                        { id: 'sol-2-1', action: '', executor: '', date: '' },
-                        { id: 'sol-2-2', action: '', executor: '', date: '' }
-                      ]
-                    }
-                  ]);
+                  setProjectTasks([]);
                   setIssueAssigneesText('');
                   setIssueType('TASK');
                   setIssueStatus('TO_DO');
                   setIssuePriority('MEDIUM');
                   setIssueAssigneeId('');
                   setIsIssueModalOpen(false);
+                  Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã tạo issue mới thành công!" });
                 } catch (err) {
-                  alert("Lỗi tạo issue: " + err.message);
+                  Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi tạo issue: " + err.message });
                 }
               }}>
                 <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px', padding: '20px' }}>
@@ -1589,6 +1817,33 @@ export default function ProjectDetail({ params }) {
                       <label>Tiêu đề tóm tắt (Summary) <span className="required">*</span></label>
                       <input type="text" value={issueTitle} onChange={(e) => setIssueTitle(e.target.value)} required placeholder="Ví dụ: Thiết kế giao diện thanh toán..." style={{ width: '100%' }} />
                     </div>
+                     <div className="form-group">
+                       <label>Hạn chót (Deadline) <span className="required">*</span></label>
+                       <input type="date" value={jiraCreateDeadline} onChange={(e) => setJiraCreateDeadline(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} />
+                     </div>
+
+                     <div className="form-group">
+                       <label>Hiện trạng</label>
+                       <textarea value={jiraCreateHienTrang} onChange={(e) => setJiraCreateHienTrang(e.target.value)} placeholder="Nhập hiện trạng..." rows="2" style={{ width: '100%', minHeight: '50px' }} />
+                     </div>
+
+                      <div className="form-group" style={{ marginTop: '8px' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            setTempNguyenNhan(jiraCreateNguyenNhan);
+                            setTempHuongGiaiQuyet(jiraCreateHuongGiaiQuyet);
+                            setTempKetQua(jiraCreateKetQua);
+                            setReportModalSource('create');
+                            setIsReportPopupOpen(true);
+                          }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', fontSize: '13px', width: '100%', justifyContent: 'center' }}
+                        >
+                          <i className="fa-solid fa-file-invoice"></i> Báo cáo chi tiết
+                        </button>
+                      </div>
+
                     
                     <div className="form-group">
                       <label>Độ ưu tiên (Priority)</label>
@@ -1600,31 +1855,51 @@ export default function ProjectDetail({ params }) {
                       </select>
                     </div>
 
-                    <div className="form-group">
-                      <label>Mô tả chi tiết</label>
-                      <textarea value={issueDesc} onChange={(e) => setIssueDesc(e.target.value)} placeholder="Nhập mô tả chi tiết, các bước tái hiện..." rows="4" style={{ width: '100%', minHeight: '80px' }} />
-                    </div>
 
-                    <div className="form-group" style={{ position: 'relative' }}>
-                      <label>Người chịu trách nhiệm (Assignee)</label>
-                      <textarea
-                        id="create-assignee-text"
-                        value={issueAssigneesText}
-                        onChange={(e) => handleAssigneesTextChange(e.target.value)}
-                        placeholder="Gõ @ để tag người chịu trách nhiệm..."
-                        style={{ width: '100%', minHeight: '36px', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', resize: 'vertical', fontSize: '13px' }}
-                        rows="1"
-                      />
-                      {activeMentionInput?.modal === 'create' && activeMentionInput?.field === 'assignee' && mentionQuery !== null && (
-                        <div className="mentions-popup" style={{ display: 'block', position: 'absolute', zIndex: 100, top: '100%', left: '0', right: '0' }}>
-                          {mentionList.map(u => (
-                            <div className="mention-user-option" onClick={() => selectGridMention(u)} key={u.id}>
-                              <div className="men-avatar" style={{ backgroundColor: u.color }}>{u.name.split(" ").pop().charAt(0)}</div>
-                              <span>{u.name}</span>
-                            </div>
+
+                    <div className="form-group">
+                      <label>Thành viên liên quan</label>
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                        <input 
+                          type="text" 
+                          placeholder="Tìm kiếm thành viên..." 
+                          value={jiraCreateAssigneeSearchQuery} 
+                          onChange={(e) => setJiraCreateAssigneeSearchQuery(e.target.value)} 
+                          style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                        />
+                        <select 
+                          value={jiraCreateAssigneeSelectedDept} 
+                          onChange={(e) => setJiraCreateAssigneeSelectedDept(e.target.value)} 
+                          style={{ width: '130px', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                        >
+                          <option value="">Tất cả phòng ban</option>
+                          {departments.map(dept => (
+                            <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
                           ))}
-                        </div>
-                      )}
+                        </select>
+                      </div>
+                      <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#fff' }}>
+                        {filteredCreateAssignees.length === 0 ? (
+                          <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '12px', textAlign: 'center' }}>Không tìm thấy nhân viên phù hợp</div>
+                        ) : (
+                          filteredCreateAssignees.map(m => {
+                            const isChecked = issueAssigneeId === m.id;
+                            return (
+                              <div className="member-select-row" key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
+                                <div className="member-select-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <input 
+                                    type="checkbox" 
+                                    id={`jira-create-assignee-check-${m.id}`} 
+                                    checked={isChecked} 
+                                    onChange={() => setIssueAssigneeId(isChecked ? '' : m.id)}
+                                  />
+                                  <label htmlFor={`jira-create-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>{m.name} ({m.project_role})</label>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1637,7 +1912,7 @@ export default function ProjectDetail({ params }) {
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '35%', fontWeight: '700' }}>Tên công việc</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Deadline</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Người thực hiện</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Người tạo</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Trạng thái</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1678,17 +1953,38 @@ export default function ProjectDetail({ params }) {
                                 style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '12.5px' }}
                               />
                             </td>
-                            <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', position: 'relative' }}>
                               <input
+                                id={`grid-assignee-create-${row.id}`}
                                 type="text"
                                 value={row.assignee}
-                                onChange={(e) => handleIssueTaskChange(row.id, 'assignee', e.target.value)}
+                                onChange={(e) => handleGridAssigneeChange(row.id, e.target.value, 'create')}
                                 placeholder="Gán tên..."
                                 style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px' }}
                               />
+                              {activeMentionInput?.modal === 'create-grid' && activeMentionInput?.rowId === row.id && mentionQuery !== null && (
+                                <div className="mentions-popup" style={{ display: 'block', position: 'absolute', zIndex: 100, top: '100%', left: '0', right: '0' }}>
+                                  {mentionList.map(u => (
+                                    <div className="mention-user-option" onClick={() => selectGridMention(u)} key={u.id}>
+                                      <div className="men-avatar" style={{ backgroundColor: u.color }}>{u.name.split(" ").pop().charAt(0)}</div>
+                                      <span>{u.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </td>
-                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle', fontSize: '12.5px' }}>
-                              {row.creator}
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle' }}>
+                              <span style={{ 
+                                display: 'inline-block',
+                                padding: '4px 8px', 
+                                borderRadius: '4px', 
+                                fontSize: '12px', 
+                                fontWeight: '600', 
+                                backgroundColor: row.status === 'Hoàn thành' ? '#e2fbe8' : row.status === 'Đang thực hiện' ? '#fff3cd' : '#f1f5f9',
+                                color: row.status === 'Hoàn thành' ? '#0f5132' : row.status === 'Đang thực hiện' ? '#664d03' : '#475569'
+                              }}>
+                                {row.status || 'Chưa thực hiện'}
+                              </span>
                             </td>
                           </tr>
                         ))}
@@ -1738,56 +2034,34 @@ export default function ProjectDetail({ params }) {
                     <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', marginBottom: '8px' }}>{activeIssueDetail.summary}</h2>
                   </div>
 
-                  <div>
-                    <label style={{ fontWeight: '600', fontSize: '13px', display: 'block', marginBottom: '6px', color: '#475569' }}>Mô tả chi tiết</label>
-                    {isEditingIssue ? (
-                      <div>
-                        <textarea 
-                          value={editIssueDesc} 
-                          onChange={(e) => setEditIssueDesc(e.target.value)} 
-                          style={{ width: '100%', minHeight: '120px', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }}
-                        />
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                          <button 
-                            type="button" 
-                            className="btn btn-primary btn-sm" 
-                            onClick={async () => {
-                              const newDescription = JSON.stringify({
-                                text: editIssueDesc,
-                                issueTasks: projectTasks
-                              });
-                              await handleUpdateIssueField('description', newDescription);
-                              setIsEditingIssue(false);
-                            }}
-                          >
-                            Lưu
-                          </button>
-                          <button 
-                            type="button" 
-                            className="btn btn-secondary btn-sm" 
-                            onClick={() => {
-                              setEditIssueDesc(detailText || '');
-                              setIsEditingIssue(false);
-                            }}
-                          >
-                            Hủy
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        onClick={() => setIsEditingIssue(true)} 
-                        style={{ padding: '10px', border: '1px solid transparent', borderRadius: '4px', cursor: 'pointer', backgroundColor: '#f8fafc', transition: 'all 0.2s', minHeight: '60px' }}
-                        onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--neutral-border)'}
-                        onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="form-group">
+                      <label style={{ fontWeight: '600', fontSize: '13px', display: 'block', marginBottom: '6px', color: '#475569' }}>Hiện trạng</label>
+                      <textarea
+                        value={jiraDetailHienTrang}
+                        onChange={(e) => setJiraDetailHienTrang(e.target.value)}
+                        placeholder="Nhập hiện trạng..."
+                        rows="2"
+                        style={{ width: '100%', minHeight: '60px', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical' }}
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginTop: '4px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setTempNguyenNhan(jiraDetailNguyenNhan);
+                          setTempHuongGiaiQuyet(jiraDetailHuongGiaiQuyet);
+                          setTempKetQua(jiraDetailKetQua);
+                          setReportModalSource('detail');
+                          setIsReportPopupOpen(true);
+                        }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', fontSize: '13px', width: '100%', justifyContent: 'center' }}
                       >
-                        {detailText ? (
-                          <p style={{ whiteSpace: 'pre-wrap', fontSize: '13.5px', color: '#334155', margin: 0 }}>{detailText}</p>
-                        ) : (
-                          <span style={{ color: 'var(--neutral-muted)', fontSize: '13px', fontStyle: 'italic' }}>Thêm mô tả chi tiết...</span>
-                        )}
-                      </div>
-                    )}
+                        <i className="fa-solid fa-file-invoice"></i> Báo cáo chi tiết
+                      </button>
+                    </div>
                   </div>
 
                   {/* Grid Table in Details Modal */}
@@ -1799,7 +2073,7 @@ export default function ProjectDetail({ params }) {
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '35%', fontWeight: '700' }}>Tên công việc</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Deadline</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Người thực hiện</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Người tạo</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Trạng thái</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1840,17 +2114,38 @@ export default function ProjectDetail({ params }) {
                                 style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '12.5px' }}
                               />
                             </td>
-                            <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', position: 'relative' }}>
                               <input
+                                id={`grid-assignee-detail-${row.id}`}
                                 type="text"
                                 value={row.assignee}
-                                onChange={(e) => handleIssueTaskChange(row.id, 'assignee', e.target.value)}
+                                onChange={(e) => handleGridAssigneeChange(row.id, e.target.value, 'detail')}
                                 placeholder="Gán tên..."
                                 style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px' }}
                               />
+                              {activeMentionInput?.modal === 'detail-grid' && activeMentionInput?.rowId === row.id && mentionQuery !== null && (
+                                <div className="mentions-popup" style={{ display: 'block', position: 'absolute', zIndex: 100, top: '100%', left: '0', right: '0' }}>
+                                  {mentionList.map(u => (
+                                    <div className="mention-user-option" onClick={() => selectGridMention(u)} key={u.id}>
+                                      <div className="men-avatar" style={{ backgroundColor: u.color }}>{u.name.split(" ").pop().charAt(0)}</div>
+                                      <span>{u.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </td>
-                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle', fontSize: '12.5px' }}>
-                              {row.creator}
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle' }}>
+                              <span style={{ 
+                                display: 'inline-block',
+                                padding: '4px 8px', 
+                                borderRadius: '4px', 
+                                fontSize: '12px', 
+                                fontWeight: '600', 
+                                backgroundColor: row.status === 'Hoàn thành' ? '#e2fbe8' : row.status === 'Đang thực hiện' ? '#fff3cd' : '#f1f5f9',
+                                color: row.status === 'Hoàn thành' ? '#0f5132' : row.status === 'Đang thực hiện' ? '#664d03' : '#475569'
+                              }}>
+                                {row.status || 'Chưa thực hiện'}
+                              </span>
                             </td>
                           </tr>
                         ))}
@@ -1865,13 +2160,7 @@ export default function ProjectDetail({ params }) {
                       >
                         +
                       </button>
-                      <button 
-                        type="button" 
-                        className="btn btn-primary btn-sm" 
-                        onClick={handleSaveAllIssueTasks}
-                      >
-                        Lưu bảng công việc
-                      </button>
+                      {/* Save button removed from here, moved to the bottom of the modal */}
                     </div>
                   </div>
 
@@ -1923,19 +2212,43 @@ export default function ProjectDetail({ params }) {
                   <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '16px' }}>
                     <h4 style={{ fontWeight: '600', fontSize: '14px', marginBottom: '10px' }}>Lịch sử hoạt động</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '150px', overflowY: 'auto' }}>
-                      {issueHistory.map(hist => (
-                        <div key={hist.id} style={{ fontSize: '12px', color: '#475569', display: 'flex', gap: '4px' }}>
-                          <span style={{ fontWeight: '600' }}>{hist.user_name || 'Hệ thống'}</span>
-                          {hist.field_changed === 'created' ? (
-                            <span>đã báo cáo lỗi ({hist.new_value})</span>
-                          ) : (
-                            <span>đổi <strong>{hist.field_changed}</strong> từ <code>{hist.old_value || 'rỗng'}</code> thành <code>{hist.new_value || 'rỗng'}</code></span>
-                          )}
-                          <span style={{ color: 'var(--neutral-muted)', fontSize: '11px', marginLeft: 'auto' }}>
-                            {new Date(hist.changed_at).toLocaleString('vi-VN')}
-                          </span>
-                        </div>
-                      ))}
+                      {issueHistory.map(hist => {
+                        const renderAction = () => {
+                          if (hist.field_changed === 'created') {
+                            return <span>đã báo cáo lỗi ({hist.new_value || ''})</span>;
+                          }
+                          if (hist.field_changed === 'description') {
+                            return <span>đã cập nhật thông tin chi tiết/báo cáo</span>;
+                          }
+                          
+                          let fieldLabel = hist.field_changed;
+                          if (hist.field_changed === 'status') fieldLabel = 'trạng thái';
+                          else if (hist.field_changed === 'priority') fieldLabel = 'độ ưu tiên';
+                          else if (hist.field_changed === 'assignee_id') fieldLabel = 'người chịu trách nhiệm';
+                          else if (hist.field_changed === 'summary') fieldLabel = 'tiêu đề';
+
+                          let oldVal = hist.old_value;
+                          let newVal = hist.new_value;
+                          if (hist.field_changed === 'assignee_id') {
+                            oldVal = users.find(u => u.id === hist.old_value)?.name || hist.old_value;
+                            newVal = users.find(u => u.id === hist.new_value)?.name || hist.new_value;
+                          }
+
+                          return (
+                            <span>đổi <strong>{fieldLabel}</strong> từ <code>{oldVal || 'rỗng'}</code> thành <code>{newVal || 'rỗng'}</code></span>
+                          );
+                        };
+
+                        return (
+                          <div key={hist.id} style={{ fontSize: '12.5px', color: '#475569', display: 'flex', gap: '4px', borderBottom: '1px dashed #f1f5f9', paddingBottom: '4px', paddingLeft: '4px' }}>
+                            <span style={{ fontWeight: '600' }}>{hist.user_name || 'Hệ thống'}</span>
+                            {renderAction()}
+                            <span style={{ color: 'var(--neutral-muted)', fontSize: '11px', marginLeft: 'auto' }}>
+                              {new Date(hist.changed_at).toLocaleString('vi-VN')}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -1950,7 +2263,6 @@ export default function ProjectDetail({ params }) {
                       className="doc-select-filter"
                       style={{ width: '100%', height: '34px', fontSize: '13px' }}
                     >
-                      <option value="BACKLOG">BACKLOG</option>
                       <option value="TO_DO">TO DO</option>
                       <option value="IN_PROGRESS">IN PROGRESS</option>
                       <option value="DONE">DONE</option>
@@ -1958,32 +2270,55 @@ export default function ProjectDetail({ params }) {
                   </div>
 
                   <div className="form-group" style={{ position: 'relative' }}>
-                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Người chịu trách nhiệm (Assignee)</label>
+                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Thành viên liên quan</label>
                     {isEditingAssignee ? (
                       <div>
-                        <textarea
-                          id="detail-assignee-text"
-                          value={detailAssigneesText}
-                          onChange={(e) => handleDetailAssigneesTextChange(e.target.value)}
-                          placeholder="Gõ @ để tag người chịu trách nhiệm..."
-                          style={{ width: '100%', minHeight: '36px', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', resize: 'vertical', fontSize: '13px' }}
-                          rows="1"
-                        />
-                        {activeMentionInput?.modal === 'detail' && activeMentionInput?.field === 'assignee' && mentionQuery !== null && (
-                          <div className="mentions-popup" style={{ display: 'block', position: 'absolute', zIndex: 100, top: '100%', left: '0', right: '0' }}>
-                            {mentionList.map(u => (
-                              <div className="mention-user-option" onClick={() => selectGridMention(u)} key={u.id}>
-                                <div className="men-avatar" style={{ backgroundColor: u.color }}>{u.name.split(" ").pop().charAt(0)}</div>
-                                <span>{u.name}</span>
-                              </div>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                          <input 
+                            type="text" 
+                            placeholder="Tìm kiếm thành viên..." 
+                            value={jiraDetailAssigneeSearchQuery} 
+                            onChange={(e) => setJiraDetailAssigneeSearchQuery(e.target.value)} 
+                            style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                          />
+                          <select 
+                            value={jiraDetailAssigneeSelectedDept} 
+                            onChange={(e) => setJiraDetailAssigneeSelectedDept(e.target.value)} 
+                            style={{ width: '130px', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                          >
+                            <option value="">Tất cả phòng ban</option>
+                            {departments.map(dept => (
+                              <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
                             ))}
-                          </div>
-                        )}
+                          </select>
+                        </div>
+                        <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#fff', marginBottom: '8px' }}>
+                          {filteredDetailAssignees.length === 0 ? (
+                            <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '12px', textAlign: 'center' }}>Không tìm thấy nhân viên phù hợp</div>
+                          ) : (
+                            filteredDetailAssignees.map(m => {
+                              const isChecked = issueAssigneeId === m.id;
+                              return (
+                                <div className="member-select-row" key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
+                                  <div className="member-select-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input 
+                                      type="checkbox" 
+                                      id={`jira-detail-assignee-check-${m.id}`} 
+                                      checked={isChecked} 
+                                      onChange={() => setIssueAssigneeId(isChecked ? '' : m.id)}
+                                    />
+                                    <label htmlFor={`jira-detail-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>{m.name} ({m.project_role})</label>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                           <button 
                             type="button" 
                             className="btn btn-primary btn-sm" 
-                            onClick={handleSaveAssigneeText}
+                            onClick={() => handleSaveAssigneeText(issueAssigneeId)}
                           >
                             Lưu
                           </button>
@@ -1991,8 +2326,6 @@ export default function ProjectDetail({ params }) {
                             type="button" 
                             className="btn btn-secondary btn-sm" 
                             onClick={() => {
-                              const parsed = parseDescription(activeIssueDetail.description);
-                              setDetailAssigneesText(parsed.assigneesText || (activeIssueDetail.assignee_id ? `@${users.find(u => u.id === activeIssueDetail.assignee_id)?.name || ''} ` : ''));
                               setIsEditingAssignee(false);
                             }}
                           >
@@ -2002,7 +2335,12 @@ export default function ProjectDetail({ params }) {
                       </div>
                     ) : (
                       <div 
-                        onClick={() => setIsEditingAssignee(true)} 
+                        onClick={() => {
+                          setIssueAssigneeId(activeIssueDetail.assignee_id || '');
+                          setJiraDetailAssigneeSearchQuery('');
+                          setJiraDetailAssigneeSelectedDept('');
+                          setIsEditingAssignee(true);
+                        }} 
                         style={{ padding: '8px 12px', border: '1px solid transparent', borderRadius: '4px', cursor: 'pointer', backgroundColor: '#f8fafc', transition: 'all 0.2s', minHeight: '34px', fontSize: '13px' }}
                         onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--neutral-border)'}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
@@ -2029,6 +2367,16 @@ export default function ProjectDetail({ params }) {
                       <option value="HIGH">HIGH</option>
                       <option value="CRITICAL">CRITICAL</option>
                     </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Hạn chót (Deadline) <span className="required">*</span></label>
+                    <input
+                      type="date"
+                      value={jiraDetailDeadline || ''}
+                      onChange={(e) => setJiraDetailDeadline(e.target.value)}
+                      style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
+                    />
                   </div>
 
                   <div className="form-group">
@@ -2059,25 +2407,54 @@ export default function ProjectDetail({ params }) {
                       type="button" 
                       className="btn btn-danger" 
                       onClick={async () => {
-                        if (!confirm(`Bạn có chắc chắn muốn xóa Issue ${activeIssueDetail.issue_key}?`)) return;
+                        const confirmResult = await Swal.fire({
+                          title: 'Xác nhận xóa',
+                          text: `Bạn có chắc chắn muốn xóa Issue ${activeIssueDetail.issue_key}?`,
+                          icon: 'warning',
+                          showCancelButton: true,
+                          confirmButtonColor: '#3085d6',
+                          cancelButtonColor: '#d33',
+                          confirmButtonText: 'Đồng ý',
+                          cancelButtonText: 'Hủy'
+                        });
+                        if (!confirmResult.isConfirmed) return;
                         try {
                           await db.deleteIssue(activeIssueDetail.id);
                           setIsDetailModalOpen(false);
                           loadIssues();
+                          Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã xóa issue thành công!" });
                         } catch (err) {
-                          alert("Lỗi xóa issue: " + err.message);
+                          Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi xóa issue: " + err.message });
                         }
                       }}
                       style={{ width: '100%', padding: '8px 12px', fontSize: '13px' }}
                     >
                       <i className="fa-solid fa-trash"></i> Xóa Issue này
                     </button>
+
+                    {activeIssueDetail.status !== 'DONE' && (
+                      <button 
+                        type="button" 
+                        className="btn btn-success" 
+                        onClick={() => {
+                          setTempNguyenNhan(jiraDetailNguyenNhan);
+                          setTempHuongGiaiQuyet(jiraDetailHuongGiaiQuyet);
+                          setTempKetQua(jiraDetailKetQua);
+                          setReportModalSource('detail-finish');
+                          setIsReportPopupOpen(true);
+                        }}
+                        style={{ width: '100%', padding: '8px 12px', fontSize: '13px', marginTop: '10px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      >
+                        <i className="fa-solid fa-circle-check"></i> Kết thúc issue
+                      </button>
+                    )}
                   </div>
                 </div>
 
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer" style={{ borderTop: '1px solid var(--neutral-border)', padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setIsDetailModalOpen(false)}>Đóng</button>
+                <button type="button" className="btn btn-primary" onClick={handleSaveAllIssueTasks}>Lưu thay đổi</button>
               </div>
             </div>
           </div>
@@ -2089,10 +2466,23 @@ export default function ProjectDetail({ params }) {
         <div className="modal show" style={{ display: 'flex', zIndex: 310 }}>
           <div className="modal-dialog" style={{ maxWidth: 'none', width: '75vw', height: '75vh', maxHeight: '75vh', margin: 'auto', borderRadius: '8px' }}>
             <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div className="modal-header" style={{ padding: '16px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--neutral-border)' }}>
+              <div className="modal-header" style={{ padding: '16px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
                   {activeSubTaskData.name || 'Chi tiết công việc'}
                 </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', marginRight: '16px' }}>
+                  <label style={{ fontWeight: '600', fontSize: '13px', color: '#475569', margin: 0 }}>Trạng thái:</label>
+                  <select
+                    value={activeSubTaskData.status || 'Chưa thực hiện'}
+                    onChange={(e) => handleSubTaskFieldChange('status', e.target.value)}
+                    className="doc-select-filter"
+                    style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
+                  >
+                    <option value="Chưa thực hiện">Chưa thực hiện</option>
+                    <option value="Đang thực hiện">Đang thực hiện</option>
+                    <option value="Hoàn thành">Hoàn thành</option>
+                  </select>
+                </div>
                 <button className="btn-close-modal" onClick={() => setIsSubTaskPopupOpen(false)} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
               </div>
               <div className="modal-body" style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -2201,6 +2591,138 @@ export default function ProjectDetail({ params }) {
         currentCategoryId="cat-lifecycle" 
         onSaved={reloadAll} 
       />
+
+      {/* JIRA Detailed Report Popup */}
+      {isReportPopupOpen && (
+        <div className="modal show" style={{ display: 'flex', zIndex: 320 }}>
+          <div className="modal-dialog" style={{ maxWidth: '600px', width: '90vw', margin: 'auto', borderRadius: '8px' }}>
+            <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', padding: '24px', gap: '16px' }}>
+              <div className="modal-header" style={{ padding: '0 0 12px 0', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
+                  Báo cáo chi tiết
+                </h3>
+                <button className="btn-close-modal" onClick={() => setIsReportPopupOpen(false)} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
+              </div>
+              <div className="modal-body" style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontWeight: '600', fontSize: '13px', color: '#475569' }}>Nguyên nhân</label>
+                  <textarea
+                    value={tempNguyenNhan}
+                    onChange={(e) => setTempNguyenNhan(e.target.value)}
+                    placeholder="Nhập nguyên nhân..."
+                    rows="3"
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontWeight: '600', fontSize: '13px', color: '#475569' }}>Hướng giải quyết</label>
+                  <textarea
+                    value={tempHuongGiaiQuyet}
+                    onChange={(e) => setTempHuongGiaiQuyet(e.target.value)}
+                    placeholder="Nhập hướng giải quyết..."
+                    rows="3"
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontWeight: '600', fontSize: '13px', color: '#475569' }}>Kết quả</label>
+                  <textarea
+                    value={tempKetQua}
+                    onChange={(e) => setTempKetQua(e.target.value)}
+                    placeholder="Nhập kết quả..."
+                    rows="3"
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical' }}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer" style={{ borderTop: 'none', padding: '8px 0 0 0', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setIsReportPopupOpen(false)}
+                  style={{ padding: '8px 16px', fontSize: '13px' }}
+                >
+                  Hủy
+                </button>
+                
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    if (reportModalSource === 'create') {
+                      setJiraCreateNguyenNhan(tempNguyenNhan);
+                      setJiraCreateHuongGiaiQuyet(tempHuongGiaiQuyet);
+                      setJiraCreateKetQua(tempKetQua);
+                    } else {
+                      setJiraDetailNguyenNhan(tempNguyenNhan);
+                      setJiraDetailHuongGiaiQuyet(tempHuongGiaiQuyet);
+                      setJiraDetailKetQua(tempKetQua);
+                    }
+                    setIsReportPopupOpen(false);
+                  }}
+                  style={{ padding: '8px 24px', fontSize: '13px' }}
+                >
+                  Lưu
+                </button>
+
+                {activeIssueDetail && activeIssueDetail.status !== 'DONE' && (
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    disabled={reportModalSource !== 'detail-finish' || !jiraDetailHienTrang?.trim() || !tempNguyenNhan?.trim() || !tempHuongGiaiQuyet?.trim() || !tempKetQua?.trim() || !projectTasks.every(t => t.status === 'Hoàn thành')}
+                    onClick={async () => {
+                      try {
+                        setJiraDetailNguyenNhan(tempNguyenNhan);
+                        setJiraDetailHuongGiaiQuyet(tempHuongGiaiQuyet);
+                        setJiraDetailKetQua(tempKetQua);
+
+                        const newDescription = JSON.stringify({
+                          text: editIssueDesc,
+                          hientrang: jiraDetailHienTrang,
+                          nguyennhan: tempNguyenNhan,
+                          huonggiaiquyet: tempHuongGiaiQuyet,
+                          ketqua: tempKetQua,
+                          deadline: jiraDetailDeadline,
+                          issueTasks: projectTasks,
+                          assigneesText: detailAssigneesText
+                        });
+                        const updatedIssue = { 
+                          ...activeIssueDetail, 
+                          status: 'DONE',
+                          description: newDescription
+                        };
+                        await db.updateIssue(updatedIssue, currentUser.id);
+                        await notifyMentionedUsersInGrid(projectTasks, activeIssueDetail.issue_key, activeIssueDetail.summary, activeIssueDetail.id);
+                        
+                        await loadIssueDetail(activeIssueDetail.id);
+                        loadIssues();
+                        setIsReportPopupOpen(false);
+                        setIsDetailModalOpen(false);
+                        Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã kết thúc issue thành công!" });
+                      } catch (err) {
+                        Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi kết thúc issue: " + err.message });
+                      }
+                    }}
+                    style={{ 
+                      padding: '8px 20px', 
+                      fontSize: '13px', 
+                      backgroundColor: '#10b981', 
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: (reportModalSource !== 'detail-finish' || !jiraDetailHienTrang?.trim() || !tempNguyenNhan?.trim() || !tempHuongGiaiQuyet?.trim() || !tempKetQua?.trim() || !projectTasks.every(t => t.status === 'Hoàn thành')) ? 'not-allowed' : 'pointer', 
+                      opacity: (reportModalSource !== 'detail-finish' || !jiraDetailHienTrang?.trim() || !tempNguyenNhan?.trim() || !tempHuongGiaiQuyet?.trim() || !tempKetQua?.trim() || !projectTasks.every(t => t.status === 'Hoàn thành')) ? 0.6 : 1,
+                      fontWeight: '600'
+                    }}
+                  >
+                    Xác nhận kết thúc
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

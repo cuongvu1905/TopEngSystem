@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useApp } from '@/context/AppContext';
 import { db, MockDB } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
+import Swal from 'sweetalert2';
 
 function Chat() {
   const { currentUser, projects, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
@@ -137,7 +138,17 @@ function Chat() {
     // Ask before sending message based on dynamic permission
     const shouldConfirm = hasPermission('chat_confirm_send');
     if (shouldConfirm) {
-      if (!confirm("Bạn có chắc chắn muốn gửi tin nhắn này?")) {
+      const confirmResult = await Swal.fire({
+        title: 'Xác nhận gửi',
+        text: "Bạn có chắc chắn muốn gửi tin nhắn này?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Gửi',
+        cancelButtonText: 'Hủy'
+      });
+      if (!confirmResult.isConfirmed) {
         return;
       }
     }
@@ -148,13 +159,13 @@ function Chat() {
       if (roomType === 'global') {
         const canTagAll = hasPermission('chat_tag_all_global');
         if (!canTagAll) {
-          alert("Bạn không có quyền tag @all trong phòng chat chung doanh nghiệp.");
+          Swal.fire({ icon: 'error', title: 'Quyền hạn', text: "Bạn không có quyền tag @all trong phòng chat chung doanh nghiệp." });
           return;
         }
       } else if (roomType === 'project') {
         const canTagAll = hasPermission('chat_tag_all_project');
         if (!canTagAll) {
-          alert("Bạn không có quyền tag @all trong phòng chat dự án.");
+          Swal.fire({ icon: 'error', title: 'Quyền hạn', text: "Bạn không có quyền tag @all trong phòng chat dự án." });
           return;
         }
       }
@@ -274,16 +285,25 @@ function Chat() {
 
   const handleAddDirectRoom = async () => {
     const others = users.filter(u => u.id !== currentUser.id);
-    let str = "";
+    const inputOptions = {};
     others.forEach(o => {
-      str += `\n- ${o.id}: ${o.name}`;
+      inputOptions[o.id] = o.name;
     });
-    const targetId = prompt("Nhập ID của người dùng bạn muốn nhắn tin trực tiếp:" + str);
+
+    const { value: targetId } = await Swal.fire({
+      title: 'Nhắn tin trực tiếp',
+      input: 'select',
+      inputOptions: inputOptions,
+      inputPlaceholder: 'Chọn người dùng muốn trò chuyện',
+      showCancelButton: true,
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy'
+    });
     if (!targetId) return;
 
     const targetUser = others.find(o => o.id === targetId);
     if (!targetUser) {
-      alert("Người dùng không hợp lệ!");
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Người dùng không hợp lệ!" });
       return;
     }
 
@@ -293,7 +313,7 @@ function Chat() {
   };
 
   const handleDownloadDoc = (att) => {
-    alert(`Đang tải file: ${att.file_url}`);
+    Swal.fire({ icon: 'info', title: 'Đang tải file', text: `Đang tải file: ${att.file_url}` });
   };
 
   return (

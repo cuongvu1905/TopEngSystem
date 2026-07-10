@@ -10,13 +10,37 @@ const INITIAL_USERS = [
   { id: "usr-member1", name: "Lê Nhân Viên 1 (Staff)", email: "charlie.le@company.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#10B981" },
   { id: "usr-member2", name: "Phạm Nhân Viên 2 (Staff)", email: "david.pham@company.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#EC4899" },
   { id: "usr-sales", name: "Vũ Kinh Doanh (Sales)", email: "sales.vu@company.com", system_role: "Kinh doanh (Sales)", department_id: "dept-sales", color: "#EF4444" },
-  { id: "usr-bod", name: "Nguyễn Điều Hành (BOD)", email: "bod.nguyen@company.com", system_role: "Ban điều hành (BOD)", department_id: "dept-finance", color: "#10B981" }
+  { id: "usr-bod", name: "Nguyễn Điều Hành (BOD)", email: "bod.nguyen@company.com", system_role: "Ban điều hành (BOD)", department_id: "dept-finance", color: "#10B981" },
+  // 23 additional users to reach 30 users total
+  { id: "usr-user07", name: "Hoàng Phát Triển", email: "developer1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#3B82F6" },
+  { id: "usr-user08", name: "Ngô Lập Trình", email: "developer2@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#60A5FA" },
+  { id: "usr-user09", name: "Bùi Mã Nguồn", email: "developer3@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#93C5FD" },
+  { id: "usr-user10", name: "Đỗ Công Nghệ", email: "developer4@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#34D399" },
+  { id: "usr-user11", name: "Phan Kiểm Thử", email: "tester1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#F59E0B" },
+  { id: "usr-user12", name: "Vũ Đảm Bảo", email: "qa1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#10B981" },
+  { id: "usr-user13", name: "Lý Thiết Kế", email: "designer1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#8B5CF6" },
+  { id: "usr-user14", name: "Nguyễn Tuyển Dụng", email: "recruiter1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-hr", color: "#EC4899" },
+  { id: "usr-user15", name: "Trần Đào Tạo", email: "trainer1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-hr", color: "#F43F5E" },
+  { id: "usr-user16", name: "Lê Tiếp Thị", email: "marketer1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-mkt", color: "#06B6D4" },
+  { id: "usr-user17", name: "Phạm Truyền Thông", email: "pr1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-mkt", color: "#0D9488" },
+  { id: "usr-user18", name: "Trịnh Quảng Cáo", email: "ads1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-mkt", color: "#14B8A6" },
+  { id: "usr-user19", name: "Đặng Bán Hàng", email: "sales1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-sales", color: "#EF4444" },
+  { id: "usr-user20", name: "Dương Khách Hàng", email: "sales2@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-sales", color: "#F87171" },
+  { id: "usr-user21", name: "Lâm Kế Toán", email: "accountant1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-finance", color: "#6B7280" },
+  { id: "usr-user22", name: "Hồ Thủ Quỹ", email: "cashier1@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-finance", color: "#9CA3AF" },
+  { id: "usr-user23", name: "Nguyễn Trưởng Phòng Dev", email: "dev_mgr@test.com", system_role: "Leader/Part Leader", department_id: "dept-dev", color: "#2563EB" },
+  { id: "usr-user24", name: "Trần Trưởng Nhóm Mkt", email: "mkt_lead@test.com", system_role: "Leader/Part Leader", department_id: "dept-mkt", color: "#A855F7" },
+  { id: "usr-user25", name: "Lê Trưởng Phòng Mkt", email: "mkt_mgr@test.com", system_role: "Leader/Part Leader", department_id: "dept-mkt", color: "#D946EF" },
+  { id: "usr-user26", name: "Phạm Phó Giám Đốc", email: "deputy@test.com", system_role: "Ban điều hành (BOD)", department_id: "dept-finance", color: "#EAB308" },
+  { id: "usr-user27", name: "Vũ Tư Vấn", email: "consultant1@test.com", system_role: "Kinh doanh (Sales)", department_id: "dept-sales", color: "#F97316" },
+  { id: "usr-user28", name: "Nguyễn Thực Tập Dev", email: "dev_intern@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-dev", color: "#F472B6" },
+  { id: "usr-user29", name: "Trần Thực Tập HR", email: "hr_intern@test.com", system_role: "Nhân viên (Staff)", department_id: "dept-hr", color: "#FB7185" }
 ];
 
 const INITIAL_PROJECTS = [
   { 
     id: "proj-1", 
-    name: "Xây dựng Hệ thống ERP Nội bộ", 
+    name: "Xây dựng Hệ thống CRM Khách hàng", 
     description: "Hệ thống quản lý nguồn lực doanh nghiệp tích hợp Nhân sự, Tài chính, và Báo cáo tự động.", 
     status: "Thực thi", 
     start_date: "2026-06-01", 
@@ -26,8 +50,8 @@ const INITIAL_PROJECTS = [
   },
   { 
     id: "proj-2", 
-    name: "Ứng dụng Di động Khách hàng v2.0", 
-    description: "Nâng cấp trải nghiệm người dùng, cải thiện hiệu năng và bổ dung tính năng thanh toán trực tuyến.", 
+    name: "Ứng dụng Di động E-Commerce Pay", 
+    description: "Nâng cấp trải nghiệm người dùng, cải thiện hiệu năng và bổ sung tính năng thanh toán trực tuyến.", 
     status: "Lập kế hoạch", 
     start_date: "2026-08-01", 
     end_date: "2026-11-30", 
@@ -47,124 +71,139 @@ const INITIAL_PROJECTS = [
 ];
 
 const INITIAL_PROJECT_MEMBERS = [
-  { id: "pmem-1", project_id: "proj-1", user_id: "usr-admin", project_role: "PM", joined_at: "2026-06-01T08:00:00Z" },
-  { id: "pmem-2", project_id: "proj-1", user_id: "usr-pm", project_role: "PM", joined_at: "2026-06-01T09:00:00Z" },
-  { id: "pmem-3", project_id: "proj-1", user_id: "usr-member1", project_role: "Member", joined_at: "2026-06-02T10:00:00Z" },
-  { id: "pmem-4", project_id: "proj-1", user_id: "usr-member2", project_role: "Member", joined_at: "2026-06-02T11:00:00Z" },
+  { id: "pmem-1", project_id: "proj-1", user_id: "usr-pm", project_role: "PM", joined_at: "2026-06-01T09:00:00Z" },
+  { id: "pmem-2", project_id: "proj-1", user_id: "usr-member1", project_role: "Member", joined_at: "2026-06-02T10:00:00Z" },
+  { id: "pmem-3", project_id: "proj-1", user_id: "usr-user07", project_role: "Member", joined_at: "2026-06-02T11:00:00Z" },
+  { id: "pmem-4", project_id: "proj-1", user_id: "usr-user08", project_role: "Member", joined_at: "2026-06-02T11:00:00Z" },
+  { id: "pmem-5", project_id: "proj-1", user_id: "usr-user11", project_role: "Member", joined_at: "2026-06-02T11:00:00Z" },
+  { id: "pmem-6", project_id: "proj-1", user_id: "usr-user13", project_role: "Member", joined_at: "2026-06-02T11:00:00Z" },
+  { id: "pmem-7", project_id: "proj-1", user_id: "usr-sales", project_role: "Member", joined_at: "2026-06-02T11:00:00Z" },
   
-  { id: "pmem-5", project_id: "proj-2", user_id: "usr-pm", project_role: "PM", joined_at: "2026-06-15T08:00:00Z" },
-  { id: "pmem-6", project_id: "proj-2", user_id: "usr-member1", project_role: "Member", joined_at: "2026-06-15T09:00:00Z" },
-  
-  { id: "pmem-7", project_id: "proj-3", user_id: "usr-admin", project_role: "PM", joined_at: "2026-07-01T08:00:00Z" },
-  { id: "pmem-8", project_id: "proj-3", user_id: "usr-member2", project_role: "Member", joined_at: "2026-07-01T09:00:00Z" }
+  { id: "pmem-8", project_id: "proj-2", user_id: "usr-user23", project_role: "PM", joined_at: "2026-06-15T08:00:00Z" },
+  { id: "pmem-9", project_id: "proj-2", user_id: "usr-pm", project_role: "Member", joined_at: "2026-06-15T09:00:00Z" },
+  { id: "pmem-10", project_id: "proj-2", user_id: "usr-member1", project_role: "Member", joined_at: "2026-06-15T09:00:00Z" },
+  { id: "pmem-11", project_id: "proj-2", user_id: "usr-user09", project_role: "Member", joined_at: "2026-06-15T09:00:00Z" },
+  { id: "pmem-12", project_id: "proj-2", user_id: "usr-user10", project_role: "Member", joined_at: "2026-06-15T09:00:00Z" },
+  { id: "pmem-13", project_id: "proj-2", user_id: "usr-user12", project_role: "Member", joined_at: "2026-06-15T09:00:00Z" },
+  { id: "pmem-14", project_id: "proj-2", user_id: "usr-user26", project_role: "Member", joined_at: "2026-06-15T09:00:00Z" },
+
+  { id: "pmem-15", project_id: "proj-3", user_id: "usr-hr", project_role: "PM", joined_at: "2026-07-01T08:00:00Z" },
+  { id: "pmem-16", project_id: "proj-3", user_id: "usr-admin", project_role: "Member", joined_at: "2026-07-01T09:00:00Z" },
+  { id: "pmem-17", project_id: "proj-3", user_id: "usr-user14", project_role: "Member", joined_at: "2026-07-01T09:00:00Z" },
+  { id: "pmem-18", project_id: "proj-3", user_id: "usr-user15", project_role: "Member", joined_at: "2026-07-01T09:00:00Z" },
+  { id: "pmem-19", project_id: "proj-3", user_id: "usr-user29", project_role: "Member", joined_at: "2026-07-01T09:00:00Z" }
 ];
 
 const INITIAL_TASKS = [
   { 
     id: "task-1", 
     project_id: "proj-1", 
-    title: "Phân tích yêu cầu nghiệp vụ kho bãi", 
-    description: "Họp với trưởng bộ phận Logistics để làm rõ quy trình nhập, xuất, kiểm kê kho và định hình luồng dữ liệu.", 
+    title: "Thiết kế cơ sơ dữ liệu CRM", 
+    description: "Thiết kế các bảng MySQL cho CRM và tạo mối quan hệ ràng buộc.", 
     assignee_id: "usr-member1", 
     priority: "Cao", 
     status: "Done", 
-    due_date: "2026-06-15"
+    due_date: "2026-07-20"
   },
   { 
     id: "task-2", 
     project_id: "proj-1", 
-    title: "Thiết kế cơ sở dữ liệu chi tiết (Schema)", 
-    description: "Thiết kế các bảng cho phân hệ Nhân sự, Tài chính và tích hợp với phân hệ bán hàng hiện tại.", 
-    assignee_id: "usr-pm", 
+    title: "Xây dựng API đăng nhập & phân quyền", 
+    description: "Cấu hình JWT & Middleware xác thực người dùng.", 
+    assignee_id: "usr-user07", 
     priority: "Cao", 
-    status: "Done", 
-    due_date: "2026-06-25"
+    status: "InProgress", 
+    due_date: "2026-07-25"
   },
   { 
     id: "task-3", 
     project_id: "proj-1", 
-    title: "Xây dựng API đăng ký/đăng nhập & phân quyền", 
-    description: "Cài đặt JWT Auth và Middleware phân quyền Role-based / Resource-based trên MySQL.", 
-    assignee_id: "usr-member2", 
-    priority: "Cao", 
-    status: "InProgress", 
-    due_date: "2026-07-20"
-  },
-  { 
-    id: "task-4", 
-    project_id: "proj-1", 
-    title: "Thiết kế Giao diện Trang chủ Dashboard", 
-    description: "Vẽ giao diện hiển thị biểu đồ doanh thu, tiến độ dự án và danh sách công việc khẩn cấp.", 
-    assignee_id: "usr-member1", 
+    title: "Tạo UI giao diện Dashboard CRM", 
+    description: "Vẽ giao diện dashboard hiển thị các biểu đồ thống kê.", 
+    assignee_id: "usr-user13", 
     priority: "Trung bình", 
     status: "Review", 
     due_date: "2026-07-15"
   },
   { 
+    id: "task-4", 
+    project_id: "proj-2", 
+    title: "Phác thảo Wireframe UI/UX E-Commerce", 
+    description: "Vẽ Wireframe chi tiết luồng thanh toán và giỏ hàng.", 
+    assignee_id: "usr-pm", 
+    priority: "Cao", 
+    status: "Done", 
+    due_date: "2026-07-10"
+  },
+  { 
     id: "task-5", 
-    project_id: "proj-1", 
-    title: "Tích hợp cổng thanh toán thử nghiệm", 
-    description: "Kết nối API với cổng sandbox VNPay/Momo để kiểm tra luồng nạp và thanh toán hóa đơn.", 
-    assignee_id: "usr-member2", 
-    priority: "Thấp", 
+    project_id: "proj-2", 
+    title: "Tích hợp cổng thanh toán Sandbox", 
+    description: "Cài đặt và cấu hình Viettel Pay SDK Sandbox.", 
+    assignee_id: "usr-user09", 
+    priority: "Cao", 
     status: "Todo", 
-    due_date: "2026-08-10"
+    due_date: "2026-08-01"
   },
   { 
     id: "task-6", 
     project_id: "proj-2", 
-    title: "Thu thập phản hồi người dùng bản v1.0", 
-    description: "Tổng hợp các đánh giá trên App Store/Play Store và các báo cáo lỗi từ đội chăm sóc khách hàng.", 
-    assignee_id: "usr-member1", 
+    title: "Viết API giỏ hàng và đặt hàng", 
+    description: "Phát triển API thêm/sửa/xóa sản phẩm trong giỏ hàng và tạo đơn hàng.", 
+    assignee_id: "usr-user10", 
     priority: "Trung bình", 
-    status: "Done", 
-    due_date: "2026-06-30"
+    status: "InProgress", 
+    due_date: "2026-07-30"
   },
   { 
     id: "task-7", 
-    project_id: "proj-2", 
-    title: "Phác thảo Wireframe UI/UX cho phiên bản mới", 
-    description: "Thiết kế luồng thanh toán 1-click và cải tiến giao diện giỏ hàng thân thiện hơn.", 
-    assignee_id: "usr-pm", 
+    project_id: "proj-3", 
+    title: "Sàng lọc hồ sơ ứng viên Tech Lead", 
+    description: "Đánh giá CV của các ứng viên nộp qua cổng tuyển dụng.", 
+    assignee_id: "usr-user14", 
     priority: "Cao", 
     status: "InProgress", 
-    due_date: "2026-08-05"
+    due_date: "2026-07-18"
+  },
+  { 
+    id: "task-8", 
+    project_id: "proj-3", 
+    title: "Lên lịch phỏng vấn vòng 1", 
+    description: "Gửi thư mời phỏng vấn và sắp xếp lịch hẹn cho ứng viên phù hợp.", 
+    assignee_id: "usr-user15", 
+    priority: "Trung bình", 
+    status: "Todo", 
+    due_date: "2026-07-22"
   }
 ];
 
 const INITIAL_SUBTASKS = [
-  { id: "sub-1", task_id: "task-1", title: "Phỏng vấn phòng Logistics", is_done: true },
-  { id: "sub-2", task_id: "task-1", title: "Phác thảo sơ đồ DFD cấp 1", is_done: true },
-  { id: "sub-3", task_id: "task-1", title: "Ký biên bản thống nhất yêu cầu", is_done: true },
-  
-  { id: "sub-4", task_id: "task-3", title: "Thiết lập MySQL Auth", is_done: true },
-  { id: "sub-5", task_id: "task-3", title: "Viết hàm Middleware phân quyền API", is_done: false },
-  { id: "sub-6", task_id: "task-3", title: "Viết Unit Test kiểm thử API", is_done: false },
-  
-  { id: "sub-7", task_id: "task-4", title: "Vẽ Wireframe trên Figma", is_done: true },
-  { id: "sub-8", task_id: "task-4", title: "Cắt HTML/CSS giao diện thô", is_done: false }
+  { id: "sub-1", task_id: "task-1", title: "Vẽ sơ đồ ERD chi tiết", is_done: true },
+  { id: "sub-2", task_id: "task-1", title: "Tạo script SQL khởi tạo", is_done: true },
+  { id: "sub-3", task_id: "task-2", title: "Cấu hình thư viện jwt", is_done: true },
+  { id: "sub-4", task_id: "task-2", title: "Viết middleware phân quyền", is_done: false },
+  { id: "sub-5", task_id: "task-3", title: "Thiết kế giao diện chart doanh thu", is_done: false }
 ];
 
 const INITIAL_COMMENTS = [
   { id: "comm-1", task_id: "task-1", user_id: "usr-pm", content: "Báo cáo rất chi tiết, tôi đã duyệt tài liệu này gửi cho khách hàng.", created_at: "2026-06-14T15:30:00Z" },
-  { id: "comm-2", task_id: "task-3", user_id: "usr-admin", content: "Nhớ chú ý kiểm tra SQL injection khi viết câu lệnh truy vấn nhé.", created_at: "2026-07-05T09:12:00Z" },
-  { id: "comm-3", task_id: "task-3", user_id: "usr-member2", content: "Dạ vâng chị, em đang cấu hình lại các hàm kiểm tra quyền truy cập.", created_at: "2026-07-05T10:00:00Z" }
+  { id: "comm-2", task_id: "task-2", user_id: "usr-admin", content: "Nhớ chú ý kiểm tra SQL injection khi viết câu lệnh truy vấn nhé.", created_at: "2026-07-05T09:12:00Z" }
 ];
 
 const INITIAL_TASK_CHATS = [
-  { id: "tchat-1", task_id: "task-3", sender_id: "usr-pm", content: "Tiến độ API auth thế nào rồi Charlie?", created_at: "2026-07-06T09:00:00Z" },
-  { id: "tchat-2", task_id: "task-3", sender_id: "usr-member2", content: "Em đang băm password bằng md5 và viết jwt sign rồi anh.", created_at: "2026-07-06T09:05:00Z" }
+  { id: "tchat-1", task_id: "task-2", sender_id: "usr-pm", content: "Tiến độ API auth thế nào rồi?", created_at: "2026-07-06T09:00:00Z" },
+  { id: "tchat-2", task_id: "task-2", sender_id: "usr-user07", content: "Em đang làm và viết jwt sign rồi anh.", created_at: "2026-07-06T09:05:00Z" }
 ];
 
 const INITIAL_PROJECT_ISSUES = [
-  { id: 1, issue_key: "ERP-101", project_id: "proj-1", summary: "Thiết kế giao diện Dashboard ERP", description: "Xây dựng layout Dashboard hiển thị các biểu đồ doanh thu và thống kê nhân sự.", type: "STORY", status: "DONE", priority: "HIGH", reporter_id: "usr-admin", assignee_id: "usr-pm", epic_id: null, parent_id: null, created_at: "2026-07-01T08:00:00Z", updated_at: "2026-07-02T10:00:00Z" },
-  { id: 2, issue_key: "ERP-102", project_id: "proj-1", summary: "Lỗi API đồng bộ dữ liệu tồn kho", description: "API trả về status 500 khi đồng bộ lượng lớn dữ liệu tồn kho từ tệp Excel.", type: "BUG", status: "IN_PROGRESS", priority: "CRITICAL", reporter_id: "usr-member2", assignee_id: "usr-member1", epic_id: null, parent_id: null, created_at: "2026-07-05T09:00:00Z", updated_at: "2026-07-05T11:00:00Z" },
-  { id: 3, issue_key: "PAY-101", project_id: "proj-2", summary: "Tích hợp cổng thanh toán Viettel Pay SDK", description: "Tải SDK và cấu hình các endpoints callback giao dịch.", type: "TASK", status: "TO_DO", priority: "MEDIUM", reporter_id: "usr-pm", assignee_id: "usr-sales", epic_id: null, parent_id: null, created_at: "2026-07-06T10:00:00Z", updated_at: "2026-07-06T10:00:00Z" }
+  { id: 1, issue_key: "CRM-101", project_id: "proj-1", summary: "Thiết kế Dashboard hiển thị KPI doanh số", description: "Xây dựng layout Dashboard hiển thị các biểu đồ doanh thu và thống kê khách hàng.", type: "STORY", status: "DONE", priority: "HIGH", reporter_id: "usr-sales", assignee_id: "usr-pm", epic_id: null, parent_id: null, created_at: "2026-07-01T08:00:00Z", updated_at: "2026-07-02T10:00:00Z" },
+  { id: 2, issue_key: "CRM-102", project_id: "proj-1", summary: "Lỗi null pointer exception khi lưu khách hàng không có email", description: "API trả về status 500 khi lưu một record khách hàng mới không chứa trường email.", type: "BUG", status: "IN_PROGRESS", priority: "CRITICAL", reporter_id: "usr-user11", assignee_id: "usr-member1", epic_id: null, parent_id: null, created_at: "2026-07-05T09:00:00Z", updated_at: "2026-07-05T11:00:00Z" },
+  { id: 3, issue_key: "PAY-101", project_id: "proj-2", summary: "Cập nhật SSL certificate cho sandbox API", description: "Cần cập nhật cấu hình SSL mới cho server sandbox để tránh lỗi kết nối TLS từ cổng thanh toán.", type: "TASK", status: "TO_DO", priority: "MEDIUM", reporter_id: "usr-user23", assignee_id: "usr-user09", epic_id: null, parent_id: null, created_at: "2026-07-06T10:00:00Z", updated_at: "2026-07-06T10:00:00Z" }
 ];
 
 const INITIAL_ISSUE_COMMENTS = [
-  { id: 1, issue_id: 1, user_id: "usr-pm", content: "Em đã thiết kế xong Figma và code React cơ bản rồi ạ.", created_at: "2026-07-02T09:00:00Z", updated_at: "2026-07-02T09:00:00Z" },
-  { id: 2, issue_id: 2, user_id: "usr-admin", content: "Hãy kiểm tra lại bộ nhớ đệm và phân trang khi đọc file Excel nhé!", created_at: "2026-07-05T10:00:00Z", updated_at: "2026-07-05T10:00:00Z" }
+  { id: 1, issue_id: 1, user_id: "usr-member1", content: "Em đã hoàn thành thiết kế Figma và React rồi, nhờ anh review nhé.", created_at: "2026-07-02T09:00:00Z", updated_at: "2026-07-02T09:00:00Z" },
+  { id: 2, issue_id: 2, user_id: "usr-pm", content: "Hãy kiểm tra lại validation ở tầng DTO trước khi lưu database nhé.", created_at: "2026-07-05T10:00:00Z", updated_at: "2026-07-05T10:00:00Z" }
 ];
 
 const INITIAL_ISSUE_HISTORY = [
@@ -174,8 +213,9 @@ const INITIAL_ISSUE_HISTORY = [
 
 const INITIAL_CHAT_ROOMS = [
   { id: "room-global", type: "global", name: "💬 Kênh thảo luận toàn công ty", project_id: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "room-proj-1", type: "project", name: "📂 Dự án ERP - Thảo luận chung", project_id: "proj-1", created_at: "2026-06-01T08:00:00Z" },
-  { id: "room-proj-2", type: "project", name: "📱 Dự án Mobile App - Kỹ thuật", project_id: "proj-2", created_at: "2026-06-15T08:00:00Z" }
+  { id: "room-crm", type: "project", name: "📂 Dự án CRM - Thảo luận chung", project_id: "proj-1", created_at: "2026-06-01T08:00:00Z" },
+  { id: "room-ecommerce", type: "project", name: "📂 Dự án Mobile App - Kỹ thuật", project_id: "proj-2", created_at: "2026-06-15T08:00:00Z" },
+  { id: "room-recruitment", type: "project", name: "📂 Tuyển dụng 2026 - Thảo luận chung", project_id: "proj-3", created_at: "2026-07-01T08:00:00Z" }
 ];
 
 const INITIAL_CHAT_ROOM_MEMBERS = [
@@ -184,16 +224,22 @@ const INITIAL_CHAT_ROOM_MEMBERS = [
   { id: "crm-3", room_id: "room-global", user_id: "usr-pm", joined_at: "2026-01-01T00:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
   { id: "crm-4", room_id: "room-global", user_id: "usr-sales", joined_at: "2026-01-01T00:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
   { id: "crm-5", room_id: "room-global", user_id: "usr-bod", joined_at: "2026-01-01T00:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
+  { id: "crm-6", room_id: "room-global", user_id: "usr-member1", joined_at: "2026-01-01T00:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
+  { id: "crm-7", room_id: "room-global", user_id: "usr-member2", joined_at: "2026-01-01T00:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
   
-  { id: "crm-6", room_id: "room-proj-1", user_id: "usr-admin", joined_at: "2026-06-01T08:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
-  { id: "crm-7", room_id: "room-proj-1", user_id: "usr-pm", joined_at: "2026-06-01T09:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
-  { id: "crm-8", room_id: "room-proj-1", user_id: "usr-member1", joined_at: "2026-06-02T10:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
-  { id: "crm-9", room_id: "room-proj-1", user_id: "usr-member2", joined_at: "2026-06-02T11:00:00Z", last_read_at: "2026-07-07T04:00:00Z" }
+  { id: "crm-8", room_id: "room-crm", user_id: "usr-pm", joined_at: "2026-06-01T09:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
+  { id: "crm-9", room_id: "room-crm", user_id: "usr-member1", joined_at: "2026-06-02T10:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
+  { id: "crm-10", room_id: "room-crm", user_id: "usr-user07", joined_at: "2026-06-02T11:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
+  { id: "crm-11", room_id: "room-crm", user_id: "usr-user08", joined_at: "2026-06-02T11:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
+
+  { id: "crm-12", room_id: "room-ecommerce", user_id: "usr-user23", joined_at: "2026-06-15T08:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
+  { id: "crm-13", room_id: "room-ecommerce", user_id: "usr-pm", joined_at: "2026-06-15T09:00:00Z", last_read_at: "2026-07-07T04:00:00Z" },
+  { id: "crm-14", room_id: "room-ecommerce", user_id: "usr-member1", joined_at: "2026-06-15T09:00:00Z", last_read_at: "2026-07-07T04:00:00Z" }
 ];
 
 const INITIAL_MESSAGES = [
   { id: "msg-1", room_id: "room-global", sender_id: "usr-admin", content: "Chào mừng mọi người đến với cổng quản trị doanh nghiệp mới của TopEng. Hãy cập nhật công việc hàng ngày của mình lên hệ thống nhé!", is_edited: false, created_at: "2026-07-06T08:30:00Z", attachments: [] },
-  { id: "msg-2", room_id: "room-global", sender_id: "usr-pm", content: "Dạ vâng chị. Toàn bộ các task cho dự án ERP và Mobile App đã được cập nhật.", is_edited: false, created_at: "2026-07-06T09:00:00Z", attachments: [] }
+  { id: "msg-2", room_id: "room-global", sender_id: "usr-pm", content: "Dạ vâng chị. Toàn bộ các task cho dự án CRM và E-Commerce đã được cập nhật.", is_edited: false, created_at: "2026-07-06T09:00:00Z", attachments: [] }
 ];
 
 const INITIAL_DOCUMENT_CATEGORIES = [
@@ -205,21 +251,25 @@ const INITIAL_DOCUMENT_CATEGORIES = [
 const INITIAL_DOCUMENTS = [
   { id: "doc-1", title: "Quy trình Onboarding thành viên mới", category_id: "cat-training", project_id: null, uploaded_by: "usr-admin", project_phase: null, created_at: "2026-01-15T09:00:00Z" },
   { id: "doc-2", title: "Nội quy & Chính sách bảo mật thông tin", category_id: "cat-general", project_id: null, uploaded_by: "usr-admin", project_phase: null, created_at: "2026-01-20T10:00:00Z" },
-  { id: "doc-3", title: "Sơ đồ kiến trúc & Database ERP (v1.0)", category_id: "cat-lifecycle", project_id: "proj-1", uploaded_by: "usr-pm", project_phase: "Lập kế hoạch", created_at: "2026-06-10T14:00:00Z" }
+  { id: "doc-3", title: "Tài liệu Thiết kế Kiến trúc CRM", category_id: "cat-lifecycle", project_id: "proj-1", uploaded_by: "usr-pm", project_phase: "Lập kế hoạch", created_at: "2026-06-10T14:00:00Z" },
+  { id: "doc-4", title: "Đặc tả yêu cầu nghiệp vụ E-Commerce (SRS)", category_id: "cat-lifecycle", project_id: "proj-2", uploaded_by: "usr-user23", project_phase: "Khởi tạo", created_at: "2026-06-18T10:00:00Z" },
+  { id: "doc-5", title: "Kế hoạch Tuyển dụng Kỹ sư AI 2026", category_id: "cat-general", project_id: "proj-3", uploaded_by: "usr-hr", project_phase: "Lập kế hoạch", created_at: "2026-07-02T15:00:00Z" }
 ];
 
 const INITIAL_DOCUMENT_VERSIONS = [
   { id: "ver-1", document_id: "doc-1", version_number: 1, file_url: "Onboarding_Process_v1.pdf", file_size: "1.2 MB", uploaded_by: "usr-admin", created_at: "2026-01-15T09:00:00Z" },
   { id: "ver-2", document_id: "doc-2", version_number: 1, file_url: "Security_Policy_v1.pdf", file_size: "2.4 MB", uploaded_by: "usr-admin", created_at: "2026-01-20T10:00:00Z" },
-  { id: "ver-3", document_id: "doc-3", version_number: 1, file_url: "ERP_DB_Schema_v1.pdf", file_size: "3.5 MB", uploaded_by: "usr-pm", created_at: "2026-06-10T14:00:00Z" }
+  { id: "ver-3", document_id: "doc-3", version_number: 1, file_url: "CRM_Architecture_v1.pdf", file_size: "4.8 MB", uploaded_by: "usr-pm", created_at: "2026-06-10T14:00:00Z" },
+  { id: "ver-4", document_id: "doc-4", version_number: 2, file_url: "Ecommerce_SRS_v2.pdf", file_size: "5.1 MB", uploaded_by: "usr-user23", created_at: "2026-06-18T10:00:00Z" },
+  { id: "ver-5", document_id: "doc-5", version_number: 1, file_url: "AI_Recruitment_Plan_2026.pdf", file_size: "1.5 MB", uploaded_by: "usr-hr", created_at: "2026-07-02T15:00:00Z" }
 ];
 
 const INITIAL_ACTIVITY_LOGS = [
-  { id: "log-1", user_id: "usr-admin", action_type: "CREATE", entity_type: "Project", entity_id: "proj-1", description: "đã tạo dự án 'Xây dựng Hệ thống ERP Nội bộ'", metadata: {}, created_at: "2026-06-01T08:00:00Z" }
+  { id: "log-1", user_id: "usr-admin", action_type: "CREATE", entity_type: "Project", entity_id: "proj-1", description: "đã tạo dự án 'Xây dựng Hệ thống CRM Khách hàng'", metadata: {}, created_at: "2026-06-01T08:00:00Z" }
 ];
 
 const INITIAL_NOTIFICATIONS = [
-  { id: "not-1", user_id: "usr-member1", title: "Công việc mới được giao", content: "Bạn được giao công việc 'Phân tích yêu cầu nghiệp vụ kho bãi' trong dự án ERP.", link_url: "#tasks", is_read: false, created_at: "2026-06-02T10:05:00Z" }
+  { id: "not-1", user_id: "usr-member1", title: "Công việc mới được giao", content: "Bạn được giao công việc 'Thiết kế cơ sơ dữ liệu CRM' trong dự án CRM.", link_url: "#tasks", is_read: false, created_at: "2026-06-02T10:05:00Z" }
 ];
 
 // Helper to save to localStorage safely in Next.js
@@ -374,9 +424,11 @@ export const MockDB = {
 
     if (membersList.length > 0) {
       let pMembers = await this.getProjectMembers();
+      const oldUserIds = pMembers.filter(m => m.project_id === resultProj.id).map(m => m.user_id);
       if (proj.id) {
         pMembers = pMembers.filter(m => m.project_id !== proj.id);
       }
+      const notifications = loadFromLocalStorage("notifications", INITIAL_NOTIFICATIONS);
       membersList.forEach(m => {
         pMembers.push({
           id: `pmem-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
@@ -385,8 +437,21 @@ export const MockDB = {
           project_role: m.project_role,
           joined_at: new Date().toISOString()
         });
+
+        if (!oldUserIds.includes(m.user_id)) {
+          notifications.push({
+            id: `not-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            user_id: m.user_id,
+            title: 'Bạn được thêm vào dự án mới',
+            content: `Bạn vừa được thêm vào dự án "${resultProj.name}" với vai trò ${m.project_role || 'Member'}.`,
+            link_url: `#projects/${resultProj.id}`,
+            is_read: false,
+            created_at: new Date().toISOString()
+          });
+        }
       });
       this.setProjectMembers(pMembers);
+      saveToLocalStorage("notifications", notifications);
     }
     return resultProj;
   },
@@ -505,6 +570,22 @@ export const MockDB = {
     };
     pMembers.push(newMember);
     this.setProjectMembers(pMembers);
+
+    // Create notification
+    const projects = await this.getProjects();
+    const proj = projects.find(p => p.id === projectId);
+    const notifications = loadFromLocalStorage("notifications", INITIAL_NOTIFICATIONS);
+    notifications.push({
+      id: `not-${Date.now()}`,
+      user_id: userId,
+      title: 'Bạn được thêm vào dự án mới',
+      content: `Bạn vừa được thêm vào dự án "${proj?.name || 'Dự án'}" với vai trò ${projectRole || 'Member'}.`,
+      link_url: `#projects/${projectId}`,
+      is_read: false,
+      created_at: new Date().toISOString()
+    });
+    saveToLocalStorage("notifications", notifications);
+
     return newMember;
   },
 

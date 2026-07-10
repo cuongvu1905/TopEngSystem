@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { db } from '@/utils/db';
 import { TaskModal } from '@/components/Modals';
+import Swal from 'sweetalert2';
 
 export default function Tasks() {
   const { currentUser, projects, tasks, projectMembers, users, reloadAll } = useApp();
@@ -65,7 +66,7 @@ export default function Tasks() {
     if (!task) return;
 
     if (!isMemberOfProject(task.project_id)) {
-      alert("Bạn không phải thành viên dự án này, không thể cập nhật công việc!");
+      Swal.fire({ icon: 'error', title: 'Quyền hạn', text: "Bạn không phải thành viên dự án này, không thể cập nhật công việc!" });
       return;
     }
 

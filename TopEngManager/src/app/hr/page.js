@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { db } from '@/utils/db';
 import Link from 'next/link';
+import Swal from 'sweetalert2';
 
 export default function HRManagement() {
   const { currentUser, users, projects, tasks, reloadAll } = useApp();
@@ -234,7 +235,7 @@ export default function HRManagement() {
 
               const trimmed = newRoleName.trim();
               if (localRoles.some(r => r.name.toLowerCase() === trimmed.toLowerCase())) {
-                alert("Vai trò này đã tồn tại!");
+                Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Vai trò này đã tồn tại!" });
                 return;
               }
 
@@ -259,9 +260,9 @@ export default function HRManagement() {
                   `đã thêm vai trò người dùng mới '${trimmed}'`
                 );
                 await reloadAll();
-                alert(`Đã thêm vai trò '${trimmed}' thành công! Hãy cấu hình quyền hạn cho vai trò này.`);
+                Swal.fire({ icon: 'success', title: 'Thành công', text: `Đã thêm vai trò '${trimmed}' thành công! Hãy cấu hình quyền hạn cho vai trò này.` });
               } catch (err) {
-                alert("Lỗi thêm vai trò: " + err.message);
+                Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi thêm vai trò: " + err.message });
               }
             }} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input 
@@ -351,9 +352,9 @@ export default function HRManagement() {
                     `đã cập nhật ma trận phân quyền hệ thống`
                   );
                   await reloadAll();
-                  alert("Đã lưu cấu hình phân quyền hệ thống thành công!");
+                  Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã lưu cấu hình phân quyền hệ thống thành công!" });
                 } catch (err) {
-                  alert("Lỗi lưu phân quyền: " + err.message);
+                  Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu phân quyền: " + err.message });
                 } finally {
                   setSavingPermissions(false);
                 }

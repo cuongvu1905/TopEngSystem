@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { DocumentModal } from '@/components/Modals';
+import Swal from 'sweetalert2';
 
 export default function Documents() {
   const { currentUser, projects, projectMembers, users, documents, documentVersions, documentCategories, reloadAll } = useApp();
@@ -26,7 +27,11 @@ export default function Documents() {
   const accessibleDocs = documents.filter(d => d.project_id === null || isMemberOfProject(d.project_id));
 
   const handleDownloadDoc = (att) => {
-    alert(`Đang mô phỏng tải về tệp tin: ${att.file_url}\nDung lượng: ${att.file_size || 'N/A'}`);
+    Swal.fire({
+      icon: 'info',
+      title: 'Đang tải file',
+      html: `Đang mô phỏng tải về tệp tin: <code>${att.file_url}</code><br>Dung lượng: <b>${att.file_size || 'N/A'}</b>`
+    });
   };
 
   const openDocVersion = (id) => {

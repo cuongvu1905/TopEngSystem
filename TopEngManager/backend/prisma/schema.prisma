@@ -164,6 +164,9 @@ model project {
   project_key         String?         @unique(map: "project_key") @db.VarChar(10)
   create_by           String?         @db.VarChar(36)
   customer_id         String?         @db.VarChar(36)
+  status              String?         @default("Thực thi") @db.VarChar(50)
+  start_date          String?         @db.VarChar(50)
+  end_date            String?         @db.VarChar(50)
   chatrooms           chatrooms[]
   dailyreport         dailyreport[]
   issue               issue[]
