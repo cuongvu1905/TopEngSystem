@@ -7,7 +7,22 @@ import { StreamChatAdapter } from '@/utils/streamChatClient';
 import { ProjectModal, TaskModal, DocumentModal } from '@/components/Modals';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import Swal from 'sweetalert2';
+import { getSwal } from '@/utils/swal';
+
+const Swal = {
+  fire: async (...args) => {
+    const instance = await getSwal();
+    return instance.fire(...args);
+  },
+  mixin: async (...args) => {
+    const instance = await getSwal();
+    return instance.mixin(...args);
+  },
+  close: async (...args) => {
+    const instance = await getSwal();
+    return instance.close(...args);
+  }
+};
 
 function parseDescription(desc) {
   try {

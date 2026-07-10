@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import { ProjectModal } from '@/components/Modals';
-import Swal from 'sweetalert2';
+import { getSwal } from '@/utils/swal';
 
 export default function Projects() {
   const { currentUser, projects, tasks, projectMembers, users, reloadAll, hasPermission } = useApp();
@@ -21,8 +21,9 @@ export default function Projects() {
     return projectMembers.some(m => m.project_id === projId && m.user_id === currentUser.id);
   };
 
-  const handleProjectClick = (pId) => {
+  const handleProjectClick = async (pId) => {
     if (!hasPermission('view_all_projects') && !projectMembers.some(m => m.project_id === pId && m.user_id === currentUser.id)) {
+      const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: 'Từ chối truy cập', text: "Bạn không có quyền truy cập vì không thuộc dự án này." });
       return;
     }

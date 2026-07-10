@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, MySQLAdapter, MockDB } from '@/utils/db';
 import { useApp } from '@/context/AppContext';
-import Swal from 'sweetalert2';
+import { getSwal } from '@/utils/swal';
 
 // Modal Backdrop Wrapper
 const ModalWrapper = ({ isOpen, children, onClose }) => {
@@ -145,6 +145,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
       onSaved();
       onClose();
     } catch (e) {
+      const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu dự án: " + e.message });
     }
   };
@@ -403,6 +404,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
       onSaved();
       onClose();
     } catch (e) {
+      const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu task: " + e.message });
     }
   };
@@ -808,6 +810,7 @@ export const DocumentModal = ({ isOpen, onClose, docId, projId, currentUser, cur
       onSaved();
       onClose();
     } catch (e) {
+      const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi tải lên tài liệu: " + e.message });
     }
   };
@@ -899,21 +902,24 @@ export const DatabaseModal = ({ isOpen, onClose, onSaved }) => {
     try {
       const adapter = dbType === 'mysql' ? MySQLAdapter : MockDB;
       const result = await adapter.testConnection();
+      const Swal = await getSwal();
       if (result.success) {
         Swal.fire({ icon: 'success', title: 'Thành công', text: result.message });
       } else {
         Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi kết nối: " + (result.error || "Không rõ nguyên nhân") });
       }
     } catch (err) {
+      const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: 'Thất bại', text: "Kết nối thất bại: " + err.message });
     } finally {
       setIsTesting(false);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     localStorage.setItem('ems_db_type', dbType);
+    const Swal = await getSwal();
     if (dbType === 'mysql') {
       Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã chuyển sang chế độ MySQL Database (Backend API)! Ứng dụng sẽ kết nối đến MySQL thông qua Route Handlers." });
     } else {

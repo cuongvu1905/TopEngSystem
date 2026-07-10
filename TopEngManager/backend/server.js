@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
@@ -25,7 +28,38 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Middlewares
-app.use(cors());
+// Configure restrictive CORS policy for production environment
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3000'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'Chính sách CORS của máy chủ không cho phép truy cập từ Origin được cung cấp.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Allow browser to download assets like uploaded images
+}));
+app.use(compression()); // Compress responses
+
+// Configure basic rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1500, // limit each IP to 1500 requests per windowMs
+  message: { error: 'Quá nhiều yêu cầu từ địa chỉ IP này, vui lòng thử lại sau 15 phút.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api', limiter);
+
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 

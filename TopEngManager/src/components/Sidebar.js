@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { db, MockDB } from '@/utils/db';
-import Swal from 'sweetalert2';
+import { getSwal } from '@/utils/swal';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { currentUser, reloadAll, hasPermission } = useApp();
 
   const handleResetData = async () => {
+    const Swal = await getSwal();
     const confirmResult = await Swal.fire({
       title: 'Thiết lập lại dữ liệu?',
       text: "Bạn có chắc chắn muốn thiết lập lại toàn bộ dữ liệu mẫu ban đầu? Tất cả thay đổi của bạn sẽ bị mất.",
@@ -29,7 +30,7 @@ export default function Sidebar() {
         await Swal.fire({ icon: 'success', title: 'Thành công', text: "Dữ liệu đã được khôi phục về mặc định!" });
         window.location.reload();
       } else {
-        Swal.fire({
+        await Swal.fire({
           icon: 'info',
           title: 'Thông báo',
           text: "Nút Reset chỉ áp dụng cho dữ liệu cục bộ (MockDB). Để thiết lập lại dữ liệu trên MySQL, vui lòng chạy lại script schema.sql trong trình quản lý cơ sở dữ liệu MySQL của bạn."

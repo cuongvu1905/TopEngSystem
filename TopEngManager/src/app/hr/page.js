@@ -4,7 +4,22 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { db } from '@/utils/db';
 import Link from 'next/link';
-import Swal from 'sweetalert2';
+import { getSwal } from '@/utils/swal';
+
+const Swal = {
+  fire: async (...args) => {
+    const instance = await getSwal();
+    return instance.fire(...args);
+  },
+  mixin: async (...args) => {
+    const instance = await getSwal();
+    return instance.mixin(...args);
+  },
+  close: async (...args) => {
+    const instance = await getSwal();
+    return instance.close(...args);
+  }
+};
 
 export default function HRManagement() {
   const { currentUser, users, projects, tasks, reloadAll } = useApp();

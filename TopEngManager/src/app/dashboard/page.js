@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import { db } from '@/utils/db';
 import { TaskModal } from '@/components/Modals';
-import Swal from 'sweetalert2';
+import { getSwal } from '@/utils/swal';
 
 // Helper to check if a user is mentioned in an issue
 const isMentionedInIssue = (issue, user, users) => {
@@ -119,12 +119,11 @@ export default function Dashboard() {
     if (!currentUser) return;
     try {
       setLoadingData(true);
-      // Fetch Issues
-      const issues = await db.getIssues(null).catch(() => []);
+      const [issues, reports] = await Promise.all([
+        db.getIssues(null).catch(() => []),
+        db.getDailyReports(currentUser.id, currentUser.system_role).catch(() => [])
+      ]);
       setAllIssues(issues);
-
-      // Fetch Reports
-      const reports = await db.getDailyReports(currentUser.id, currentUser.system_role).catch(() => []);
       setAllReports(reports);
     } catch (e) {
       console.error("Failed to load dashboard data: ", e);
@@ -309,6 +308,7 @@ export default function Dashboard() {
   const handleUpdateReportStatus = async (status) => {
     if (!selectedReportForPopup) return;
     const isMock = String(selectedReportForPopup.id).startsWith('mock-');
+    const Swal = await getSwal();
     if (isMock) {
       Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Không thể duyệt hoặc từ chối báo cáo mẫu." });
       return;

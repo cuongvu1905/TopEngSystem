@@ -293,7 +293,7 @@ export const MySQLAdapter = {
   uploadFile: async function(file) {
     const formData = new FormData();
     formData.append('file', file);
-    const backendUrl = 'http://localhost:5000/api';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:5000/api';
     const res = await fetch(`${backendUrl}/uploadFile`, {
       method: 'POST',
       body: formData

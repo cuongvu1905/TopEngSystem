@@ -5,7 +5,22 @@ import dynamic from 'next/dynamic';
 import { useApp } from '@/context/AppContext';
 import { db, MockDB } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
-import Swal from 'sweetalert2';
+import { getSwal } from '@/utils/swal';
+
+const Swal = {
+  fire: async (...args) => {
+    const instance = await getSwal();
+    return instance.fire(...args);
+  },
+  mixin: async (...args) => {
+    const instance = await getSwal();
+    return instance.mixin(...args);
+  },
+  close: async (...args) => {
+    const instance = await getSwal();
+    return instance.close(...args);
+  }
+};
 
 function Chat() {
   const { currentUser, projects, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();

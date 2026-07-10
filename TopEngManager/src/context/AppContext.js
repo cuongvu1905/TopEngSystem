@@ -3,6 +3,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '@/utils/db';
 
+// Patch window.performance.measure to prevent Next.js Turbopack crashes due to negative time stamp errors
+if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
+  const originalMeasure = window.performance.measure;
+  window.performance.measure = function (name, startMark, endMark) {
+    try {
+      return originalMeasure.apply(this, arguments);
+    } catch (e) {
+      console.warn("Performance measure error bypassed:", e);
+      return null;
+    }
+  };
+}
+
 const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
@@ -40,15 +53,13 @@ export const AppContextProvider = ({ children }) => {
         const profile = usersList.find(u => u.id === session.user.id);
 
         if (!profile) {
-          console.warn("Chưa tìm thấy thông tin cá nhân của user: ", session.user.id);
-          const fallbackUser = {
-            id: session.user.id,
-            name: session.user.full_name || session.user.email.split('@')[0],
-            email: session.user.email,
-            system_role: session.user.role_name || 'Nhân viên (Staff)',
-            color: '#1E40AF'
-          };
-          setCurrentUser(fallbackUser);
+          console.warn("Session user không tồn tại trong database (DB đã bị reset). Thực hiện Clear Session...");
+          if (db.isEnabled()) {
+            await db.client.auth.signOut().catch(() => {});
+          }
+          setCurrentUser(null);
+          setIsLoading(false);
+          return;
         } else {
           setCurrentUser({
             id: profile.id,
@@ -60,47 +71,47 @@ export const AppContextProvider = ({ children }) => {
         }
       }
 
-      // Load rest of the database tables
-      const uList = await db.getUsers().catch(() => []);
+      // Load rest of the database tables in parallel to optimize initial load speed (preventing waterfall delays)
+      const [
+        uList,
+        projs,
+        tks,
+        docs,
+        vers,
+        cats,
+        pm,
+        crm,
+        rooms,
+        nots,
+        logs,
+        rpConfig
+      ] = await Promise.all([
+        db.getUsers().catch(() => []),
+        db.getProjects().catch(() => []),
+        db.getTasks().catch(() => []),
+        db.getDocuments().catch(() => []),
+        db.getDocumentVersions().catch(() => []),
+        db.getDocumentCategories().catch(() => []),
+        db.getProjectMembers().catch(() => []),
+        db.getChatRoomMembers().catch(() => []),
+        db.getChatRooms().catch(() => []),
+        db.getNotifications(session.user.id).catch(() => []),
+        db.getActivityLogs().catch(() => []),
+        db.getRolesPermissions().catch(() => ({}))
+      ]);
+
       setUsers(uList);
-
-      const projs = await db.getProjects().catch(() => []);
       setProjects(projs);
-
-      const tks = await db.getTasks().catch(() => []);
       setTasks(tks);
-
-      const docs = await db.getDocuments().catch(() => []);
       setDocuments(docs);
-
-      const vers = await db.getDocumentVersions().catch(() => []);
       setDocumentVersions(vers);
-
-      const cats = await db.getDocumentCategories().catch(() => []);
       setDocumentCategories(cats);
-
-      const pm = await db.getProjectMembers().catch(() => []);
       setProjectMembers(pm);
-
-      const crm = await db.getChatRoomMembers().catch(() => []);
       setChatRoomMembers(crm);
-
-      const rooms = await db.getChatRooms().catch(() => []);
       setChatRooms(rooms);
-
-      const nots = await db.getNotifications(session.user.id).catch(() => []);
       setNotifications(nots);
-
-      const logs = await db.getActivityLogs().catch(() => []);
       setActivityLogs(logs);
-
-      // Load roles & permissions mapping
-      try {
-        const rpConfig = await db.getRolesPermissions();
-        setRolePermissions(rpConfig.role_permissions || {});
-      } catch (err) {
-        console.error("Failed to load role permissions:", err);
-      }
+      setRolePermissions(rpConfig?.role_permissions || {});
 
     } catch (e) {
       console.error("Context reload failed: ", e);

@@ -3,7 +3,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { db } from '@/utils/db';
-import Swal from 'sweetalert2';
+import { getSwal } from '@/utils/swal';
+
+const Swal = {
+  fire: async (...args) => {
+    const instance = await getSwal();
+    return instance.fire(...args);
+  },
+  mixin: async (...args) => {
+    const instance = await getSwal();
+    return instance.mixin(...args);
+  },
+  close: async (...args) => {
+    const instance = await getSwal();
+    return instance.close(...args);
+  }
+};
 
 export default function DailyReportsPage() {
   const { currentUser, users, projects } = useApp();
