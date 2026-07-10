@@ -202,7 +202,25 @@ export const MySQLAdapter = {
   },
 
   getIssueDetail: async function(issueId) {
-    return await callApi('getIssueDetail', { issueId });
+    let userId = '';
+    if (typeof window !== 'undefined') {
+      const sessionStr = localStorage.getItem('ems_mysql_session');
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          userId = session?.user?.id || '';
+        } catch (e) {}
+      }
+    }
+    return await callApi('getIssueDetail', { issueId, userId });
+  },
+
+  lockIssue: async function(issueId, userId) {
+    return await callApi('lockIssue', { issueId, userId });
+  },
+
+  unlockIssue: async function(issueId, userId) {
+    return await callApi('unlockIssue', { issueId, userId });
   },
 
   createIssue: async function(issue) {

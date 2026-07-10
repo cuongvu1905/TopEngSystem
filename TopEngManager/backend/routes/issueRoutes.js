@@ -27,6 +27,8 @@ router.post('/updateIssueStatus', issueController.updateIssueStatus);
 router.post('/deleteIssue', issueController.deleteIssue);
 router.post('/addComment', issueController.addComment);
 router.post('/deleteComment', issueController.deleteComment);
+router.post('/lockIssue', issueController.lockIssue);
+router.post('/unlockIssue', issueController.unlockIssue);
 
 // Route to handle single file upload
 router.post('/uploadFile', upload.single('file'), (req, res) => {

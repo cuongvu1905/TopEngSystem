@@ -684,7 +684,52 @@ export const MockDB = {
       return { ...h, user_name: u ? u.name : 'Unknown User' };
     });
 
-    return { issue, comments: formatComments, history: formatHistory };
+    let currentUserId = '';
+    if (typeof window !== 'undefined') {
+      const sessionStr = localStorage.getItem('ems_mock_session') || localStorage.getItem('ems_mysql_session');
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          currentUserId = session?.user?.id || session?.id || '';
+        } catch (e) {}
+      }
+    }
+    const locks = loadFromLocalStorage("ems_issue_locks", {});
+    const existingLock = locks[issue.id];
+    const now = Date.now();
+    const isLocked = existingLock && existingLock.userId !== currentUserId && (now - existingLock.lockedAt) < 15000;
+
+    return { 
+      issue, 
+      comments: formatComments, 
+      history: formatHistory,
+      lock: isLocked ? { isLocked: true, lockedBy: existingLock.userName } : { isLocked: false }
+    };
+  },
+
+  lockIssue: async function(issueId, userId) {
+    const locks = loadFromLocalStorage("ems_issue_locks", {});
+    const now = Date.now();
+    const existingLock = locks[issueId];
+    if (existingLock && existingLock.userId !== userId && (now - existingLock.lockedAt) < 15000) {
+      return { success: false, lockedBy: existingLock.userName, isLocked: true };
+    }
+    const users = loadFromLocalStorage("users", INITIAL_USERS);
+    const u = users.find(usr => usr.id === userId);
+    const userName = u ? u.name : 'Người dùng khác';
+    locks[issueId] = { userId, userName, lockedAt: now };
+    saveToLocalStorage("ems_issue_locks", locks);
+    return { success: true };
+  },
+
+  unlockIssue: async function(issueId, userId) {
+    const locks = loadFromLocalStorage("ems_issue_locks", {});
+    const existingLock = locks[issueId];
+    if (existingLock && existingLock.userId === userId) {
+      delete locks[issueId];
+      saveToLocalStorage("ems_issue_locks", locks);
+    }
+    return { success: true };
   },
 
   createIssue: async function(issue) {
@@ -737,17 +782,38 @@ export const MockDB = {
   },
 
   updateIssue: async function(issue, userId) {
+    const locks = loadFromLocalStorage("ems_issue_locks", {});
+    const existingLock = locks[issue.id];
+    if (existingLock && existingLock.userId !== userId && (Date.now() - existingLock.lockedAt) < 15000) {
+      throw new Error(`Issue is locked by ${existingLock.userName}`);
+    }
+
     const list = loadFromLocalStorage("project_issues", INITIAL_PROJECT_ISSUES);
     const idx = list.findIndex(i => i.id === Number(issue.id) || i.id === issue.id);
     if (idx === -1) throw new Error('Issue not found');
 
     const old = list[idx];
+    let finalStatus = issue.status;
+    try {
+      if (issue.description) {
+        const parsed = JSON.parse(issue.description);
+        if (parsed && Array.isArray(parsed.issueTasks)) {
+          const hasInProgress = parsed.issueTasks.some(t => t.status === 'Đang thực hiện');
+          if (hasInProgress && finalStatus === 'TO_DO') {
+            finalStatus = 'IN_PROGRESS';
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const updated = {
       ...old,
       summary: issue.summary,
       description: issue.description,
       type: issue.type,
-      status: issue.status,
+      status: finalStatus,
       priority: issue.priority,
       assignee_id: issue.assignee_id,
       epic_id: issue.epic_id,
@@ -777,7 +843,7 @@ export const MockDB = {
     trackChange('summary', old.summary, issue.summary);
     trackChange('description', old.description, issue.description);
     trackChange('type', old.type, issue.type);
-    trackChange('status', old.status, issue.status);
+    trackChange('status', old.status, finalStatus);
     trackChange('priority', old.priority, issue.priority);
     trackChange('assignee_id', old.assignee_id, issue.assignee_id);
     trackChange('epic_id', old.epic_id, issue.epic_id);
@@ -788,6 +854,12 @@ export const MockDB = {
   },
 
   updateIssueStatus: async function(issueId, status, userId) {
+    const locks = loadFromLocalStorage("ems_issue_locks", {});
+    const existingLock = locks[issueId];
+    if (existingLock && existingLock.userId !== userId && (Date.now() - existingLock.lockedAt) < 15000) {
+      throw new Error(`Issue is locked by ${existingLock.userName}`);
+    }
+
     const list = loadFromLocalStorage("project_issues", INITIAL_PROJECT_ISSUES);
     const idx = list.findIndex(i => i.id === Number(issueId) || i.id === issueId);
     if (idx === -1) throw new Error('Issue not found');

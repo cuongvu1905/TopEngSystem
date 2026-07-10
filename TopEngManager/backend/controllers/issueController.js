@@ -1,5 +1,7 @@
 const prisma = require('../config/prisma');
 
+const issueLocks = {}; // key: issueId, value: { userId, userName, lockedAt }
+
 exports.getIssues = async (req, res, next) => {
   try {
     const { projectId, searchQuery, assigneeId, priority, type } = req.body;
@@ -38,7 +40,7 @@ exports.getIssues = async (req, res, next) => {
 
 exports.getIssueDetail = async (req, res, next) => {
   try {
-    const { issueId } = req.body;
+    const { issueId, userId } = req.body;
     const issue = await prisma.issue.findUnique({
       where: { id: parseInt(issueId) }
     });
@@ -46,6 +48,10 @@ exports.getIssueDetail = async (req, res, next) => {
     if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
+
+    const existingLock = issueLocks[issueId];
+    const now = Date.now();
+    const isLocked = existingLock && existingLock.userId !== userId && (now - existingLock.lockedAt) < 15000;
 
     const dbComments = await prisma.issuecomments.findMany({
       where: { issue_id: parseInt(issueId) },
@@ -79,7 +85,12 @@ exports.getIssueDetail = async (req, res, next) => {
       user_name: ih.user ? ih.user.full_name : null
     }));
 
-    res.json({ issue, comments, history });
+    res.json({ 
+      issue, 
+      comments, 
+      history, 
+      lock: isLocked ? { isLocked: true, lockedBy: existingLock.userName } : { isLocked: false } 
+    });
   } catch (err) {
     next(err);
   }
@@ -165,13 +176,28 @@ exports.updateIssue = async (req, res, next) => {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
+    let finalStatus = status;
+    try {
+      if (description) {
+        const parsed = JSON.parse(description);
+        if (parsed && Array.isArray(parsed.issueTasks)) {
+          const hasInProgress = parsed.issueTasks.some(t => t.status === 'Đang thực hiện');
+          if (hasInProgress && finalStatus === 'TO_DO') {
+            finalStatus = 'IN_PROGRESS';
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     await prisma.issue.update({
       where: { id: parseInt(id) },
       data: {
         summary,
         description,
         type,
-        status,
+        status: finalStatus,
         priority,
         assignee_id: assignee_id || null,
         epic_id: epic_id ? parseInt(epic_id) : null,
@@ -196,7 +222,7 @@ exports.updateIssue = async (req, res, next) => {
     await trackChange('summary', old.summary, summary);
     await trackChange('description', old.description, description);
     await trackChange('type', old.type, type);
-    await trackChange('status', old.status, status);
+    await trackChange('status', old.status, finalStatus);
     await trackChange('priority', old.priority, priority);
     await trackChange('assignee_id', old.assignee_id, assignee_id);
     await trackChange('epic_id', old.epic_id, epic_id);
@@ -224,6 +250,12 @@ exports.updateIssue = async (req, res, next) => {
 exports.updateIssueStatus = async (req, res, next) => {
   try {
     const { issueId, status, userId } = req.body;
+
+    // Check lock
+    const lock = issueLocks[issueId];
+    if (lock && lock.isLocked && lock.lockedByUserId !== userId && lock.expiresAt > Date.now()) {
+      return res.status(403).json({ error: `Issue is locked by ${lock.lockedByUserName}` });
+    }
 
     const old = await prisma.issue.findUnique({
       where: { id: parseInt(issueId) },
@@ -307,6 +339,46 @@ exports.getIssueTags = async (req, res, next) => {
 
 exports.saveIssue = async (req, res, next) => {
   try {
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.lockIssue = async (req, res, next) => {
+  try {
+    const { issueId, userId } = req.body;
+    const now = Date.now();
+    const existingLock = issueLocks[issueId];
+
+    if (existingLock && existingLock.userId !== userId && (now - existingLock.lockedAt) < 15000) {
+      return res.json({ success: false, lockedBy: existingLock.userName, isLocked: true });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { user_id: userId }
+    });
+    const userName = user ? user.full_name : 'Người dùng khác';
+
+    issueLocks[issueId] = {
+      userId,
+      userName,
+      lockedAt: now
+    };
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.unlockIssue = async (req, res, next) => {
+  try {
+    const { issueId, userId } = req.body;
+    const existingLock = issueLocks[issueId];
+    if (existingLock && existingLock.userId === userId) {
+      delete issueLocks[issueId];
+    }
     res.json({ success: true });
   } catch (err) {
     next(err);
