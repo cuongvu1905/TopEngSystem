@@ -2453,7 +2453,7 @@ export default function ProjectDetail({ params }) {
 
               </div>
               <div className="modal-footer" style={{ borderTop: '1px solid var(--neutral-border)', padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsDetailModalOpen(false)}>Đóng</button>
+                {/* <button type="button" className="btn btn-secondary" onClick={() => setIsDetailModalOpen(false)}>Đóng</button> */}
                 <button type="button" className="btn btn-primary" onClick={handleSaveAllIssueTasks}>Lưu thay đổi</button>
               </div>
             </div>
@@ -2715,7 +2715,7 @@ export default function ProjectDetail({ params }) {
                       fontWeight: '600'
                     }}
                   >
-                    Xác nhận kết thúc
+                    Đóng Issue
                   </button>
                 )}
               </div>

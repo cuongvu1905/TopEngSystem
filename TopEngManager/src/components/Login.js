@@ -48,6 +48,11 @@ export default function Login() {
               <i className="fa-regular fa-envelope"></i>
               <input 
                 type="email" 
+                style={{
+                  backgroundColor: 'white',
+                  color: 'black',
+                  
+                }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com" 
