@@ -6,7 +6,7 @@ Tài liệu này tóm tắt toàn bộ cấu trúc và các chức năng đã tr
 
 ## 1. Cơ sở dữ liệu (Database)
 
-Hệ thống sử dụng cơ sở dữ liệu quan hệ **MySQL** (cấu hình trong `Top_Sys.sql`). Lược đồ cơ sở dữ liệu bao gồm **15 bảng** được thiết kế để chuẩn hóa dữ liệu và ràng buộc toàn vẹn khóa ngoại chặt chẽ:
+Hệ thống sử dụng cơ sở dữ liệu quan hệ **MySQL** (cấu hình trong \`Top_Sys.sql\`). Lược đồ cơ sở dữ liệu bao gồm **18 bảng** được thiết kế để chuẩn hóa dữ liệu và ràng buộc toàn vẹn khóa ngoại chặt chẽ:
 
 1. **`Department`**: Quản lý thông tin phòng ban (Phát triển phần mềm, Nhân sự, Kinh doanh, Marketing, Kế toán).
 2. **`Position`**: Quản lý chức vụ nhân viên (Thực tập sinh, Nhân viên, Trưởng nhóm, Trưởng phòng, Giám đốc).
@@ -27,7 +27,7 @@ Hệ thống sử dụng cơ sở dữ liệu quan hệ **MySQL** (cấu hình t
 17. **`Messages`**: Nội dung tin nhắn gửi trong phòng chat.
 18. **`MessagesAttachment`**: File đính kèm đi cùng tin nhắn trong chat.
 
-*Dữ liệu mẫu khởi tạo ban đầu được lưu trữ trong file [insertdemodata.sql](file:///d:/AntigravityFix/TopEngManager/insertdemodata.sql) chứa sẵn các tài khoản thử nghiệm tương ứng với các vai trò nhân sự khác nhau.*
+*Hệ thống đi kèm tập lệnh [clear_and_seed.js](file:///d:/AntigravityFix/TopEngManager/backend/clear_and_seed.js) dùng để làm sạch toàn bộ cơ sở dữ liệu và tự động tạo mới các tài khoản kiểm thử cho từng vai trò/vị trí. Thông tin đăng nhập chi tiết của các tài khoản này được lưu tại file [account_test.md](file:///d:/AntigravityFix/TopEngManager/account_test.md). Ngoài ra, dữ liệu mẫu cũ vẫn được lưu trữ tham khảo trong [insertdemodata.sql](file:///d:/AntigravityFix/TopEngManager/insertdemodata.sql).*
 
 ---
 
