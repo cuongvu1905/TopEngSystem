@@ -139,6 +139,7 @@ CREATE TABLE `Task` (
     `description` TEXT DEFAULT NULL,
     `priority` VARCHAR(50) NOT NULL DEFAULT 'Trung bình', -- Thấp, Trung bình, Cao
     `due_date` DATE DEFAULT NULL,
+    `status` VARCHAR(50) NOT NULL DEFAULT 'Todo', -- Todo, InProgress, Review, Done
     `create_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `update_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_task_project` FOREIGN KEY (`project_id`) REFERENCES `Project` (`project_id`) ON DELETE CASCADE,
@@ -189,7 +190,11 @@ CREATE TABLE `DailyReport` (
     `content` TEXT DEFAULT NULL,
     `file_url` TEXT DEFAULT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_report_user` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_id`) ON DELETE CASCADE
+    `project_id` VARCHAR(36) DEFAULT NULL,
+    `status` VARCHAR(50) DEFAULT 'Pending',
+    `comment` TEXT DEFAULT NULL,
+    CONSTRAINT `fk_report_user` FOREIGN KEY (`user_id`) REFERENCES `User` (`user_id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_report_project` FOREIGN KEY (`project_id`) REFERENCES `Project` (`project_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 12. CHAT_ROOMS TABLE

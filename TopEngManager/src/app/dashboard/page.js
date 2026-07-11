@@ -285,24 +285,39 @@ export default function Dashboard() {
     }
   };
 
+  const loadIssueDetail = async (issueId) => {
+    try {
+      setLoadingIssueDetail(true);
+      const res = await db.getIssueDetail(issueId);
+      setSelectedIssueDetail(res);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingIssueDetail(false);
+    }
+  };
+
   // Fetch issue details on selectedIssueIdForPopup change
   useEffect(() => {
     if (selectedIssueIdForPopup) {
-      setLoadingIssueDetail(true);
-      db.getIssueDetail(selectedIssueIdForPopup)
-        .then(res => {
-          setSelectedIssueDetail(res);
-        })
-        .catch(err => {
-          console.error(err);
-        })
-        .finally(() => {
-          setLoadingIssueDetail(false);
-        });
+      loadIssueDetail(selectedIssueIdForPopup);
     } else {
       setSelectedIssueDetail(null);
     }
   }, [selectedIssueIdForPopup]);
+
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newCommentText.trim() || !selectedIssueIdForPopup) return;
+    try {
+      await db.addComment(selectedIssueIdForPopup, currentUser.id, newCommentText);
+      setNewCommentText('');
+      await loadIssueDetail(selectedIssueIdForPopup);
+    } catch (err) {
+      const Swal = await getSwal();
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi thêm bình luận: " + err.message });
+    }
+  };
 
   // Update Report Approval/Rejection status in MySQL/MockDB
   const handleUpdateReportStatus = async (status) => {
@@ -1319,7 +1334,7 @@ export default function Dashboard() {
                     const task = myTasksSorted.find(t => t.id === selectedTaskIdForPopup);
                     if (!task) return <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>Vui lòng chọn công việc để xem chi tiết.</div>;
                     const taskProj = projects.find(p => p.id === task.project_id);
-                    const taskSubtasks = subtasks.filter(st => st.task_id === task.id);
+                    const taskSubtasks = (subtasks || []).filter(st => st.task_id === task.id);
                     
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

@@ -24,6 +24,7 @@ export const AppContextProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [subtasks, setSubtasks] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [documentVersions, setDocumentVersions] = useState([]);
   const [documentCategories, setDocumentCategories] = useState([]);
@@ -76,6 +77,7 @@ export const AppContextProvider = ({ children }) => {
         uList,
         projs,
         tks,
+        subs,
         docs,
         vers,
         cats,
@@ -89,6 +91,7 @@ export const AppContextProvider = ({ children }) => {
         db.getUsers().catch(() => []),
         db.getProjects().catch(() => []),
         db.getTasks().catch(() => []),
+        db.getSubtasks().catch(() => []),
         db.getDocuments().catch(() => []),
         db.getDocumentVersions().catch(() => []),
         db.getDocumentCategories().catch(() => []),
@@ -103,6 +106,7 @@ export const AppContextProvider = ({ children }) => {
       setUsers(uList);
       setProjects(projs);
       setTasks(tks);
+      setSubtasks(subs);
       setDocuments(docs);
       setDocumentVersions(vers);
       setDocumentCategories(cats);
@@ -132,6 +136,7 @@ export const AppContextProvider = ({ children }) => {
           setCurrentUser(null);
           setProjects([]);
           setTasks([]);
+          setSubtasks([]);
           setDocuments([]);
           setNotifications([]);
           setActivityLogs([]);
@@ -192,6 +197,7 @@ export const AppContextProvider = ({ children }) => {
     setCurrentUser(null);
     setProjects([]);
     setTasks([]);
+    setSubtasks([]);
     setDocuments([]);
     setNotifications([]);
     setActivityLogs([]);
@@ -210,6 +216,7 @@ export const AppContextProvider = ({ children }) => {
     users,
     projects,
     tasks,
+    subtasks,
     documents,
     documentVersions,
     documentCategories,

@@ -16,7 +16,7 @@ exports.getTasks = async (req, res, next) => {
       title: t.title,
       description: t.description,
       priority: t.priority,
-      status: 'Todo',
+      status: t.status || 'Todo',
       due_date: t.due_date,
       created_at: t.create_at,
       updated_at: t.update_at,
@@ -68,6 +68,7 @@ exports.saveTask = async (req, res, next) => {
           description: task.description,
           assignee_id: task.assignee_id || null,
           priority: task.priority || 'Trung bình',
+          status: task.status || 'Todo',
           due_date: task.due_date ? new Date(task.due_date) : null
         }
       });
@@ -79,6 +80,7 @@ exports.saveTask = async (req, res, next) => {
           description: task.description,
           assignee_id: task.assignee_id || null,
           priority: task.priority,
+          status: task.status,
           due_date: task.due_date ? new Date(task.due_date) : null
         }
       });
@@ -96,7 +98,7 @@ exports.saveTask = async (req, res, next) => {
       description: saved.description,
       priority: saved.priority,
       due_date: saved.due_date,
-      status: task.status || 'Todo',
+      status: saved.status || 'Todo',
       attachments: []
     });
   } catch (err) {
@@ -106,7 +108,11 @@ exports.saveTask = async (req, res, next) => {
 
 exports.updateTaskStatus = async (req, res, next) => {
   try {
-    // Task status column is mapped dynamically or saved locally, here we return success
+    const { taskId, status } = req.body;
+    await prisma.task.update({
+      where: { task_id: taskId },
+      data: { status: status }
+    });
     res.json({ success: true });
   } catch (err) {
     next(err);

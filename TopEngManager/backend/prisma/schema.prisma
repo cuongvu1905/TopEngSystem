@@ -210,6 +210,7 @@ model task {
   description String?   @db.Text
   priority    String    @default("Trung bình") @db.VarChar(50)
   due_date    DateTime? @db.Date
+  status      String    @default("Todo") @db.VarChar(50)
   create_at   DateTime  @default(now()) @db.Timestamp(0)
   update_at   DateTime  @default(now()) @db.Timestamp(0)
   subtask     subtask[]

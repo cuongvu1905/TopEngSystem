@@ -4,11 +4,12 @@ exports.getDailyReports = async (req, res, next) => {
   try {
     const { userId, userRole } = req.body;
 
+    const roleStr = typeof userRole === 'string' ? userRole : '';
     const isAdminOrManagement = 
-      userRole?.includes("Admin") || 
-      userRole?.includes("HR") || 
-      userRole?.includes("BOD") || 
-      userRole?.includes("Leader");
+      roleStr.includes("Admin") || 
+      roleStr.includes("HR") || 
+      roleStr.includes("BOD") || 
+      roleStr.includes("Leader");
 
     let where = {};
     if (!isAdminOrManagement && userId) {
