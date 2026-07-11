@@ -39,7 +39,7 @@
       "edit_task", "delete_task", "view_documents", "chat_tag_all_global", "chat_confirm_send"
     ],
     "Leader/Part Leader": [
-      "view_dashboard", "view_all_projects", "create_task", "edit_task", "delete_task",
+      "view_dashboard", "view_all_projects", "create_project", "create_task", "edit_task", "delete_task",
       "update_task_status", "create_issue", "edit_issue", "view_documents", "upload_documents",
       "chat_tag_all_project"
     ],

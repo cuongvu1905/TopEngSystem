@@ -867,6 +867,27 @@ export const MockDB = {
     const old = list[idx];
     if (old.status !== status) {
       list[idx].status = status;
+
+      let updatedDescription = old.description;
+      try {
+        if (old.description) {
+          const parsed = JSON.parse(old.description);
+          if (parsed && Array.isArray(parsed.issueTasks)) {
+            parsed.issueTasks = parsed.issueTasks.map(t => {
+              if (status === 'DONE') {
+                return { ...t, status: 'Hoàn thành' };
+              } else if (status === 'TO_DO') {
+                return { ...t, status: 'Chưa thực hiện' };
+              }
+              return t;
+            });
+            updatedDescription = JSON.stringify(parsed);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+      list[idx].description = updatedDescription;
       list[idx].updated_at = new Date().toISOString();
       saveToLocalStorage("project_issues", list);
 
@@ -1025,7 +1046,7 @@ export const MockDB = {
         "edit_task", "delete_task", "view_documents", "chat_tag_all_global", "chat_confirm_send"
       ],
       "Leader/Part Leader": [
-        "view_dashboard", "view_all_projects", "create_task", "edit_task", "delete_task",
+        "view_dashboard", "view_all_projects", "create_project", "create_task", "edit_task", "delete_task",
         "update_task_status", "create_issue", "edit_issue", "view_documents", "upload_documents",
         "chat_tag_all_project"
       ],

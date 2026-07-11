@@ -58,6 +58,13 @@ export default function DailyReportsPage() {
 
   useEffect(() => {
     loadReports();
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const projectIdParam = searchParams.get('projectId');
+      if (projectIdParam) {
+        setSelectedProjectId(projectIdParam);
+      }
+    }
   }, [currentUser]);
 
   const handleFileUpload = async (e) => {
@@ -120,7 +127,7 @@ export default function DailyReportsPage() {
   }
 
   return (
-    <div className="page-container" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="page-container" style={{ padding: '24px', width: '100%' }}>
       <div className="page-header" style={{ marginBottom: '24px', borderBottom: '1px solid var(--neutral-border)', paddingBottom: '16px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
           <i className="fa-solid fa-file-invoice" style={{ marginRight: '10px', color: 'var(--primary-color)' }}></i>

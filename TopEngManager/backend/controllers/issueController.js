@@ -259,15 +259,38 @@ exports.updateIssueStatus = async (req, res, next) => {
 
     const old = await prisma.issue.findUnique({
       where: { id: parseInt(issueId) },
-      select: { status: true, issue_key: true, project_id: true }
+      select: { status: true, issue_key: true, project_id: true, description: true }
     });
     if (!old) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
+    let updatedDescription = old.description;
+    try {
+      if (old.description) {
+        const parsed = JSON.parse(old.description);
+        if (parsed && Array.isArray(parsed.issueTasks)) {
+          parsed.issueTasks = parsed.issueTasks.map(t => {
+            if (status === 'DONE') {
+              return { ...t, status: 'Hoàn thành' };
+            } else if (status === 'TO_DO') {
+              return { ...t, status: 'Chưa thực hiện' };
+            }
+            return t;
+          });
+          updatedDescription = JSON.stringify(parsed);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     await prisma.issue.update({
       where: { id: parseInt(issueId) },
-      data: { status: status }
+      data: { 
+        status: status,
+        description: updatedDescription
+      }
     });
 
     if (old.status !== status) {

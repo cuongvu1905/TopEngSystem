@@ -810,7 +810,8 @@ export default function ProjectDetail({ params }) {
   useEffect(() => {
     let activeChannel = null;
     const initStreamChannel = async () => {
-      if (StreamChatAdapter.isEnabled() && chatRoomId && project) {
+      if (StreamChatAdapter.isEnabled() && chatRoomId && project && currentUser) {
+        await StreamChatAdapter.init(currentUser.id, currentUser.name);
         const channel = await StreamChatAdapter.joinChannel(chatRoomId, `📂 Dự án: ${project.name}`);
         if (channel) {
           activeChannel = channel;
@@ -1607,7 +1608,6 @@ export default function ProjectDetail({ params }) {
                     <th>Email</th>
                     <th>Vai trò chung</th>
                     <th>Vai trò dự án</th>
-                    <th>Ngày tham gia</th>
                     {canManageProject && <th>Hành động</th>}
                   </tr>
                 </thead>
@@ -1615,8 +1615,6 @@ export default function ProjectDetail({ params }) {
                   {pMembers.map(m => {
                     const u = users.find(usr => usr.id === m.user_id);
                     if (!u) return null;
-                    const date = new Date(m.joined_at);
-                    const dateStr = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
                     return (
                       <tr key={m.id}>
                         <td>
@@ -1630,7 +1628,6 @@ export default function ProjectDetail({ params }) {
                         <td>{u.email}</td>
                         <td>{u.system_role}</td>
                         <td><span className={`badge ${m.project_role === 'PM' ? 'badge-info' : 'badge-success'}`}>{m.project_role}</span></td>
-                        <td>{dateStr}</td>
                         {canManageProject && (
                           <td>
                             {m.user_id !== currentUser.id ? (
@@ -1784,7 +1781,7 @@ export default function ProjectDetail({ params }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>Báo cáo hàng ngày thuộc dự án</h3>
-              <Link href="/daily-reports" className="btn btn-primary btn-sm">
+              <Link href={`/daily-reports?projectId=${project.id}`} className="btn btn-primary btn-sm">
                 <i className="fa-solid fa-plus"></i> Viết báo cáo mới
               </Link>
             </div>
