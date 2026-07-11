@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useApp } from '@/context/AppContext';
-import { db, MockDB } from '@/utils/db';
+import { db } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
 import { getSwal } from '@/utils/swal';
 

@@ -1,7 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { db, MySQLAdapter, MockDB } from '@/utils/db';
+import { db } from '@/utils/db';
 import { useApp } from '@/context/AppContext';
 import { getSwal } from '@/utils/swal';
+
+const formatDateForInput = (dateVal) => {
+  if (!dateVal) return '';
+  if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+    return dateVal;
+  }
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    return '';
+  }
+};
 
 // Modal Backdrop Wrapper
 const ModalWrapper = ({ isOpen, children, onClose }) => {
@@ -66,8 +83,8 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
             setDescription(p.description || '');
             setCustomerId(p.customer_id || '');
             setStatus(p.status || 'Thực thi');
-            setStartDate(p.start_date || '2026-06-01');
-            setEndDate(p.end_date || '2026-12-31');
+            setStartDate(formatDateForInput(p.start_date) || '2026-06-01');
+            setEndDate(formatDateForInput(p.end_date) || '2026-12-31');
             
             const pMembers = (await db.getProjectMembers()).filter(m => m.project_id === projectId);
             const membersMap = {};
@@ -348,7 +365,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
             setTitle(t.title);
             setDescription(t.description || '');
             setAssigneeId(t.assignee_id || '');
-            setDueDate(t.due_date || '');
+            setDueDate(formatDateForInput(t.due_date) || '');
             setPriority(t.priority);
             setStatus(t.status);
             
@@ -886,96 +903,4 @@ export const DocumentModal = ({ isOpen, onClose, docId, projId, currentUser, cur
   );
 };
 
-// ================= 4. DATABASE CONFIG MODAL =================
-export const DatabaseModal = ({ isOpen, onClose, onSaved }) => {
-  const [dbType, setDbType] = useState('mysql');
-  const [isTesting, setIsTesting] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setDbType(localStorage.getItem('ems_db_type') || 'mysql');
-    }
-  }, [isOpen]);
-
-  const handleTestConnection = async () => {
-    setIsTesting(true);
-    try {
-      const adapter = dbType === 'mysql' ? MySQLAdapter : MockDB;
-      const result = await adapter.testConnection();
-      const Swal = await getSwal();
-      if (result.success) {
-        Swal.fire({ icon: 'success', title: 'Thành công', text: result.message });
-      } else {
-        Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi kết nối: " + (result.error || "Không rõ nguyên nhân") });
-      }
-    } catch (err) {
-      const Swal = await getSwal();
-      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Kết nối thất bại: " + err.message });
-    } finally {
-      setIsTesting(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    localStorage.setItem('ems_db_type', dbType);
-    const Swal = await getSwal();
-    if (dbType === 'mysql') {
-      Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã chuyển sang chế độ MySQL Database (Backend API)! Ứng dụng sẽ kết nối đến MySQL thông qua Route Handlers." });
-    } else {
-      Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã chuyển sang chế độ Mock Database cục bộ!" });
-    }
-    onSaved();
-    onClose();
-  };
-
-  return (
-    <ModalWrapper isOpen={isOpen} onClose={onClose}>
-      <div className="modal-content">
-        <div className="modal-header">
-          <h3>Cấu hình Cơ sở dữ liệu</h3>
-          <button className="btn-close-modal" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <p style={{ marginBottom: '16px', fontSize: '13px', color: 'var(--neutral-muted)' }}>
-              Hệ thống hỗ trợ chạy bằng Mock Database lưu trữ trên Browser hoặc MySQL thực tế trên Server.
-            </p>
-            <div className="form-group">
-              <label>Phương thức lưu trữ</label>
-              <select value={dbType} onChange={(e) => setDbType(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', width: '100%', outline: 'none' }}>
-                <option value="mock">Mock Database (Lưu trữ LocalStorage - Phù hợp kiểm thử và Demo)</option>
-                <option value="mysql">MySQL Database (Chạy qua Route Handlers API - Yêu cầu kết nối DB thực)</option>
-              </select>
-            </div>
-            
-            {dbType === 'mysql' && (
-              <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--neutral-light)', borderRadius: '6px', border: '1px solid var(--neutral-border)' }}>
-                <div style={{ fontSize: '12px', color: 'var(--neutral-dark)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <i className="fa-solid fa-circle-info" style={{ color: 'var(--primary-color)' }}></i>
-                  Cấu hình MySQL trong tệp <code>.env.local</code> trên máy chủ:
-                </div>
-                <pre style={{ fontSize: '11px', marginTop: '8px', backgroundColor: '#e2e8f0', padding: '8px', borderRadius: '4px', color: '#0f172a', overflowX: 'auto', fontFamily: 'monospace' }}>
-{`MYSQL_HOST=localhost
-MYSQL_PORT=3306
-MYSQL_USER=root
-MYSQL_PASSWORD=your_password
-MYSQL_DATABASE=topsystemdb`}
-                </pre>
-              </div>
-            )}
-          </div>
-          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button type="button" className="btn" style={{ backgroundColor: '#2563EB', color: '#fff', fontSize: '13px', padding: '6px 12px', borderRadius: '4px' }} onClick={handleTestConnection} disabled={isTesting}>
-              {isTesting ? 'Đang thử kết nối...' : 'Kiểm tra kết nối'}
-            </button>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="button" className="btn btn-secondary" onClick={onClose}>Hủy</button>
-              <button type="submit" className="btn btn-primary">Lưu cấu hình</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </ModalWrapper>
-  );
-};

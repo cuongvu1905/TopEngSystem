@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, use } from 'react';
 import { useApp } from '@/context/AppContext';
-import { db, MockDB } from '@/utils/db';
+import { db } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
 import { ProjectModal, TaskModal, DocumentModal } from '@/components/Modals';
 import Link from 'next/link';
@@ -21,6 +21,23 @@ const Swal = {
   close: async (...args) => {
     const instance = await getSwal();
     return instance.close(...args);
+  }
+};
+
+const formatDateForInput = (dateVal) => {
+  if (!dateVal) return '';
+  if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+    return dateVal;
+  }
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    return '';
   }
 };
 
@@ -101,6 +118,7 @@ export default function ProjectDetail({ params }) {
   const [issuePriority, setIssuePriority] = useState('MEDIUM');
   const [issueAssigneeId, setIssueAssigneeId] = useState('');
   const [issueAssigneeIds, setIssueAssigneeIds] = useState([]); // Multi-select related members
+  const [jiraCreateAssigneeIds, setJiraCreateAssigneeIds] = useState([]);
   const [isLockedByOther, setIsLockedByOther] = useState(false);
   const [lockOwnerName, setLockOwnerName] = useState('');
   const lockIntervalRef = useRef(null);
@@ -489,7 +507,7 @@ export default function ProjectDetail({ params }) {
       
       setDetailText(parsed.text || '');
       setEditIssueDesc(parsed.text || '');
-      setJiraDetailDeadline(parsed.deadline || '');
+      setJiraDetailDeadline(formatDateForInput(parsed.deadline) || '');
       setJiraDetailHienTrang(parsed.hientrang || '');
       setJiraDetailNguyenNhan(parsed.nguyennhan || '');
       setJiraDetailHuongGiaiQuyet(parsed.huonggiaiquyet || '');
@@ -1198,7 +1216,7 @@ export default function ProjectDetail({ params }) {
             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               <input
                 type="date"
-                value={project.start_date || ''}
+                value={formatDateForInput(project.start_date) || ''}
                 onChange={async (e) => {
                   try {
                     const updatedProj = { ...project, start_date: e.target.value };
@@ -1215,7 +1233,7 @@ export default function ProjectDetail({ params }) {
               <span>~</span>
               <input
                 type="date"
-                value={project.end_date || ''}
+                value={formatDateForInput(project.end_date) || ''}
                 onChange={async (e) => {
                   try {
                     const updatedProj = { ...project, end_date: e.target.value };
@@ -1231,7 +1249,7 @@ export default function ProjectDetail({ params }) {
               />
             </div>
           ) : (
-            <span>{project.start_date} ~ {project.end_date}</span>
+            <span>{project.start_date ? new Date(project.start_date).toLocaleDateString('vi-VN') : 'N/A'} ~ {project.end_date ? new Date(project.end_date).toLocaleDateString('vi-VN') : 'N/A'}</span>
           )}
         </div>
         <div className="project-meta-item">
@@ -1382,6 +1400,7 @@ export default function ProjectDetail({ params }) {
                   setIssueStatus('TO_DO');
                   setIssuePriority('MEDIUM');
                   setIssueAssigneeId('');
+                  setJiraCreateAssigneeIds([]);
                   setIssueAssigneesText('');
                   setProjectTasks([]);
                   setJiraCreateAssigneeSearchQuery('');
@@ -1870,7 +1889,7 @@ export default function ProjectDetail({ params }) {
                   Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Vui lòng gắn Hạn chót (Deadline) cho Issue!" });
                   return;
                 }
-                if (!issueAssigneeId) {
+                if (jiraCreateAssigneeIds.length === 0) {
                   Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Vui lòng chọn Người chịu trách nhiệm cho Issue!" });
                   return;
                 }
@@ -1882,8 +1901,8 @@ export default function ProjectDetail({ params }) {
                 }
 
                 try {
-                  const assigneeUser = users.find(u => u.id === issueAssigneeId);
-                  const calculatedAssigneesText = assigneeUser ? `@${assigneeUser.name} ` : '';
+                  const selectedUsers = users.filter(u => jiraCreateAssigneeIds.includes(u.id));
+                  const calculatedAssigneesText = selectedUsers.map(u => `@${u.name}`).join(' ') + (selectedUsers.length > 0 ? ' ' : '');
 
                   const serializedDescription = JSON.stringify({
                     text: issueDesc,
@@ -1893,7 +1912,8 @@ export default function ProjectDetail({ params }) {
                     ketqua: jiraCreateKetQua,
                     deadline: jiraCreateDeadline,
                     issueTasks: projectTasks,
-                    assigneesText: calculatedAssigneesText
+                    assigneesText: calculatedAssigneesText,
+                    relatedUserIds: jiraCreateAssigneeIds
                   });
 
                   const newIssue = await db.createIssue({
@@ -1904,7 +1924,7 @@ export default function ProjectDetail({ params }) {
                     status: issueStatus,
                     priority: issuePriority,
                     reporter_id: currentUser.id,
-                    assignee_id: issueAssigneeId || null
+                    assignee_id: jiraCreateAssigneeIds[0] || null
                   });
 
                   await db.logActivity(currentUser.id, "CREATE_ISSUE", "Issue", `iss-${Date.now()}`, `đã báo cáo issue mới '${issueTitle}'`);
@@ -1923,6 +1943,12 @@ export default function ProjectDetail({ params }) {
                   setIssueStatus('TO_DO');
                   setIssuePriority('MEDIUM');
                   setIssueAssigneeId('');
+                  setJiraCreateAssigneeIds([]);
+                  setJiraCreateDeadline('');
+                  setJiraCreateHienTrang('');
+                  setJiraCreateNguyenNhan('');
+                  setJiraCreateHuongGiaiQuyet('');
+                  setJiraCreateKetQua('');
                   setIsIssueModalOpen(false);
                   Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã tạo issue mới thành công!" });
                 } catch (err) {
@@ -2002,7 +2028,7 @@ export default function ProjectDetail({ params }) {
                           <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '12px', textAlign: 'center' }}>Không tìm thấy nhân viên phù hợp</div>
                         ) : (
                           filteredCreateAssignees.map(m => {
-                            const isChecked = issueAssigneeId === m.id;
+                            const isChecked = jiraCreateAssigneeIds.includes(m.id);
                             return (
                               <div className="member-select-row" key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
                                 <div className="member-select-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2010,7 +2036,13 @@ export default function ProjectDetail({ params }) {
                                     type="checkbox" 
                                     id={`jira-create-assignee-check-${m.id}`} 
                                     checked={isChecked} 
-                                    onChange={() => setIssueAssigneeId(isChecked ? '' : m.id)}
+                                    onChange={() => {
+                                      if (isChecked) {
+                                        setJiraCreateAssigneeIds(prev => prev.filter(id => id !== m.id));
+                                      } else {
+                                        setJiraCreateAssigneeIds(prev => [...prev, m.id]);
+                                      }
+                                    }}
                                   />
                                   <label htmlFor={`jira-create-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>{m.name} ({m.project_role})</label>
                                 </div>
@@ -2067,7 +2099,7 @@ export default function ProjectDetail({ params }) {
                             <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
                               <input
                                 type="date"
-                                value={row.deadline}
+                                value={formatDateForInput(row.deadline) || ''}
                                 onChange={(e) => handleIssueTaskChange(row.id, 'deadline', e.target.value)}
                                 style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '12.5px' }}
                               />
@@ -2242,7 +2274,7 @@ export default function ProjectDetail({ params }) {
                             <td style={{ padding: '6px', border: '1px solid #cbd5e1' }}>
                               <input
                                 type="date"
-                                value={row.deadline}
+                                value={formatDateForInput(row.deadline) || ''}
                                 onChange={(e) => handleIssueTaskChange(row.id, 'deadline', e.target.value)}
                                 disabled={isLockedByOther}
                                 style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '12.5px' }}

@@ -4,40 +4,13 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import { db, MockDB } from '@/utils/db';
-import { getSwal } from '@/utils/swal';
+
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { currentUser, reloadAll, hasPermission } = useApp();
 
-  const handleResetData = async () => {
-    const Swal = await getSwal();
-    const confirmResult = await Swal.fire({
-      title: 'Thiết lập lại dữ liệu?',
-      text: "Bạn có chắc chắn muốn thiết lập lại toàn bộ dữ liệu mẫu ban đầu? Tất cả thay đổi của bạn sẽ bị mất.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Đồng ý',
-      cancelButtonText: 'Hủy'
-    });
-    if (confirmResult.isConfirmed) {
-      if (db === MockDB) {
-        MockDB.resetAll();
-        localStorage.removeItem("ems_current_user_id");
-        await Swal.fire({ icon: 'success', title: 'Thành công', text: "Dữ liệu đã được khôi phục về mặc định!" });
-        window.location.reload();
-      } else {
-        await Swal.fire({
-          icon: 'info',
-          title: 'Thông báo',
-          text: "Nút Reset chỉ áp dụng cho dữ liệu cục bộ (MockDB). Để thiết lập lại dữ liệu trên MySQL, vui lòng chạy lại script schema.sql trong trình quản lý cơ sở dữ liệu MySQL của bạn."
-        });
-      }
-    }
-  };
+
 
   if (!currentUser) return null;
 
@@ -105,9 +78,6 @@ export default function Sidebar() {
             <span>{currentUser.system_role}</span>
           </div>
         </div>
-        <button onClick={handleResetData} title="Reset dữ liệu về mặc định" className="btn-reset-icon">
-          <i className="fa-solid fa-arrows-rotate"></i>
-        </button>
       </div>
     </aside>
   );

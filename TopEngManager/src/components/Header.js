@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
-import { db, MockDB } from '@/utils/db';
-import { DatabaseModal } from '@/components/Modals';
+import { db } from '@/utils/db';
 import { usePathname, useRouter } from 'next/navigation';
 
 export default function Header() {
   const { currentUser, logout, users, notifications, reloadAll } = useApp();
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -119,16 +117,6 @@ export default function Header() {
               </div>
               <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button 
-                  onClick={() => {
-                    setIsSwitcherOpen(false);
-                    setIsDatabaseModalOpen(true);
-                  }}
-                  className="btn btn-secondary btn-sm" 
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: 'var(--neutral-light)', border: '1px solid var(--neutral-border)', color: 'var(--neutral-dark)' }}
-                >
-                  <i className="fa-solid fa-database"></i> Cấu hình Database
-                </button>
-                <button 
                   onClick={handleLogout} 
                   className="btn btn-danger btn-sm" 
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
@@ -140,13 +128,6 @@ export default function Header() {
           </div>
         </div>
       </header>
-
-      {/* Connection modal */}
-      <DatabaseModal 
-        isOpen={isDatabaseModalOpen} 
-        onClose={() => setIsDatabaseModalOpen(false)} 
-        onSaved={() => window.location.reload()} 
-      />
     </>
   );
 }
