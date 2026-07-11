@@ -25,6 +25,7 @@ export default function HRManagement() {
   const { currentUser, users, projects, tasks, reloadAll } = useApp();
   const [activeTab, setActiveTab] = useState('users');
   const [roles, setRoles] = useState([]);
+  const [departments, setDepartments] = useState([]);
   
   // Create account states
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +33,7 @@ export default function HRManagement() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [roleId, setRoleId] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,20 +52,26 @@ export default function HRManagement() {
   const isAdmin = currentUser?.system_role?.includes("Admin");
   const isHR = currentUser?.system_role?.includes("Nhân sự");
 
-  const loadRoles = async () => {
+  const loadSelectOptions = async () => {
     try {
       const list = await db.getRoles();
       setRoles(list);
       if (list.length > 0 && !roleId) {
         setRoleId(list[0].id);
       }
+
+      const depts = await db.getDepartments();
+      setDepartments(depts);
+      if (depts.length > 0 && !departmentId) {
+        setDepartmentId(depts[0].department_id);
+      }
     } catch (err) {
-      console.error("Failed to load roles:", err);
+      console.error("Failed to load select options:", err);
     }
   };
 
   useEffect(() => {
-    loadRoles();
+    loadSelectOptions();
   }, [activeTab]);
 
   useEffect(() => {
@@ -96,14 +104,17 @@ export default function HRManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fullName || !email || !password || !roleId) return;
+    if (!fullName || !email || !password || !roleId || !departmentId) {
+      setErrorMsg('Vui lòng điền đầy đủ thông tin bắt buộc, bao gồm cả phòng ban.');
+      return;
+    }
 
     setErrorMsg('');
     setSuccessMsg('');
     setLoading(true);
 
     try {
-      await db.createUser(email, password, fullName, roleId);
+      await db.createUser(email, password, fullName, roleId, departmentId);
       setSuccessMsg('Đã cấp tài khoản thành công cho nhân viên mới!');
       
       // Log activity
@@ -119,6 +130,7 @@ export default function HRManagement() {
       setFullName('');
       setEmail('');
       setPassword('');
+      setDepartmentId(departments.length > 0 ? departments[0].department_id : '');
       setIsOpen(false);
       
       await reloadAll();
@@ -203,7 +215,7 @@ export default function HRManagement() {
                   <th>Họ và tên</th>
                   <th>Địa chỉ Email</th>
                   <th>Vai trò hệ thống</th>
-                  <th>Màu nhận diện</th>
+                  <th>Phòng ban</th>
                 </tr>
               </thead>
               <tbody>
@@ -222,10 +234,7 @@ export default function HRManagement() {
                       <span className="badge badge-info">{u.system_role || 'Nhân viên'}</span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: u.color }}></span>
-                        <code style={{ fontSize: '11.5px', color: 'var(--neutral-muted)' }}>{u.color}</code>
-                      </div>
+                      {u.department_name || 'Chưa phân phòng'}
                     </td>
                   </tr>
                 ))}
@@ -545,6 +554,16 @@ export default function HRManagement() {
                     <select value={roleId} onChange={(e) => setRoleId(e.target.value)} style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} required>
                       {roles.map(r => (
                         <option value={r.id} key={r.id}>{r.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Phòng ban trực thuộc <span className="required">*</span></label>
+                    <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} required>
+                      <option value="">-- Chọn phòng ban --</option>
+                      {departments.map(d => (
+                        <option value={d.department_id} key={d.department_id}>{d.name}</option>
                       ))}
                     </select>
                   </div>

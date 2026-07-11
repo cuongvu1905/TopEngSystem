@@ -108,14 +108,15 @@ exports.createIssue = async (req, res, next) => {
 
     // Get maximum issue key number
     const maxResult = await prisma.$queryRaw`
-      SELECT MAX(CAST(SUBSTRING_INDEX(issue_key, '-', -1) AS UNSIGNED)) as max_num 
+      SELECT MAX(CAST(SUBSTRING_INDEX(issue_key, '_', -1) AS UNSIGNED)) as max_num 
       FROM Issue 
       WHERE project_id = ${project_id}
     `;
 
     const maxNum = maxResult[0]?.max_num;
-    const nextNum = (Number(maxNum) || 100) + 1; // start from 101 like JIRA
-    const issueKey = `${projKey}-${nextNum}`;
+    const nextNum = (Number(maxNum) || 0) + 1;
+    const paddedNum = String(nextNum).padStart(3, '0');
+    const issueKey = `${projKey}_${paddedNum}`;
 
     const result = await prisma.issue.create({
       data: {

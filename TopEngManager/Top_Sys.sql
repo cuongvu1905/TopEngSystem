@@ -30,7 +30,9 @@ DROP TABLE IF EXISTS `Customer`;
 CREATE TABLE `Customer` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `customer_id` VARCHAR(36) NOT NULL UNIQUE,
-    `customer_name` VARCHAR(255) NOT NULL
+    `customer_name` VARCHAR(255) NOT NULL,
+    `address` VARCHAR(255) DEFAULT NULL,
+    `tax_code` VARCHAR(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. USER TABLE

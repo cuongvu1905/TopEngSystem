@@ -292,8 +292,8 @@ export const MySQLAdapter = {
     return await callApi('getRoles');
   },
 
-  createUser: async function(email, password, fullName, roleId) {
-    return await callApi('createUser', { email, password, fullName, roleId });
+  createUser: async function(email, password, fullName, roleId, departmentId = null) {
+    return await callApi('createUser', { email, password, fullName, roleId, departmentId });
   },
 
   testConnection: async function() {
@@ -302,6 +302,10 @@ export const MySQLAdapter = {
 
   getCustomers: async function() {
     return await callApi('getCustomers');
+  },
+
+  saveCustomer: async function(customer) {
+    return await callApi('saveCustomer', { customer });
   },
 
   getDepartments: async function() {
@@ -331,6 +335,10 @@ export const MySQLAdapter = {
 
   updateDailyReportStatus: async function(reportId, status, comment) {
     return await callApi('updateDailyReportStatus', { reportId, status, comment });
+  },
+
+  updateDailyReport: async function(reportId, content, fileUrl, projectId) {
+    return await callApi('updateDailyReport', { reportId, content, fileUrl, projectId });
   },
 
   getRolesPermissions: async function() {

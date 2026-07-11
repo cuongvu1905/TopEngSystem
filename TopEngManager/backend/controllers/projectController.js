@@ -3,17 +3,21 @@ const prisma = require('../config/prisma');
 exports.getProjects = async (req, res, next) => {
   try {
     const dbProjects = await prisma.$queryRaw`SELECT * FROM Project`;
-    const projects = dbProjects.map(p => ({
-      id: p.project_id,
-      name: p.project_name,
-      description: p.project_description,
-      project_key: p.project_key || p.project_id.split('-').pop().toUpperCase().slice(0, 5),
-      status: p.status || 'Thực thi',
-      start_date: p.start_date || '2026-06-01',
-      end_date: p.end_date || '2026-12-31',
-      create_by: p.create_by,
-      is_public: true
-    }));
+    const projects = dbProjects.map(p => {
+      const prefix = p.customer_id ? `[${p.customer_id}] ` : '';
+      return {
+        id: p.project_id,
+        name: `${prefix}${p.project_name}`,
+        description: p.project_description,
+        project_key: p.project_key || p.project_id.split('-').pop().toUpperCase().slice(0, 5),
+        status: p.status || 'Thực thi',
+        start_date: p.start_date || '2026-06-01',
+        end_date: p.end_date || '2026-12-31',
+        create_by: p.create_by,
+        customer_id: p.customer_id || null,
+        is_public: true
+      };
+    });
     res.json(projects);
   } catch (err) {
     next(err);
@@ -41,15 +45,27 @@ exports.saveProject = async (req, res, next) => {
     const isNew = !proj.id;
     const id = proj.id || 'proj-' + Date.now();
 
+    let finalProjectName = proj.name;
+    if (finalProjectName && finalProjectName.trim().startsWith('[')) {
+      const closeBracketIndex = finalProjectName.indexOf(']');
+      if (closeBracketIndex !== -1) {
+        finalProjectName = finalProjectName.slice(closeBracketIndex + 1).trim();
+      }
+    }
+
     if (isNew) {
-      // Derive a unique key from the project name
-      let projectKey = proj.name
-        .toUpperCase()
-        .replace(/[^A-Z0-9\s]/g, '')
-        .split(/\s+/)
-        .map(w => w.charAt(0))
-        .join('')
-        .slice(0, 5);
+      let projectKey = proj.project_key ? proj.project_key.trim().toUpperCase() : null;
+
+      if (!projectKey) {
+        // Derive a unique key from the project name
+        projectKey = finalProjectName
+          .toUpperCase()
+          .replace(/[^A-Z0-9\s]/g, '')
+          .split(/\s+/)
+          .map(w => w.charAt(0))
+          .join('')
+          .slice(0, 5);
+      }
       
       if (!projectKey || projectKey.length === 0) {
         projectKey = 'PRJ';
@@ -65,12 +81,12 @@ exports.saveProject = async (req, res, next) => {
 
       await prisma.$executeRaw`
         INSERT INTO Project (project_id, project_name, project_description, project_key, create_by, customer_id, status, start_date, end_date)
-        VALUES (${id}, ${proj.name}, ${proj.description}, ${projectKey}, ${proj.create_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'})
+        VALUES (${id}, ${finalProjectName}, ${proj.description}, ${projectKey}, ${proj.create_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'})
       `;
     } else {
       await prisma.$executeRaw`
         UPDATE Project 
-        SET project_name = ${proj.name}, 
+        SET project_name = ${finalProjectName}, 
             project_description = ${proj.description}, 
             customer_id = ${proj.customer_id || null},
             status = ${proj.status || 'Thực thi'}, 
@@ -208,6 +224,46 @@ exports.getDepartments = async (req, res, next) => {
       orderBy: { name: 'asc' }
     });
     res.json(depts);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.saveCustomer = async (req, res, next) => {
+  try {
+    const { customer } = req.body;
+    const isNew = !customer.id;
+
+    if (isNew) {
+      if (!customer.customer_id) {
+        return res.status(400).json({ error: 'Mã khách hàng là bắt buộc.' });
+      }
+      const existing = await prisma.customer.findUnique({
+        where: { customer_id: customer.customer_id }
+      });
+      if (existing) {
+        return res.status(400).json({ error: 'Mã khách hàng đã tồn tại.' });
+      }
+
+      await prisma.customer.create({
+        data: {
+          customer_id: customer.customer_id,
+          customer_name: customer.customer_name,
+          address: customer.address || null,
+          tax_code: customer.tax_code || null
+        }
+      });
+    } else {
+      await prisma.customer.update({
+        where: { id: parseInt(customer.id) },
+        data: {
+          customer_name: customer.customer_name,
+          address: customer.address || null,
+          tax_code: customer.tax_code || null
+        }
+      });
+    }
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }

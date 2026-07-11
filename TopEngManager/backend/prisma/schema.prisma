@@ -51,6 +51,8 @@ model customer {
   id            Int       @id @default(autoincrement())
   customer_id   String    @unique(map: "customer_id") @db.VarChar(36)
   customer_name String    @db.VarChar(255)
+  address       String?   @db.VarChar(255)
+  tax_code      String?   @db.VarChar(50)
   project       project[]
 }
 

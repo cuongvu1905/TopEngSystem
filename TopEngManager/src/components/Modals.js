@@ -50,6 +50,7 @@ const ModalWrapperLg = ({ isOpen, children, onClose }) => {
 // ================= 1. PROJECT MODAL =================
 export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved }) => {
   const [name, setName] = useState('');
+  const [projectKey, setProjectKey] = useState('');
   const [description, setDescription] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [status, setStatus] = useState('Thực thi');
@@ -79,7 +80,15 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
           const projects = await db.getProjects();
           const p = projects.find(proj => proj.id === projectId);
           if (p) {
-            setName(p.name);
+            let cleanName = p.name || '';
+            if (cleanName.startsWith('[')) {
+              const closeBracketIndex = cleanName.indexOf(']');
+              if (closeBracketIndex !== -1) {
+                cleanName = cleanName.slice(closeBracketIndex + 1).trim();
+              }
+            }
+            setName(cleanName);
+            setProjectKey(p.project_key || '');
             setDescription(p.description || '');
             setCustomerId(p.customer_id || '');
             setStatus(p.status || 'Thực thi');
@@ -95,6 +104,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
           }
         } else {
           setName('');
+          setProjectKey('');
           setDescription('');
           setCustomerId('');
           setStatus('Thực thi');
@@ -137,6 +147,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
       const projData = {
         id: projectId || null,
         name,
+        project_key: projectKey,
         description,
         customer_id: customerId || null,
         status,
@@ -188,6 +199,17 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Nhập tên dự án..." />
             </div>
             <div className="form-group">
+              <label>Mã dự án <span className="required">*</span></label>
+              <input 
+                type="text" 
+                value={projectKey} 
+                onChange={(e) => setProjectKey(e.target.value.toUpperCase())} 
+                required 
+                disabled={!!projectId}
+                placeholder="Ví dụ: CRM, PAY, SDV..." 
+              />
+            </div>
+            <div className="form-group">
               <label>Mô tả</label>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="3" placeholder="Nhập mô tả dự án..."></textarea>
             </div>
@@ -199,19 +221,6 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                   <option key={c.customer_id} value={c.customer_id}>{c.customer_name}</option>
                 ))}
               </select>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group col-6" style={{ flex: 1 }}>
-                <label>Trạng thái dự án</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', width: '100%', outline: 'none' }}>
-                  <option value="Khởi tạo">Khởi tạo</option>
-                  <option value="Lập kế hoạch">Lập kế hoạch</option>
-                  <option value="Thực thi">Thực thi</option>
-                  <option value="Giám sát">Giám sát</option>
-                  <option value="Kết thúc">Kết thúc</option>
-                </select>
-              </div>
             </div>
 
             <div className="form-row" style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
@@ -1023,6 +1032,347 @@ export const DocumentModal = ({ isOpen, onClose, docId, projId, currentUser, cur
         </form>
       </div>
     </ModalWrapper>
+  );
+};
+
+// ================= 4. CUSTOMER MODAL =================
+export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
+  const [customers, setCustomers] = useState([]);
+  const [activeCustomerId, setActiveCustomerId] = useState('new');
+  
+  const [custName, setCustName] = useState('');
+  const [custCode, setCustCode] = useState('');
+  const [address, setAddress] = useState('');
+  const [taxCode, setTaxCode] = useState('');
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  const loadCustomers = async () => {
+    try {
+      const list = await db.getCustomers();
+      setCustomers(list);
+    } catch (e) {
+      console.error("Failed to load customers:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCustomers();
+      setActiveCustomerId('new');
+      setCustName('');
+      setCustCode('');
+      setAddress('');
+      setTaxCode('');
+      setIsEditing(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (activeCustomerId === 'new') {
+      setCustName('');
+      setCustCode('');
+      setAddress('');
+      setTaxCode('');
+      setIsEditing(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+    } else {
+      const c = customers.find(item => item.id === parseInt(activeCustomerId));
+      if (c) {
+        setCustName(c.customer_name);
+        setCustCode(c.customer_id);
+        setAddress(c.address || '');
+        setTaxCode(c.tax_code || '');
+        setIsEditing(false);
+        setErrorMsg('');
+        setSuccessMsg('');
+      }
+    }
+  }, [activeCustomerId, customers]);
+
+  const handleCancelEdit = () => {
+    if (activeCustomerId === 'new') {
+      setCustName('');
+      setCustCode('');
+      setAddress('');
+      setTaxCode('');
+      setErrorMsg('');
+    } else {
+      const c = customers.find(item => item.id === parseInt(activeCustomerId));
+      if (c) {
+        setCustName(c.customer_name);
+        setCustCode(c.customer_id);
+        setAddress(c.address || '');
+        setTaxCode(c.tax_code || '');
+      }
+      setIsEditing(false);
+      setErrorMsg('');
+    }
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!custName || !custCode) {
+      setErrorMsg('Tên khách hàng và Mã khách hàng là bắt buộc.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const payload = {
+        id: activeCustomerId === 'new' ? null : parseInt(activeCustomerId),
+        customer_id: custCode.trim(),
+        customer_name: custName.trim(),
+        address: address.trim(),
+        tax_code: taxCode.trim()
+      };
+
+      const res = await db.saveCustomer(payload);
+      if (res.success) {
+        const message = activeCustomerId === 'new' ? 'Đã thêm khách hàng thành công!' : 'Đã cập nhật thông tin khách hàng!';
+        setSuccessMsg(message);
+        
+        await db.logActivity(
+          currentUser.id,
+          activeCustomerId === 'new' ? "CREATE" : "UPDATE",
+          "Customer",
+          custCode.trim(),
+          `đã ${activeCustomerId === 'new' ? 'thêm' : 'cập nhật'} khách hàng '${custName.trim()}' (${custCode.trim()})`
+        );
+
+        const list = await db.getCustomers();
+        setCustomers(list);
+        
+        const newCust = list.find(item => item.customer_id === custCode.trim());
+        if (newCust) {
+          setActiveCustomerId(newCust.id.toString());
+        }
+        setIsEditing(false);
+
+        if (onSaved) onSaved();
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || 'Lỗi khi lưu khách hàng.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ModalWrapperLg isOpen={isOpen} onClose={onClose}>
+      <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '520px', maxHeight: '90vh' }}>
+        <div className="modal-header" style={{ borderBottom: '1px solid var(--neutral-border)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
+            <i className="fa-solid fa-user-tie" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i> Quản lý khách hàng
+          </h3>
+          <button className="btn-close-modal" onClick={onClose} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
+        </div>
+        <div className="modal-body" style={{ display: 'flex', flex: 1, padding: 0, overflow: 'hidden' }}>
+          {/* Left panel - Customer List */}
+          <div style={{ width: '240px', borderRight: '1px solid var(--neutral-border)', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc', height: '100%' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: '#475569', backgroundColor: '#f1f5f9' }}>
+              Danh sách khách hàng
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+              <button 
+                type="button"
+                onClick={() => setActiveCustomerId('new')}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  textAlign: 'left',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: activeCustomerId === 'new' ? 'var(--primary-color)' : '#475569',
+                  backgroundColor: activeCustomerId === 'new' ? '#eff6ff' : 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '6px',
+                  transition: 'all 0.15s'
+                }}
+              >
+                <i className="fa-solid fa-plus-circle" style={{ fontSize: '14px' }}></i> Thêm khách hàng
+              </button>
+              
+              <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '8px 0' }} />
+              
+              {customers.length === 0 ? (
+                <div style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: 'var(--neutral-muted)' }}>
+                  Chưa có khách hàng nào
+                </div>
+              ) : (
+                customers.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setActiveCustomerId(c.id.toString())}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      textAlign: 'left',
+                      fontSize: '13px',
+                      fontWeight: activeCustomerId === c.id.toString() ? '600' : '500',
+                      color: activeCustomerId === c.id.toString() ? 'var(--primary-color)' : '#334155',
+                      backgroundColor: activeCustomerId === c.id.toString() ? '#eff6ff' : 'transparent',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '4px',
+                      transition: 'all 0.15s',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    <i className="fa-solid fa-user-tie" style={{ fontSize: '13px', opacity: 0.7 }}></i>
+                    {c.customer_name}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Right panel - Customer Form */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#fff', overflowY: 'auto', padding: '24px' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#1e293b', borderBottom: '2px solid #3b82f6', paddingBottom: '8px', display: 'inline-block', width: 'fit-content' }}>
+              {activeCustomerId === 'new' ? 'Thêm khách hàng' : activeCustomerId === 'new' ? 'Thêm khách hàng' : custName}
+            </h4>
+            
+            {errorMsg && (
+              <div style={{ padding: '10px 14px', backgroundColor: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '6px', color: '#ef4444', fontSize: '12.5px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className="fa-solid fa-circle-exclamation"></i> {errorMsg}
+              </div>
+            )}
+            
+            {successMsg && (
+              <div style={{ padding: '10px 14px', backgroundColor: '#f0fdf4', border: '1px solid #dcfce7', borderRadius: '6px', color: '#16a34a', fontSize: '12.5px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className="fa-solid fa-circle-check"></i> {successMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', marginBottom: '20px' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ width: '30%', backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
+                      Tên Khách Hàng <span className="required" style={{ color: '#ef4444' }}>*</span>
+                    </td>
+                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                      <input 
+                        type="text" 
+                        value={custName} 
+                        onChange={(e) => setCustName(e.target.value)} 
+                        disabled={!isEditing}
+                        style={{ width: '100%', border: isEditing ? '1px solid #cbd5e1' : 'none', backgroundColor: isEditing ? '#fff' : 'transparent', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                        placeholder="Nhập tên khách hàng..."
+                        required
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
+                      Mã Khách Hàng <span className="required" style={{ color: '#ef4444' }}>*</span>
+                    </td>
+                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                      <input 
+                        type="text" 
+                        value={custCode} 
+                        onChange={(e) => setCustCode(e.target.value)} 
+                        disabled={!isEditing || activeCustomerId !== 'new'}
+                        style={{ width: '100%', border: (isEditing && activeCustomerId === 'new') ? '1px solid #cbd5e1' : 'none', backgroundColor: (isEditing && activeCustomerId === 'new') ? '#fff' : 'transparent', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                        placeholder="Nhập mã khách hàng..."
+                        required
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
+                      Địa chỉ
+                    </td>
+                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                      <input 
+                        type="text" 
+                        value={address} 
+                        onChange={(e) => setAddress(e.target.value)} 
+                        disabled={!isEditing}
+                        style={{ width: '100%', border: isEditing ? '1px solid #cbd5e1' : 'none', backgroundColor: isEditing ? '#fff' : 'transparent', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                        placeholder="Nhập địa chỉ..."
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
+                      Mã số thuế
+                    </td>
+                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                      <input 
+                        type="text" 
+                        value={taxCode} 
+                        onChange={(e) => setTaxCode(e.target.value)} 
+                        disabled={!isEditing}
+                        style={{ width: '100%', border: isEditing ? '1px solid #cbd5e1' : 'none', backgroundColor: isEditing ? '#fff' : 'transparent', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                        placeholder="Nhập mã số thuế..."
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #cbd5e1', paddingTop: '16px' }}>
+                {isEditing ? (
+                  <>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      onClick={handleCancelEdit}
+                      disabled={loading}
+                    >
+                      Hủy
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="btn btn-primary" 
+                      disabled={loading}
+                    >
+                      {loading ? 'Đang lưu...' : 'Lưu'}
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    type="button" 
+                    className="btn btn-primary" 
+                    onClick={handleStartEdit}
+                  >
+                    Sửa
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </ModalWrapperLg>
   );
 };
 

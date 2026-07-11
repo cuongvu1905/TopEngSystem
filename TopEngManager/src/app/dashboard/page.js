@@ -109,6 +109,7 @@ export default function Dashboard() {
 
   // Loading details & Review comments
   const [selectedIssueDetail, setSelectedIssueDetail] = useState(null);
+  const issueProj = (selectedIssueDetail && selectedIssueDetail.issue) ? projects.find(p => p.id === selectedIssueDetail.issue.project_id) : null;
   const [loadingIssueDetail, setLoadingIssueDetail] = useState(false);
   const [newCommentText, setNewCommentText] = useState('');
   
@@ -1275,20 +1276,53 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}><i className="fa-solid fa-circle-notch fa-spin fa-2x"></i></div>
                   ) : selectedIssueDetail ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', alignItems: 'center' }}>
+                      <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
                         <div>
-                          <Link href={`/projects/${selectedIssueDetail.issue.project_id}?issueId=${selectedIssueDetail.issue.id}`} style={{ textDecoration: 'none' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }} title="Xem chi tiết trong dự án">
-                              {selectedIssueDetail.issue.issue_key} <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: '9px' }}></i>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                                DỰ ÁN: {issueProj?.name || 'Chung'}
+                              </span>
+                              {issueProj && (
+                                <Link 
+                                  href={`/projects/${issueProj.id}?issueId=${selectedIssueDetail.issue.id}`}
+                                  style={{ 
+                                    fontSize: '11px', 
+                                    color: 'var(--primary-color)', 
+                                    textDecoration: 'none',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontWeight: '500',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    border: '1.5px solid var(--primary-color)',
+                                    cursor: 'pointer'
+                                  }}
+                                  title="Đi tới chi tiết vướng mắc trong dự án"
+                                >
+                                  Xem trong dự án <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: '9px' }}></i>
+                                </Link>
+                              )}
+                            </div>
+                            <span 
+                              className={`badge ${
+                                selectedIssueDetail.issue.status === 'DONE' ? 'badge-success' : 
+                                selectedIssueDetail.issue.status === 'IN_PROGRESS' ? 'badge-warning' : 
+                                'badge-info'
+                              }`}
+                            >
+                              {selectedIssueDetail.issue.status === 'TO_DO' ? 'TO DO' : 
+                               selectedIssueDetail.issue.status === 'IN_PROGRESS' ? 'IN PROGRESS' : 
+                               selectedIssueDetail.issue.status}
                             </span>
-                          </Link>
-                          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '6px 0 0 0' }}>
+                          </div>
+                          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '4px 0 0 0' }}>
                             <Link href={`/projects/${selectedIssueDetail.issue.project_id}?issueId=${selectedIssueDetail.issue.id}`} style={{ color: '#0f172a', textDecoration: 'none' }} title="Xem chi tiết trong dự án">
                               {selectedIssueDetail.issue.summary}
                             </Link>
                           </h2>
                         </div>
-                        <span className={`badge ${selectedIssueDetail.issue.status === 'Done' ? 'badge-success' : 'badge-warning'}`}>{selectedIssueDetail.issue.status}</span>
                       </div>
 
                       <div>

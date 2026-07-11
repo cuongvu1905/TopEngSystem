@@ -108,13 +108,18 @@ exports.signup = async (req, res, next) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const dbUsers = await prisma.user.findMany();
+    const dbUsers = await prisma.user.findMany({
+      include: {
+        department: true
+      }
+    });
     const users = dbUsers.map(u => ({
       id: u.user_id,
       name: u.full_name,
       email: u.email,
       system_role: u.role,
       department_id: u.department_id,
+      department_name: u.department ? u.department.name : 'Chưa phân phòng',
       color: '#1E40AF'
     }));
     res.json(users);
@@ -161,7 +166,7 @@ exports.saveRolesPermissions = async (req, res, next) => {
 
 exports.createUser = async (req, res, next) => {
   try {
-    const { email, password, fullName, roleId } = req.body;
+    const { email, password, fullName, roleId, departmentId } = req.body;
     if (!email || !password || !fullName || !roleId) {
       return res.status(400).json({ error: 'Thiếu thông tin đăng ký bắt buộc' });
     }
@@ -198,7 +203,8 @@ exports.createUser = async (req, res, next) => {
         full_name: fullName,
         email: email,
         password: passwordHash,
-        role: systemRole
+        role: systemRole,
+        department_id: departmentId || null
       }
     });
 

@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
-import { ProjectModal } from '@/components/Modals';
+import { ProjectModal, CustomerModal } from '@/components/Modals';
 import { getSwal } from '@/utils/swal';
 
 export default function Projects() {
   const { currentUser, projects, tasks, projectMembers, users, reloadAll, hasPermission } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const router = useRouter();
 
   if (!currentUser) return null;
@@ -57,9 +58,28 @@ export default function Projects() {
           <h2>Danh sách Dự án</h2>
           <p>Quản lý quy trình và theo dõi tiến độ của tất cả các dự án trong doanh nghiệp.</p>
         </div>
-        <div className="view-actions">
+        <div className="view-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setIsCustomerModalOpen(true)}
+            style={{ 
+              backgroundColor: '#fff', 
+              color: '#334155', 
+              border: '1px solid #cbd5e1',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '600',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <i className="fa-solid fa-user-tie"></i> Quản lý khách hàng
+          </button>
           {showCreateBtn && (
-            <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+            <button className="btn btn-primary" onClick={() => setIsModalOpen(true)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600' }}>
               <i className="fa-solid fa-plus"></i> Tạo Dự Án
             </button>
           )}
@@ -128,6 +148,13 @@ export default function Projects() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         projectId={null}
+        currentUser={currentUser}
+        onSaved={reloadAll}
+      />
+
+      <CustomerModal
+        isOpen={isCustomerModalOpen}
+        onClose={() => setIsCustomerModalOpen(false)}
         currentUser={currentUser}
         onSaved={reloadAll}
       />

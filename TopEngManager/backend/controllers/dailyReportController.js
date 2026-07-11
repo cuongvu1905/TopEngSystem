@@ -106,3 +106,38 @@ exports.updateDailyReportStatus = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.updateDailyReport = async (req, res, next) => {
+  try {
+    const { reportId, content, fileUrl, projectId } = req.body;
+
+    if (!reportId || !content) {
+      return res.status(400).json({ error: 'Thiếu mã báo cáo hoặc nội dung cập nhật' });
+    }
+
+    const report = await prisma.dailyreport.findUnique({
+      where: { id: parseInt(reportId) }
+    });
+
+    if (!report) {
+      return res.status(404).json({ error: 'Không tìm thấy báo cáo' });
+    }
+
+    if (report.status !== 'Pending' && report.status !== 'pending' && report.status !== 'Chờ duyệt') {
+      return res.status(400).json({ error: 'Chỉ có thể chỉnh sửa báo cáo ở trạng thái Chờ duyệt' });
+    }
+
+    const updated = await prisma.dailyreport.update({
+      where: { id: parseInt(reportId) },
+      data: {
+        content: content,
+        file_url: fileUrl !== undefined ? fileUrl : report.file_url,
+        project_id: projectId !== undefined ? projectId : report.project_id
+      }
+    });
+
+    res.json({ success: true, report: updated });
+  } catch (err) {
+    next(err);
+  }
+};
