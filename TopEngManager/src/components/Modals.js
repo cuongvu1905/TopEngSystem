@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db } from '@/utils/db';
 import { useApp } from '@/context/AppContext';
 import { getSwal } from '@/utils/swal';
@@ -295,6 +295,27 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
+  const [assigneeIds, setAssigneeIds] = useState([]);
+
+  const [isLockedByOther, setIsLockedByOther] = useState(false);
+  const [lockOwnerName, setLockOwnerName] = useState('');
+  const lockIntervalRef = useRef(null);
+
+  const parseTaskDesc = (desc) => {
+    try {
+      const data = JSON.parse(desc);
+      if (data && typeof data === 'object') {
+        return {
+          text: data.text || '',
+          assigneeIds: data.assignee_ids || []
+        };
+      }
+    } catch (e) {}
+    return {
+      text: desc || '',
+      assigneeIds: []
+    };
+  };
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState('Trung bình');
   const [status, setStatus] = useState('Todo');
@@ -359,12 +380,38 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
         setProjectMembers(mappedMembers);
 
         if (taskId) {
+          // Attempt to lock task
+          if (lockIntervalRef.current) {
+            clearInterval(lockIntervalRef.current);
+            lockIntervalRef.current = null;
+          }
+
+          try {
+            const lockRes = await db.lockTask(taskId, currentUser.id);
+            if (lockRes.success) {
+              setIsLockedByOther(false);
+              setLockOwnerName('');
+              lockIntervalRef.current = setInterval(async () => {
+                await db.lockTask(taskId, currentUser.id);
+              }, 10000);
+            } else {
+              setIsLockedByOther(true);
+              setLockOwnerName(lockRes.lockedBy || 'Người dùng khác');
+            }
+          } catch (lockErr) {
+            console.error("Locking task failed:", lockErr);
+          }
+
           const tasks = await db.getTasks();
           const t = tasks.find(task => task.id === taskId);
           if (t) {
             setTitle(t.title);
-            setDescription(t.description || '');
+            
+            const parsed = parseTaskDesc(t.description);
+            setDescription(parsed.text);
+            setAssigneeIds(parsed.assigneeIds.length > 0 ? parsed.assigneeIds : (t.assignee_id ? [t.assignee_id] : []));
             setAssigneeId(t.assignee_id || '');
+            
             setDueDate(formatDateForInput(t.due_date) || '');
             setPriority(t.priority);
             setStatus(t.status);
@@ -372,9 +419,12 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
             await loadCollabData();
           }
         } else {
+          setIsLockedByOther(false);
+          setLockOwnerName('');
           setTitle('');
           setDescription('');
           setAssigneeId('');
+          setAssigneeIds([]);
           setDueDate('');
           setPriority('Trung bình');
           setStatus('Todo');
@@ -387,7 +437,17 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
       }
     };
     loadTaskDetails();
-  }, [isOpen, taskId, projId]);
+
+    return () => {
+      if (lockIntervalRef.current) {
+        clearInterval(lockIntervalRef.current);
+        lockIntervalRef.current = null;
+      }
+      if (taskId && currentUser) {
+        db.unlockTask(taskId, currentUser.id).catch(err => console.error("Failed to unlock task:", err));
+      }
+    };
+  }, [isOpen, taskId, projId, currentUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -398,8 +458,11 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
         id: taskId || null,
         project_id: projId,
         title,
-        description,
-        assignee_id: assigneeId || null,
+        description: JSON.stringify({
+          text: description,
+          assignee_ids: assigneeIds
+        }),
+        assignee_id: assigneeIds[0] || null,
         priority,
         status,
         due_date: dueDate || null,
@@ -408,8 +471,25 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
 
       const result = await db.saveTask(taskData);
 
-      if (assigneeId && assigneeId !== (taskId ? (await db.getTasks()).find(t => t.id === taskId)?.assignee_id : null)) {
-        await db.createNotification(assigneeId, "Công việc mới được giao", `Bạn được giao công việc '${title}'`, `#tasks`);
+      // Create notifications for newly assigned users
+      const oldTask = taskId ? (await db.getTasks()).find(t => t.id === taskId) : null;
+      let oldAssigneeIds = [];
+      if (oldTask) {
+        try {
+          const parsed = JSON.parse(oldTask.description);
+          if (parsed && typeof parsed === 'object') {
+            oldAssigneeIds = parsed.assignee_ids || [];
+          }
+        } catch (e) {}
+        if (oldAssigneeIds.length === 0 && oldTask.assignee_id) {
+          oldAssigneeIds = [oldTask.assignee_id];
+        }
+      }
+
+      for (const uid of assigneeIds) {
+        if (!oldAssigneeIds.includes(uid)) {
+          await db.createNotification(uid, "Công việc mới được giao", `Bạn được giao công việc '${title}'`, `#tasks`);
+        }
       }
 
       if (taskId) {
@@ -554,7 +634,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              disabled={disableStatusSelect}
+              disabled={disableStatusSelect || isLockedByOther}
               className="doc-select-filter"
               style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
             >
@@ -566,16 +646,34 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
           </div>
           <button className="btn-close-modal" onClick={onClose} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
         </div>
+        {isLockedByOther && (
+          <div style={{
+            backgroundColor: '#fffbeb',
+            borderBottom: '1px solid #fde68a',
+            padding: '10px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#b45309',
+            fontSize: '13.5px',
+            fontWeight: '500'
+          }}>
+            <i className="fa-solid fa-lock" style={{ fontSize: '15px', color: '#d97706' }}></i>
+            <span>
+              Công việc này đang được chỉnh sửa bởi <strong>{lockOwnerName}</strong>. Chế độ xem chỉ đọc (Read-only).
+            </span>
+          </div>
+        )}
         <div className="modal-body modal-body-split">
           <div className="modal-split-left">
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Tiêu đề công việc <span className="required">*</span></label>
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} disabled={!isPM} required placeholder="Nhập tiêu đề công việc..." />
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} disabled={!isPM || isLockedByOther} required placeholder="Nhập tiêu đề công việc..." />
               </div>
               <div className="form-group">
                 <label>Mô tả công việc</label>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={!isPM} rows="4" placeholder="Nhập mô tả chi tiết..."></textarea>
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={!isPM || isLockedByOther} rows="4" placeholder="Nhập mô tả chi tiết..."></textarea>
               </div>
               <div className="form-row" style={{ display: 'flex', gap: '16px' }}>
                 <div className="form-group col-6" style={{ flex: 1 }}>
@@ -606,7 +704,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                           <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '12px', textAlign: 'center' }}>Không tìm thấy nhân viên phù hợp</div>
                         ) : (
                           filteredMembers.map(m => {
-                            const isChecked = assigneeId === m.id;
+                            const isChecked = assigneeIds.includes(m.id);
                             return (
                               <div className="member-select-row" key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
                                 <div className="member-select-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -614,7 +712,14 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                                     type="checkbox" 
                                     id={`task-assignee-check-${m.id}`} 
                                     checked={isChecked} 
-                                    onChange={() => setAssigneeId(isChecked ? '' : m.id)}
+                                    disabled={isLockedByOther}
+                                    onChange={() => {
+                                      if (isChecked) {
+                                        setAssigneeIds(prev => prev.filter(id => id !== m.id));
+                                      } else {
+                                        setAssigneeIds(prev => [...prev, m.id]);
+                                      }
+                                    }}
                                   />
                                   <label htmlFor={`task-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>{m.name} ({m.project_role})</label>
                                 </div>
@@ -625,20 +730,28 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                       </div>
                     </div>
                   ) : (
-                    <div style={{ padding: '8px 12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', backgroundColor: '#f8fafc', fontSize: '13px' }}>
-                      {projectMembers.find(m => m.id === assigneeId)?.name || 'Chưa giao việc cho ai.'}
+                    <div style={{ padding: '8px 12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', backgroundColor: '#f8fafc', fontSize: '13px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {assigneeIds.length > 0 ? (
+                        projectMembers.filter(m => assigneeIds.includes(m.id)).map(m => (
+                          <span key={m.id} style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: '#e2e8f0', color: '#334155', fontWeight: '500', fontSize: '12px' }}>
+                            {m.name}
+                          </span>
+                        ))
+                      ) : (
+                        'Chưa giao việc cho ai.'
+                      )}
                     </div>
                   )}
                 </div>
                 <div className="form-group col-6" style={{ width: '50%' }}>
                   <label>Hạn chót (Deadline)</label>
-                  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={!isPM} style={{ width: '100%' }} />
+                  <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={!isPM || isLockedByOther} style={{ width: '100%' }} />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group col-12" style={{ width: '100%' }}>
                   <label>Độ ưu tiên</label>
-                  <select value={priority} onChange={(e) => setPriority(e.target.value)} disabled={!isPM} style={{ width: '100%' }}>
+                  <select value={priority} onChange={(e) => setPriority(e.target.value)} disabled={!isPM || isLockedByOther} style={{ width: '100%' }}>
                     <option value="Thấp">Thấp</option>
                     <option value="Trung bình">Trung bình</option>
                     <option value="Cao">Cao</option>
@@ -646,7 +759,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                 </div>
               </div>
               <div className="task-form-actions">
-                {isPM && <button type="submit" className="btn btn-primary">Lưu thay đổi</button>}
+                {isPM && !isLockedByOther && <button type="submit" className="btn btn-primary">Lưu thay đổi</button>}
               </div>
             </form>
 
@@ -671,15 +784,25 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                             <span className="attachment-size">{att.file_size || 'N/A'}</span>
                           </div>
                         </div>
-                        <button className="btn-delete-attachment" onClick={() => handleDeleteAttachment(idx)}><i className="fa-solid fa-trash"></i></button>
+                        <button 
+                          className="btn-delete-attachment" 
+                          onClick={() => { if (!isLockedByOther) handleDeleteAttachment(idx); }}
+                          disabled={isLockedByOther}
+                          style={{ opacity: isLockedByOther ? 0.5 : 1, cursor: isLockedByOther ? 'not-allowed' : 'pointer' }}
+                        >
+                          <i className="fa-solid fa-trash"></i>
+                        </button>
                       </div>
                     ))
                   )}
                 </div>
                 <div className="attachment-upload-box">
-                  <label className="btn btn-secondary btn-sm btn-block" style={{ marginBottom: 0 }}>
+                  <label 
+                    className="btn btn-secondary btn-sm btn-block" 
+                    style={{ marginBottom: 0, opacity: isLockedByOther ? 0.6 : 1, pointerEvents: isLockedByOther ? 'none' : 'auto', cursor: isLockedByOther ? 'not-allowed' : 'pointer' }}
+                  >
                     <i className="fa-solid fa-cloud-arrow-up"></i> Tải file lên
-                    <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} />
+                    <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isLockedByOther} />
                   </label>
                 </div>
               </div>

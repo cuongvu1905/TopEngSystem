@@ -185,7 +185,17 @@ export default function Dashboard() {
 
   // 2. Resolve My Tasks (Created-date sorted)
   const myTasksSorted = tasks
-    .filter(t => t.assignee_id === currentUser.id)
+    .filter(t => {
+      const isAssignedToMe = t.assignee_id === currentUser.id;
+      let isCollab = false;
+      try {
+        const parsed = JSON.parse(t.description);
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.assignee_ids)) {
+          isCollab = parsed.assignee_ids.includes(currentUser.id);
+        }
+      } catch (e) {}
+      return isAssignedToMe || isCollab;
+    })
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   // 3. Resolve My Mentioned Issues (Created-date sorted)
@@ -933,7 +943,15 @@ export default function Dashboard() {
                       <div className="item-title-text" style={{ margin: '4px 0', fontSize: '13.5px' }}>{task.title}</div>
                       {task.description && (
                         <div style={{ fontSize: '12px', color: 'var(--neutral-muted)', marginBottom: '4px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                          {task.description}
+                          {(() => {
+                            try {
+                              const parsed = JSON.parse(task.description);
+                              if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+                                return parsed.text || 'Không có mô tả.';
+                              }
+                            } catch (e) {}
+                            return task.description;
+                          })()}
                         </div>
                       )}
                       <div style={{ fontSize: '11px', color: isOverdue ? 'var(--danger-color)' : 'var(--neutral-muted)', fontWeight: isOverdue ? 'bold' : 'normal' }}>
@@ -1286,36 +1304,51 @@ export default function Dashboard() {
                           <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', fontSize: '12px' }}>
                             <thead>
                               <tr style={{ backgroundColor: '#f1f5f9' }}>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%' }}>Tên công việc phụ</th>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%' }}>Người thực hiện</th>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '15%' }}>Hạn chót</th>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '40%' }}>Giải pháp / Tiến độ</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '40%' }}>Tên công việc phụ</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%' }}>Người thực hiện</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%' }}>Hạn chót</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '15%' }}>Trạng thái</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {parseIssueDescription(selectedIssueDetail.issue.description).issueTasks.map((t, idx) => (
-                                <tr key={idx}>
-                                  <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', fontWeight: '500' }}>{t.name || t.title || ''}</td>
-                                  <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1' }}>{getPerformerForTask(t)}</td>
-                                  <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1' }}>{formatDate(t.deadline || t.dueDate)}</td>
-                                  <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1' }}>
-                                    {t.solutions && t.solutions.filter(s => s.action?.trim()).length > 0 ? (
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                        {t.solutions.filter(s => s.action?.trim()).map((s, sIdx) => (
-                                          <div key={s.id || sIdx} style={{ fontSize: '11px', borderBottom: sIdx < t.solutions.filter(x => x.action?.trim()).length - 1 ? '1px dashed #e2e8f0' : 'none', paddingBottom: '2px' }}>
-                                            <strong>GP:</strong> {s.action}{' '}
-                                            <span style={{ color: '#64748b' }}>
-                                              ({s.executor || 'N/A'} - {s.date ? new Date(s.date).toLocaleDateString('vi-VN') : 'N/A'})
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Chưa có giải pháp</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
+                              {parseIssueDescription(selectedIssueDetail.issue.description).issueTasks.map((t, idx) => {
+                                const status = t.status || 'Chưa thực hiện';
+                                let bgColor = '#f1f5f9';
+                                let textColor = '#475569';
+                                let borderColor = '#cbd5e1';
+
+                                if (status === 'Hoàn thành') {
+                                  bgColor = '#dcfce7';
+                                  textColor = '#16a34a';
+                                  borderColor = '#bbf7d0';
+                                } else if (status === 'Đang thực hiện') {
+                                  bgColor = '#eff6ff';
+                                  textColor = '#2563eb';
+                                  borderColor = '#bfdbfe';
+                                }
+
+                                return (
+                                  <tr key={idx}>
+                                    <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', fontWeight: '500' }}>{t.name || t.title || ''}</td>
+                                    <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1' }}>{getPerformerForTask(t)}</td>
+                                    <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1' }}>{formatDate(t.deadline || t.dueDate)}</td>
+                                    <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
+                                      <span style={{ 
+                                        display: 'inline-block',
+                                        padding: '2px 8px', 
+                                        borderRadius: '4px', 
+                                        backgroundColor: bgColor, 
+                                        color: textColor, 
+                                        border: `1px solid ${borderColor}`,
+                                        fontSize: '11px',
+                                        fontWeight: '600'
+                                      }}>
+                                        {status}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
@@ -1387,10 +1420,41 @@ export default function Dashboard() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div>
-                            <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
-                              DỰ ÁN: {taskProj?.name || 'Chung'}
-                            </span>
-                            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '6px 0 0 0' }}>{task.title}</h2>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                                DỰ ÁN: {taskProj?.name || 'Chung'}
+                              </span>
+                              {taskProj && (
+                                <Link 
+                                  href={`/projects/${taskProj.id}?taskId=${task.id}`}
+                                  style={{ 
+                                    fontSize: '11px', 
+                                    color: 'var(--primary-color)', 
+                                    textDecoration: 'none',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontWeight: '500',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    border: '1.5px solid var(--primary-color)',
+                                    cursor: 'pointer'
+                                  }}
+                                  title="Đi tới chi tiết công việc trong dự án"
+                                >
+                                  Xem trong dự án <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: '9px' }}></i>
+                                </Link>
+                              )}
+                            </div>
+                            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '6px 0 0 0' }}>
+                              {taskProj ? (
+                                <Link href={`/projects/${taskProj.id}?taskId=${task.id}`} style={{ color: '#0f172a', textDecoration: 'none' }} title="Xem trong dự án">
+                                  {task.title}
+                                </Link>
+                              ) : (
+                                task.title
+                              )}
+                            </h2>
                           </div>
                           <span className={`badge ${task.status === 'Done' ? 'badge-success' : 'badge-warning'}`}>{task.status}</span>
                         </div>
@@ -1398,7 +1462,15 @@ export default function Dashboard() {
                         <div>
                           <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>Mô tả công việc</label>
                           <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
-                            {task.description || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết công việc.</span>}
+                            {(() => {
+                              try {
+                                const parsed = JSON.parse(task.description);
+                                if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+                                  return parsed.text || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết công việc.</span>;
+                                }
+                              } catch (e) {}
+                              return task.description || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết công việc.</span>;
+                            })()}
                           </div>
                         </div>
 

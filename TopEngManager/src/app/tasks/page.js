@@ -21,6 +21,22 @@ const Swal = {
   }
 };
 
+const parseTaskDescription = (desc) => {
+  try {
+    const data = JSON.parse(desc);
+    if (data && typeof data === 'object' && 'text' in data) {
+      return {
+        text: data.text || '',
+        assigneeIds: data.assignee_ids || []
+      };
+    }
+  } catch (e) {}
+  return {
+    text: desc || '',
+    assigneeIds: []
+  };
+};
+
 export default function Tasks() {
   const { currentUser, projects, tasks, projectMembers, users, reloadAll } = useApp();
 
@@ -65,7 +81,16 @@ export default function Tasks() {
   }
 
   if (selectedAssignee === 'me') {
-    filteredTasks = filteredTasks.filter(t => t.assignee_id === currentUser.id);
+    filteredTasks = filteredTasks.filter(t => {
+      if (t.assignee_id === currentUser.id) return true;
+      try {
+        const parsed = JSON.parse(t.description);
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.assignee_ids)) {
+          return parsed.assignee_ids.includes(currentUser.id);
+        }
+      } catch (e) {}
+      return false;
+    });
   }
 
   // Drag and drop task status
@@ -167,12 +192,17 @@ export default function Tasks() {
                   onDrop={(e) => handleDrop(e, col.id)}
                 >
                   {colTasks.map(t => {
-                    const u = users.find(usr => usr.id === t.assignee_id);
+                    const parsedTask = parseTaskDescription(t.description);
                     const isOverdue = new Date(t.due_date) < new Date() && t.status !== "Done";
                     let pClass = "badge-info";
                     if (t.priority === "Cao") pClass = "badge-danger";
                     else if (t.priority === "Trung bình") pClass = "badge-warning";
                     else pClass = "badge-success";
+
+                    let currentAssigneeIds = parsedTask.assigneeIds;
+                    if (currentAssigneeIds.length === 0 && t.assignee_id) {
+                      currentAssigneeIds = [t.assignee_id];
+                    }
 
                     return (
                       <div 
@@ -184,12 +214,39 @@ export default function Tasks() {
                       >
                         <div className="task-card-header">
                           <span className={`badge ${pClass}`}>{t.priority}</span>
-                          <div className="task-card-assignee" style={{ backgroundColor: u ? u.color : 'var(--neutral-muted)' }} title={u ? u.name : 'Chưa giao'}>
-                            {u ? u.name.split(" ").pop().charAt(0) : '?'}
+                          <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+                            {currentAssigneeIds.length > 0 ? (
+                              currentAssigneeIds.map((id, idx) => {
+                                const usr = users.find(x => x.id === id);
+                                if (!usr) return null;
+                                return (
+                                  <div 
+                                    key={id} 
+                                    className="task-card-assignee" 
+                                    style={{ 
+                                      backgroundColor: usr.color, 
+                                      marginLeft: idx > 0 ? '-8px' : '0',
+                                      zIndex: 10 - idx,
+                                      border: '1px solid #fff',
+                                      width: '20px',
+                                      height: '20px',
+                                      fontSize: '9px'
+                                    }} 
+                                    title={usr.name}
+                                  >
+                                    {usr.name.split(" ").pop().charAt(0)}
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="task-card-assignee" style={{ backgroundColor: 'var(--neutral-muted)', width: '20px', height: '20px', fontSize: '9px' }} title="Chưa giao">
+                                ?
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="task-card-title">{t.title}</div>
-                        <p className="task-card-desc">{t.description || 'Không có mô tả.'}</p>
+                        <p className="task-card-desc">{parsedTask.text || 'Không có mô tả.'}</p>
                         <div className="task-card-meta">
                           <span className={`task-card-due ${isOverdue ? 'overdue' : ''}`}>
                             <i className="fa-regular fa-clock"></i> {t.due_date || 'Không hạn'}
@@ -237,12 +294,61 @@ export default function Tasks() {
                     <td><span className={`badge ${pClass}`}>{t.priority}</span></td>
                     <td style={{ color: isOverdue ? 'var(--danger-color)' : 'inherit', fontWeight: isOverdue ? '600' : 'normal' }}>{t.due_date || 'N/A'}</td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: u ? u.color : 'var(--neutral-muted)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9.5px', fontWeight: '600' }}>
-                          {u ? u.name.split(" ").pop().charAt(0) : '?'}
-                        </div>
-                        <span>{u ? u.name : 'Chưa giao'}</span>
-                      </div>
+                      {(() => {
+                        const parsed = parseTaskDescription(t.description);
+                        let currentAssigneeIds = parsed.assigneeIds;
+                        if (currentAssigneeIds.length === 0 && t.assignee_id) {
+                          currentAssigneeIds = [t.assignee_id];
+                        }
+                        
+                        if (currentAssigneeIds.length > 0) {
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+                                {currentAssigneeIds.map((id, idx) => {
+                                  const usr = users.find(x => x.id === id);
+                                  if (!usr) return null;
+                                  return (
+                                    <div 
+                                      key={id} 
+                                      style={{ 
+                                        width: '22px', 
+                                        height: '22px', 
+                                        borderRadius: '50%', 
+                                        backgroundColor: usr.color, 
+                                        color: '#fff', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        fontSize: '9.5px', 
+                                        fontWeight: '600',
+                                        marginLeft: idx > 0 ? '-6px' : '0',
+                                        zIndex: 10 - idx,
+                                        border: '1px solid #fff'
+                                      }}
+                                      title={usr.name}
+                                    >
+                                      {usr.name.split(" ").pop().charAt(0)}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <span style={{ fontSize: '12px' }}>
+                                {currentAssigneeIds.map(id => users.find(x => x.id === id)?.name).filter(Boolean).join(', ')}
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--neutral-muted)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9.5px', fontWeight: '600' }}>
+                              ?
+                            </div>
+                            <span>Chưa giao</span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td><span className={`badge ${statusBadgeClass}`}>{t.status}</span></td>
                     <td>

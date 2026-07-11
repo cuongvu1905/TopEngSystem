@@ -72,10 +72,27 @@ function parseDescription(desc) {
   };
 }
 
+const parseTaskDescription = (desc) => {
+  try {
+    const data = JSON.parse(desc);
+    if (data && typeof data === 'object' && 'text' in data) {
+      return {
+        text: data.text || '',
+        assigneeIds: data.assignee_ids || []
+      };
+    }
+  } catch (e) {}
+  return {
+    text: desc || '',
+    assigneeIds: []
+  };
+};
+
 export default function ProjectDetail({ params }) {
   const { id: projectId } = use(params);
   const searchParams = useSearchParams();
   const queryIssueId = searchParams.get('issueId');
+  const queryTaskId = searchParams.get('taskId');
   const { currentUser, projects, tasks, documents, documentVersions, documentCategories, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState('kanban');
@@ -395,6 +412,14 @@ export default function ProjectDetail({ params }) {
   const [activeTaskId, setActiveTaskId] = useState(null);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [activeDocId, setActiveDocId] = useState(null);
+
+  useEffect(() => {
+    if (queryTaskId) {
+      setActiveSubTab('kanban');
+      setActiveTaskId(queryTaskId);
+      setIsTaskModalOpen(true);
+    }
+  }, [queryTaskId]);
 
   const [draggedTaskId, setDraggedTaskId] = useState(null);
 
@@ -1313,12 +1338,17 @@ export default function ProjectDetail({ params }) {
                       onDrop={(e) => handleDrop(e, col.id)}
                     >
                       {colTasks.map(t => {
-                        const u = users.find(usr => usr.id === t.assignee_id);
+                        const parsedTask = parseTaskDescription(t.description);
                         const isOverdue = new Date(t.due_date) < new Date() && t.status !== "Done";
                         let pClass = "badge-info";
                         if (t.priority === "Cao") pClass = "badge-danger";
                         else if (t.priority === "Trung bình") pClass = "badge-warning";
                         else pClass = "badge-success";
+
+                        let currentAssigneeIds = parsedTask.assigneeIds;
+                        if (currentAssigneeIds.length === 0 && t.assignee_id) {
+                          currentAssigneeIds = [t.assignee_id];
+                        }
 
                         return (
                           <div 
@@ -1330,12 +1360,39 @@ export default function ProjectDetail({ params }) {
                           >
                             <div className="task-card-header">
                               <span className={`badge ${pClass}`}>{t.priority}</span>
-                              <div className="task-card-assignee" style={{ backgroundColor: u ? u.color : 'var(--neutral-muted)' }} title={u ? u.name : 'Chưa giao'}>
-                                {u ? u.name.split(" ").pop().charAt(0) : '?'}
+                              <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+                                {currentAssigneeIds.length > 0 ? (
+                                  currentAssigneeIds.map((id, idx) => {
+                                    const u = users.find(usr => usr.id === id);
+                                    if (!u) return null;
+                                    return (
+                                      <div 
+                                        key={id} 
+                                        className="task-card-assignee" 
+                                        style={{ 
+                                          backgroundColor: u.color, 
+                                          marginLeft: idx > 0 ? '-8px' : '0',
+                                          zIndex: 10 - idx,
+                                          border: '1px solid #fff',
+                                          width: '20px',
+                                          height: '20px',
+                                          fontSize: '9px'
+                                        }} 
+                                        title={u.name}
+                                      >
+                                        {u.name.split(" ").pop().charAt(0)}
+                                      </div>
+                                    );
+                                  })
+                                ) : (
+                                  <div className="task-card-assignee" style={{ backgroundColor: 'var(--neutral-muted)', width: '20px', height: '20px', fontSize: '9px' }} title="Chưa giao">
+                                    ?
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div className="task-card-title">{t.title}</div>
-                            <p className="task-card-desc">{t.description || 'Không có mô tả.'}</p>
+                            <p className="task-card-desc">{parsedTask.text || 'Không có mô tả.'}</p>
                             <div className="task-card-meta">
                               <span className={`task-card-due ${isOverdue ? 'overdue' : ''}`}>
                                 <i className="fa-regular fa-clock"></i> {t.due_date || 'Không hạn'}
@@ -2213,14 +2270,17 @@ export default function ProjectDetail({ params }) {
                       <button
                         type="button"
                         className="btn btn-secondary"
+                        disabled={isLockedByOther}
                         onClick={() => {
-                          setTempNguyenNhan(jiraDetailNguyenNhan);
-                          setTempHuongGiaiQuyet(jiraDetailHuongGiaiQuyet);
-                          setTempKetQua(jiraDetailKetQua);
-                          setReportModalSource('detail');
-                          setIsReportPopupOpen(true);
+                          if (!isLockedByOther) {
+                            setTempNguyenNhan(jiraDetailNguyenNhan);
+                            setTempHuongGiaiQuyet(jiraDetailHuongGiaiQuyet);
+                            setTempKetQua(jiraDetailKetQua);
+                            setReportModalSource('detail');
+                            setIsReportPopupOpen(true);
+                          }
                         }}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', fontSize: '13px', width: '100%', justifyContent: 'center' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', fontSize: '13px', width: '100%', justifyContent: 'center', opacity: isLockedByOther ? 0.6 : 1, cursor: isLockedByOther ? 'not-allowed' : 'pointer' }}
                       >
                         <i className="fa-solid fa-file-invoice"></i> Báo cáo chi tiết
                       </button>
@@ -2536,6 +2596,7 @@ export default function ProjectDetail({ params }) {
                     <select 
                       value={activeIssueDetail.priority} 
                       onChange={(e) => handleUpdateIssueField('priority', e.target.value)}
+                      disabled={isLockedByOther}
                       className="doc-select-filter"
                       style={{ width: '100%', height: '34px', fontSize: '13px' }}
                     >
@@ -2552,6 +2613,7 @@ export default function ProjectDetail({ params }) {
                       type="date"
                       value={jiraDetailDeadline || ''}
                       onChange={(e) => setJiraDetailDeadline(e.target.value)}
+                      disabled={isLockedByOther}
                       style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
                     />
                   </div>
@@ -2561,6 +2623,7 @@ export default function ProjectDetail({ params }) {
                     <select 
                       value={activeIssueDetail.type} 
                       onChange={(e) => handleUpdateIssueField('type', e.target.value)}
+                      disabled={isLockedByOther}
                       className="doc-select-filter"
                       style={{ width: '100%', height: '34px', fontSize: '13px' }}
                     >
@@ -2583,7 +2646,9 @@ export default function ProjectDetail({ params }) {
                     <button 
                       type="button" 
                       className="btn btn-danger" 
+                      disabled={isLockedByOther}
                       onClick={async () => {
+                        if (isLockedByOther) return;
                         const confirmResult = await Swal.fire({
                           title: 'Xác nhận xóa',
                           text: `Bạn có chắc chắn muốn xóa Issue ${activeIssueDetail.issue_key}?`,
@@ -2613,14 +2678,17 @@ export default function ProjectDetail({ params }) {
                       <button 
                         type="button" 
                         className="btn btn-success" 
+                        disabled={isLockedByOther}
                         onClick={() => {
-                          setTempNguyenNhan(jiraDetailNguyenNhan);
-                          setTempHuongGiaiQuyet(jiraDetailHuongGiaiQuyet);
-                          setTempKetQua(jiraDetailKetQua);
-                          setReportModalSource('detail-finish');
-                          setIsReportPopupOpen(true);
+                          if (!isLockedByOther) {
+                            setTempNguyenNhan(jiraDetailNguyenNhan);
+                            setTempHuongGiaiQuyet(jiraDetailHuongGiaiQuyet);
+                            setTempKetQua(jiraDetailKetQua);
+                            setReportModalSource('detail-finish');
+                            setIsReportPopupOpen(true);
+                          }
                         }}
-                        style={{ width: '100%', padding: '8px 12px', fontSize: '13px', marginTop: '10px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                        style={{ width: '100%', padding: '8px 12px', fontSize: '13px', marginTop: '10px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: isLockedByOther ? 'not-allowed' : 'pointer', fontWeight: '600', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: isLockedByOther ? 0.6 : 1 }}
                       >
                         <i className="fa-solid fa-circle-check"></i> Kết thúc issue
                       </button>
@@ -2631,7 +2699,7 @@ export default function ProjectDetail({ params }) {
               </div>
               <div className="modal-footer" style={{ borderTop: '1px solid var(--neutral-border)', padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 {/* <button type="button" className="btn btn-secondary" onClick={() => setIsDetailModalOpen(false)}>Đóng</button> */}
-                <button type="button" className="btn btn-primary" onClick={handleSaveAllIssueTasks}>Lưu thay đổi</button>
+                <button type="button" className="btn btn-primary" onClick={handleSaveAllIssueTasks} disabled={isLockedByOther}>Lưu thay đổi</button>
               </div>
             </div>
           </div>
@@ -2652,6 +2720,7 @@ export default function ProjectDetail({ params }) {
                   <select
                     value={activeSubTaskData.status || 'Chưa thực hiện'}
                     onChange={(e) => handleSubTaskFieldChange('status', e.target.value)}
+                    disabled={isLockedByOther}
                     className="doc-select-filter"
                     style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
                   >
@@ -2671,6 +2740,7 @@ export default function ProjectDetail({ params }) {
                     value={activeSubTaskData.contentNeeded || ''}
                     onChange={(e) => handleSubTaskFieldChange('contentNeeded', e.target.value)}
                     placeholder="Nhập nội dung chi tiết cần thực hiện..."
+                    disabled={isLockedByOther}
                     rows="4"
                     style={{ width: '100%', border: '1px solid #cbd5e1', padding: '10px', borderRadius: '4px', outline: 'none', resize: 'vertical', fontSize: '13.5px', lineHeight: '1.6' }}
                   />
@@ -2696,14 +2766,16 @@ export default function ProjectDetail({ params }) {
                                 value={sol.action}
                                 onChange={(e) => handleSolutionChange(sol.id, 'action', e.target.value)}
                                 placeholder="Nhập nội dung thực hiện (tự động ghi người & ngày)..."
+                                disabled={isLockedByOther}
                                 rows="2"
                                 style={{ flex: 1, border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px', resize: 'vertical' }}
                               />
                               <button
                                 type="button"
-                                onClick={() => handleRemoveSolutionRow(sol.id)}
+                                onClick={() => { if (!isLockedByOther) handleRemoveSolutionRow(sol.id); }}
                                 title="Xóa giải pháp"
-                                style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                disabled={isLockedByOther}
+                                style={{ border: 'none', background: 'none', color: '#ef4444', cursor: isLockedByOther ? 'not-allowed' : 'pointer', fontSize: '13px', padding: '2px', opacity: isLockedByOther ? 0.5 : 1 }}
                               >
                                 <i className="fa-solid fa-trash"></i>
                               </button>
@@ -2723,8 +2795,9 @@ export default function ProjectDetail({ params }) {
                     <button
                       type="button"
                       className="btn btn-secondary btn-sm"
+                      disabled={isLockedByOther}
                       onClick={handleAddSolutionRow}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '50%', width: '32px', height: '32px', padding: 0, justifyContent: 'center', fontSize: '16px', fontWeight: 'bold' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', borderRadius: '50%', width: '32px', height: '32px', padding: 0, justifyContent: 'center', fontSize: '16px', fontWeight: 'bold', opacity: isLockedByOther ? 0.6 : 1, cursor: isLockedByOther ? 'not-allowed' : 'pointer' }}
                     >
                       +
                     </button>
@@ -2734,7 +2807,7 @@ export default function ProjectDetail({ params }) {
               </div>
               <div className="modal-footer" style={{ borderTop: '1px solid var(--neutral-border)', padding: '12px 20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setIsSubTaskPopupOpen(false)}>Hủy</button>
-                <button type="button" className="btn btn-primary" onClick={handleSaveTaskPopup}>Đồng ý</button>
+                <button type="button" className="btn btn-primary" onClick={handleSaveTaskPopup} disabled={isLockedByOther}>Đồng ý</button>
               </div>
             </div>
           </div>

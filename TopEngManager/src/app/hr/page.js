@@ -455,7 +455,17 @@ export default function HRManagement() {
                         <div key={t.id} className="card" style={{ padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div>
                             <span style={{ fontWeight: '600', fontSize: '13.5px' }}>{t.title}</span>
-                            <p style={{ fontSize: '12px', color: 'var(--neutral-muted)', margin: '4px 0 0' }}>{t.description || 'Không có mô tả.'}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--neutral-muted)', margin: '4px 0 0' }}>
+                              {(() => {
+                                try {
+                                  const parsed = JSON.parse(t.description);
+                                  if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+                                    return parsed.text || 'Không có mô tả.';
+                                  }
+                                } catch (e) {}
+                                return t.description || 'Không có mô tả.';
+                              })()}
+                            </p>
                           </div>
                           <span className={`badge ${t.status === 'Done' ? 'badge-success' : 'badge-warning'}`}>{t.status}</span>
                         </div>

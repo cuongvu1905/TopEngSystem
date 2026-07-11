@@ -1,5 +1,7 @@
 const prisma = require('../config/prisma');
 
+const taskLocks = {}; // key: taskId, value: { userId, userName, lockedAt }
+
 exports.getTasks = async (req, res, next) => {
   try {
     const { projectId } = req.body;
@@ -161,6 +163,46 @@ exports.deleteSubtask = async (req, res, next) => {
 exports.addComment = async (req, res, next) => {
   try {
     // Comments table is deleted, return success mock
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.lockTask = async (req, res, next) => {
+  try {
+    const { taskId, userId } = req.body;
+    const now = Date.now();
+    const existingLock = taskLocks[taskId];
+
+    if (existingLock && existingLock.userId !== userId && (now - existingLock.lockedAt) < 15000) {
+      return res.json({ success: false, lockedBy: existingLock.userName, isLocked: true });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { user_id: userId }
+    });
+    const userName = user ? user.full_name : 'Người dùng khác';
+
+    taskLocks[taskId] = {
+      userId,
+      userName,
+      lockedAt: now
+    };
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.unlockTask = async (req, res, next) => {
+  try {
+    const { taskId, userId } = req.body;
+    const existingLock = taskLocks[taskId];
+    if (existingLock && existingLock.userId === userId) {
+      delete taskLocks[taskId];
+    }
     res.json({ success: true });
   } catch (err) {
     next(err);

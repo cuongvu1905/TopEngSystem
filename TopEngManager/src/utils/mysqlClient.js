@@ -339,5 +339,13 @@ export const MySQLAdapter = {
 
   saveRolesPermissions: async function(roles, rolePermissions) {
     return await callApi('saveRolesPermissions', { roles, role_permissions: rolePermissions });
+  },
+
+  lockTask: async function(taskId, userId) {
+    return await callApi('lockTask', { taskId, userId });
+  },
+
+  unlockTask: async function(taskId, userId) {
+    return await callApi('unlockTask', { taskId, userId });
   }
 };

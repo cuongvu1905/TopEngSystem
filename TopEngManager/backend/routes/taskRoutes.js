@@ -10,5 +10,7 @@ router.post('/updateTaskStatus', taskController.updateTaskStatus);
 router.post('/saveSubtask', taskController.saveSubtask);
 router.post('/deleteSubtask', taskController.deleteSubtask);
 router.post('/addComment', taskController.addComment);
+router.post('/lockTask', taskController.lockTask);
+router.post('/unlockTask', taskController.unlockTask);
 
 module.exports = router;
