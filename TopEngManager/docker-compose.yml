@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: topeng-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: topsystemdb
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Automatically seed database when container starts for the first time
+      - ./Top_Sys.sql:/docker-entrypoint-initdb.d/1-Top_Sys.sql
+      - ./insertdemodata.sql:/docker-entrypoint-initdb.d/2-insertdemodata.sql
+
+volumes:
+  mysql_data:

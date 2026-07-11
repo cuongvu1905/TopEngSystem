@@ -117,7 +117,17 @@ export default function Header() {
                 <div>Email: {currentUser.email}</div>
                 <div style={{ marginTop: '2px' }}>Quyền: <span className="badge badge-info" style={{ fontSize: '10px' }}>{currentUser.system_role}</span></div>
               </div>
-              <div style={{ padding: '8px' }}>
+              <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button 
+                  onClick={() => {
+                    setIsSwitcherOpen(false);
+                    setIsDatabaseModalOpen(true);
+                  }}
+                  className="btn btn-secondary btn-sm" 
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: 'var(--neutral-light)', border: '1px solid var(--neutral-border)', color: 'var(--neutral-dark)' }}
+                >
+                  <i className="fa-solid fa-database"></i> Cấu hình Database
+                </button>
                 <button 
                   onClick={handleLogout} 
                   className="btn btn-danger btn-sm" 

@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(sed -E 's/\\(PASSWORD|SECRET|KEY\\)=.*/\\\\1=****/' backend/.env)",
+      "Bash(sed -E 's/\\(PASSWORD|SECRET|KEY\\)=.*/\\\\1=****/' .env.local)",
+      "Bash(timeout 12 npm run dev)",
+      "Bash(timeout 10 node server.js)",
+      "Bash(node -e ' *)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(wmic process *)",
+      "Bash(WMIC process *)",
+      "Bash(/c/Windows/System32/taskkill.exe *)",
+      "Bash(npx.cmd --version)",
+      "Bash(npx.cmd -y @colbymchenry/codegraph mcp --help)",
+      "Bash(npx.cmd codegraph *)",
+      "Bash(python3 -c ' *)",
+      "Bash(node *)",
+      "Bash(claude --version)",
+      "Bash(claude mcp *)",
+      "Bash(timeout 8 npx.cmd -y @colbymchenry/codegraph mcp)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npx.cmd -y @colbymchenry/codegraph version)",
+      "Bash(npm view *)",
+      "Bash(npx.cmd *)",
+      "Bash(where codegraph *)",
+      "Bash(npm list *)"
+    ]
+  }
+}
