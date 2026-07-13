@@ -13,6 +13,18 @@ export default function Projects() {
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const router = useRouter();
 
+  const currentYear = new Date().getFullYear();
+  const previousYear = currentYear - 1;
+  const [startYearFilter, setStartYearFilter] = useState(String(previousYear));
+  const [endYearFilter, setEndYearFilter] = useState(String(currentYear));
+
+  const getProjectYear = (p) => {
+    if (p.start_date && p.start_date.includes('-')) {
+      return p.start_date.split('-')[0];
+    }
+    return '';
+  };
+
   if (!currentUser) return null;
 
   const isAdmin = currentUser.system_role.includes("Admin");
@@ -226,6 +238,39 @@ export default function Projects() {
     return projectMembers.some(m => m.project_id === p.id && m.user_id === currentUser.id);
   });
 
+  const filteredByYearProjects = visibleProjects.filter(p => {
+    const startInput = startYearFilter.trim();
+    const endInput = endYearFilter.trim();
+    
+    // If both inputs are empty, don't filter (show all)
+    if (!startInput && !endInput) return true;
+    
+    const pYearStr = getProjectYear(p);
+    if (!pYearStr) return false; // Hide projects without start dates if any filter is set
+    
+    const pYear = parseInt(pYearStr);
+    const startVal = startInput ? parseInt(startInput) : null;
+    const endVal = endInput ? parseInt(endInput) : null;
+    
+    if (startVal !== null && !isNaN(startVal) && endVal !== null && !isNaN(endVal)) {
+      const minYear = Math.min(startVal, endVal);
+      const maxYear = Math.max(startVal, endVal);
+      return pYear >= minYear && pYear <= maxYear;
+    } else if (startVal !== null && !isNaN(startVal)) {
+      return pYear >= startVal;
+    } else if (endVal !== null && !isNaN(endVal)) {
+      return pYear <= endVal;
+    }
+    
+    return true;
+  });
+
+  const availableYears = Array.from(new Set(
+    projects
+      .map(p => getProjectYear(p))
+      .filter(yr => yr && yr !== '')
+  )).sort((a, b) => b - a);
+
   return (
     <div className="scrollable-view">
       <div className="view-header">
@@ -234,6 +279,52 @@ export default function Projects() {
           <p>Quản lý quy trình và theo dõi tiến độ của tất cả các dự án trong doanh nghiệp.</p>
         </div>
         <div className="view-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <input
+              type="text"
+              list="year-suggestions"
+              value={startYearFilter}
+              onChange={(e) => setStartYearFilter(e.target.value)}
+              placeholder="Từ năm"
+              style={{
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                fontSize: '13px',
+                fontWeight: '600',
+                outline: 'none',
+                backgroundColor: '#fff',
+                color: '#334155',
+                width: '100px',
+                textAlign: 'center'
+              }}
+            />
+            <span style={{ color: '#64748b', fontWeight: '600' }}>-</span>
+            <input
+              type="text"
+              list="year-suggestions"
+              value={endYearFilter}
+              onChange={(e) => setEndYearFilter(e.target.value)}
+              placeholder="Đến năm"
+              style={{
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                fontSize: '13px',
+                fontWeight: '600',
+                outline: 'none',
+                backgroundColor: '#fff',
+                color: '#334155',
+                width: '100px',
+                textAlign: 'center'
+              }}
+            />
+          </div>
+          <datalist id="year-suggestions">
+            {availableYears.map(yr => (
+              <option key={yr} value={yr}>Năm {yr}</option>
+            ))}
+          </datalist>
           <button 
             className="btn btn-secondary" 
             onClick={handleJoinProjectClick}
@@ -281,8 +372,13 @@ export default function Projects() {
       </div>
       
       <div className="project-list-grid">
-        {visibleProjects.map(p => {
-          const isMember = isMemberOfProject(p.id);
+        {filteredByYearProjects.length === 0 ? (
+          <div className="card" style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--neutral-muted)', fontSize: '14px' }}>
+            Không tìm thấy dự án nào trong năm đã chọn.
+          </div>
+        ) : (
+          filteredByYearProjects.map(p => {
+            const isMember = isMemberOfProject(p.id);
           const pTasks = tasks.filter(t => t.project_id === p.id);
           const done = pTasks.filter(t => t.status === "Done").length;
           const progress = pTasks.length > 0 ? Math.round((done / pTasks.length) * 100) : 0;
@@ -335,7 +431,8 @@ export default function Projects() {
               </div>
             </div>
           );
-        })}
+        })
+      )}
       </div>
 
       <ProjectModal 

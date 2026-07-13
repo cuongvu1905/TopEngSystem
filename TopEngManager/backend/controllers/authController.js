@@ -200,6 +200,7 @@ exports.getUsers = async (req, res, next) => {
     });
     const users = dbUsers.map(u => ({
       id: u.user_id,
+      employee_id: u.user_id,
       name: u.full_name,
       email: u.email,
       system_role: u.role,

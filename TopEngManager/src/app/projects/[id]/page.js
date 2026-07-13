@@ -1553,7 +1553,7 @@ export default function ProjectDetail({ params }) {
                             <p className="task-card-desc">{parsedTask.text || 'Không có mô tả.'}</p>
                             <div className="task-card-meta">
                               <span className={`task-card-due ${isOverdue ? 'overdue' : ''}`}>
-                                <i className="fa-regular fa-clock"></i> {t.due_date || 'Không hạn'}
+                                <i className="fa-regular fa-clock"></i> {t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}
                               </span>
                             </div>
                           </div>
@@ -1591,7 +1591,7 @@ export default function ProjectDetail({ params }) {
                         <div className="gantt-task-name" onClick={() => openTaskDetail(t.id)} style={{ cursor: 'pointer' }}>{t.title}</div>
                         <div className="gantt-timeline-container">
                           <div className={`gantt-bar ${t.status.toLowerCase()}`} style={{ left: `${left}%`, width: `${width}%` }}>
-                            <span>Hạn: {t.due_date || 'Không có'} ({t.status})</span>
+                            <span>Hạn: {t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'Không có'} ({t.status})</span>
                           </div>
                         </div>
                       </div>

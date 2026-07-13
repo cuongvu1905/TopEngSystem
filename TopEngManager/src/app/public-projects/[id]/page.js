@@ -146,7 +146,7 @@ export default function PublicProjectDetail({ params }) {
                     <tr key={t.id}>
                       <td style={{ fontWeight: '500' }}>{t.title}</td>
                       <td><span className={`badge ${pClass}`}>{t.priority}</span></td>
-                      <td>{t.due_date || 'N/A'}</td>
+                      <td>{t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'N/A'}</td>
                       <td>
                         {u ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

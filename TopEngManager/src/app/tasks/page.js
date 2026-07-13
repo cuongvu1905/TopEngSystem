@@ -249,7 +249,7 @@ export default function Tasks() {
                         <p className="task-card-desc">{parsedTask.text || 'Không có mô tả.'}</p>
                         <div className="task-card-meta">
                           <span className={`task-card-due ${isOverdue ? 'overdue' : ''}`}>
-                            <i className="fa-regular fa-clock"></i> {t.due_date || 'Không hạn'}
+                            <i className="fa-regular fa-clock"></i> {t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}
                           </span>
                         </div>
                       </div>
@@ -292,7 +292,7 @@ export default function Tasks() {
                   <tr key={t.id}>
                     <td><a href="#" onClick={(e) => { e.preventDefault(); openTaskDetail(t.id); }} style={{ color: 'var(--neutral-dark)', fontWeight: '500' }}>{t.title}</a></td>
                     <td><span className={`badge ${pClass}`}>{t.priority}</span></td>
-                    <td style={{ color: isOverdue ? 'var(--danger-color)' : 'inherit', fontWeight: isOverdue ? '600' : 'normal' }}>{t.due_date || 'N/A'}</td>
+                    <td style={{ color: isOverdue ? 'var(--danger-color)' : 'inherit', fontWeight: isOverdue ? '600' : 'normal' }}>{t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'N/A'}</td>
                     <td>
                       {(() => {
                         const parsed = parseTaskDescription(t.description);
