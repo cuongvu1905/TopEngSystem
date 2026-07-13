@@ -2,7 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { getSwal } from '@/utils/swal';
 
+const Swal = {
+  fire: async (...args) => {
+    const instance = await getSwal();
+    return instance.fire(...args);
+  },
+  mixin: async (...args) => {
+    const instance = await getSwal();
+    return instance.mixin(...args);
+  },
+  close: async (...args) => {
+    const instance = await getSwal();
+    return instance.close(...args);
+  }
+};
 export default function Login() {
   const { login } = useApp();
   const [email, setEmail] = useState('');
@@ -18,8 +33,12 @@ export default function Login() {
     try {
       await login(email, password);
     } catch (err) {
-      console.error(err);
-      setErrorMsg(err.message || 'Có lỗi xảy ra trong quá trình xác thực.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi đăng nhập',
+        text: err.message || 'Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại.',
+      });
+
       setLoading(false);
     }
   };

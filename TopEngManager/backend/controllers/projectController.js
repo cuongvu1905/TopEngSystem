@@ -229,6 +229,54 @@ exports.getDepartments = async (req, res, next) => {
   }
 };
 
+exports.saveDepartment = async (req, res, next) => {
+  try {
+    const { department } = req.body;
+    const isNew = !department.id;
+
+    if (isNew) {
+      if (!department.department_id) {
+        return res.status(400).json({ error: 'Mã phòng ban là bắt buộc.' });
+      }
+      const existing = await prisma.department.findUnique({
+        where: { department_id: department.department_id }
+      });
+      if (existing) {
+        return res.status(400).json({ error: 'Mã phòng ban đã tồn tại.' });
+      }
+
+      await prisma.department.create({
+        data: {
+          department_id: department.department_id,
+          name: department.name
+        }
+      });
+    } else {
+      await prisma.department.update({
+        where: { id: parseInt(department.id) },
+        data: {
+          name: department.name
+        }
+      });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteDepartment = async (req, res, next) => {
+  try {
+    const { id } = req.body;
+    await prisma.department.delete({
+      where: { id: parseInt(id) }
+    });
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.saveCustomer = async (req, res, next) => {
   try {
     const { customer } = req.body;

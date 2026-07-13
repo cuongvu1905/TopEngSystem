@@ -29,6 +29,12 @@ export default function HRManagement() {
   
   // Create account states
   const [isOpen, setIsOpen] = useState(false);
+  const [employeeId, setEmployeeId] = useState('');
+
+  // User list filtering, search & pagination states
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [selectedDeptFilter, setSelectedDeptFilter] = useState('all');
+  const [userCurrentPage, setUserCurrentPage] = useState(1);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,6 +43,29 @@ export default function HRManagement() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Department CRUD states
+  const [isDeptOpen, setIsDeptOpen] = useState(false);
+  const [selectedDept, setSelectedDept] = useState(null);
+  const [inputDeptId, setInputDeptId] = useState('');
+  const [inputDeptName, setInputDeptName] = useState('');
+  const [deptErrorMsg, setDeptErrorMsg] = useState('');
+  const [deptSuccessMsg, setDeptSuccessMsg] = useState('');
+  const [deptLoading, setDeptLoading] = useState(false);
+
+  const handleOpenDeptModal = (dept = null) => {
+    setSelectedDept(dept);
+    if (dept) {
+      setInputDeptId(dept.department_id);
+      setInputDeptName(dept.name);
+    } else {
+      setInputDeptId('');
+      setInputDeptName('');
+    }
+    setDeptErrorMsg('');
+    setDeptSuccessMsg('');
+    setIsDeptOpen(true);
+  };
 
   // Search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,6 +118,10 @@ export default function HRManagement() {
     loadPermissionsData();
   }, [activeTab, isOpen]);
 
+  useEffect(() => {
+    setUserCurrentPage(1);
+  }, [userSearchQuery, selectedDeptFilter]);
+
   // Enforce access control: only Admin or HR can see this
   if (!isAdmin && !isHR) {
     return (
@@ -104,8 +137,8 @@ export default function HRManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fullName || !email || !password || !roleId || !departmentId) {
-      setErrorMsg('Vui lòng điền đầy đủ thông tin bắt buộc, bao gồm cả phòng ban.');
+    if (!employeeId || !fullName || !email || !password || !roleId || !departmentId) {
+      setErrorMsg('Vui lòng điền đầy đủ thông tin bắt buộc, bao gồm cả mã nhân viên và phòng ban.');
       return;
     }
 
@@ -114,7 +147,7 @@ export default function HRManagement() {
     setLoading(true);
 
     try {
-      await db.createUser(email, password, fullName, roleId, departmentId);
+      await db.createUser(email, password, fullName, roleId, departmentId, employeeId);
       setSuccessMsg('Đã cấp tài khoản thành công cho nhân viên mới!');
       
       // Log activity
@@ -127,6 +160,7 @@ export default function HRManagement() {
       );
 
       // Reset form
+      setEmployeeId('');
       setFullName('');
       setEmail('');
       setPassword('');
@@ -139,6 +173,202 @@ export default function HRManagement() {
       setErrorMsg(err.message || 'Lỗi cấp tài khoản.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeptSubmit = async (e) => {
+    e.preventDefault();
+    if (!inputDeptId.trim() || !inputDeptName.trim()) {
+      setDeptErrorMsg('Vui lòng điền đầy đủ thông tin bắt buộc.');
+      return;
+    }
+
+    setDeptErrorMsg('');
+    setDeptSuccessMsg('');
+    setDeptLoading(true);
+
+    try {
+      const payload = {
+        name: inputDeptName.trim(),
+        department_id: inputDeptId.trim()
+      };
+      if (selectedDept) {
+        payload.id = selectedDept.id;
+      }
+
+      await db.saveDepartment(payload);
+      setDeptSuccessMsg(selectedDept ? 'Cập nhật phòng ban thành công!' : 'Thêm phòng ban mới thành công!');
+
+      // Log activity
+      await db.logActivity(
+        currentUser.id, 
+        selectedDept ? "UPDATE" : "CREATE", 
+        "Department", 
+        inputDeptId.trim(), 
+        `đã ${selectedDept ? 'cập nhật' : 'tạo'} phòng ban '${inputDeptName.trim()}' (${inputDeptId.trim()})`
+      );
+
+      // Close modal & reload
+      setTimeout(async () => {
+        setIsDeptOpen(false);
+        await reloadAll();
+        await loadSelectOptions();
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      setDeptErrorMsg(err.message || 'Lỗi lưu thông tin phòng ban.');
+    } finally {
+      setDeptLoading(false);
+    }
+  };
+
+  const handleDeleteDept = async (dept) => {
+    // Show SweetAlert confirmation
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa?',
+      text: `Bạn có chắc chắn muốn xóa phòng ban "${dept.name}"? Tất cả nhân viên trực thuộc phòng này sẽ được chuyển thành "Chưa phân phòng".`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Đồng ý xóa',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await db.deleteDepartment(dept.id);
+        
+        // Log activity
+        await db.logActivity(
+          currentUser.id, 
+          "DELETE", 
+          "Department", 
+          dept.department_id, 
+          `đã xóa phòng ban '${dept.name}' (${dept.department_id})`
+        );
+
+        await reloadAll();
+        await loadSelectOptions();
+
+        Swal.fire(
+          'Đã xóa!',
+          `Phòng ban "${dept.name}" đã được xóa thành công.`,
+          'success'
+        );
+      } catch (err) {
+        console.error(err);
+        Swal.fire(
+          'Lỗi!',
+          err.message || 'Không thể xóa phòng ban này.',
+          'error'
+        );
+      }
+    }
+  };
+
+  const handleResetUserPassword = async (userObj) => {
+    const Swal = await getSwal();
+    const result = await Swal.fire({
+      title: `Đặt lại mật khẩu cho ${userObj.name}`,
+      input: 'password',
+      inputLabel: 'Nhập mật khẩu mới',
+      inputPlaceholder: 'Nhập mật khẩu mới cho nhân viên này...',
+      inputAttributes: {
+        autocapitalize: 'off',
+        autocorrect: 'off'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Đặt lại',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: 'var(--primary-color)',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Bạn cần nhập mật khẩu!';
+        }
+        if (value.length < 6) {
+          return 'Mật khẩu phải dài từ 6 ký tự trở lên!';
+        }
+      }
+    });
+
+    if (result.isConfirmed) {
+      const newPassword = result.value;
+      try {
+        Swal.fire({
+          title: 'Đang xử lý...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        await db.resetUserPassword(userObj.id, newPassword);
+        
+        await db.logActivity(
+          currentUser.id, 
+          "RESET_PASSWORD", 
+          "User", 
+          userObj.id, 
+          `đã đặt lại mật khẩu cho nhân viên '${userObj.name}' (${userObj.email})`
+        );
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công',
+          text: `Đã đặt lại mật khẩu cho nhân viên ${userObj.name} thành công!`,
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      } catch (err) {
+        console.error(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Thất bại',
+          text: err.message || 'Không thể đặt lại mật khẩu.',
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      }
+    }
+  };
+
+  const handleDeleteUser = async (userObj) => {
+    const result = await Swal.fire({
+      title: 'Xác nhận xóa tài khoản?',
+      text: `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của nhân viên "${userObj.name}" (${userObj.email})? Hành động này không thể hoàn tác.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Đồng ý xóa',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await db.deleteUser(userObj.id);
+        
+        await db.logActivity(
+          currentUser.id, 
+          "DELETE", 
+          "User", 
+          userObj.id, 
+          `đã xóa tài khoản nhân viên '${userObj.name}' (${userObj.email})`
+        );
+
+        await reloadAll();
+
+        Swal.fire(
+          'Đã xóa!',
+          `Tài khoản của nhân viên "${userObj.name}" đã được xóa thành công.`,
+          'success'
+        );
+      } catch (err) {
+        console.error(err);
+        Swal.fire(
+          'Lỗi!',
+          err.message || 'Không thể xóa tài khoản này.',
+          'error'
+        );
+      }
     }
   };
 
@@ -170,6 +400,30 @@ export default function HRManagement() {
     };
   };
 
+  const getFilteredUsersList = () => {
+    let list = [...users];
+
+    if (userSearchQuery.trim()) {
+      const query = userSearchQuery.toLowerCase().trim();
+      list = list.filter(u => 
+        u.name.toLowerCase().includes(query) || 
+        (u.id && u.id.toLowerCase().includes(query))
+      );
+    }
+
+    if (selectedDeptFilter !== 'all') {
+      list = list.filter(u => u.department_id === selectedDeptFilter);
+    }
+
+    return list;
+  };
+
+  const filteredUsers = getFilteredUsersList();
+  const itemsPerPage = 20;
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
+  const startIndex = (userCurrentPage - 1) * itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+
   const results = getSearchResults();
   const totalResults = results.projects.length + results.tasks.length + results.users.length;
 
@@ -184,6 +438,11 @@ export default function HRManagement() {
           {activeTab === 'users' && (
             <button className="btn btn-primary" onClick={() => { setIsOpen(true); setErrorMsg(''); setSuccessMsg(''); }}>
               <i className="fa-solid fa-user-plus"></i> Cấp tài khoản mới
+            </button>
+          )}
+          {activeTab === 'departments' && (
+            <button className="btn btn-primary" onClick={() => { handleOpenDeptModal(null); }}>
+              <i className="fa-solid fa-plus"></i> Thêm phòng ban mới
             </button>
           )}
         </div>
@@ -201,13 +460,55 @@ export default function HRManagement() {
         <button className={`tab-btn ${activeTab === 'lookup' ? 'active' : ''}`} onClick={() => setActiveTab('lookup')}>
           <i className="fa-solid fa-magnifying-glass"></i> Tra cứu Dữ liệu
         </button>
+        <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
+          Quản lý phòng ban
+        </button>
       </div>
 
       {/* ================= TAB 1: USERS LIST ================= */}
       {activeTab === 'users' && (
         <div className="card" style={{ padding: '20px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>Danh sách nhân viên ({users.length})</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>Danh sách nhân viên ({filteredUsers.length})</h3>
           
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <input 
+                type="text" 
+                placeholder="Tìm theo tên hoặc mã nhân viên..." 
+                value={userSearchQuery}
+                onChange={(e) => setUserSearchQuery(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px 12px', 
+                  borderRadius: '6px', 
+                  border: '1px solid var(--neutral-border)', 
+                  fontSize: '13px',
+                  outline: 'none' 
+                }}
+              />
+            </div>
+            <div style={{ width: '200px' }}>
+              <select 
+                value={selectedDeptFilter}
+                onChange={(e) => setSelectedDeptFilter(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px 12px', 
+                  borderRadius: '6px', 
+                  border: '1px solid var(--neutral-border)', 
+                  fontSize: '13px',
+                  outline: 'none',
+                  backgroundColor: '#fff'
+                }}
+              >
+                <option value="all">Tất cả phòng ban</option>
+                {departments.map(d => (
+                  <option value={d.department_id} key={d.department_id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="data-table-wrapper">
             <table className="data-table">
               <thead>
@@ -216,10 +517,11 @@ export default function HRManagement() {
                   <th>Địa chỉ Email</th>
                   <th>Vai trò hệ thống</th>
                   <th>Phòng ban</th>
+                  <th style={{ textAlign: 'center', width: '220px' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
+                {paginatedUsers.map(u => (
                   <tr key={u.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -236,8 +538,120 @@ export default function HRManagement() {
                     <td>
                       {u.department_name || 'Chưa phân phòng'}
                     </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        <button 
+                          className="btn btn-secondary btn-sm" 
+                          style={{ padding: '4px 8px', fontSize: '12px' }}
+                          onClick={() => handleResetUserPassword(u)}
+                        >
+                          <i className="fa-solid fa-key"></i> Đặt lại
+                        </button>
+                        {u.id !== currentUser.id && (
+                          <button 
+                            className="btn btn-danger btn-sm" 
+                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                            onClick={() => handleDeleteUser(u)}
+                          >
+                            <i className="fa-solid fa-trash-can"></i> Xóa
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
+                {paginatedUsers.length === 0 && (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
+                      Không tìm thấy nhân viên nào phù hợp.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '16px' }}>
+              <button 
+                className="btn btn-secondary btn-sm"
+                disabled={userCurrentPage === 1}
+                onClick={() => setUserCurrentPage(prev => Math.max(prev - 1, 1))}
+                style={{ padding: '6px 12px' }}
+              >
+                <i className="fa-solid fa-angle-left"></i> Trước
+              </button>
+              
+              <span style={{ fontSize: '13px', color: 'var(--neutral-muted)' }}>
+                Trang <strong>{userCurrentPage}</strong> / {totalPages}
+              </span>
+
+              <button 
+                className="btn btn-secondary btn-sm"
+                disabled={userCurrentPage === totalPages}
+                onClick={() => setUserCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                style={{ padding: '6px 12px' }}
+              >
+                Sau <i className="fa-solid fa-angle-right"></i>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ================= TAB: DEPARTMENTS LIST ================= */}
+      {activeTab === 'departments' && (
+        <div className="card" style={{ padding: '20px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>Danh sách phòng ban ({departments.length})</h3>
+          
+          <div className="data-table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Mã phòng ban</th>
+                  <th>Tên phòng ban</th>
+                  <th style={{ textAlign: 'center' }}>Số lượng nhân viên</th>
+                  <th style={{ textAlign: 'center', width: '150px' }}>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {departments.map(d => {
+                  const memberCount = users.filter(u => u.department_id === d.department_id).length;
+                  return (
+                    <tr key={d.id}>
+                      <td style={{ fontWeight: '600', color: '#1e40af' }}>{d.department_id}</td>
+                      <td style={{ fontWeight: '500' }}>{d.name}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className="badge badge-info">{memberCount} nhân viên</span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button 
+                            className="btn btn-secondary btn-sm" 
+                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                            onClick={() => handleOpenDeptModal(d)}
+                          >
+                            <i className="fa-solid fa-pen-to-square"></i> Sửa
+                          </button>
+                          <button 
+                            className="btn btn-danger btn-sm" 
+                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                            onClick={() => handleDeleteDept(d)}
+                          >
+                            <i className="fa-solid fa-trash-can"></i> Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {departments.length === 0 && (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
+                      Chưa có phòng ban nào được tạo.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -535,6 +949,11 @@ export default function HRManagement() {
                   )}
 
                   <div className="form-group">
+                    <label>Mã nhân viên <span className="required">*</span></label>
+                    <input type="text" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required placeholder="Ví dụ: NV001, NV002, admin..." />
+                  </div>
+
+                  <div className="form-group">
                     <label>Họ và tên nhân viên <span className="required">*</span></label>
                     <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Ví dụ: Nguyễn Văn A" />
                   </div>
@@ -572,6 +991,66 @@ export default function HRManagement() {
                   <button type="button" className="btn btn-secondary" onClick={() => setIsOpen(false)}>Hủy</button>
                   <button type="submit" className="btn btn-primary" disabled={loading}>
                     {loading ? 'Đang tạo...' : 'Cấp tài khoản'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Department Modal */}
+      {isDeptOpen && (
+        <div className="modal show" style={{ display: 'flex' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3>{selectedDept ? 'Chỉnh sửa phòng ban' : 'Thêm phòng ban mới'}</h3>
+                <button className="btn-close-modal" onClick={() => setIsDeptOpen(false)}><i className="fa-solid fa-xmark"></i></button>
+              </div>
+              <form onSubmit={handleDeptSubmit}>
+                <div className="modal-body">
+                  {deptErrorMsg && (
+                    <div className="login-alert danger" style={{ marginBottom: '12px', padding: '10px' }}>
+                      <i className="fa-solid fa-circle-exclamation"></i>
+                      <span>{deptErrorMsg}</span>
+                    </div>
+                  )}
+                  {deptSuccessMsg && (
+                    <div className="login-alert success" style={{ marginBottom: '12px', padding: '10px' }}>
+                      <i className="fa-solid fa-circle-check"></i>
+                      <span>{deptSuccessMsg}</span>
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <label>Mã phòng ban <span className="required">*</span></label>
+                    <input 
+                      type="text" 
+                      value={inputDeptId} 
+                      onChange={(e) => setInputDeptId(e.target.value)} 
+                      required 
+                      disabled={!!selectedDept} 
+                      placeholder="Ví dụ: Dev, HR, Sales, MKT..." 
+                    />
+                    {selectedDept && <small className="text-muted" style={{ display: 'block', marginTop: '4px' }}>Mã phòng ban không thể thay đổi sau khi tạo.</small>}
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Tên phòng ban <span className="required">*</span></label>
+                    <input 
+                      type="text" 
+                      value={inputDeptName} 
+                      onChange={(e) => setInputDeptName(e.target.value)} 
+                      required 
+                      placeholder="Ví dụ: Phát triển phần mềm" 
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsDeptOpen(false)}>Hủy</button>
+                  <button type="submit" className="btn btn-primary" disabled={deptLoading}>
+                    {deptLoading ? 'Đang lưu...' : 'Lưu lại'}
                   </button>
                 </div>
               </form>

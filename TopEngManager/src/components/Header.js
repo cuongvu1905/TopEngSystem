@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { db } from '@/utils/db';
 import { usePathname, useRouter } from 'next/navigation';
+import { getSwal } from '@/utils/swal';
 
 export default function Header() {
   const { currentUser, logout, users, notifications, reloadAll } = useApp();
@@ -37,6 +38,127 @@ export default function Header() {
   } else if (pathname === '/activity-logs') {
     pageTitle = "Lịch sử Hoạt động";
   }
+
+  const handleShowProfile = async () => {
+    setIsSwitcherOpen(false);
+    const Swal = await getSwal();
+    Swal.fire({
+      title: 'Hồ sơ cá nhân',
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--neutral-border); padding-bottom: 15px;">
+            <div style="width: 50px; height: 50px; border-radius: 50%; background-color: ${currentUser.color || '#1E40AF'}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600;">
+              ${currentUser.name.split(" ").pop().charAt(0)}
+            </div>
+            <div>
+              <div style="font-weight: 600; font-size: 16px; color: var(--foreground-color);">${currentUser.name}</div>
+              <div style="font-size: 13px; color: var(--neutral-muted);">${currentUser.email}</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 100px 1fr; gap: 10px; font-size: 14px;">
+            <strong style="color: var(--neutral-muted);">Mã nhân viên:</strong>
+            <span>${currentUser.id}</span>
+            <strong style="color: var(--neutral-muted);">Phòng ban:</strong>
+            <span>${currentUser.department_name || 'Chưa phân phòng'}</span>
+            <strong style="color: var(--neutral-muted);">Quyền hạn:</strong>
+            <span>${currentUser.system_role}</span>
+          </div>
+        </div>
+      `,
+      showDenyButton: true,
+      denyButtonText: 'Đổi mật khẩu',
+      denyButtonColor: '#64748b',
+      confirmButtonText: 'Đóng',
+      confirmButtonColor: 'var(--primary-color)'
+    }).then((result) => {
+      if (result.isDenied) {
+        handleShowChangePassword();
+      }
+    });
+  };
+
+  const handleShowChangePassword = async () => {
+    const Swal = await getSwal();
+    Swal.fire({
+      title: 'Đổi mật khẩu',
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Mật khẩu hiện tại <span style="color: red;">*</span></label>
+            <input type="password" id="current-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="Nhập mật khẩu hiện tại...">
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Mật khẩu mới <span style="color: red;">*</span></label>
+            <input type="password" id="new-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="Nhập mật khẩu mới...">
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Xác nhận mật khẩu mới <span style="color: red;">*</span></label>
+            <input type="password" id="confirm-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="Xác nhận mật khẩu mới...">
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Đổi mật khẩu',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: 'var(--primary-color)',
+      focusConfirm: false,
+      preConfirm: () => {
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          Swal.showValidationMessage('Vui lòng nhập đầy đủ thông tin.');
+          return false;
+        }
+        if (newPassword !== confirmPassword) {
+          Swal.showValidationMessage('Mật khẩu mới và xác nhận mật khẩu không khớp.');
+          return false;
+        }
+        if (newPassword.length < 6) {
+          Swal.showValidationMessage('Mật khẩu mới phải từ 6 ký tự trở lên.');
+          return false;
+        }
+        return { currentPassword, newPassword };
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const { currentPassword, newPassword } = result.value;
+        try {
+          Swal.fire({
+            title: 'Đang xử lý...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          await db.changePassword(currentUser.id, currentPassword, newPassword);
+          
+          await db.logActivity(
+            currentUser.id, 
+            "UPDATE_PASSWORD", 
+            "User", 
+            currentUser.id, 
+            `đã đổi mật khẩu cá nhân`
+          );
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Đổi mật khẩu thành công!',
+            confirmButtonColor: 'var(--primary-color)'
+          });
+        } catch (err) {
+          console.error(err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Thất bại',
+            text: err.message || 'Không thể đổi mật khẩu.',
+            confirmButtonColor: 'var(--primary-color)'
+          });
+        }
+      }
+    });
+  };
 
   const handleLogout = async () => {
     setIsSwitcherOpen(false);
@@ -113,9 +235,24 @@ export default function Header() {
               <div className="dropdown-header" style={{ paddingBottom: '4px' }}>Hồ sơ cá nhân</div>
               <div style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neutral-muted)', borderBottom: '1px solid var(--neutral-border)' }}>
                 <div>Email: {currentUser.email}</div>
+                <div style={{ marginTop: '2px' }}>Phòng ban: {currentUser.department_name || 'Chưa phân phòng'}</div>
                 <div style={{ marginTop: '2px' }}>Quyền: <span className="badge badge-info" style={{ fontSize: '10px' }}>{currentUser.system_role}</span></div>
               </div>
               <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button 
+                  onClick={handleShowProfile} 
+                  className="btn btn-secondary btn-sm" 
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <i className="fa-solid fa-user"></i> Chi tiết tài khoản
+                </button>
+                <button 
+                  onClick={handleShowChangePassword} 
+                  className="btn btn-secondary btn-sm" 
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <i className="fa-solid fa-key"></i> Đổi mật khẩu
+                </button>
                 <button 
                   onClick={handleLogout} 
                   className="btn btn-danger btn-sm" 

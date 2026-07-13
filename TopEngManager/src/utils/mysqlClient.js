@@ -292,8 +292,20 @@ export const MySQLAdapter = {
     return await callApi('getRoles');
   },
 
-  createUser: async function(email, password, fullName, roleId, departmentId = null) {
-    return await callApi('createUser', { email, password, fullName, roleId, departmentId });
+  createUser: async function(email, password, fullName, roleId, departmentId = null, employeeId = '') {
+    return await callApi('createUser', { email, password, fullName, roleId, departmentId, employeeId });
+  },
+
+  changePassword: async function(userId, currentPassword, newPassword) {
+    return await callApi('changePassword', { userId, currentPassword, newPassword });
+  },
+
+  resetUserPassword: async function(userId, newPassword) {
+    return await callApi('resetUserPassword', { userId, newPassword });
+  },
+
+  deleteUser: async function(userId) {
+    return await callApi('deleteUser', { userId });
   },
 
   testConnection: async function() {
@@ -310,6 +322,14 @@ export const MySQLAdapter = {
 
   getDepartments: async function() {
     return await callApi('getDepartments');
+  },
+
+  saveDepartment: async function(department) {
+    return await callApi('saveDepartment', { department });
+  },
+
+  deleteDepartment: async function(id) {
+    return await callApi('deleteDepartment', { id });
   },
 
   uploadFile: async function(file) {

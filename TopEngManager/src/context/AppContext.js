@@ -67,7 +67,9 @@ export const AppContextProvider = ({ children }) => {
             name: profile.name,
             email: profile.email,
             system_role: profile.system_role || 'Nhân viên (Staff)',
-            color: profile.color || '#1E40AF'
+            color: profile.color || '#1E40AF',
+            department_id: profile.department_id || null,
+            department_name: profile.department_name || 'Chưa phân phòng'
           });
         }
       }

@@ -9,6 +9,8 @@ router.post('/addProjectMember', projectController.addProjectMember);
 router.post('/removeProjectMember', projectController.removeProjectMember);
 router.post('/getCustomers', projectController.getCustomers);
 router.post('/getDepartments', projectController.getDepartments);
+router.post('/saveDepartment', projectController.saveDepartment);
+router.post('/deleteDepartment', projectController.deleteDepartment);
 router.post('/saveCustomer', projectController.saveCustomer);
 
 module.exports = router;

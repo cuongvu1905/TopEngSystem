@@ -166,7 +166,7 @@ exports.saveRolesPermissions = async (req, res, next) => {
 
 exports.createUser = async (req, res, next) => {
   try {
-    const { email, password, fullName, roleId, departmentId } = req.body;
+    const { email, password, fullName, roleId, departmentId, employeeId } = req.body;
     if (!email || !password || !fullName || !roleId) {
       return res.status(400).json({ error: 'Thiếu thông tin đăng ký bắt buộc' });
     }
@@ -188,7 +188,16 @@ exports.createUser = async (req, res, next) => {
     const systemRole = roleMap[roleId] || roleId || 'Nhân viên (Staff)';
 
     const passwordHash = hashPassword(password);
-    const userId = 'usr-' + Date.now();
+    const userId = (employeeId && employeeId.trim()) || ('usr-' + Date.now());
+
+    if (employeeId && employeeId.trim()) {
+      const existingUserById = await prisma.user.findUnique({
+        where: { user_id: employeeId.trim() }
+      });
+      if (existingUserById) {
+        return res.status(400).json({ error: 'Mã nhân viên đã tồn tại.' });
+      }
+    }
 
     const existing = await prisma.user.findUnique({
       where: { email: email }
@@ -209,6 +218,74 @@ exports.createUser = async (req, res, next) => {
     });
 
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.changePassword = async (req, res, next) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Thiếu thông tin yêu cầu đổi mật khẩu.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { user_id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Người dùng không tồn tại.' });
+    }
+
+    const currentHash = hashPassword(currentPassword);
+    if (user.password !== currentHash) {
+      return res.status(400).json({ error: 'Mật khẩu hiện tại không chính xác.' });
+    }
+
+    const newHash = hashPassword(newPassword);
+    await prisma.user.update({
+      where: { user_id: userId },
+      data: { password: newHash }
+    });
+
+    res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.resetUserPassword = async (req, res, next) => {
+  try {
+    const { userId, newPassword } = req.body;
+    if (!userId || !newPassword) {
+      return res.status(400).json({ error: 'Thiếu thông tin đặt lại mật khẩu.' });
+    }
+
+    const passwordHash = hashPassword(newPassword);
+    await prisma.user.update({
+      where: { user_id: userId },
+      data: { password: passwordHash }
+    });
+
+    res.json({ success: true, message: 'Đặt lại mật khẩu thành công!' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'Thiếu mã nhân viên cần xóa.' });
+    }
+
+    await prisma.user.delete({
+      where: { user_id: userId }
+    });
+
+    res.json({ success: true, message: 'Xóa tài khoản thành công!' });
   } catch (err) {
     next(err);
   }
