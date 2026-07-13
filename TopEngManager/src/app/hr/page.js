@@ -67,6 +67,20 @@ export default function HRManagement() {
   const [addMemberSelectedIds, setAddMemberSelectedIds] = useState(new Set());
   const [addMemberLoading, setAddMemberLoading] = useState(false);
 
+  // Collapse/expand state for departments tree
+  const [collapsedDepts, setCollapsedDepts] = useState(new Set());
+  const toggleDeptCollapsed = (deptId) => {
+    setCollapsedDepts(prev => {
+      const next = new Set(prev);
+      if (next.has(deptId)) {
+        next.delete(deptId);
+      } else {
+        next.add(deptId);
+      }
+      return next;
+    });
+  };
+
   // Auto switch activeTab to departments for users without core view permissions
   useEffect(() => {
     if (currentUser) {
@@ -477,11 +491,17 @@ export default function HRManagement() {
     const children = getDeptChildren(dept.department_id);
     const isSelected = selectedDeptId === dept.department_id;
     const hasChildren = children.length > 0;
+    const isCollapsed = collapsedDepts.has(dept.department_id);
     
     return (
       <div key={dept.department_id} style={{ marginLeft: depth > 0 ? '16px' : '0px' }}>
         <div 
-          onClick={() => setSelectedDeptId(dept.department_id)}
+          onClick={() => {
+            setSelectedDeptId(dept.department_id);
+            if (hasChildren) {
+              toggleDeptCollapsed(dept.department_id);
+            }
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -499,7 +519,13 @@ export default function HRManagement() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <i className={hasChildren ? "fa-solid fa-folder-open" : "fa-solid fa-folder"} 
+            {hasChildren && (
+              <i 
+                className={isCollapsed ? "fa-solid fa-chevron-right" : "fa-solid fa-chevron-down"} 
+                style={{ marginRight: '6px', fontSize: '10px', color: 'var(--neutral-muted)', width: '12px' }}
+              ></i>
+            )}
+            <i className={hasChildren ? (isCollapsed ? "fa-solid fa-folder" : "fa-solid fa-folder-open") : "fa-solid fa-folder"} 
                style={{ 
                  marginRight: '8px', 
                  color: isSelected ? '#1e40af' : 'var(--neutral-muted)',
@@ -514,7 +540,7 @@ export default function HRManagement() {
             </span>
           )}
         </div>
-        {hasChildren && (
+        {hasChildren && !isCollapsed && (
           <div style={{ borderLeft: '1px dashed var(--neutral-border)', marginLeft: '9px', paddingLeft: '8px', marginTop: '2px', marginBottom: '4px' }}>
             {children.map(child => renderDeptNode(child, depth + 1))}
           </div>
@@ -902,6 +928,7 @@ export default function HRManagement() {
               <thead>
                 <tr>
                   <th>Họ và tên</th>
+                  <th>Mã nhân viên</th>
                   <th>Địa chỉ Email</th>
                   <th>Vai trò hệ thống</th>
                   <th>Phòng ban</th>
@@ -918,6 +945,9 @@ export default function HRManagement() {
                         </div>
                         <span style={{ fontWeight: '500' }}>{u.name} {u.id === currentUser.id && <span className="text-muted" style={{ fontSize: '11px' }}>(Bạn)</span>}</span>
                       </div>
+                    </td>
+                    <td>
+                      <strong style={{ color: '#475569', fontSize: '13px' }}>{u.employee_id || 'N/A'}</strong>
                     </td>
                     <td>{u.email}</td>
                     <td>

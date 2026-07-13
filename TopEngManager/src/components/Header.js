@@ -88,9 +88,13 @@ export default function Header() {
 
       // Add root members
       treeHtml += `
-            <div style="margin-bottom: 10px;">
-              <span style="font-weight: 600; color: var(--foreground-color);"><i class="fa-solid fa-folder-open" style="color: #1e40af; margin-right: 6px;"></i> ${teamDept.name} (Root)</span>
-              <div style="margin-left: 18px; margin-top: 4px;">
+            <div style="margin-bottom: 12px;">
+              <div onclick="const target = document.getElementById('team-root-children'); const isHidden = target.style.display === 'none'; target.style.display = isHidden ? 'block' : 'none'; this.querySelector('.chevron-icon').className = isHidden ? 'fa-solid fa-chevron-down chevron-icon' : 'fa-solid fa-chevron-right chevron-icon'; this.querySelector('.folder-icon').className = isHidden ? 'fa-solid fa-folder-open folder-icon' : 'fa-solid fa-folder folder-icon';" style="cursor: pointer; font-weight: 600; color: var(--foreground-color); display: flex; align-items: center; gap: 6px; user-select: none;">
+                <i class="fa-solid fa-chevron-down chevron-icon" style="font-size: 10px; color: var(--neutral-muted); transition: transform 0.2s; width: 12px;"></i>
+                <i class="fa-solid fa-folder-open folder-icon" style="color: #1e40af; width: 16px;"></i>
+                <span>${teamDept.name} (Root)</span>
+              </div>
+              <div id="team-root-children" style="margin-left: 32px; margin-top: 6px; display: block;">
       `;
       if (teamDeptUsers.length === 0) {
         treeHtml += `  <div style="color: var(--neutral-muted); font-style: italic; font-size: 12px;">Chưa có thành viên</div>`;
@@ -98,7 +102,7 @@ export default function Header() {
         teamDeptUsers.forEach(u => {
           treeHtml += `
             <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-              <i class="fa-solid fa-user" style="font-size: 11px; color: var(--neutral-muted);"></i>
+              <i class="fa-solid fa-user" style="font-size: 11px; color: var(--neutral-muted); width: 12px; text-align: center;"></i>
               <span>${u.name}</span>
               <span class="badge ${u.system_role.includes('Leader') ? 'badge-danger' : 'badge-info'}" style="font-size: 10px; padding: 1px 4px;">${u.system_role}</span>
             </div>`;
@@ -110,12 +114,16 @@ export default function Header() {
       `;
 
       // Add child parts and their members
-      childDepts.forEach(child => {
+      childDepts.forEach((child, index) => {
         const childUsers = usersList.filter(u => u.department_id === child.department_id);
         treeHtml += `
-            <div style="margin-bottom: 10px; margin-top: 12px;">
-              <span style="font-weight: 600; color: var(--foreground-color);"><i class="fa-solid fa-folder" style="color: #eab308; margin-right: 6px;"></i> ${child.name} (${child.department_id})</span>
-              <div style="margin-left: 18px; margin-top: 4px;">
+            <div style="margin-bottom: 12px; margin-top: 12px;">
+              <div onclick="const target = document.getElementById('team-child-${index}'); const isHidden = target.style.display === 'none'; target.style.display = isHidden ? 'block' : 'none'; this.querySelector('.chevron-icon').className = isHidden ? 'fa-solid fa-chevron-down chevron-icon' : 'fa-solid fa-chevron-right chevron-icon'; this.querySelector('.folder-icon').className = isHidden ? 'fa-solid fa-folder-open folder-icon' : 'fa-solid fa-folder folder-icon';" style="cursor: pointer; font-weight: 600; color: var(--foreground-color); display: flex; align-items: center; gap: 6px; user-select: none;">
+                <i class="fa-solid fa-chevron-down chevron-icon" style="font-size: 10px; color: var(--neutral-muted); transition: transform 0.2s; width: 12px;"></i>
+                <i class="fa-solid fa-folder-open folder-icon" style="color: #eab308; width: 16px;"></i>
+                <span>${child.name} (${child.department_id})</span>
+              </div>
+              <div id="team-child-${index}" style="margin-left: 32px; margin-top: 6px; display: block;">
         `;
         if (childUsers.length === 0) {
           treeHtml += `  <div style="color: var(--neutral-muted); font-style: italic; font-size: 12px;">Chưa có thành viên</div>`;
@@ -123,7 +131,7 @@ export default function Header() {
           childUsers.forEach(u => {
             treeHtml += `
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                <i class="fa-solid fa-user" style="font-size: 11px; color: var(--neutral-muted);"></i>
+                <i class="fa-solid fa-user" style="font-size: 11px; color: var(--neutral-muted); width: 12px; text-align: center;"></i>
                 <span>${u.name}</span>
                 <span class="badge ${u.system_role.includes('Leader') ? 'badge-warning' : 'badge-info'}" style="font-size: 10px; padding: 1px 4px;">${u.system_role}</span>
               </div>`;
@@ -382,12 +390,12 @@ export default function Header() {
               <i className="fa-solid fa-chevron-down" style={{ marginLeft: '6px', fontSize: '10px' }}></i>
             </div>
             <div className={`dropdown-menu switcher-menu ${isSwitcherOpen ? 'show' : ''}`} style={{ right: 0, minWidth: '200px' }}>
-              <div className="dropdown-header" style={{ paddingBottom: '4px' }}>Hồ sơ cá nhân</div>
+              {/* <div className="dropdown-header" style={{ paddingBottom: '4px' }}>Hồ sơ cá nhân</div>
               <div style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neutral-muted)', borderBottom: '1px solid var(--neutral-border)' }}>
                 <div>Email: {currentUser.email}</div>
                 <div style={{ marginTop: '2px' }}>Phòng ban: {currentUser.department_name || 'Chưa phân phòng'}</div>
                 <div style={{ marginTop: '2px' }}>Quyền: <span className="badge badge-info" style={{ fontSize: '10px' }}>{currentUser.system_role}</span></div>
-              </div>
+              </div> */}
               <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button 
                   onClick={handleShowProfile} 

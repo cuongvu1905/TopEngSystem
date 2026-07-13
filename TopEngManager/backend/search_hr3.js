@@ -4,7 +4,8 @@ const content = fs.readFileSync(filePath, 'utf8');
 const lines = content.split(/\r?\n/);
 
 lines.forEach((line, index) => {
-  if (line.includes('Cơ cấu tổ chức') || line.includes('Sơ đồ nhóm') || line.includes('Cơ cấu Team') || line.includes('renderDeptNode')) {
+  const lineLower = line.toLowerCase();
+  if (lineLower.includes('team') && (lineLower.includes('cơ cấu') || lineLower.includes('sơ đồ') || lineLower.includes('nhóm') || lineLower.includes('root'))) {
     console.log(`${index + 1}: ${line.trim()}`);
   }
 });
