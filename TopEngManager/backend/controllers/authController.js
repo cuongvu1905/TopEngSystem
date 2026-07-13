@@ -41,18 +41,23 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: 'Thiếu email hoặc mật khẩu' });
+      return res.status(400).json({ error: 'Thiếu email/mã nhân viên hoặc mật khẩu' });
     }
 
     const inputSecureHash = hashPasswordSecurely(password);
     const inputMd5Hash = hashPassword(password);
 
     const users = await prisma.user.findMany({
-      where: { email: email }
+      where: {
+        OR: [
+          { email: email },
+          { user_id: email }
+        ]
+      }
     });
 
     if (users.length === 0) {
-      return res.status(400).json({ error: 'Email hoặc mật khẩu không chính xác.' });
+      return res.status(400).json({ error: 'Email/Mã nhân viên hoặc mật khẩu không chính xác.' });
     }
 
     const user = users[0];
@@ -79,7 +84,7 @@ exports.login = async (req, res, next) => {
           description: `Đăng nhập thất bại: sai mật khẩu cho tài khoản ${email}.`
         }
       });
-      return res.status(400).json({ error: 'Email hoặc mật khẩu không chính xác.' });
+      return res.status(400).json({ error: 'Email/Mã nhân viên hoặc mật khẩu không chính xác.' });
     }
 
     // Capture security context for abnormal login checks

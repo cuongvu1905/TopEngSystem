@@ -153,7 +153,7 @@ export default function DailyReportsPage() {
   }
 
   return (
-    <div className="page-container" style={{ padding: '24px', width: '100%' }}>
+    <div className="scrollable-view">
       {/* Header section with Trigger Button */}
       <div className="page-header" style={{ marginBottom: '24px', borderBottom: '1px solid var(--neutral-border)', paddingBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>

@@ -65,19 +65,18 @@ export default function Login() {
 
 
           <div className="form-group">
-            <label>Địa chỉ Email</label>
+            <label>Email hoặc Mã nhân viên</label>
             <div className="input-with-icon">
-              <i className="fa-regular fa-envelope"></i>
+              <i className="fa-regular fa-user"></i>
               <input 
-                type="email" 
+                type="text" 
                 style={{
                   backgroundColor: 'white',
                   color: 'black',
-                  
                 }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@topengnet.com" 
+                placeholder="name@topengnet.com hoặc mã nhân viên" 
                 required 
               />
             </div>

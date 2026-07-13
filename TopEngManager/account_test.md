@@ -3,8 +3,9 @@
 Tài liệu này chứa thông tin các tài khoản thử nghiệm tương ứng với từng vai trò/vị trí trong hệ thống sau khi đã làm sạch và seed dữ liệu demo.
 
 ## Thông tin đăng nhập chung
-- **Mật khẩu mặc định**: `123456`
+- **Mật khẩu mặc định**: `TopEngManager2026@`
 - **Đường dẫn ứng dụng**: `http://localhost:3000`
+- **Mã đăng nhập nhanh**: Bạn có thể đăng nhập bằng Email hoặc Mã nhân viên (ví dụ: `usr-admin`).
 
 ## 6 Tài khoản vai trò cốt lõi (Core Accounts)
 
@@ -50,6 +51,6 @@ Tài liệu này chứa thông tin các tài khoản thử nghiệm tương ứn
 
 ## Hướng dẫn kiểm thử nhanh
 1. Truy cập vào ứng dụng tại [http://localhost:3000](http://localhost:3000)
-2. Sử dụng email của tài khoản muốn kiểm thử kèm mật khẩu `123456` để đăng nhập.
+2. Sử dụng email hoặc mã nhân viên của tài khoản muốn kiểm thử kèm mật khẩu `TopEngManager2026@` để đăng nhập.
 3. Kiểm tra các chức năng và quyền truy cập đặc thù của vai trò đó (Tham khảo phân quyền trong `PHAN_QUYEN.md`).
 4. Sử dụng nút đăng xuất nhanh ở góc trên bên phải để chuyển đổi giữa các tài khoản tiện lợi hơn.
