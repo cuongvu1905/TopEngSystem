@@ -429,7 +429,7 @@ export default function Dashboard() {
   const getCanReviewReport = (rep) => {
     if (!rep) return false;
     return (currentUser.id !== rep.user_id) && 
-      (isAdmin || isHR || currentUser.system_role.includes("BOD") || currentUser.system_role.includes("Leader") || isPM);
+      (hasPermission('approve_daily_report') || isPM);
   };
 
   return (

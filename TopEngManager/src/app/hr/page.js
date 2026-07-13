@@ -22,7 +22,7 @@ const Swal = {
 };
 
 export default function HRManagement() {
-  const { currentUser, users, projects, tasks, reloadAll } = useApp();
+  const { currentUser, users, projects, tasks, reloadAll, hasPermission } = useApp();
   const [activeTab, setActiveTab] = useState('users');
   const [roles, setRoles] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -60,10 +60,17 @@ export default function HRManagement() {
 
   const [selectedDeptId, setSelectedDeptId] = useState(null);
 
-  // Auto switch activeTab to departments for Team Leader
+  // Add member modal states
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [addMemberSearch, setAddMemberSearch] = useState('');
+  const [addMemberDeptFilter, setAddMemberDeptFilter] = useState('all');
+  const [addMemberSelectedIds, setAddMemberSelectedIds] = useState(new Set());
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
+
+  // Auto switch activeTab to departments for users without core view permissions
   useEffect(() => {
     if (currentUser) {
-      const isPowerUser = currentUser.system_role.includes("Admin") || currentUser.system_role.includes("Nhân sự");
+      const isPowerUser = hasPermission('view_hr_members') || hasPermission('manage_role_permissions');
       if (!isPowerUser) {
         setActiveTab('departments');
       }
@@ -118,6 +125,7 @@ export default function HRManagement() {
   const [localRolePermissions, setLocalRolePermissions] = useState({});
   const [newRoleName, setNewRoleName] = useState('');
   const [savingPermissions, setSavingPermissions] = useState(false);
+  const [selectedModuleFilter, setSelectedModuleFilter] = useState('all');
 
   // Role checks declared at the top of HRManagement
 
@@ -635,7 +643,7 @@ export default function HRManagement() {
   };
 
   const handleTogglePartLeader = async (userObj, promote) => {
-    const targetRole = promote ? 'Part Leader' : 'Staff';
+    const targetRole = promote ? 'Part Leader' : 'Nhân viên (Staff)';
     const actionText = promote ? 'chỉ định làm Part Leader' : 'thu hồi quyền Part Leader';
     const result = await Swal.fire({
       title: promote ? 'Chỉ định Part Leader?' : 'Thu hồi quyền Part Leader?',
@@ -688,6 +696,113 @@ export default function HRManagement() {
     }
   };
 
+  const handleAddDeptMember = (currentSelectedDept) => {
+    setAddMemberSearch('');
+    setAddMemberDeptFilter('all');
+    setAddMemberSelectedIds(new Set());
+    setIsAddMemberOpen(true);
+  };
+
+  const handleConfirmAddMembers = async () => {
+    const currentSelectedDept = departments.find(d => d.department_id === selectedDeptId);
+    if (!currentSelectedDept || addMemberSelectedIds.size === 0) return;
+
+    setAddMemberLoading(true);
+    const Swal = await getSwal();
+
+    try {
+      const selectedIdsArray = Array.from(addMemberSelectedIds);
+      const promises = selectedIdsArray.map(async (uId) => {
+        const targetUser = users.find(u => u.id === uId);
+        if (!targetUser) return;
+
+        await db.updateUserRoleAndDept(
+          targetUser.id,
+          targetUser.system_role || 'Nhân viên (Staff)',
+          currentSelectedDept.department_id,
+          targetUser.name,
+          targetUser.email
+        );
+
+        await db.logActivity(
+          currentUser.id,
+          "UPDATE",
+          "User",
+          targetUser.id,
+          `đã thêm nhân viên '${targetUser.name}' vào phòng ban/part '${currentSelectedDept.name}' (${currentSelectedDept.department_id})`
+        );
+      });
+
+      await Promise.all(promises);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Thành công',
+        text: `Đã thêm ${selectedIdsArray.length} nhân viên vào phòng ban thành công!`,
+        confirmButtonColor: 'var(--primary-color)'
+      });
+
+      setIsAddMemberOpen(false);
+      await reloadAll();
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Thất bại',
+        text: 'Lỗi thêm thành viên: ' + (err.message || err),
+        confirmButtonColor: 'var(--primary-color)'
+      });
+    } finally {
+      setAddMemberLoading(false);
+    }
+  };
+
+  const getAddMemberEligibleUsers = () => {
+    const currentSelectedDept = departments.find(d => d.department_id === selectedDeptId);
+    if (!currentSelectedDept) return [];
+
+    return users.filter(u => {
+      if (u.department_id === currentSelectedDept.department_id) return false;
+
+      if (addMemberDeptFilter !== 'all' && u.department_id !== addMemberDeptFilter) return false;
+
+      if (addMemberSearch.trim()) {
+        const query = addMemberSearch.toLowerCase();
+        const nameMatch = u.name?.toLowerCase().includes(query);
+        const emailMatch = u.email?.toLowerCase().includes(query);
+        const codeMatch = u.employee_id?.toLowerCase().includes(query);
+        if (!nameMatch && !emailMatch && !codeMatch) return false;
+      }
+
+      return true;
+    });
+  };
+
+  const handleToggleAddMemberCheckbox = (userId) => {
+    setAddMemberSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleAddMemberSelectAll = (eligibleUsersList) => {
+    setAddMemberSelectedIds(prev => {
+      const next = new Set(prev);
+      const allSelected = eligibleUsersList.length > 0 && eligibleUsersList.every(u => next.has(u.id));
+      if (allSelected) {
+        eligibleUsersList.forEach(u => next.delete(u.id));
+      } else {
+        eligibleUsersList.forEach(u => next.add(u.id));
+      }
+      return next;
+    });
+  };
+
   const filteredUsers = getFilteredUsersList();
   const itemsPerPage = 20;
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
@@ -705,12 +820,12 @@ export default function HRManagement() {
           <p>Cấp tài khoản mới, tra cứu thông tin dữ liệu chéo và quản trị ma trận phân quyền hệ thống.</p>
         </div>
         <div className="view-actions">
-          {activeTab === 'users' && (
+          {activeTab === 'users' && hasPermission('create_employee_account') && (
             <button className="btn btn-primary" onClick={() => { setIsOpen(true); setErrorMsg(''); setSuccessMsg(''); }}>
               <i className="fa-solid fa-user-plus"></i> Cấp tài khoản mới
             </button>
           )}
-          {activeTab === 'departments' && (
+          {activeTab === 'departments' && hasPermission('manage_departments') && (
             <button className="btn btn-primary" onClick={() => { handleOpenDeptModal(null); }}>
               <i className="fa-solid fa-plus"></i> Thêm phòng ban mới
             </button>
@@ -718,22 +833,23 @@ export default function HRManagement() {
         </div>
       </div>
 
-      {(isAdmin || isHR) && (
+      {(hasPermission('view_hr_members') || hasPermission('manage_role_permissions') || hasPermission('manage_departments') || isTeamLeader) && (
         <div className="project-tabs" style={{ marginTop: '16px', marginBottom: '16px' }}>
-          <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
-            <i className="fa-solid fa-users"></i> Nhân sự & Tài khoản
-          </button>
-          {isAdmin && (
+          {hasPermission('view_hr_members') && (
+            <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
+              <i className="fa-solid fa-users"></i> Nhân sự & Tài khoản
+            </button>
+          )}
+          {hasPermission('manage_role_permissions') && (
             <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
               <i className="fa-solid fa-shield-halved"></i> Bảng Phân Quyền
             </button>
           )}
-          {/* <button className={`tab-btn ${activeTab === 'lookup' ? 'active' : ''}`} onClick={() => setActiveTab('lookup')}>
-            <i className="fa-solid fa-magnifying-glass"></i> Tra cứu Dữ liệu
-          </button> */}
-          <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
-            Quản lý phòng ban
-          </button>
+          {(hasPermission('manage_departments') || isTeamLeader) && (
+            <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
+              Quản lý phòng ban
+            </button>
+          )}
         </div>
       )}
 
@@ -812,14 +928,16 @@ export default function HRManagement() {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                        <button 
-                          className="btn btn-secondary btn-sm" 
-                          style={{ padding: '4px 8px', fontSize: '12px' }}
-                          onClick={() => handleResetUserPassword(u)}
-                        >
-                          <i className="fa-solid fa-key"></i> Đặt lại
-                        </button>
-                        {u.id !== currentUser.id && (
+                        {hasPermission('edit_employee_info') && (
+                          <button 
+                            className="btn btn-secondary btn-sm" 
+                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                            onClick={() => handleResetUserPassword(u)}
+                          >
+                            <i className="fa-solid fa-key"></i> Đặt lại
+                          </button>
+                        )}
+                        {hasPermission('edit_employee_info') && u.id !== currentUser.id && (
                           <button 
                             className="btn btn-danger btn-sm" 
                             style={{ padding: '4px 8px', fontSize: '12px' }}
@@ -878,11 +996,11 @@ export default function HRManagement() {
           <div className="card" style={{ flex: '0 0 35%', padding: '20px', minHeight: '400px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '600' }}>Cơ cấu tổ chức</h3>
-              {(isAdmin || isHR) && (
+              {/* {(isAdmin || isHR) && (
                 <button className="btn btn-primary btn-sm" onClick={() => handleOpenDeptModal(null)}>
                   <i className="fa-solid fa-plus"></i> Thêm phòng
                 </button>
-              )}
+              )} */}
             </div>
             <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '4px' }}>
               {(() => {
@@ -914,9 +1032,9 @@ export default function HRManagement() {
               const parentDept = departments.find(d => d.department_id === currentSelectedDept.parent_id);
               const deptMembers = users.filter(u => u.department_id === currentSelectedDept.department_id);
 
-              const canEditDept = isAdmin || isHR || (isTeamLeader && currentSelectedDept.parent_id === currentUser.department_id);
-              const canDeleteDept = isAdmin || isHR || (isTeamLeader && currentSelectedDept.parent_id === currentUser.department_id);
-              const canCreateSubDept = isAdmin || isHR || (isTeamLeader && currentSelectedDept.department_id === currentUser.department_id);
+              const canEditDept = hasPermission('manage_departments') || (isTeamLeader && currentSelectedDept.parent_id === currentUser.department_id);
+              const canDeleteDept = hasPermission('manage_departments') || (isTeamLeader && currentSelectedDept.parent_id === currentUser.department_id);
+              const canAddMember = hasPermission('edit_employee_info') || (isTeamLeader && (currentSelectedDept.department_id === currentUser.department_id || currentSelectedDept.parent_id === currentUser.department_id));
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -937,9 +1055,9 @@ export default function HRManagement() {
                       </div>
 
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        {canCreateSubDept && (
-                          <button className="btn btn-secondary btn-sm" onClick={() => handleOpenDeptModal(null, currentSelectedDept.department_id)}>
-                            <i className="fa-solid fa-plus"></i> Thêm Part con
+                        {canAddMember && (
+                          <button className="btn btn-secondary btn-sm" onClick={() => handleAddDeptMember(currentSelectedDept)}>
+                            <i className="fa-solid fa-user-plus"></i> Thêm thành viên
                           </button>
                         )}
                         {canEditDept && (
@@ -973,7 +1091,7 @@ export default function HRManagement() {
                           {deptMembers.map(member => {
                             const isMemberOfMyTeam = member.department_id === currentUser.department_id || 
                               departments.some(d => d.department_id === member.department_id && d.parent_id === currentUser.department_id);
-                            const canManageMemberRole = isAdmin || isHR || (isTeamLeader && isMemberOfMyTeam);
+                             const canManageMemberRole = hasPermission('edit_employee_info') || (isTeamLeader && isMemberOfMyTeam);
 
                             return (
                               <tr key={member.id}>
@@ -1044,13 +1162,42 @@ export default function HRManagement() {
       )}
 
       {/* ================= TAB 2: SYSTEM PERMISSIONS MATRIX ================= */}
-      {activeTab === 'permissions' && isAdmin && (
-        <div className="card" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <div>
-              <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>Ma trận Phân quyền Chức năng</h3>
-              <p className="text-muted" style={{ fontSize: '12.5px', margin: 0 }}>Cấu hình bật/tắt quyền hạn chi tiết cho từng vai trò và thêm vai trò mới để mở rộng người dùng.</p>
-            </div>
+      {activeTab === 'permissions' && isAdmin && (() => {
+        const modules = Array.from(new Set(localPermissions.map(p => p.module))).filter(Boolean);
+        const filteredPermissions = selectedModuleFilter === 'all'
+          ? localPermissions
+          : localPermissions.filter(p => p.module === selectedModuleFilter);
+
+        return (
+          <div className="card" style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>Ma trận Phân quyền Chức năng</h3>
+                <p className="text-muted" style={{ fontSize: '12.5px', margin: 0 }}>Cấu hình bật/tắt quyền hạn chi tiết cho từng vai trò và thêm/bỏ vai trò mới để mở rộng người dùng.</p>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--neutral-muted)' }}>Lọc phân hệ:</span>
+                  <select 
+                    value={selectedModuleFilter} 
+                    onChange={(e) => setSelectedModuleFilter(e.target.value)} 
+                    style={{ 
+                      padding: '6px 12px', 
+                      borderRadius: '6px', 
+                      border: '1px solid var(--neutral-border)', 
+                      outline: 'none', 
+                      fontSize: '13px', 
+                      fontWeight: '500',
+                      color: '#334155'
+                    }}
+                  >
+                    <option value="all">Tất cả phân hệ</option>
+                    {modules.map(mod => (
+                      <option key={mod} value={mod}>{mod}</option>
+                    ))}
+                  </select>
+                </div>
             
             <form onSubmit={async (e) => {
               e.preventDefault();
@@ -1101,6 +1248,7 @@ export default function HRManagement() {
               </button>
             </form>
           </div>
+        </div>
           
           <div className="data-table-wrapper" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             <table className="data-table" style={{ fontSize: '12px' }}>
@@ -1109,14 +1257,67 @@ export default function HRManagement() {
                   <th style={{ minWidth: '150px' }}>Phân hệ</th>
                   <th style={{ minWidth: '220px' }}>Quyền hạn / Chức năng</th>
                   {localRoles.map(role => (
-                    <th key={role.id} style={{ textAlign: 'center', minWidth: '100px' }}>
-                      {role.name}
+                    <th key={role.id} style={{ textAlign: 'center', minWidth: '110px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        <span>{role.name}</span>
+                        {!['Quản trị viên (Admin)', 'Nhân sự (HR)', 'Nhân viên (Staff)', 'Team Leader', 'Part Leader', 'Kinh doanh (Sales)', 'Ban điều hành (BOD)'].includes(role.name) && (
+                          <button 
+                            type="button" 
+                            className="btn btn-sm text-danger" 
+                            style={{ 
+                              padding: '2px 6px', 
+                              fontSize: '10.5px', 
+                              background: '#fff1f2', 
+                              border: '1px solid #ffe4e6', 
+                              borderRadius: '4px',
+                              cursor: 'pointer' 
+                            }}
+                            onClick={async () => {
+                              const result = await Swal.fire({
+                                title: 'Xác nhận xóa',
+                                text: `Bạn có chắc chắn muốn xóa vai trò "${role.name}"? Tất cả phân quyền của vai trò này sẽ bị xóa.`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#d33',
+                                cancelButtonColor: '#3085d6',
+                                confirmButtonText: 'Xóa',
+                                cancelButtonText: 'Hủy'
+                              });
+                              if (result.isConfirmed) {
+                                const updatedRoles = localRoles.filter(r => r.id !== role.id);
+                                const updatedRolePerms = { ...localRolePermissions };
+                                delete updatedRolePerms[role.name];
+                                
+                                setLocalRoles(updatedRoles);
+                                setLocalRolePermissions(updatedRolePerms);
+                                
+                                try {
+                                  await db.saveRolesPermissions(updatedRoles, updatedRolePerms);
+                                  await db.logActivity(
+                                    currentUser.id,
+                                    "DELETE_ROLE",
+                                    "Role",
+                                    role.id,
+                                    `đã xóa vai trò người dùng '${role.name}'`
+                                  );
+                                  await reloadAll();
+                                  Swal.fire('Thành công', `Đã xóa vai trò "${role.name}"!`, 'success');
+                                } catch (err) {
+                                  Swal.fire('Lỗi', `Không thể xóa vai trò: ${err.message}`, 'error');
+                                }
+                              }
+                            }}
+                          >
+                            <i className="fa-solid fa-trash-can"></i> Xóa
+                          </button>
+                        )}
+                      </div>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {localPermissions.map(perm => (
+                {filteredPermissions.map(perm => (
                   <tr key={perm.key}>
                     <td style={{ fontWeight: '600', color: '#475569' }}>{perm.module}</td>
                     <td>
@@ -1193,7 +1394,8 @@ export default function HRManagement() {
             </button>
           </div>
         </div>
-      )}
+      );
+    })()}
 
       {/* ================= TAB 3: DATA LOOKUP CENTER ================= */}
       {/* {activeTab === 'lookup' && (
@@ -1415,10 +1617,9 @@ export default function HRManagement() {
                       value={inputDeptId} 
                       onChange={(e) => setInputDeptId(e.target.value)} 
                       required 
-                      disabled={!!selectedDept} 
                       placeholder="Ví dụ: Dev, HR, Sales, MKT..." 
                     />
-                    {selectedDept && <small className="text-muted" style={{ display: 'block', marginTop: '4px' }}>Mã phòng ban không thể thay đổi sau khi tạo.</small>}
+                    {selectedDept && <small className="text-muted" style={{ display: 'block', marginTop: '4px' }}>Thay đổi mã phòng ban sẽ tự động cập nhật cho tất cả nhân viên và phòng ban trực thuộc.</small>}
                   </div>
                   
                   <div className="form-group">
@@ -1427,7 +1628,6 @@ export default function HRManagement() {
                       value={inputDeptParentId}
                       onChange={(e) => setInputDeptParentId(e.target.value)}
                       style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', backgroundColor: '#fff' }}
-                      disabled={isTeamLeader}
                     >
                       <option value="">Không (Phòng ban gốc)</option>
                       {departments
@@ -1461,6 +1661,127 @@ export default function HRManagement() {
           </div>
         </div>
       )}
+
+      {/* Add Member Modal */}
+      {isAddMemberOpen && (() => {
+        const currentSelectedDept = departments.find(d => d.department_id === selectedDeptId);
+        if (!currentSelectedDept) return null;
+        
+        const eligibleUsers = getAddMemberEligibleUsers();
+        const allSelected = eligibleUsers.length > 0 && eligibleUsers.every(u => addMemberSelectedIds.has(u.id));
+        
+        return (
+          <div className="modal show" style={{ display: 'flex' }}>
+            <div className="modal-dialog" style={{ maxWidth: '650px', width: '100%' }}>
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h3>Thêm thành viên vào {currentSelectedDept.name}</h3>
+                  <button className="btn-close-modal" onClick={() => setIsAddMemberOpen(false)}><i className="fa-solid fa-xmark"></i></button>
+                </div>
+                <div className="modal-body" style={{ padding: '20px' }}>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                    <div style={{ flex: '1', position: 'relative' }}>
+                      <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '10px', top: '11px', color: 'var(--neutral-muted)', fontSize: '13px' }}></i>
+                      <input 
+                        type="text" 
+                        placeholder="Tìm theo tên, email, mã nhân viên..." 
+                        value={addMemberSearch}
+                        onChange={(e) => setAddMemberSearch(e.target.value)}
+                        style={{ padding: '8px 12px 8px 30px', width: '100%', borderRadius: '6px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ width: '200px' }}>
+                      <select
+                        value={addMemberDeptFilter}
+                        onChange={(e) => setAddMemberDeptFilter(e.target.value)}
+                        style={{ padding: '8px 12px', width: '100%', borderRadius: '6px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', backgroundColor: '#fff' }}
+                      >
+                        <option value="all">Tất cả phòng ban</option>
+                        {departments.map(d => (
+                          <option value={d.department_id} key={d.department_id}>{d.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="data-table-wrapper" style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px' }}>
+                    <table className="data-table" style={{ fontSize: '12.5px', marginBottom: 0 }}>
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8fafc', zIndex: 1 }}>
+                        <tr>
+                          <th style={{ width: '40px', textAlign: 'center' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={allSelected} 
+                              disabled={eligibleUsers.length === 0}
+                              onChange={() => handleToggleAddMemberSelectAll(eligibleUsers)}
+                              style={{ transform: 'scale(1.15)', cursor: 'pointer' }}
+                            />
+                          </th>
+                          <th>Họ và tên</th>
+                          <th>Mã nhân viên / Email</th>
+                          <th>Phòng ban hiện tại</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {eligibleUsers.map(u => {
+                          const isChecked = addMemberSelectedIds.has(u.id);
+                          return (
+                            <tr 
+                              key={u.id} 
+                              onClick={() => handleToggleAddMemberCheckbox(u.id)}
+                              style={{ cursor: 'pointer', backgroundColor: isChecked ? 'rgba(30, 64, 175, 0.03)' : 'transparent' }}
+                            >
+                              <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={isChecked} 
+                                  onChange={() => handleToggleAddMemberCheckbox(u.id)}
+                                  style={{ transform: 'scale(1.15)', cursor: 'pointer' }}
+                                />
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: u.color || '#1e40af', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '600' }}>
+                                    {u.name.split(" ").pop().charAt(0)}
+                                  </div>
+                                  <span style={{ fontWeight: '500' }}>{u.name}</span>
+                                </div>
+                              </td>
+                              <td>
+                                <div style={{ fontWeight: '500' }}>{u.employee_id || 'N/A'}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--neutral-muted)' }}>{u.email}</div>
+                              </td>
+                              <td>{u.department_name || 'Chưa phân phòng'}</td>
+                            </tr>
+                          );
+                        })}
+                        {eligibleUsers.length === 0 && (
+                          <tr>
+                            <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: 'var(--neutral-muted)' }}>
+                              Không tìm thấy nhân viên phù hợp.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="modal-footer" style={{ padding: '16px 20px', borderTop: '1px solid var(--neutral-border)' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsAddMemberOpen(false)}>Hủy</button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary" 
+                    disabled={addMemberLoading || addMemberSelectedIds.size === 0}
+                    onClick={handleConfirmAddMembers}
+                  >
+                    {addMemberLoading ? 'Đang lưu...' : `Thêm (${addMemberSelectedIds.size}) thành viên`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -1,18 +1,31 @@
+const path = require('path');
+const fs = require('fs');
 const prisma = require('../config/prisma');
+
+function hasPermission(userRole, permissionKey) {
+  try {
+    const configPath = path.join(__dirname, '../config/roles_permissions.json');
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (userRole.includes("Admin") || userRole.includes("Owner")) return true;
+      const permissions = config.role_permissions[userRole] || [];
+      return permissions.includes(permissionKey);
+    }
+  } catch (err) {
+    console.error('Error checking permission in backend:', err);
+  }
+  return userRole.includes("Admin") || userRole.includes("HR") || userRole.includes("BOD") || userRole.includes("Leader");
+}
 
 exports.getDailyReports = async (req, res, next) => {
   try {
     const { userId, userRole } = req.body;
 
     const roleStr = typeof userRole === 'string' ? userRole : '';
-    const isAdminOrManagement = 
-      roleStr.includes("Admin") || 
-      roleStr.includes("HR") || 
-      roleStr.includes("BOD") || 
-      roleStr.includes("Leader");
+    const canViewAll = hasPermission(roleStr, 'view_daily_reports');
 
     let where = {};
-    if (!isAdminOrManagement && userId) {
+    if (!canViewAll && userId) {
       where.user_id = userId;
     }
 

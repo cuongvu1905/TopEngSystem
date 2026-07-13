@@ -12,7 +12,7 @@
     { "key": "view_dashboard", "name": "Xem Dashboard", "module": "Dashboard" },
     { "key": "view_all_projects", "name": "Xem toàn bộ dự án", "module": "Dự án" },
     { "key": "create_project", "name": "Thêm dự án mới", "module": "Dự án" },
-    { "key": "edit_project", "name": "Điều chỉnh plan dự án (sửa/xóa dự án)", "module": "Dự án" },
+    { "key": "edit_project", "name": "Chỉnh sửa dự án (Sửa/Xóa/Thay đổi plan)", "module": "Dự án" },
     { "key": "manage_project_members", "name": "Quản lý thành viên dự án", "module": "Dự án" },
     { "key": "create_task", "name": "Giao việc mới (Tạo Task)", "module": "Công việc" },
     { "key": "edit_task", "name": "Chỉnh sửa nội dung công việc", "module": "Công việc" },
@@ -22,8 +22,16 @@
     { "key": "edit_issue", "name": "Cập nhật trạng thái Issue (Reporter/Tagged)", "module": "Dự án" },
     { "key": "view_documents", "name": "Xem tài liệu chung và tài liệu dự án", "module": "Tài liệu" },
     { "key": "upload_documents", "name": "Tải lên/Cập nhật tài liệu mới", "module": "Tài liệu" },
-    { "key": "view_hr", "name": "Truy cập Quản trị nhân sự", "module": "Quản trị hệ thống" },
+    { "key": "view_hr", "name": "Truy cập Quản trị nhân sự (Trang HR)", "module": "Quản trị hệ thống" },
+    { "key": "view_hr_members", "name": "Xem danh sách tài khoản & nhân sự", "module": "Quản trị hệ thống" },
+    { "key": "manage_role_permissions", "name": "Quản lý ma trận phân quyền", "module": "Quản trị hệ thống" },
+    { "key": "manage_departments", "name": "Quản lý danh mục phòng ban (Thêm/Sửa/Xóa)", "module": "Quản trị hệ thống" },
+    { "key": "create_employee_account", "name": "Cấp tài khoản nhân viên mới", "module": "Quản trị hệ thống" },
+    { "key": "edit_employee_info", "name": "Chỉnh sửa thông tin nhân viên / chuyển phòng ban / đặt lại mật khẩu", "module": "Quản trị hệ thống" },
     { "key": "view_activity_logs", "name": "Xem nhật ký hệ thống (Log)", "module": "Quản trị hệ thống" },
+    { "key": "view_daily_reports", "name": "Xem danh sách báo cáo ngày", "module": "Báo cáo ngày" },
+    { "key": "create_daily_report", "name": "Viết/gửi báo cáo ngày mới", "module": "Báo cáo ngày" },
+    { "key": "approve_daily_report", "name": "Phê duyệt/phản hồi báo cáo ngày", "module": "Báo cáo ngày" },
     { "key": "chat_tag_all_global", "name": "Tự động tag @all phòng chat chung", "module": "Kênh Chat" },
     { "key": "chat_tag_all_project", "name": "Tự động tag @all phòng chat dự án", "module": "Kênh Chat" },
     { "key": "chat_confirm_send", "name": "Hỏi xác nhận trước khi gửi tin nhắn", "module": "Kênh Chat" }
@@ -32,34 +40,40 @@
     "Quản trị viên (Admin)": [
       "view_dashboard", "view_all_projects", "create_project", "edit_project", "manage_project_members",
       "create_task", "edit_task", "delete_task", "update_task_status", "create_issue", "edit_issue",
-      "view_documents", "upload_documents", "view_hr", "view_activity_logs", "chat_tag_all_global",
+      "view_documents", "upload_documents", "view_hr", "view_hr_members", "manage_role_permissions",
+      "manage_departments", "create_employee_account", "edit_employee_info", "view_activity_logs",
+      "view_daily_reports", "create_daily_report", "approve_daily_report", "chat_tag_all_global",
       "chat_tag_all_project", "chat_confirm_send"
     ],
     "Ban điều hành (BOD)": [
       "view_dashboard", "view_all_projects", "create_project", "edit_project",
-      "edit_task", "delete_task", "view_documents", "chat_tag_all_global", "chat_confirm_send"
+      "edit_task", "delete_task", "view_documents", "view_daily_reports", "approve_daily_report",
+      "chat_tag_all_global", "chat_confirm_send"
     ],
     "Team Leader": [
       "view_dashboard", "view_all_projects", "create_project", "create_task", "edit_task", "delete_task",
       "update_task_status", "create_issue", "edit_issue", "view_documents", "upload_documents",
-      "chat_tag_all_project", "view_hr"
+      "view_hr", "view_hr_members", "edit_employee_info", "view_daily_reports", "create_daily_report",
+      "approve_daily_report", "chat_tag_all_project", "manage_departments"
     ],
     "Part Leader": [
       "view_dashboard", "view_all_projects", "create_project", "create_task", "edit_task", "delete_task",
       "update_task_status", "create_issue", "edit_issue", "view_documents", "upload_documents",
-      "chat_tag_all_project"
+      "view_daily_reports", "create_daily_report", "approve_daily_report", "chat_tag_all_project"
     ],
     "Nhân viên (Staff)": [
       "view_dashboard", "update_task_status", "create_issue", "edit_issue",
-      "view_documents", "upload_documents"
+      "view_documents", "upload_documents", "create_daily_report"
     ],
     "Kinh doanh (Sales)": [
       "view_dashboard", "view_all_projects", "create_project", "edit_project",
-      "update_task_status", "view_documents", "upload_documents", "chat_tag_all_global",
-      "chat_tag_all_project", "chat_confirm_send"
+      "update_task_status", "view_documents", "upload_documents", "view_daily_reports",
+      "create_daily_report", "chat_tag_all_global", "chat_tag_all_project", "chat_confirm_send"
     ],
     "Nhân sự (HR)": [
-      "view_hr", "view_documents", "upload_documents", "chat_confirm_send"
+      "view_hr", "view_hr_members", "manage_departments", "create_employee_account", "edit_employee_info",
+      "view_documents", "upload_documents", "view_daily_reports", "create_daily_report", "approve_daily_report",
+      "chat_confirm_send"
     ]
   }
 }

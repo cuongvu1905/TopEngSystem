@@ -271,13 +271,43 @@ exports.saveDepartment = async (req, res, next) => {
         }
       });
     } else {
-      await prisma.department.update({
-        where: { id: parseInt(department.id) },
-        data: {
-          name: department.name,
-          parent_id: department.parent_id || null
-        }
+      const oldDept = await prisma.department.findUnique({
+        where: { id: parseInt(department.id) }
       });
+      if (!oldDept) {
+        return res.status(400).json({ error: 'Không tìm thấy phòng ban cần chỉnh sửa.' });
+      }
+
+      if (department.department_id !== oldDept.department_id) {
+        // Verify new code is not taken by another record
+        const existing = await prisma.department.findFirst({
+          where: {
+            department_id: department.department_id,
+            id: { not: parseInt(department.id) }
+          }
+        });
+        if (existing) {
+          return res.status(400).json({ error: 'Mã phòng ban mới đã được sử dụng.' });
+        }
+
+        // Disable constraint checks temporarily to perform update cascades
+        await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0');
+        try {
+          await prisma.$executeRaw`UPDATE \`department\` SET \`department_id\` = ${department.department_id}, \`name\` = ${department.name}, \`parent_id\` = ${department.parent_id || null} WHERE \`id\` = ${parseInt(department.id)}`;
+          await prisma.$executeRaw`UPDATE \`department\` SET \`parent_id\` = ${department.department_id} WHERE \`parent_id\` = ${oldDept.department_id}`;
+          await prisma.$executeRaw`UPDATE \`user\` SET \`department_id\` = ${department.department_id} WHERE \`department_id\` = ${oldDept.department_id}`;
+        } finally {
+          await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1');
+        }
+      } else {
+        await prisma.department.update({
+          where: { id: parseInt(department.id) },
+          data: {
+            name: department.name,
+            parent_id: department.parent_id || null
+          }
+        });
+      }
     }
     res.json({ success: true });
   } catch (err) {
