@@ -428,11 +428,48 @@ exports.testConnection = async (req, res, next) => {
 
 exports.updateUserRoleAndDept = async (req, res, next) => {
   try {
-    const { userId, role, departmentId, fullName, email } = req.body;
+    const { userId, role, departmentId, fullName, email, newEmployeeId } = req.body;
     if (!userId) {
       return res.status(400).json({ error: 'Thiếu mã nhân viên cần cập nhật.' });
     }
 
+    // Check if newEmployeeId already exists
+    if (newEmployeeId && newEmployeeId.trim() && newEmployeeId.trim() !== userId) {
+      const trimmedNewId = newEmployeeId.trim();
+      const existing = await prisma.user.findUnique({
+        where: { user_id: trimmedNewId }
+      });
+      if (existing) {
+        return res.status(400).json({ error: 'Mã nhân viên mới đã tồn tại trên hệ thống.' });
+      }
+
+      await prisma.$transaction(async (tx) => {
+        // Disable foreign key checks
+        await tx.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0');
+        
+        // Update foreign key references
+        await tx.$executeRawUnsafe('UPDATE `activitylogs` SET `user_id` = ? WHERE `user_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `chatroommember` SET `user_id` = ? WHERE `user_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `dailyreport` SET `user_id` = ? WHERE `user_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `issue` SET `assignee_id` = ? WHERE `assignee_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `issue` SET `reporter_id` = ? WHERE `reporter_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `messages` SET `sender_id` = ? WHERE `sender_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `notificyations` SET `user_id` = ? WHERE `user_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `project` SET `create_by` = ? WHERE `create_by` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `projectmember` SET `userId` = ? WHERE `userId` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `task` SET `assignee_id` = ? WHERE `assignee_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `issuecomments` SET `user_id` = ? WHERE `user_id` = ?', trimmedNewId, userId);
+        await tx.$executeRawUnsafe('UPDATE `issuehistory` SET `user_id` = ? WHERE `user_id` = ?', trimmedNewId, userId);
+        
+        // Update primary key user_id inside user table
+        await tx.$executeRawUnsafe('UPDATE `user` SET `user_id` = ? WHERE `user_id` = ?', trimmedNewId, userId);
+        
+        // Enable foreign key checks
+        await tx.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1');
+      });
+    }
+
+    const currentId = (newEmployeeId && newEmployeeId.trim()) || userId;
     const updateData = {};
     if (role !== undefined) {
       updateData.role = role;
@@ -448,7 +485,7 @@ exports.updateUserRoleAndDept = async (req, res, next) => {
     }
 
     await prisma.user.update({
-      where: { user_id: userId },
+      where: { user_id: currentId },
       data: updateData
     });
 

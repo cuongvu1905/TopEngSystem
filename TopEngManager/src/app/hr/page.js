@@ -577,10 +577,16 @@ export default function HRManagement() {
       `<option value="${r.id}" ${r.id === memberObj.system_role ? 'selected' : ''}>${r.name}</option>`
     ).join('\n');
 
+    const canEditEmployeeId = isAdmin || isHR;
+
     const { value: formValues } = await Swal.fire({
       title: 'Thay đổi thông tin nhân viên',
       html: `
         <div style="text-align: left; padding: 10px;">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Mã nhân viên <span style="color: red;">*</span></label>
+            <input type="text" id="edit-employee-id" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px; ${!canEditEmployeeId ? 'background-color: #f1f5f9; cursor: not-allowed;' : ''}" value="${memberObj.employee_id || memberObj.id}" ${!canEditEmployeeId ? 'disabled readonly' : ''}>
+          </div>
           <div class="form-group" style="margin-bottom: 12px;">
             <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Họ và tên <span style="color: red;">*</span></label>
             <input type="text" id="edit-fullname" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" value="${memberObj.name}">
@@ -609,16 +615,17 @@ export default function HRManagement() {
       cancelButtonText: 'Hủy',
       confirmButtonColor: 'var(--primary-color)',
       preConfirm: () => {
+        const newEmployeeId = document.getElementById('edit-employee-id').value.trim();
         const fullName = document.getElementById('edit-fullname').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const role = document.getElementById('edit-role').value;
         const departmentId = document.getElementById('edit-dept').value;
 
-        if (!fullName || !email || !role) {
+        if (!newEmployeeId || !fullName || !email || !role) {
           Swal.showValidationMessage('Vui lòng điền đầy đủ thông tin bắt buộc.');
           return false;
         }
-        return { fullName, email, role, departmentId };
+        return { newEmployeeId, fullName, email, role, departmentId };
       }
     });
 
@@ -637,7 +644,8 @@ export default function HRManagement() {
           formValues.role, 
           formValues.departmentId, 
           formValues.fullName, 
-          formValues.email
+          formValues.email,
+          formValues.newEmployeeId
         );
 
         await db.logActivity(
@@ -936,8 +944,13 @@ export default function HRManagement() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedUsers.map(u => (
-                  <tr key={u.id}>
+                {paginatedUsers.map(u => {
+                  const isMemberOfMyTeam = u.department_id === currentUser.department_id || 
+                    departments.some(d => d.department_id === u.department_id && d.parent_id === currentUser.department_id);
+                  const canEditUser = hasPermission('edit_employee_info') || (isTeamLeader && isMemberOfMyTeam);
+
+                  return (
+                    <tr key={u.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: u.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600' }}>
@@ -958,6 +971,15 @@ export default function HRManagement() {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        {canEditUser && u.id !== currentUser.id && (
+                          <button 
+                            className="btn btn-secondary btn-sm" 
+                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                            onClick={() => handleEditMember(u)}
+                          >
+                            <i className="fa-solid fa-user-pen"></i> Sửa
+                          </button>
+                        )}
                         {hasPermission('edit_employee_info') && (
                           <button 
                             className="btn btn-secondary btn-sm" 
@@ -979,10 +1001,11 @@ export default function HRManagement() {
                       </div>
                     </td>
                   </tr>
-                ))}
-                {paginatedUsers.length === 0 && (
+                );
+              })}
+              {paginatedUsers.length === 0 && (
                   <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
+                    <td colSpan="6" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
                       Không tìm thấy nhân viên nào phù hợp.
                     </td>
                   </tr>
@@ -1141,15 +1164,8 @@ export default function HRManagement() {
                                 </td>
                                 <td style={{ textAlign: 'center' }}>
                                   {canManageMemberRole && member.id !== currentUser.id && (
-                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                      <button 
-                                        className="btn btn-secondary btn-sm"
-                                        style={{ padding: '4px 8px', fontSize: '11px' }}
-                                        onClick={() => handleEditMember(member)}
-                                      >
-                                        <i className="fa-solid fa-user-pen"></i> Sửa
-                                      </button>
-                                      {member.system_role !== 'Part Leader' && member.system_role !== 'Team Leader' && (
+                                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                       {member.system_role !== 'Part Leader' && member.system_role !== 'Team Leader' && (
                                         <button 
                                           className="btn btn-secondary btn-sm"
                                           style={{ padding: '4px 8px', fontSize: '11px' }}

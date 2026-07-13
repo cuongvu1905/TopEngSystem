@@ -308,8 +308,8 @@ export const MySQLAdapter = {
     return await callApi('deleteUser', { userId });
   },
 
-  updateUserRoleAndDept: async function(userId, role, departmentId, fullName = undefined, email = undefined) {
-    return await callApi('updateUserRoleAndDept', { userId, role, departmentId, fullName, email });
+  updateUserRoleAndDept: async function(userId, role, departmentId, fullName = undefined, email = undefined, newEmployeeId = undefined) {
+    return await callApi('updateUserRoleAndDept', { userId, role, departmentId, fullName, email, newEmployeeId });
   },
 
   checkSession: async function(userId, token) {
