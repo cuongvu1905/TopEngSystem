@@ -88,6 +88,55 @@ const parseTaskDescription = (desc) => {
   };
 };
 
+const renderReportContentVisual = (content, projects) => {
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+          {parsed.map((card, idx) => {
+            const projName = projects?.find(p => p.id === card.projectId)?.name || 'Dự án';
+            return (
+              <div 
+                key={card.id || idx} 
+                style={{ 
+                  border: '1px solid #cbd5e1', 
+                  borderRadius: '6px', 
+                  padding: '10px 12px', 
+                  backgroundColor: '#f8fafc',
+                  marginBottom: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', justifycontent: 'space-between', alignItems: 'center', marginBottom: '6px', borderBottom: '1px dashed #e2e8f0', paddingBottom: '4px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#0f766e', backgroundColor: '#ccfbf1', padding: '1px 5px', borderRadius: '4px' }}>
+                    <i className="fa-regular fa-clock"></i> {card.startTime} - {card.endTime}
+                  </span>
+                  <span style={{ fontSize: '10.5px', fontWeight: '600', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '4px' }}>
+                    {projName}
+                  </span>
+                </div>
+                <div style={{ fontSize: '12.5px', color: '#334155', whiteSpace: 'pre-wrap', lineheight: '1.5' }}>
+                  {card.content}
+                </div>
+                {card.fileUrl && (
+                  <div style={{ marginTop: '6px', fontSize: '11px' }}>
+                    <a href={card.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <i className="fa-solid fa-paperclip"></i>
+                      {card.fileName || 'Tệp đính kèm'}
+                    </a>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+  } catch (e) {}
+  
+  return <div style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineheight: '1.5', color: '#334155' }}>{content}</div>;
+};
+
 export default function ProjectDetail({ params }) {
   const { id: projectId } = use(params);
   const searchParams = useSearchParams();
@@ -260,6 +309,7 @@ export default function ProjectDetail({ params }) {
   const [issuePriority, setIssuePriority] = useState('MEDIUM');
   const [issueAssigneeId, setIssueAssigneeId] = useState('');
   const [issueAssigneeIds, setIssueAssigneeIds] = useState([]); // Multi-select related members
+  const [openAssigneeDropdownId, setOpenAssigneeDropdownId] = useState(null);
   const [jiraCreateAssigneeIds, setJiraCreateAssigneeIds] = useState([]);
   const [isLockedByOther, setIsLockedByOther] = useState(false);
   const [lockOwnerName, setLockOwnerName] = useState('');
@@ -788,8 +838,8 @@ export default function ProjectDetail({ params }) {
           {
             id: `sol-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
             action: '',
-            executor: '',
-            date: ''
+            executor: currentUser?.full_name || currentUser?.name || 'User',
+            date: new Date().toISOString().split('T')[0]
           }
         ]
       };
@@ -1345,6 +1395,18 @@ export default function ProjectDetail({ params }) {
       return uniqueExecutors.map(name => name.startsWith('@') ? name : `@${name}`).join(' ');
     }
     return row.assignee || '';
+  };
+
+  const getPerformerFromSolution = (row) => {
+    if (!row.solutions || !Array.isArray(row.solutions)) return 'Chưa gán...';
+    const executors = row.solutions
+      .filter(s => s.action?.trim() && s.executor?.trim())
+      .map(s => s.executor.trim());
+    if (executors.length > 0) {
+      const uniqueExecutors = Array.from(new Set(executors));
+      return uniqueExecutors.map(name => name.startsWith('@') ? name : `@${name}`).join(', ');
+    }
+    return 'Chưa gán...';
   };
 
   const getCompletedOrAssignedExecutorsText = () => {
@@ -2167,8 +2229,8 @@ export default function ProjectDetail({ params }) {
                         </span>
                       </div>
 
-                      <div style={{ fontSize: '13.5px', color: '#334155', whiteSpace: 'pre-wrap', lineHeight: '1.6', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
-                        {report.content}
+                      <div style={{ fontSize: '13.5px', color: '#334155', lineHeight: '1.6', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                        {renderReportContentVisual(report.content, projects)}
                       </div>
 
                       {report.file_url && (
@@ -2561,10 +2623,11 @@ export default function ProjectDetail({ params }) {
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', fontSize: '13px', marginBottom: '10px' }}>
                       <thead>
                         <tr style={{ backgroundColor: '#135274', color: '#ffffff' }}>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '35%', fontWeight: '700' }}>Tên công việc</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Deadline</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Người thực hiện</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%', fontWeight: '700' }}>Trạng thái</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', width: '35%', fontWeight: '700' }}>Tên công việc</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', width: '10%', fontWeight: '700' }}>Deadline</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', width: '25%', fontWeight: '700' }}>Người được giao</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', width: '15%', fontWeight: '700' }}>Người thực hiện</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', width: '15%', fontWeight: '700' }}>Trạng thái</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2608,15 +2671,200 @@ export default function ProjectDetail({ params }) {
                                 style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '12.5px' }}
                               />
                             </td>
-                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', position: 'relative' }}>
-                              <input
-                                id={`grid-assignee-detail-${row.id}`}
-                                type="text"
-                                value={getPerformerForTask(row)}
-                                readOnly={true}
-                                placeholder="Chưa gán..."
-                                style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '13px', backgroundColor: '#f1f5f9', cursor: 'not-allowed' }}
-                              />
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', position: 'relative', verticalAlign: 'top' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {(() => {
+                                  const assignedNames = row.assignee ? row.assignee.split('@').map(s => s.trim()).filter(Boolean) : [];
+                                  return (
+                                    <>
+                                      {assignedNames.map(name => (
+                                        <div 
+                                          key={name}
+                                          className="assigned-member-tag"
+                                          style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '3px 8px',
+                                            borderRadius: '4px',
+                                            backgroundColor: '#f1f5f9',
+                                            border: '1px solid #e2e8f0',
+                                            fontSize: '12px',
+                                            lineHeight: '1.4',
+                                            color: '#334155'
+                                          }}
+                                        >
+                                          <span>@{name}</span>
+                                          {!isLockedByOther && (
+                                            <button
+                                              type="button"
+                                              className="remove-tag-btn"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const currentTags = row.assignee ? row.assignee.split('@').map(s => s.trim()).filter(Boolean) : [];
+                                                const newTags = currentTags.filter(t => t !== name);
+                                                handleIssueTaskChange(row.id, 'assignee', newTags.map(t => `@${t}`).join(' '));
+                                              }}
+                                              style={{
+                                                border: 'none',
+                                                background: 'none',
+                                                color: '#94a3b8',
+                                                cursor: 'pointer',
+                                                padding: '0 4px',
+                                                fontSize: '13px',
+                                                lineHeight: '1',
+                                                display: 'none',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: '50%',
+                                                marginLeft: '6px',
+                                                width: '16px',
+                                                height: '16px',
+                                                transition: 'all 0.15s ease'
+                                              }}
+                                            >
+                                              &times;
+                                            </button>
+                                          )}
+                                        </div>
+                                      ))}
+                                      
+                                      <button
+                                        type="button"
+                                        disabled={isLockedByOther}
+                                        onClick={() => {
+                                          if (!isLockedByOther) {
+                                            setOpenAssigneeDropdownId(openAssigneeDropdownId === row.id ? null : row.id);
+                                          }
+                                        }}
+                                        style={{
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '4px',
+                                          border: '1px dashed #cbd5e1',
+                                          padding: '3px 8px',
+                                          borderRadius: '4px',
+                                          background: '#fff',
+                                          color: '#0f766e',
+                                          fontSize: '11.5px',
+                                          cursor: isLockedByOther ? 'not-allowed' : 'pointer',
+                                          width: 'fit-content',
+                                          marginTop: '2px',
+                                          fontWeight: '500'
+                                        }}
+                                      >
+                                        <i className="fa-solid fa-plus" style={{ fontSize: '9px' }}></i>
+                                        {assignedNames.length === 0 ? 'Chọn thành viên' : 'Thêm'}
+                                      </button>
+                                    </>
+                                  );
+                                })()}
+                                
+                                {openAssigneeDropdownId === row.id && (
+                                  <>
+                                    <div 
+                                      onClick={() => setOpenAssigneeDropdownId(null)}
+                                      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
+                                    />
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        right: 0,
+                                        backgroundColor: '#fff',
+                                        border: '1px solid var(--neutral-border)',
+                                        borderRadius: '4px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                        zIndex: 1000,
+                                        maxHeight: '180px',
+                                        overflowY: 'auto',
+                                        padding: '4px 0',
+                                        marginTop: '2px'
+                                      }}
+                                    >
+                                      {users.filter(u => issueAssigneeIds.includes(u.id)).length === 0 ? (
+                                        <div style={{ padding: '6px 12px', fontSize: '12px', color: 'var(--neutral-muted)' }}>
+                                          Chưa có thành viên liên quan
+                                        </div>
+                                      ) : (
+                                        users.filter(u => issueAssigneeIds.includes(u.id)).map(u => {
+                                          const currentTags = row.assignee ? row.assignee.split('@').map(s => s.trim()).filter(Boolean) : [];
+                                          const isChecked = currentTags.includes(u.name.trim());
+                                          
+                                          return (
+                                            <div
+                                              key={u.id}
+                                              style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                padding: '6px 12px',
+                                                cursor: 'pointer',
+                                                fontSize: '12.5px',
+                                                color: '#334155'
+                                              }}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                let newTags;
+                                                if (isChecked) {
+                                                  newTags = currentTags.filter(t => t !== u.name.trim());
+                                                } else {
+                                                  newTags = [...currentTags, u.name.trim()];
+                                                }
+                                                handleIssueTaskChange(row.id, 'assignee', newTags.map(t => `@${t}`).join(' '));
+                                              }}
+                                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                readOnly
+                                                style={{ pointerEvents: 'none' }}
+                                              />
+                                              <span>{u.name}</span>
+                                            </div>
+                                          );
+                                        })
+                                      )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                            <td style={{ padding: '6px', border: '1px solid #cbd5e1', verticalAlign: 'top' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {(() => {
+                                  const executors = row.solutions
+                                    ? row.solutions
+                                        .filter(s => s.action?.trim() && s.executor?.trim())
+                                        .map(s => s.executor.trim())
+                                    : [];
+                                  const uniqueExecutors = Array.from(new Set(executors));
+                                  if (uniqueExecutors.length === 0) {
+                                    return <span style={{ color: 'var(--neutral-muted)', fontSize: '13px' }}>Chưa gán...</span>;
+                                  }
+                                  return uniqueExecutors.map(name => (
+                                    <div 
+                                      key={name}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '3px 8px',
+                                        borderRadius: '4px',
+                                        backgroundColor: '#f8fafc',
+                                        border: '1px solid #e2e8f0',
+                                        fontSize: '12px',
+                                        lineHeight: '1.4',
+                                        color: '#475569'
+                                      }}
+                                    >
+                                      @{name.startsWith('@') ? name.slice(1) : name}
+                                    </div>
+                                  ));
+                                })()}
+                              </div>
                             </td>
                             <td style={{ padding: '6px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle' }}>
                               <span style={{ 
@@ -3022,9 +3270,10 @@ export default function ProjectDetail({ params }) {
                   <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', fontSize: '13px' }}>
                     <thead>
                       <tr style={{ backgroundColor: '#0f766e', color: '#ffffff' }}>
-                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '50%', fontWeight: '700' }}>Nội dung thực hiện</th>
-                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Người thực hiện</th>
-                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%', fontWeight: '700' }}>Ngày thực hiện</th>
+                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '52%', fontWeight: '700' }}>Nội dung thực hiện</th>
+                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '16%', fontWeight: '700' }}>Người thực hiện</th>
+                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '16%', fontWeight: '700' }}>Ngày thực hiện</th>
+                        <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', width: '16%', fontWeight: '700' }}>Cập nhật</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3054,7 +3303,16 @@ export default function ProjectDetail({ params }) {
                           <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle' }}>
                             {sol.executor}
                           </td>
-                          <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle' }}>
+                          <td style={{ padding: '6px', border: '1px solid #cbd5e1', verticalAlign: 'middle' }}>
+                            <input 
+                              type="date"
+                              value={sol.date || ''}
+                              disabled={isLockedByOther}
+                              onChange={(e) => handleSolutionChange(sol.id, 'date', e.target.value)}
+                              style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', outline: 'none', fontSize: '13px' }}
+                            />
+                          </td>
+                           <td style={{ padding: '10px', border: '1px solid #cbd5e1', backgroundColor: '#e2e8f0', color: '#334155', verticalAlign: 'middle' }}>
                             {sol.date ? new Date(sol.date).toLocaleDateString('vi-VN') : ''}
                           </td>
                         </tr>

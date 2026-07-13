@@ -77,6 +77,65 @@ const formatDate = (dateStr) => {
   return dateStr;
 };
 
+const getReportSnippet = (content) => {
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      return parsed.map(c => `[${c.startTime}-${c.endTime}] ${c.content}`).join(' | ');
+    }
+  } catch (e) {}
+  return content;
+};
+
+const renderReportContentVisual = (content, projects) => {
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+          {parsed.map((card, idx) => {
+            const projName = projects?.find(p => p.id === card.projectId)?.name || 'Dự án';
+            return (
+              <div 
+                key={card.id || idx} 
+                style={{ 
+                  border: '1px solid #cbd5e1', 
+                  borderRadius: '6px', 
+                  padding: '10px 12px', 
+                  backgroundColor: '#f8fafc',
+                  marginBottom: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', borderBottom: '1px dashed #e2e8f0', paddingBottom: '4px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#0f766e', backgroundColor: '#ccfbf1', padding: '1px 5px', borderRadius: '4px' }}>
+                    <i className="fa-regular fa-clock"></i> {card.startTime} - {card.endTime}
+                  </span>
+                  <span style={{ fontSize: '10.5px', fontWeight: '600', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '4px' }}>
+                    {projName}
+                  </span>
+                </div>
+                <div style={{ fontSize: '12.5px', color: '#334155', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                  {card.content}
+                </div>
+                {card.fileUrl && (
+                  <div style={{ marginTop: '6px', fontSize: '11px' }}>
+                    <a href={card.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <i className="fa-solid fa-paperclip"></i>
+                      {card.fileName || 'Tệp đính kèm'}
+                    </a>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+  } catch (e) {}
+  
+  return <div style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineHeight: '1.5', color: '#334155' }}>{content}</div>;
+};
+
 export default function Dashboard() {
   const { currentUser, projects, tasks, subtasks, documents, notifications, projectMembers, users, reloadAll, hasPermission } = useApp();
   const router = useRouter();
@@ -1066,7 +1125,7 @@ export default function Dashboard() {
                         )}
 
                         <div className="report-snippet" style={{ marginTop: '2px' }}>
-                          {report.content}
+                          {getReportSnippet(report.content)}
                         </div>
                       </div>
                     );
@@ -1636,8 +1695,8 @@ export default function Dashboard() {
 
                       <div style={{ flex: 1 }}>
                         <label style={{ fontWeight: '700', fontSize: '12.5px', display: 'block', marginBottom: '6px', color: '#475569' }}>Nội dung báo cáo:</label>
-                        <div style={{ fontSize: '13px', color: '#334155', whiteSpace: 'pre-wrap', lineHeight: '1.6', backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', minHeight: '120px' }}>
-                          {selectedReportForPopup.content}
+                        <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.6', backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', minHeight: '120px' }}>
+                          {renderReportContentVisual(selectedReportForPopup.content, projects)}
                         </div>
                       </div>
 

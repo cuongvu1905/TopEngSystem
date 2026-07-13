@@ -776,11 +776,12 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                     </div>
                   )}
                 </div>
-                <div className="form-group col-6" style={{ width: '50%' }}>
+               
+              </div>
+               <div className="form-group col-6" style={{ width: '100%' }}>
                   <label>Hạn chót (Deadline)</label>
                   <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={!isPM || isLockedByOther} style={{ width: '100%' }} />
                 </div>
-              </div>
               <div className="form-row">
                 <div className="form-group col-12" style={{ width: '100%' }}>
                   <label>Độ ưu tiên</label>
