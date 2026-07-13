@@ -9,9 +9,11 @@ router.post('/getRoles', authController.getRoles);
 router.post('/getRolesPermissions', authController.getRolesPermissions);
 router.post('/saveRolesPermissions', authController.saveRolesPermissions);
 router.post('/createUser', authController.createUser);
+router.post('/updateUserRoleAndDept', authController.updateUserRoleAndDept);
 router.post('/changePassword', authController.changePassword);
 router.post('/resetUserPassword', authController.resetUserPassword);
 router.post('/deleteUser', authController.deleteUser);
+router.post('/checkSession', authController.checkSession);
 router.post('/testConnection', authController.testConnection);
 
 module.exports = router;

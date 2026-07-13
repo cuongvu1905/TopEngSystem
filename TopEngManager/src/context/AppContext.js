@@ -49,6 +49,17 @@ export const AppContextProvider = ({ children }) => {
         setIsLoading(false);
         return;
       } else {
+        // Verify session token on startup for Single Device Login check
+        if (session.token) {
+          const check = await db.checkSession(session.user.id, session.token).catch(() => ({ valid: true }));
+          if (check && !check.valid) {
+            console.warn("Session token is invalid. Signing out...");
+            await db.client.auth.signOut().catch(() => {});
+            setCurrentUser(null);
+            setIsLoading(false);
+            return;
+          }
+        }
         // Fetch users list and find current user profile
         const usersList = await db.getUsers().catch(() => []);
         const profile = usersList.find(u => u.id === session.user.id);
@@ -145,8 +156,35 @@ export const AppContextProvider = ({ children }) => {
           setIsLoading(false);
         }
       });
+
+      // Periodically check session for Single Device Login verification (every 5 seconds)
+      const sessionInterval = setInterval(async () => {
+        const sessionRes = await db.client.auth.getSession();
+        const session = sessionRes?.data?.session;
+        if (session && session.user && session.token) {
+          try {
+            const check = await db.checkSession(session.user.id, session.token);
+            if (check && !check.valid) {
+              clearInterval(sessionInterval);
+              await db.client.auth.signOut();
+              const Swal = (await import('sweetalert2')).default;
+              Swal.fire({
+                icon: 'warning',
+                title: 'Phiên đăng nhập hết hạn',
+                text: check.reason || 'Tài khoản của bạn đã được đăng nhập từ một thiết bị khác.',
+                confirmButtonColor: 'var(--primary-color)',
+                allowOutsideClick: false
+              });
+            }
+          } catch (err) {
+            console.error('Session check error:', err);
+          }
+        }
+      }, 5000);
+
       return () => {
         subscription.unsubscribe();
+        clearInterval(sessionInterval);
       };
     }
   }, []);

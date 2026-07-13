@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { db } from '@/utils/db';
 import { useRouter } from 'next/navigation';
 import { ProjectModal, CustomerModal } from '@/components/Modals';
 import { getSwal } from '@/utils/swal';
@@ -29,6 +30,180 @@ export default function Projects() {
       return;
     }
     router.push(`/projects/${pId}`);
+  };
+
+  const handleJoinProjectClick = async () => {
+    const Swal = await getSwal();
+    
+    Swal.fire({
+      title: 'Tham gia dự án mới',
+      html: `
+        <div style="text-align: left; padding: 10px 0;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 13.5px;">Nhập mã dự án hoặc mã khóa (Key) <span style="color: red;">*</span></label>
+          <input type="text" id="join-project-id" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box;" placeholder="Ví dụ: proj-12345, RND, WEB...">
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Tìm kiếm',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: 'var(--primary-color)',
+      focusConfirm: false,
+      preConfirm: async () => {
+        const projectIdInput = document.getElementById('join-project-id').value;
+        if (!projectIdInput || !projectIdInput.trim()) {
+          Swal.showValidationMessage('Vui lòng nhập mã dự án.');
+          return false;
+        }
+
+        try {
+          const project = await db.findProjectById(projectIdInput);
+          return project;
+        } catch (err) {
+          Swal.showValidationMessage(err.message || 'Không tìm thấy dự án nào khớp với mã đã nhập.');
+          return false;
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        const project = result.value;
+        
+        const showTermsPopup = project.visibility === 'Public';
+
+        const performJoin = async () => {
+          try {
+            Swal.fire({
+              title: 'Đang xử lý...',
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+
+            await db.addProjectMember(project.id, currentUser.id, 'Member', 'ACTIVE');
+
+            await db.logActivity(
+              currentUser.id, 
+              "ADD_MEMBER", 
+              "Project", 
+              project.id, 
+              `đã tự tham gia vào dự án '${project.name}' (${project.project_key})`
+            );
+
+            await reloadAll();
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Thành công',
+              text: `Bạn đã tham gia dự án "${project.name}" thành công!`,
+              confirmButtonColor: 'var(--primary-color)'
+            });
+          } catch (err) {
+            console.error(err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Thất bại',
+              text: err.message || 'Không thể tham gia dự án này.',
+              confirmButtonColor: 'var(--primary-color)'
+            });
+          }
+        };
+
+        if (showTermsPopup) {
+          const showTermsDialog = (initialChecked = false) => {
+            Swal.fire({
+              title: 'Điều khoản dự án',
+              html: `
+                <div style="text-align: left; padding: 10px; font-size: 14.5px; line-height: 1.6;">
+                  <div style="margin-bottom: 8px;"><strong>Tên dự án:</strong> ${project.name}</div>
+                  <div style="margin-bottom: 8px;"><strong>Mã khóa (Key):</strong> <span class="badge badge-info">${project.project_key}</span></div>
+                  <div style="margin-bottom: 8px;"><strong>Người tạo:</strong> ${project.creator}</div>
+                  <div style="margin-bottom: 8px;"><strong>Trạng thái:</strong> ${project.status}</div>
+                  <div style="margin-bottom: 16px;"><strong>Mô tả:</strong> ${project.description}</div>
+
+                  <div style="background-color: rgba(30, 64, 175, 0.05); border-left: 4px solid #1e40af; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                    <strong style="color: #1e40af;">Điều khoản tham gia dự án Public:</strong>
+                    <p style="margin-top: 6px; font-size: 13px;">Bằng cách tham gia dự án, bạn đồng ý tuân thủ các quy định bảo mật, hoàn thành các nhiệm vụ được giao đúng hạn và chia sẻ thông tin công việc một cách minh bạch với các thành viên khác.</p>
+                  </div>
+                  
+                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 15px; font-size: 13px; border-top: 1px solid var(--neutral-border); padding-top: 12px;">
+                    <input type="checkbox" id="agree-terms-checkbox" style="width: 16px; height: 16px; cursor: pointer;" ${initialChecked ? 'checked' : ''} />
+                    <label for="agree-terms-checkbox" style="cursor: pointer; font-weight: 500; color: var(--foreground-color);">Tôi đồng ý với điều khoản bảo mật của dự án</label>
+                    <span id="view-terms-detail" style="color: #1e40af; text-decoration: underline; cursor: pointer; font-weight: 600; margin-left: 4px;">[Chi tiết]</span>
+                  </div>
+                </div>
+              `,
+              showCancelButton: true,
+              confirmButtonText: 'Đồng ý',
+              cancelButtonText: 'Hủy',
+              confirmButtonColor: 'var(--primary-color)',
+              didOpen: () => {
+                const confirmBtn = Swal.getConfirmButton();
+                if (confirmBtn) {
+                  confirmBtn.disabled = !initialChecked;
+                }
+
+                const checkbox = document.getElementById('agree-terms-checkbox');
+                if (checkbox && confirmBtn) {
+                  checkbox.onchange = (e) => {
+                    confirmBtn.disabled = !e.target.checked;
+                  };
+                }
+
+                const detailBtn = document.getElementById('view-terms-detail');
+                if (detailBtn) {
+                  detailBtn.onclick = async () => {
+                    const isCurrentlyChecked = checkbox ? checkbox.checked : false;
+                    const InnerSwal = await getSwal();
+                    InnerSwal.fire({
+                      title: 'Chi tiết điều khoản bảo mật',
+                      html: `
+                        <div style="text-align: left; padding: 10px; font-size: 13.5px; line-height: 1.6;">
+                          <p><strong>1. Bảo mật thông tin:</strong> Thành viên cam kết không tiết lộ, chuyển nhượng hoặc sao chép bất kỳ tài liệu, mã nguồn hay thông tin mật nào của dự án ra bên ngoài.</p>
+                          <p style="margin-top: 8px;"><strong>2. Minh bạch công việc:</strong> Các hoạt động phát triển, tài liệu và tiến độ phải được cập nhật thường xuyên trên hệ thống.</p>
+                          <p style="margin-top: 8px;"><strong>3. Trách nhiệm cá nhân:</strong> Thành viên chịu hoàn toàn trách nhiệm đối với tài khoản của mình và các công việc được bàn giao.</p>
+                          <p style="margin-top: 8px;"><strong>4. Kỷ luật dự án:</strong> Hoàn thành nhiệm vụ đúng hạn và tuân thủ các quy chuẩn kỹ thuật đã thống nhất.</p>
+                        </div>
+                      `,
+                      confirmButtonText: 'Đã hiểu',
+                      confirmButtonColor: 'var(--primary-color)'
+                    }).then(() => {
+                      showTermsDialog(isCurrentlyChecked);
+                    });
+                  };
+                }
+              }
+            }).then((termsConfirm) => {
+              if (termsConfirm.isConfirmed) {
+                performJoin();
+              }
+            });
+          };
+
+          showTermsDialog();
+        } else {
+          Swal.fire({
+            title: 'Thông tin dự án',
+            html: `
+              <div style="text-align: left; padding: 10px; font-size: 14.5px; line-height: 1.6;">
+                <div style="margin-bottom: 8px;"><strong>Tên dự án:</strong> ${project.name}</div>
+                <div style="margin-bottom: 8px;"><strong>Mã khóa (Key):</strong> <span class="badge badge-info">${project.project_key}</span></div>
+                <div style="margin-bottom: 8px;"><strong>Người tạo:</strong> ${project.creator}</div>
+                <div style="margin-bottom: 8px;"><strong>Trạng thái:</strong> ${project.status}</div>
+                <div><strong>Mô tả:</strong> ${project.description}</div>
+              </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận tham gia',
+            cancelButtonText: 'Đóng',
+            confirmButtonColor: 'var(--primary-color)',
+          }).then((joinConfirm) => {
+            if (joinConfirm.isConfirmed) {
+              performJoin();
+            }
+          });
+        }
+      }
+    });
   };
 
   const showCreateBtn = hasPermission('create_project');
@@ -59,6 +234,25 @@ export default function Projects() {
           <p>Quản lý quy trình và theo dõi tiến độ của tất cả các dự án trong doanh nghiệp.</p>
         </div>
         <div className="view-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={handleJoinProjectClick}
+            style={{ 
+              backgroundColor: '#fff', 
+              color: '#334155', 
+              border: '1px solid #cbd5e1',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '600',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <i className="fa-solid fa-right-to-bracket"></i> Tham gia dự án
+          </button>
           <button 
             className="btn btn-secondary" 
             onClick={() => setIsCustomerModalOpen(true)}

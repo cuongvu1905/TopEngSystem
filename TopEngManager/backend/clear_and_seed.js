@@ -35,7 +35,7 @@ const USERS_TO_SEED = [
     user_id: 'usr-leader',
     full_name: 'Phạm Trưởng Nhóm',
     email: 'leader@test.com',
-    role: 'Leader/Part Leader',
+    role: 'Team Leader',
     department_id: 'dept-dev',
     position_id: 'pos-lead',
     jandi_link: 'https://jandi.com/connect/leader'
@@ -207,7 +207,7 @@ const USERS_TO_SEED = [
     user_id: 'usr-user23',
     full_name: 'Nguyễn Trưởng Phòng Dev',
     email: 'dev_mgr@test.com',
-    role: 'Leader/Part Leader',
+    role: 'Team Leader',
     department_id: 'dept-dev',
     position_id: 'pos-manager',
     jandi_link: 'https://jandi.com/connect/dev_mgr'
@@ -216,7 +216,7 @@ const USERS_TO_SEED = [
     user_id: 'usr-user24',
     full_name: 'Trần Trưởng Nhóm Mkt',
     email: 'mkt_lead@test.com',
-    role: 'Leader/Part Leader',
+    role: 'Part Leader',
     department_id: 'dept-mkt',
     position_id: 'pos-lead',
     jandi_link: 'https://jandi.com/connect/mkt_lead'
@@ -225,7 +225,7 @@ const USERS_TO_SEED = [
     user_id: 'usr-user25',
     full_name: 'Lê Trưởng Phòng Mkt',
     email: 'mkt_mgr@test.com',
-    role: 'Leader/Part Leader',
+    role: 'Team Leader',
     department_id: 'dept-mkt',
     position_id: 'pos-manager',
     jandi_link: 'https://jandi.com/connect/mkt_mgr'
@@ -270,7 +270,7 @@ const USERS_TO_SEED = [
     user_id: 'usr-user30',
     full_name: 'Lê Tài Chính',
     email: 'finance_mgr@test.com',
-    role: 'Leader/Part Leader',
+    role: 'Team Leader',
     department_id: 'dept-finance',
     position_id: 'pos-manager',
     jandi_link: 'https://jandi.com/connect/finance_mgr'
@@ -278,11 +278,14 @@ const USERS_TO_SEED = [
 ];
 
 const DEPARTMENTS = [
-  { department_id: 'dept-dev', name: 'Phòng Phát triển Phần mềm (R&D)' },
-  { department_id: 'dept-hr', name: 'Phòng Hành chính Nhân sự (HR)' },
-  { department_id: 'dept-sales', name: 'Phòng Kinh doanh (Sales)' },
-  { department_id: 'dept-mkt', name: 'Phòng Truyền thông Marketing' },
-  { department_id: 'dept-finance', name: 'Phòng Kế toán Tài chính' }
+  { department_id: 'dept-dev', name: 'Phòng Phát triển Phần mềm (R&D)', parent_id: null },
+  { department_id: 'dept-hr', name: 'Phòng Hành chính Nhân sự (HR)', parent_id: null },
+  { department_id: 'dept-sales', name: 'Phòng Kinh doanh (Sales)', parent_id: null },
+  { department_id: 'dept-mkt', name: 'Phòng Truyền thông Marketing', parent_id: null },
+  { department_id: 'dept-finance', name: 'Phòng Kế toán Tài chính', parent_id: null },
+  { department_id: 'PCT', name: 'PC', parent_id: null },
+  { department_id: 'PCT1', name: 'PC1', parent_id: 'PCT' },
+  { department_id: 'PCT2', name: 'PC2', parent_id: 'PCT' }
 ];
 
 const POSITIONS = [
@@ -581,8 +584,8 @@ async function main() {
     // 3. Seed Departments
     for (const dept of DEPARTMENTS) {
       await db.query(
-        'INSERT INTO `department` (`department_id`, `name`) VALUES (?, ?)',
-        [dept.department_id, dept.name]
+        'INSERT INTO `department` (`department_id`, `name`, `parent_id`) VALUES (?, ?, ?)',
+        [dept.department_id, dept.name, dept.parent_id || null]
       );
     }
     console.log('Seeded departments.');

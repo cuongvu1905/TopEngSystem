@@ -23,10 +23,19 @@ const Swal = {
 export default function DailyReportsPage() {
   const { currentUser, users, projects } = useApp();
   
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [reports, setReports] = useState([]);
   const [reportContent, setReportContent] = useState('');
   const [fileUrl, setFileUrl] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [reportDate, setReportDate] = useState(getTodayDateString());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,11 +105,13 @@ export default function DailyReportsPage() {
         userId: currentUser.id,
         content: reportContent,
         fileUrl: fileUrl || null,
-        projectId: selectedProjectId || null
+        projectId: selectedProjectId || null,
+        createdAt: reportDate
       });
 
       setReportContent('');
       setSelectedProjectId('');
+      setReportDate(getTodayDateString());
       handleClearAttachment();
       await loadReports();
       Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã gửi báo cáo ngày thành công!" });
@@ -182,10 +193,29 @@ export default function DailyReportsPage() {
       {/* Main write daily report form centered */}
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div className="card" style={{ padding: '24px', borderRadius: '8px', border: '1px solid var(--neutral-border)', backgroundColor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#1e293b' }}>
-            <i className="fa-solid fa-pen-nib" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i>
-            Viết báo cáo hôm nay
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="fa-solid fa-pen-nib" style={{ color: 'var(--primary-color)' }}></i>
+              Viết báo cáo
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--neutral-muted)' }}>Ngày báo cáo:</span>
+              <input 
+                type="date" 
+                value={reportDate} 
+                onChange={(e) => setReportDate(e.target.value)} 
+                style={{ 
+                  padding: '6px 12px', 
+                  borderRadius: '6px', 
+                  border: '1px solid var(--neutral-border)', 
+                  outline: 'none', 
+                  fontSize: '13px', 
+                  fontWeight: '500',
+                  color: '#334155'
+                }} 
+              />
+            </div>
+          </div>
           <form onSubmit={handleSubmitReport}>
             <div className="form-group" style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#475569' }}>

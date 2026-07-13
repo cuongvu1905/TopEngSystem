@@ -24,7 +24,7 @@ export default function Sidebar() {
           <i className="fa-solid fa-cubes-stacked"></i>
         </div>
         <div className="brand-name">
-          <h2>TopEng</h2>
+          <h2>TOPVSystem</h2>
           <span>Manager</span>
         </div>
       </div>
@@ -63,7 +63,7 @@ export default function Sidebar() {
         {hasPermission('view_hr') && (
           <Link href="/hr" className={`menu-item ${pathname === '/hr' ? 'active' : ''}`}>
             <i className="fa-solid fa-user-gear"></i>
-            <span>Quản lý nhân sự</span>
+            <span>{currentUser.system_role === 'Team Leader' ? 'Quản lý Team' : 'Quản lý nhân sự'}</span>
           </Link>
         )}
       </nav>

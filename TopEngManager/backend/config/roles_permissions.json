@@ -3,7 +3,8 @@
     { "id": "role-admin", "name": "Quản trị viên (Admin)" },
     { "id": "role-hr", "name": "Nhân sự (HR)" },
     { "id": "role-staff", "name": "Nhân viên (Staff)" },
-    { "id": "role-leader", "name": "Leader/Part Leader" },
+    { "id": "role-teamleader", "name": "Team Leader" },
+    { "id": "role-partleader", "name": "Part Leader" },
     { "id": "role-sales", "name": "Kinh doanh (Sales)" },
     { "id": "role-bod", "name": "Ban điều hành (BOD)" }
   ],
@@ -38,7 +39,12 @@
       "view_dashboard", "view_all_projects", "create_project", "edit_project",
       "edit_task", "delete_task", "view_documents", "chat_tag_all_global", "chat_confirm_send"
     ],
-    "Leader/Part Leader": [
+    "Team Leader": [
+      "view_dashboard", "view_all_projects", "create_project", "create_task", "edit_task", "delete_task",
+      "update_task_status", "create_issue", "edit_issue", "view_documents", "upload_documents",
+      "chat_tag_all_project", "view_hr"
+    ],
+    "Part Leader": [
       "view_dashboard", "view_all_projects", "create_project", "create_task", "edit_task", "delete_task",
       "update_task_status", "create_issue", "edit_issue", "view_documents", "upload_documents",
       "chat_tag_all_project"

@@ -188,8 +188,8 @@ export const MySQLAdapter = {
     return await callApi('markAllNotificationsRead', { userId });
   },
 
-  addProjectMember: async function(projectId, userId, projectRole) {
-    return await callApi('addProjectMember', { projectId, userId, projectRole });
+  addProjectMember: async function(projectId, userId, projectRole, status = undefined) {
+    return await callApi('addProjectMember', { projectId, userId, projectRole, status });
   },
 
   removeProjectMember: async function(projectId, userId) {
@@ -308,6 +308,14 @@ export const MySQLAdapter = {
     return await callApi('deleteUser', { userId });
   },
 
+  updateUserRoleAndDept: async function(userId, role, departmentId, fullName = undefined, email = undefined) {
+    return await callApi('updateUserRoleAndDept', { userId, role, departmentId, fullName, email });
+  },
+
+  checkSession: async function(userId, token) {
+    return await callApi('checkSession', { userId, token });
+  },
+
   testConnection: async function() {
     return await callApi('testConnection');
   },
@@ -367,6 +375,14 @@ export const MySQLAdapter = {
 
   saveRolesPermissions: async function(roles, rolePermissions) {
     return await callApi('saveRolesPermissions', { roles, role_permissions: rolePermissions });
+  },
+
+  findProjectById: async function(projectId) {
+    return await callApi('findProjectById', { projectId });
+  },
+
+  addProjectMember: async function(projectId, userId, projectRole = 'Member') {
+    return await callApi('addProjectMember', { projectId, userId, projectRole });
   },
 
   lockTask: async function(taskId, userId) {

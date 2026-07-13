@@ -6,7 +6,7 @@ import { db } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
 import { ProjectModal, TaskModal, DocumentModal } from '@/components/Modals';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getSwal } from '@/utils/swal';
 
 const Swal = {
@@ -91,11 +91,132 @@ const parseTaskDescription = (desc) => {
 export default function ProjectDetail({ params }) {
   const { id: projectId } = use(params);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const queryIssueId = searchParams.get('issueId');
   const queryTaskId = searchParams.get('taskId');
   const { currentUser, projects, tasks, documents, documentVersions, documentCategories, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState('kanban');
+  const [isPendingInvite, setIsPendingInvite] = useState(false);
+
+  useEffect(() => {
+    const checkInvitation = async () => {
+      const myMembership = projectMembers.find(m => m.project_id === projectId && m.user_id === currentUser.id);
+      if (myMembership && myMembership.status === 'PENDING') {
+        setIsPendingInvite(true);
+        const Swal = await getSwal();
+        const showTermsDialog = (initialChecked = false) => {
+          Swal.fire({
+            title: 'Điều khoản dự án',
+            html: `
+              <div style="text-align: left; padding: 10px; font-size: 14.5px; line-height: 1.6;">
+                <div style="margin-bottom: 8px;"><strong>Tên dự án:</strong> ${project?.name}</div>
+                <div style="margin-bottom: 8px;"><strong>Mã khóa (Key):</strong> <span class="badge badge-info">${project?.project_key}</span></div>
+                <div style="margin-bottom: 8px;"><strong>Người tạo:</strong> ${project?.creator || 'Hệ thống'}</div>
+                <div style="margin-bottom: 8px;"><strong>Trạng thái:</strong> ${project?.status}</div>
+                <div style="margin-bottom: 16px;"><strong>Mô tả:</strong> ${project?.description}</div>
+
+                <div style="background-color: rgba(30, 64, 175, 0.05); border-left: 4px solid #1e40af; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                  <strong style="color: #1e40af;">Điều khoản tham gia dự án Public:</strong>
+                  <p style="margin-top: 6px; font-size: 13px;">Bằng cách tham gia dự án, bạn đồng ý tuân thủ các quy định bảo mật, hoàn thành các nhiệm vụ được giao đúng hạn và chia sẻ thông tin công việc một cách minh bạch với các thành viên khác.</p>
+                </div>
+                <p style="font-weight: 500; font-size: 13.5px; text-align: center; margin-bottom: 12px;">Bạn có xác nhận đồng ý tham gia dự án "${project?.name || 'này'}"?</p>
+                
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 15px; font-size: 13px; border-top: 1px solid var(--neutral-border); padding-top: 12px;">
+                  <input type="checkbox" id="agree-terms-checkbox-inv" style="width: 16px; height: 16px; cursor: pointer;" ${initialChecked ? 'checked' : ''} />
+                  <label for="agree-terms-checkbox-inv" style="cursor: pointer; font-weight: 500; color: var(--foreground-color);">Tôi đồng ý với điều khoản bảo mật của dự án</label>
+                  <span id="view-terms-detail-inv" style="color: #1e40af; text-decoration: underline; cursor: pointer; font-weight: 600; margin-left: 4px;">[Chi tiết]</span>
+                </div>
+              </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy (Từ chối)',
+            confirmButtonColor: 'var(--primary-color)',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+              const confirmBtn = Swal.getConfirmButton();
+              if (confirmBtn) {
+                confirmBtn.disabled = !initialChecked;
+              }
+
+              const checkbox = document.getElementById('agree-terms-checkbox-inv');
+              if (checkbox && confirmBtn) {
+                checkbox.onchange = (e) => {
+                  confirmBtn.disabled = !e.target.checked;
+                };
+              }
+
+              const detailBtn = document.getElementById('view-terms-detail-inv');
+              if (detailBtn) {
+                detailBtn.onclick = async () => {
+                  const isCurrentlyChecked = checkbox ? checkbox.checked : false;
+                  const InnerSwal = await getSwal();
+                  InnerSwal.fire({
+                    title: 'Chi tiết điều khoản bảo mật',
+                    html: `
+                      <div style="text-align: left; padding: 10px; font-size: 13.5px; line-height: 1.6;">
+                        <p><strong>1. Bảo mật thông tin:</strong> Thành viên cam kết không tiết lộ, chuyển nhượng hoặc sao chép bất kỳ tài liệu, mã nguồn hay thông tin mật nào của dự án ra bên ngoài.</p>
+                        <p style="margin-top: 8px;"><strong>2. Minh bạch công việc:</strong> Các hoạt động phát triển, tài liệu và tiến độ phải được cập nhật thường xuyên trên hệ thống.</p>
+                        <p style="margin-top: 8px;"><strong>3. Trách nhiệm cá nhân:</strong> Thành viên chịu hoàn toàn trách nhiệm đối với tài khoản của mình và các công việc được bàn giao.</p>
+                        <p style="margin-top: 8px;"><strong>4. Kỷ luật dự án:</strong> Hoàn thành nhiệm vụ đúng hạn và tuân thủ các quy chuẩn kỹ thuật đã thống nhất.</p>
+                      </div>
+                    `,
+                    confirmButtonText: 'Đã hiểu',
+                    confirmButtonColor: 'var(--primary-color)'
+                  }).then(() => {
+                    showTermsDialog(isCurrentlyChecked);
+                  });
+                };
+              }
+            }
+          }).then(async (result) => {
+            if (result.isConfirmed) {
+              try {
+                await db.addProjectMember(projectId, currentUser.id, myMembership.project_role || 'Member', 'ACTIVE');
+                await db.logActivity(
+                  currentUser.id,
+                  "ACCEPT_INVITATION",
+                  "Project",
+                  projectId,
+                  `đã đồng ý điều khoản và tham gia dự án '${project?.name || projectId}'`
+                );
+                setIsPendingInvite(false);
+                await reloadAll();
+              } catch (err) {
+                console.error(err);
+                router.push('/projects');
+              }
+            } else {
+              // Declined
+              try {
+                await db.removeProjectMember(projectId, currentUser.id);
+                await db.logActivity(
+                  currentUser.id,
+                  "DECLINE_INVITATION",
+                  "Project",
+                  projectId,
+                  `đã từ chối tham gia dự án '${project?.name || projectId}'`
+                );
+              } catch (err) {
+                console.error(err);
+              }
+              router.push('/projects');
+            }
+          });
+        };
+
+        showTermsDialog();
+      } else {
+        setIsPendingInvite(false);
+      }
+    };
+
+    if (currentUser && projectMembers.length > 0) {
+      checkInvitation();
+    }
+  }, [projectMembers, projectId, currentUser]);
 
   useEffect(() => {
     if (queryIssueId) {
@@ -904,6 +1025,15 @@ export default function ProjectDetail({ params }) {
     return <div style={{ padding: '20px', fontWeight: '500' }}>Đang tải chi tiết dự án...</div>;
   }
 
+  if (isPendingInvite) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', gap: '16px' }}>
+        <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid var(--neutral-border)', borderTopColor: '#1e40af', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--neutral-muted)' }}>Vui lòng xác nhận điều khoản để tham gia dự án...</p>
+      </div>
+    );
+  }
+
   // --- NEW 6-ROLE MATRIX ENFORCEMENT ---
   const isAdmin = currentUser.system_role.includes("Admin");
   const isHR = currentUser.system_role.includes("Nhân sự");
@@ -923,9 +1053,10 @@ export default function ProjectDetail({ params }) {
     );
   }
 
-  // Check access permission
-  const isProjectMember = projectMembers.some(m => m.project_id === projectId && m.user_id === currentUser.id);
-  const hasAccess = hasPermission('view_all_projects') || isProjectMember;
+  // Check access permission (including pending invites so they can confirm terms)
+  const isProjectMember = projectMembers.some(m => m.project_id === projectId && m.user_id === currentUser.id && m.status !== 'PENDING');
+  const isPendingMember = projectMembers.some(m => m.project_id === projectId && m.user_id === currentUser.id && m.status === 'PENDING');
+  const hasAccess = hasPermission('view_all_projects') || isProjectMember || isPendingMember;
 
   if (!hasAccess) {
     return (
@@ -989,10 +1120,29 @@ export default function ProjectDetail({ params }) {
     const role = e.target.elements.role.value;
     if (!userId || !role) return;
 
-    await db.addProjectMember(projectId, userId, role);
+    const isPublic = project.visibility === 'Public';
+    const status = isPublic ? 'PENDING' : 'ACTIVE';
+
+    await db.addProjectMember(projectId, userId, role, status);
     const u = users.find(usr => usr.id === userId);
-    await db.logActivity(currentUser.id, "ADD_MEMBER", "Project", projectId, `đã thêm thành viên '${u ? u.name : userId}' với vai trò ${role}`);
     
+    await db.logActivity(
+      currentUser.id, 
+      "ADD_MEMBER", 
+      "Project", 
+      projectId, 
+      isPublic 
+        ? `đã gửi lời mời tham gia dự án cho thành viên '${u ? u.name : userId}' với vai trò ${role}`
+        : `đã thêm thành viên '${u ? u.name : userId}' với vai trò ${role}`
+    );
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Thành công',
+      text: isPublic ? 'Đã gửi lời mời tham gia dự án (đang chờ xác nhận điều khoản)!' : 'Đã thêm thành viên thành công!',
+      confirmButtonColor: 'var(--primary-color)'
+    });
+
     e.target.reset();
     await reloadAll();
   };
@@ -1206,6 +1356,14 @@ export default function ProjectDetail({ params }) {
       </div>
 
       <div className="project-meta-strip">
+        <div className="project-meta-item">
+          <label>Phân loại</label>
+          <span>
+            <span className={`badge ${project.visibility === 'Public' ? 'badge-info' : 'badge-secondary'}`} style={{ fontSize: '11px', padding: '3px 6px' }}>
+              {project.visibility === 'Public' ? 'Public (Công khai)' : 'Private (Nội bộ)'}
+            </span>
+          </span>
+        </div>
         <div className="project-meta-item">
           <label>Trạng thái</label>
           {canManageProject ? (
@@ -1656,7 +1814,7 @@ export default function ProjectDetail({ params }) {
         {/* ================= TABS: MEMBERS ================= */}
         {activeSubTab === 'members' && (
           <div>
-            {canManageProject && (
+            {(canManageProject || (project.visibility === 'Public' && isProjectMember)) && (
               <div className="doc-filters" style={{ marginBottom: '16px' }}>
                 <form onSubmit={handleAddMember} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <select name="userId" className="doc-select-filter" required>
@@ -1671,7 +1829,9 @@ export default function ProjectDetail({ params }) {
                     <option value="Member">Thành viên</option>
                     <option value="PM">Quản lý</option>
                   </select>
-                  <button type="submit" className="btn btn-primary btn-sm"><i className="fa-solid fa-user-plus"></i> Thêm</button>
+                  <button type="submit" className="btn btn-primary btn-sm">
+                    <i className="fa-solid fa-user-plus"></i> {project.visibility === 'Public' ? 'Mời tham gia' : 'Thêm'}
+                  </button>
                 </form>
               </div>
             )}
@@ -1684,6 +1844,7 @@ export default function ProjectDetail({ params }) {
                     <th>Email</th>
                     <th>Vai trò chung</th>
                     <th>Vai trò dự án</th>
+                    <th>Trạng thái</th>
                     {canManageProject && <th>Hành động</th>}
                   </tr>
                 </thead>
@@ -1704,6 +1865,11 @@ export default function ProjectDetail({ params }) {
                         <td>{u.email}</td>
                         <td>{u.system_role}</td>
                         <td><span className={`badge ${m.project_role === 'PM' ? 'badge-info' : 'badge-success'}`}>{m.project_role}</span></td>
+                        <td>
+                          <span className={`badge ${m.status === 'PENDING' ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: '11px', padding: '3px 6px' }}>
+                            {m.status === 'PENDING' ? 'Đang chờ' : 'Đã tham gia'}
+                          </span>
+                        </td>
                         {canManageProject && (
                           <td>
                             {m.user_id !== currentUser.id ? (

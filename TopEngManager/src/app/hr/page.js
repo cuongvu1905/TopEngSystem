@@ -44,23 +44,64 @@ export default function HRManagement() {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const isTeamLeader = currentUser?.system_role === 'Team Leader';
+  const isAdmin = currentUser?.system_role?.includes("Admin");
+  const isHR = currentUser?.system_role?.includes("Nhân sự");
+
   // Department CRUD states
   const [isDeptOpen, setIsDeptOpen] = useState(false);
   const [selectedDept, setSelectedDept] = useState(null);
   const [inputDeptId, setInputDeptId] = useState('');
   const [inputDeptName, setInputDeptName] = useState('');
+  const [inputDeptParentId, setInputDeptParentId] = useState('');
   const [deptErrorMsg, setDeptErrorMsg] = useState('');
   const [deptSuccessMsg, setDeptSuccessMsg] = useState('');
   const [deptLoading, setDeptLoading] = useState(false);
 
-  const handleOpenDeptModal = (dept = null) => {
+  const [selectedDeptId, setSelectedDeptId] = useState(null);
+
+  // Auto switch activeTab to departments for Team Leader
+  useEffect(() => {
+    if (currentUser) {
+      const isPowerUser = currentUser.system_role.includes("Admin") || currentUser.system_role.includes("Nhân sự");
+      if (!isPowerUser) {
+        setActiveTab('departments');
+      }
+    }
+  }, [currentUser]);
+
+  // Set default selectedDeptId in tree view
+  useEffect(() => {
+    if (departments.length > 0 && !selectedDeptId) {
+      if (isTeamLeader && currentUser.department_id) {
+        setSelectedDeptId(currentUser.department_id);
+      } else {
+        const rootDept = departments.find(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
+        if (rootDept) {
+          setSelectedDeptId(rootDept.department_id);
+        } else {
+          setSelectedDeptId(departments[0].department_id);
+        }
+      }
+    }
+  }, [departments, currentUser]);
+
+  const handleOpenDeptModal = (dept = null, parentId = null) => {
     setSelectedDept(dept);
     if (dept) {
       setInputDeptId(dept.department_id);
       setInputDeptName(dept.name);
+      setInputDeptParentId(dept.parent_id || '');
     } else {
       setInputDeptId('');
       setInputDeptName('');
+      if (parentId) {
+        setInputDeptParentId(parentId);
+      } else if (isTeamLeader && currentUser.department_id) {
+        setInputDeptParentId(currentUser.department_id);
+      } else {
+        setInputDeptParentId('');
+      }
     }
     setDeptErrorMsg('');
     setDeptSuccessMsg('');
@@ -78,8 +119,7 @@ export default function HRManagement() {
   const [newRoleName, setNewRoleName] = useState('');
   const [savingPermissions, setSavingPermissions] = useState(false);
 
-  const isAdmin = currentUser?.system_role?.includes("Admin");
-  const isHR = currentUser?.system_role?.includes("Nhân sự");
+  // Role checks declared at the top of HRManagement
 
   const loadSelectOptions = async () => {
     try {
@@ -122,14 +162,14 @@ export default function HRManagement() {
     setUserCurrentPage(1);
   }, [userSearchQuery, selectedDeptFilter]);
 
-  // Enforce access control: only Admin or HR can see this
-  if (!isAdmin && !isHR) {
+  // Enforce access control: only Admin, HR, or Team Leader can see this
+  if (!isAdmin && !isHR && !isTeamLeader) {
     return (
       <div className="scrollable-view" style={{ textAlign: 'center', padding: '40px' }}>
         <div className="card" style={{ maxWidth: '500px', margin: '40px auto', padding: '32px' }}>
           <i className="fa-solid fa-lock" style={{ fontSize: '48px', color: 'var(--danger-color)', marginBottom: '16px' }}></i>
           <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>Không có quyền truy cập</h2>
-          <p className="text-muted" style={{ fontSize: '13px' }}>Chỉ bộ phận Nhân sự (HR) và Admin mới có quyền quản lý và cấp tài khoản nhân viên.</p>
+          <p className="text-muted" style={{ fontSize: '13px' }}>Chỉ bộ phận Nhân sự (HR), Admin, hoặc Team Leader mới có quyền quản lý cấu trúc.</p>
         </div>
       </div>
     );
@@ -190,7 +230,8 @@ export default function HRManagement() {
     try {
       const payload = {
         name: inputDeptName.trim(),
-        department_id: inputDeptId.trim()
+        department_id: inputDeptId.trim(),
+        parent_id: inputDeptParentId || null
       };
       if (selectedDept) {
         payload.id = selectedDept.id;
@@ -418,6 +459,235 @@ export default function HRManagement() {
     return list;
   };
 
+  // Get children of a department
+  const getDeptChildren = (deptId) => {
+    return departments.filter(d => d.parent_id === deptId);
+  };
+
+  // Render a node in the treeview
+  const renderDeptNode = (dept, depth = 0) => {
+    const children = getDeptChildren(dept.department_id);
+    const isSelected = selectedDeptId === dept.department_id;
+    const hasChildren = children.length > 0;
+    
+    return (
+      <div key={dept.department_id} style={{ marginLeft: depth > 0 ? '16px' : '0px' }}>
+        <div 
+          onClick={() => setSelectedDeptId(dept.department_id)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            backgroundColor: isSelected ? 'rgba(30, 64, 175, 0.08)' : 'transparent',
+            borderLeft: isSelected ? '3px solid #1E40AF' : '3px solid transparent',
+            color: isSelected ? '#1e40af' : 'var(--neutral-dark)',
+            fontWeight: isSelected ? '600' : '500',
+            fontSize: '13px',
+            marginBottom: '4px',
+            transition: 'all 0.2s',
+            justifyContent: 'space-between'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <i className={hasChildren ? "fa-solid fa-folder-open" : "fa-solid fa-folder"} 
+               style={{ 
+                 marginRight: '8px', 
+                 color: isSelected ? '#1e40af' : 'var(--neutral-muted)',
+                 fontSize: '14px' 
+               }}
+            ></i>
+            <span>{dept.name} <small className="text-muted" style={{ fontSize: '11px', marginLeft: '4px' }}>({dept.department_id})</small></span>
+          </div>
+          {children.length > 0 && (
+            <span className="badge badge-secondary" style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '10px' }}>
+              {children.length}
+            </span>
+          )}
+        </div>
+        {hasChildren && (
+          <div style={{ borderLeft: '1px dashed var(--neutral-border)', marginLeft: '9px', paddingLeft: '8px', marginTop: '2px', marginBottom: '4px' }}>
+            {children.map(child => renderDeptNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handleEditMember = async (memberObj) => {
+    const Swal = await getSwal();
+    
+    // Filter available departments to transfer to
+    // If Admin/HR: show all departments
+    // If Team Leader: show only their own team and parts inside their team
+    const availableDepts = isTeamLeader
+      ? departments.filter(d => d.department_id === currentUser.department_id || d.parent_id === currentUser.department_id)
+      : departments;
+
+    // Filter available roles
+    // If Admin/HR: show all roles
+    // If Team Leader: show only Staff and Part Leader
+    const availableRoles = isTeamLeader
+      ? [
+          { id: 'Nhân viên (Staff)', name: 'Nhân viên (Staff)' },
+          { id: 'Part Leader', name: 'Part Leader' }
+        ]
+      : roles.map(r => ({ id: r.name, name: r.name }));
+
+    const deptOptionsHtml = availableDepts.map(d => 
+      `<option value="${d.department_id}" ${d.department_id === memberObj.department_id ? 'selected' : ''}>${d.name} (${d.department_id})</option>`
+    ).join('\n');
+
+    const roleOptionsHtml = availableRoles.map(r => 
+      `<option value="${r.id}" ${r.id === memberObj.system_role ? 'selected' : ''}>${r.name}</option>`
+    ).join('\n');
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Thay đổi thông tin nhân viên',
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Họ và tên <span style="color: red;">*</span></label>
+            <input type="text" id="edit-fullname" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" value="${memberObj.name}">
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Email <span style="color: red;">*</span></label>
+            <input type="email" id="edit-email" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" value="${memberObj.email}">
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Vai trò hệ thống <span style="color: red;">*</span></label>
+            <select id="edit-role" class="swal2-select" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; height: 38px;">
+              ${roleOptionsHtml}
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Phòng ban/Part <span style="color: red;">*</span></label>
+            <select id="edit-dept" class="swal2-select" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; height: 38px;">
+              <option value="">-- Chưa phân phòng --</option>
+              ${deptOptionsHtml}
+            </select>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Lưu lại',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: 'var(--primary-color)',
+      preConfirm: () => {
+        const fullName = document.getElementById('edit-fullname').value.trim();
+        const email = document.getElementById('edit-email').value.trim();
+        const role = document.getElementById('edit-role').value;
+        const departmentId = document.getElementById('edit-dept').value;
+
+        if (!fullName || !email || !role) {
+          Swal.showValidationMessage('Vui lòng điền đầy đủ thông tin bắt buộc.');
+          return false;
+        }
+        return { fullName, email, role, departmentId };
+      }
+    });
+
+    if (formValues) {
+      try {
+        Swal.fire({
+          title: 'Đang lưu...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        await db.updateUserRoleAndDept(
+          memberObj.id, 
+          formValues.role, 
+          formValues.departmentId, 
+          formValues.fullName, 
+          formValues.email
+        );
+
+        await db.logActivity(
+          currentUser.id,
+          "UPDATE",
+          "User",
+          memberObj.id,
+          `đã cập nhật thông tin nhân viên '${formValues.fullName}' (${formValues.email})`
+        );
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công',
+          text: 'Cập nhật thông tin nhân viên thành công!',
+          confirmButtonColor: 'var(--primary-color)'
+        });
+
+        await reloadAll();
+      } catch (err) {
+        console.error(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: err.message || 'Không thể lưu thông tin nhân viên.',
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      }
+    }
+  };
+
+  const handleTogglePartLeader = async (userObj, promote) => {
+    const targetRole = promote ? 'Part Leader' : 'Staff';
+    const actionText = promote ? 'chỉ định làm Part Leader' : 'thu hồi quyền Part Leader';
+    const result = await Swal.fire({
+      title: promote ? 'Chỉ định Part Leader?' : 'Thu hồi quyền Part Leader?',
+      text: `Bạn có chắc chắn muốn ${actionText} cho nhân viên "${userObj.name}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--primary-color)',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        Swal.fire({
+          title: 'Đang thực hiện...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        await db.updateUserRoleAndDept(userObj.id, targetRole, userObj.department_id);
+        
+        await db.logActivity(
+          currentUser.id,
+          "UPDATE",
+          "User",
+          userObj.id,
+          `đã ${actionText} cho nhân viên '${userObj.name}' (${userObj.email})`
+        );
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công',
+          text: `Đã ${actionText} thành công!`,
+          confirmButtonColor: 'var(--primary-color)'
+        });
+        
+        await reloadAll();
+      } catch (err) {
+        console.error(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: err.message || 'Không thể cập nhật phân quyền.',
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      }
+    }
+  };
+
   const filteredUsers = getFilteredUsersList();
   const itemsPerPage = 20;
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
@@ -448,22 +718,24 @@ export default function HRManagement() {
         </div>
       </div>
 
-      <div className="project-tabs" style={{ marginTop: '16px', marginBottom: '16px' }}>
-        <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
-          <i className="fa-solid fa-users"></i> Nhân sự & Tài khoản
-        </button>
-        {isAdmin && (
-          <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
-            <i className="fa-solid fa-shield-halved"></i> Bảng Phân Quyền
+      {(isAdmin || isHR) && (
+        <div className="project-tabs" style={{ marginTop: '16px', marginBottom: '16px' }}>
+          <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
+            <i className="fa-solid fa-users"></i> Nhân sự & Tài khoản
           </button>
-        )}
-        <button className={`tab-btn ${activeTab === 'lookup' ? 'active' : ''}`} onClick={() => setActiveTab('lookup')}>
-          <i className="fa-solid fa-magnifying-glass"></i> Tra cứu Dữ liệu
-        </button>
-        <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
-          Quản lý phòng ban
-        </button>
-      </div>
+          {isAdmin && (
+            <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
+              <i className="fa-solid fa-shield-halved"></i> Bảng Phân Quyền
+            </button>
+          )}
+          {/* <button className={`tab-btn ${activeTab === 'lookup' ? 'active' : ''}`} onClick={() => setActiveTab('lookup')}>
+            <i className="fa-solid fa-magnifying-glass"></i> Tra cứu Dữ liệu
+          </button> */}
+          <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
+            Quản lý phòng ban
+          </button>
+        </div>
+      )}
 
       {/* ================= TAB 1: USERS LIST ================= */}
       {activeTab === 'users' && (
@@ -599,61 +871,174 @@ export default function HRManagement() {
         </div>
       )}
 
-      {/* ================= TAB: DEPARTMENTS LIST ================= */}
+      {/* ================= TAB: DEPARTMENTS LIST (TREEVIEW) ================= */}
       {activeTab === 'departments' && (
-        <div className="card" style={{ padding: '20px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>Danh sách phòng ban ({departments.length})</h3>
-          
-          <div className="data-table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Mã phòng ban</th>
-                  <th>Tên phòng ban</th>
-                  <th style={{ textAlign: 'center' }}>Số lượng nhân viên</th>
-                  <th style={{ textAlign: 'center', width: '150px' }}>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {departments.map(d => {
-                  const memberCount = users.filter(u => u.department_id === d.department_id).length;
-                  return (
-                    <tr key={d.id}>
-                      <td style={{ fontWeight: '600', color: '#1e40af' }}>{d.department_id}</td>
-                      <td style={{ fontWeight: '500' }}>{d.name}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span className="badge badge-info">{memberCount} nhân viên</span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button 
-                            className="btn btn-secondary btn-sm" 
-                            style={{ padding: '4px 8px', fontSize: '12px' }}
-                            onClick={() => handleOpenDeptModal(d)}
-                          >
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+          {/* Left panel: Treeview */}
+          <div className="card" style={{ flex: '0 0 35%', padding: '20px', minHeight: '400px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '600' }}>Cơ cấu tổ chức</h3>
+              {(isAdmin || isHR) && (
+                <button className="btn btn-primary btn-sm" onClick={() => handleOpenDeptModal(null)}>
+                  <i className="fa-solid fa-plus"></i> Thêm phòng
+                </button>
+              )}
+            </div>
+            <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '4px' }}>
+              {(() => {
+                const visibleRootDepts = isTeamLeader 
+                  ? departments.filter(d => d.department_id === currentUser.department_id)
+                  : departments.filter(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
+                
+                if (visibleRootDepts.length === 0) {
+                  return <div className="text-muted" style={{ fontSize: '13px', textAlign: 'center', padding: '20px' }}>Chưa có phòng ban nào.</div>;
+                }
+                return visibleRootDepts.map(root => renderDeptNode(root));
+              })()}
+            </div>
+          </div>
+
+          {/* Right panel: Details & Members */}
+          <div style={{ flex: '1' }}>
+            {(() => {
+              const currentSelectedDept = departments.find(d => d.department_id === selectedDeptId);
+              if (!currentSelectedDept) {
+                return (
+                  <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--neutral-muted)' }}>
+                    <i className="fa-solid fa-folder-open" style={{ fontSize: '48px', marginBottom: '12px' }}></i>
+                    <p style={{ fontSize: '14px', fontWeight: '500' }}>Chọn một phòng ban/part từ sơ đồ bên trái để xem thông tin chi tiết.</p>
+                  </div>
+                );
+              }
+
+              const parentDept = departments.find(d => d.department_id === currentSelectedDept.parent_id);
+              const deptMembers = users.filter(u => u.department_id === currentSelectedDept.department_id);
+
+              const canEditDept = isAdmin || isHR || (isTeamLeader && currentSelectedDept.parent_id === currentUser.department_id);
+              const canDeleteDept = isAdmin || isHR || (isTeamLeader && currentSelectedDept.parent_id === currentUser.department_id);
+              const canCreateSubDept = isAdmin || isHR || (isTeamLeader && currentSelectedDept.department_id === currentUser.department_id);
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {/* Department Details Card */}
+                  <div className="card" style={{ padding: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ backgroundColor: 'rgba(30, 64, 175, 0.1)', color: '#1e40af', padding: '4px 8px', borderRadius: '4px', fontSize: '13px' }}>{currentSelectedDept.department_id}</span>
+                          {currentSelectedDept.name}
+                        </h2>
+                        <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--neutral-muted)' }}>
+                          <span>Thuộc bộ phận: </span>
+                          <strong style={{ color: '#1e40af' }}>
+                            {parentDept ? `${parentDept.name} (${parentDept.department_id})` : 'Không (Là bộ phận gốc)'}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {canCreateSubDept && (
+                          <button className="btn btn-secondary btn-sm" onClick={() => handleOpenDeptModal(null, currentSelectedDept.department_id)}>
+                            <i className="fa-solid fa-plus"></i> Thêm Part con
+                          </button>
+                        )}
+                        {canEditDept && (
+                          <button className="btn btn-secondary btn-sm" onClick={() => handleOpenDeptModal(currentSelectedDept)}>
                             <i className="fa-solid fa-pen-to-square"></i> Sửa
                           </button>
-                          <button 
-                            className="btn btn-danger btn-sm" 
-                            style={{ padding: '4px 8px', fontSize: '12px' }}
-                            onClick={() => handleDeleteDept(d)}
-                          >
+                        )}
+                        {canDeleteDept && (
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDeleteDept(currentSelectedDept)}>
                             <i className="fa-solid fa-trash-can"></i> Xóa
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {departments.length === 0 && (
-                  <tr>
-                    <td colSpan="4" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
-                      Chưa có phòng ban nào được tạo.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Members Card */}
+                  <div className="card" style={{ padding: '20px' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>Thành viên của part này ({deptMembers.length})</h3>
+                    <div className="data-table-wrapper">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Họ và tên</th>
+                            <th>Email</th>
+                            <th>Vai trò hệ thống</th>
+                            <th style={{ textAlign: 'center', width: '200px' }}>Thao tác</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {deptMembers.map(member => {
+                            const isMemberOfMyTeam = member.department_id === currentUser.department_id || 
+                              departments.some(d => d.department_id === member.department_id && d.parent_id === currentUser.department_id);
+                            const canManageMemberRole = isAdmin || isHR || (isTeamLeader && isMemberOfMyTeam);
+
+                            return (
+                              <tr key={member.id}>
+                                <td>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: member.color || '#1e40af', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600' }}>
+                                      {member.name.split(" ").pop().charAt(0)}
+                                    </div>
+                                    <span style={{ fontWeight: '500' }}>{member.name} {member.id === currentUser.id && <span className="text-muted" style={{ fontSize: '11px' }}>(Bạn)</span>}</span>
+                                  </div>
+                                </td>
+                                <td>{member.email}</td>
+                                <td>
+                                  <span className={`badge ${member.system_role === 'Team Leader' ? 'badge-danger' : member.system_role === 'Part Leader' ? 'badge-warning' : 'badge-info'}`}>
+                                    {member.system_role || 'Nhân viên'}
+                                  </span>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  {canManageMemberRole && member.id !== currentUser.id && (
+                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                      <button 
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ padding: '4px 8px', fontSize: '11px' }}
+                                        onClick={() => handleEditMember(member)}
+                                      >
+                                        <i className="fa-solid fa-user-pen"></i> Sửa
+                                      </button>
+                                      {member.system_role !== 'Part Leader' && member.system_role !== 'Team Leader' && (
+                                        <button 
+                                          className="btn btn-secondary btn-sm"
+                                          style={{ padding: '4px 8px', fontSize: '11px' }}
+                                          onClick={() => handleTogglePartLeader(member, true)}
+                                        >
+                                          <i className="fa-solid fa-user-shield"></i> Chỉ định Part Leader
+                                        </button>
+                                      )}
+                                      {member.system_role === 'Part Leader' && (
+                                        <button 
+                                          className="btn btn-danger btn-sm"
+                                          style={{ padding: '4px 8px', fontSize: '11px' }}
+                                          onClick={() => handleTogglePartLeader(member, false)}
+                                        >
+                                          <i className="fa-solid fa-user-minus"></i> Thu hồi Part Leader
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {deptMembers.length === 0 && (
+                            <tr>
+                              <td colSpan="4" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
+                                Không có thành viên nào trong phòng/part này.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -811,7 +1196,7 @@ export default function HRManagement() {
       )}
 
       {/* ================= TAB 3: DATA LOOKUP CENTER ================= */}
-      {activeTab === 'lookup' && (
+      {/* {activeTab === 'lookup' && (
         <div className="card" style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>Tra cứu Dữ liệu Doanh nghiệp</h3>
           <p className="text-muted" style={{ fontSize: '12.5px', marginBottom: '16px' }}>Tra cứu nhanh chéo các thông tin của Dự án, Công việc và Thành viên trong doanh nghiệp.</p>
@@ -922,7 +1307,7 @@ export default function HRManagement() {
             )}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Issuing Account Modal */}
       {isOpen && (
@@ -1034,6 +1419,24 @@ export default function HRManagement() {
                       placeholder="Ví dụ: Dev, HR, Sales, MKT..." 
                     />
                     {selectedDept && <small className="text-muted" style={{ display: 'block', marginTop: '4px' }}>Mã phòng ban không thể thay đổi sau khi tạo.</small>}
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Phòng ban cha (nếu có)</label>
+                    <select
+                      value={inputDeptParentId}
+                      onChange={(e) => setInputDeptParentId(e.target.value)}
+                      style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', backgroundColor: '#fff' }}
+                      disabled={isTeamLeader}
+                    >
+                      <option value="">Không (Phòng ban gốc)</option>
+                      {departments
+                        .filter(d => d.department_id !== inputDeptId)
+                        .map(d => (
+                          <option value={d.department_id} key={d.department_id}>{d.name} ({d.department_id})</option>
+                        ))
+                      }
+                    </select>
                   </div>
                   
                   <div className="form-group">

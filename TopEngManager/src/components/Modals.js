@@ -56,6 +56,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
   const [status, setStatus] = useState('Thực thi');
   const [startDate, setStartDate] = useState('2026-06-01');
   const [endDate, setEndDate] = useState('2026-12-31');
+  const [visibility, setVisibility] = useState('Private');
   const [customers, setCustomers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [systemUsers, setSystemUsers] = useState([]);
@@ -94,6 +95,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
             setStatus(p.status || 'Thực thi');
             setStartDate(formatDateForInput(p.start_date) || '2026-06-01');
             setEndDate(formatDateForInput(p.end_date) || '2026-12-31');
+            setVisibility(p.visibility || 'Private');
             
             const pMembers = (await db.getProjectMembers()).filter(m => m.project_id === projectId);
             const membersMap = {};
@@ -110,6 +112,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
           setStatus('Thực thi');
           setStartDate('2026-06-01');
           setEndDate('2026-12-31');
+          setVisibility('Private');
           // Default: check the creator
           setSelectedMembers({ [currentUser.id]: 'PM' });
         }
@@ -153,6 +156,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
         status,
         start_date: startDate,
         end_date: endDate,
+        visibility,
         created_by: currentUser.id
       };
 
@@ -206,7 +210,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                 onChange={(e) => setProjectKey(e.target.value.toUpperCase())} 
                 required 
                 disabled={!!projectId}
-                placeholder="Ví dụ: CRM, PAY, SDV..." 
+                placeholder="Ví dụ: PS000000,PP00000..." 
               />
             </div>
             <div className="form-group">
@@ -220,6 +224,14 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                 {customers.map(c => (
                   <option key={c.customer_id} value={c.customer_id}>{c.customer_name}</option>
                 ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Phân loại dự án <span className="required">*</span></label>
+              <select value={visibility} onChange={(e) => setVisibility(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', width: '100%', outline: 'none' }}>
+                <option value="Private">Private (Dự án nội bộ - Giữ nguyên tính năng bảo mật)</option>
+                <option value="Public">Public (Dự án công khai - Mở rộng mời/tham gia tự do)</option>
               </select>
             </div>
 

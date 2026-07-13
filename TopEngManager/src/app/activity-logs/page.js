@@ -115,6 +115,9 @@ export default function ActivityLogs() {
               <option value="SWITCH_USER">SWITCH_USER (Đổi tài khoản)</option>
               <option value="ADD_MEMBER">ADD_MEMBER (Thêm thành viên)</option>
               <option value="REMOVE_MEMBER">REMOVE_MEMBER (Xóa thành viên)</option>
+              <option value="LOGIN_SUCCESS">LOGIN_SUCCESS (Đăng nhập thành công)</option>
+              <option value="LOGIN_FAILURE">LOGIN_FAILURE (Đăng nhập thất bại)</option>
+              <option value="SECURITY_ALERT">SECURITY_ALERT (Cảnh báo bảo mật)</option>
             </select>
           </div>
         </div>
@@ -147,7 +150,7 @@ export default function ActivityLogs() {
                 let badgeClass = "badge-info";
                 if (l.action_type === "CREATE") badgeClass = "badge-success";
                 else if (l.action_type === "UPDATE_STATUS" || l.action_type === "UPDATE") badgeClass = "badge-warning";
-                else if (l.action_type === "SWITCH_USER" || l.action_type === "REMOVE_MEMBER") badgeClass = "badge-danger";
+                else if (l.action_type === "SWITCH_USER" || l.action_type === "REMOVE_MEMBER" || l.action_type === "SECURITY_ALERT" || l.action_type === "LOGIN_FAILURE") badgeClass = "badge-danger";
 
                 return (
                   <tr key={l.id}>
@@ -164,7 +167,10 @@ export default function ActivityLogs() {
                     <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.project_name}>
                       <strong>{l.project_name}</strong>
                     </td>
-                    <td>{l.description}</td>
+                    <td style={l.action_type === "SECURITY_ALERT" ? { color: 'var(--danger-color)', fontWeight: '600' } : {}}>
+                      {l.action_type === "SECURITY_ALERT" && <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: '6px' }}></i>}
+                      {l.description}
+                    </td>
                   </tr>
                 );
               })

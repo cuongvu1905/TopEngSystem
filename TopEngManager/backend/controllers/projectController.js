@@ -15,7 +15,8 @@ exports.getProjects = async (req, res, next) => {
         end_date: p.end_date || '2026-12-31',
         create_by: p.create_by,
         customer_id: p.customer_id || null,
-        is_public: true
+        visibility: p.visibility || 'Private',
+        is_public: p.visibility === 'Public'
       };
     });
     res.json(projects);
@@ -31,7 +32,8 @@ exports.getProjectMembers = async (req, res, next) => {
       id: m.id,
       project_id: m.project_id,
       user_id: m.userId,
-      project_role: m.role
+      project_role: m.role,
+      status: m.status || 'ACTIVE'
     }));
     res.json(members);
   } catch (err) {
@@ -52,6 +54,7 @@ exports.saveProject = async (req, res, next) => {
         finalProjectName = finalProjectName.slice(closeBracketIndex + 1).trim();
       }
     }
+    const visibility = proj.visibility || 'Private';
 
     if (isNew) {
       let projectKey = proj.project_key ? proj.project_key.trim().toUpperCase() : null;
@@ -80,8 +83,8 @@ exports.saveProject = async (req, res, next) => {
       }
 
       await prisma.$executeRaw`
-        INSERT INTO Project (project_id, project_name, project_description, project_key, create_by, customer_id, status, start_date, end_date)
-        VALUES (${id}, ${finalProjectName}, ${proj.description}, ${projectKey}, ${proj.create_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'})
+        INSERT INTO Project (project_id, project_name, project_description, project_key, create_by, customer_id, status, start_date, end_date, visibility)
+        VALUES (${id}, ${finalProjectName}, ${proj.description}, ${projectKey}, ${proj.create_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'}, ${visibility})
       `;
     } else {
       await prisma.$executeRaw`
@@ -91,7 +94,8 @@ exports.saveProject = async (req, res, next) => {
             customer_id = ${proj.customer_id || null},
             status = ${proj.status || 'Thực thi'}, 
             start_date = ${proj.start_date || '2026-06-01'}, 
-            end_date = ${proj.end_date || '2026-12-31'}
+            end_date = ${proj.end_date || '2026-12-31'},
+            visibility = ${visibility}
         WHERE project_id = ${id}
       `;
     }
@@ -107,11 +111,14 @@ exports.saveProject = async (req, res, next) => {
         where: { project_id: id }
       });
       for (const m of membersList) {
+        const existingMember = oldMembers.find(om => om.userId === m.user_id);
+        const status = existingMember ? existingMember.status : 'ACTIVE';
         await prisma.projectmember.create({
           data: {
             project_id: id,
             userId: m.user_id,
-            role: m.project_role
+            role: m.project_role,
+            status: status
           }
         });
 
@@ -145,7 +152,8 @@ exports.saveProject = async (req, res, next) => {
       start_date: saved.start_date || '2026-06-01',
       end_date: saved.end_date || '2026-12-31',
       create_by: saved.create_by,
-      is_public: true
+      visibility: saved.visibility || 'Private',
+      is_public: saved.visibility === 'Public'
     });
   } catch (err) {
     next(err);
@@ -154,18 +162,21 @@ exports.saveProject = async (req, res, next) => {
 
 exports.addProjectMember = async (req, res, next) => {
   try {
-    const { projectId, userId, projectRole } = req.body;
+    const { projectId, userId, projectRole, status } = req.body;
     await prisma.projectmember.deleteMany({
       where: {
         project_id: projectId,
         userId: userId
       }
     });
+    
+    const finalStatus = status || 'ACTIVE';
     await prisma.projectmember.create({
       data: {
         project_id: projectId,
         userId: userId,
-        role: projectRole
+        role: projectRole || 'Member',
+        status: finalStatus
       }
     });
 
@@ -173,11 +184,18 @@ exports.addProjectMember = async (req, res, next) => {
       const proj = await prisma.project.findUnique({
         where: { project_id: projectId }
       });
+      
+      const isPending = finalStatus === 'PENDING';
+      const notifTitle = isPending ? 'Lời mời tham gia dự án' : 'Bạn được thêm vào dự án mới';
+      const notifContent = isPending
+        ? `Bạn vừa được mời tham gia dự án "${proj?.project_name || 'Dự án'}" với vai trò ${projectRole || 'Member'}. Hãy mở chi tiết để xác nhận.`
+        : `Bạn vừa được thêm vào dự án "${proj?.project_name || 'Dự án'}" với vai trò ${projectRole || 'Member'}.`;
+
       await prisma.notificyations.create({
         data: {
           user_id: userId,
-          title: 'Bạn được thêm vào dự án mới',
-          content: `Bạn vừa được thêm vào dự án "${proj?.project_name || 'Dự án'}" với vai trò ${projectRole || 'Member'}.`,
+          title: notifTitle,
+          content: notifContent,
           link_url: `#projects/${projectId}`,
           is_read: false
         }
@@ -248,14 +266,16 @@ exports.saveDepartment = async (req, res, next) => {
       await prisma.department.create({
         data: {
           department_id: department.department_id,
-          name: department.name
+          name: department.name,
+          parent_id: department.parent_id || null
         }
       });
     } else {
       await prisma.department.update({
         where: { id: parseInt(department.id) },
         data: {
-          name: department.name
+          name: department.name,
+          parent_id: department.parent_id || null
         }
       });
     }
@@ -312,6 +332,44 @@ exports.saveCustomer = async (req, res, next) => {
       });
     }
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.findProjectById = async (req, res, next) => {
+  try {
+    const { projectId } = req.body;
+    if (!projectId) {
+      return res.status(400).json({ error: 'Thiếu mã dự án để tìm kiếm.' });
+    }
+
+    const trimmedId = projectId.trim();
+    const dbProject = await prisma.project.findFirst({
+      where: {
+        OR: [
+          { project_id: trimmedId },
+          { project_key: trimmedId }
+        ]
+      },
+      include: {
+        user: true
+      }
+    });
+
+    if (!dbProject) {
+      return res.status(404).json({ error: 'Không tìm thấy dự án nào khớp với mã vừa nhập.' });
+    }
+
+    res.json({
+      id: dbProject.project_id,
+      name: dbProject.project_name,
+      description: dbProject.project_description || 'Không có mô tả.',
+      project_key: dbProject.project_key || 'PRJ',
+      status: dbProject.status || 'Thực thi',
+      creator: dbProject.user ? dbProject.user.full_name : 'Hệ thống',
+      visibility: dbProject.visibility || 'Private'
+    });
   } catch (err) {
     next(err);
   }

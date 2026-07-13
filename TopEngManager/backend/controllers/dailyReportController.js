@@ -52,10 +52,23 @@ exports.getDailyReports = async (req, res, next) => {
 
 exports.createDailyReport = async (req, res, next) => {
   try {
-    const { userId, content, fileUrl, projectId } = req.body;
+    const { userId, content, fileUrl, projectId, createdAt } = req.body;
 
     if (!userId || !content) {
       return res.status(400).json({ error: 'Thiếu thông tin người dùng hoặc nội dung báo cáo' });
+    }
+
+    let finalDate = new Date();
+    if (createdAt) {
+      const dateParts = createdAt.split('-');
+      if (dateParts.length === 3) {
+        finalDate = new Date(
+          parseInt(dateParts[0], 10),
+          parseInt(dateParts[1], 10) - 1,
+          parseInt(dateParts[2], 10),
+          12, 0, 0
+        );
+      }
     }
 
     const newReport = await prisma.dailyreport.create({
@@ -65,7 +78,8 @@ exports.createDailyReport = async (req, res, next) => {
         content: content,
         file_url: fileUrl || null,
         status: 'Pending',
-        comment: null
+        comment: null,
+        created_at: finalDate
       }
     });
 

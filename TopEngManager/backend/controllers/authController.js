@@ -19,7 +19,8 @@ function getRolesPermissionsConfig() {
       { id: 'role-admin', name: 'Quản trị viên (Admin)' },
       { id: 'role-hr', name: 'Nhân sự (HR)' },
       { id: 'role-staff', name: 'Nhân viên (Staff)' },
-      { id: 'role-leader', name: 'Leader/Part Leader' },
+      { id: 'role-teamleader', name: 'Team Leader' },
+      { id: 'role-partleader', name: 'Part Leader' },
       { id: 'role-sales', name: 'Kinh doanh (Sales)' },
       { id: 'role-bod', name: 'Ban điều hành (BOD)' }
     ],
@@ -32,6 +33,10 @@ function hashPassword(password) {
   return crypto.createHash('md5').update(password).digest('hex');
 }
 
+function hashPasswordSecurely(password, salt = 'top_eng_manager_secure_salt_key') {
+  return crypto.createHmac('sha256', salt).update(password).digest('hex');
+}
+
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -39,12 +44,11 @@ exports.login = async (req, res, next) => {
       return res.status(400).json({ error: 'Thiếu email hoặc mật khẩu' });
     }
 
-    const passwordHash = hashPassword(password);
+    const inputSecureHash = hashPasswordSecurely(password);
+    const inputMd5Hash = hashPassword(password);
+
     const users = await prisma.user.findMany({
-      where: {
-        email: email,
-        password: passwordHash
-      }
+      where: { email: email }
     });
 
     if (users.length === 0) {
@@ -52,8 +56,84 @@ exports.login = async (req, res, next) => {
     }
 
     const user = users[0];
+    let isPasswordCorrect = false;
+
+    if (user.password === inputSecureHash) {
+      isPasswordCorrect = true;
+    } else if (user.password === inputMd5Hash) {
+      isPasswordCorrect = true;
+      // Upgrade hash algorithm to SHA-256 for backward compatibility
+      console.log(`Upgrading password hash to SHA-256 for user: ${user.email}`);
+      await prisma.user.update({
+        where: { user_id: user.user_id },
+        data: { password: inputSecureHash }
+      });
+    }
+
+    if (!isPasswordCorrect) {
+      await prisma.activitylogs.create({
+        data: {
+          user_id: user.user_id,
+          action_type: 'LOGIN_FAILURE',
+          entity_type: 'User',
+          description: `Đăng nhập thất bại: sai mật khẩu cho tài khoản ${email}.`
+        }
+      });
+      return res.status(400).json({ error: 'Email hoặc mật khẩu không chính xác.' });
+    }
+
+    // Capture security context for abnormal login checks
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const ua = req.headers['user-agent'] || 'Unknown';
+
+    const oldRows = await prisma.$queryRawUnsafe(
+      'SELECT `last_login_ip`, `last_login_ua` FROM `user` WHERE `user_id` = ?',
+      user.user_id
+    );
+    const oldIp = oldRows && oldRows[0] ? oldRows[0].last_login_ip : null;
+    const oldUa = oldRows && oldRows[0] ? oldRows[0].last_login_ua : null;
+
+    if (oldIp && oldIp !== ip) {
+      await prisma.activitylogs.create({
+        data: {
+          user_id: user.user_id,
+          action_type: 'SECURITY_ALERT',
+          entity_type: 'User',
+          description: `Cảnh báo bảo mật: Phát hiện đăng nhập từ IP khác thường (IP cũ: ${oldIp}, IP mới: ${ip}).`
+        }
+      });
+    }
+
+    if (oldUa && oldUa !== ua) {
+      await prisma.activitylogs.create({
+        data: {
+          user_id: user.user_id,
+          action_type: 'SECURITY_ALERT',
+          entity_type: 'User',
+          description: `Cảnh báo bảo mật: Phát hiện đăng nhập từ trình duyệt/thiết bị khác thường (Thiết bị cũ: ${oldUa.slice(0, 100)}, Thiết bị mới: ${ua.slice(0, 100)}).`
+        }
+      });
+    }
+
+    // Log successful login
+    await prisma.activitylogs.create({
+      data: {
+        user_id: user.user_id,
+        action_type: 'LOGIN_SUCCESS',
+        entity_type: 'User',
+        description: `Người dùng '${user.full_name}' (${email}) đăng nhập thành công.`
+      }
+    });
+
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    await prisma.$executeRawUnsafe(
+      'UPDATE `user` SET `session_token` = ?, `last_login_ip` = ?, `last_login_ua` = ?, `last_login_at` = CURRENT_TIMESTAMP WHERE `user_id` = ?',
+      sessionToken, ip, ua, user.user_id
+    );
+
     res.json({
       session: {
+        token: sessionToken,
         user: {
           id: user.user_id,
           email: user.email,
@@ -74,7 +154,7 @@ exports.signup = async (req, res, next) => {
       return res.status(400).json({ error: 'Thiếu thông tin đăng ký bắt buộc' });
     }
 
-    const passwordHash = hashPassword(password);
+    const passwordHash = hashPasswordSecurely(password);
     const userId = 'usr-' + Date.now();
 
     const existing = await prisma.user.findUnique({
@@ -175,19 +255,21 @@ exports.createUser = async (req, res, next) => {
       'role-admin': 'Quản trị viên (Admin)',
       'role-hr': 'Nhân sự (HR)',
       'role-staff': 'Nhân viên (Staff)',
-      'role-leader': 'Leader/Part Leader',
+      'role-teamleader': 'Team Leader',
+      'role-partleader': 'Part Leader',
       'role-sales': 'Kinh doanh (Sales)',
       'role-bod': 'Ban điều hành (BOD)',
       'Quản trị viên (Admin)': 'Quản trị viên (Admin)',
       'Nhân sự (HR)': 'Nhân sự (HR)',
       'Nhân viên (Staff)': 'Nhân viên (Staff)',
-      'Leader/Part Leader': 'Leader/Part Leader',
+      'Team Leader': 'Team Leader',
+      'Part Leader': 'Part Leader',
       'Kinh doanh (Sales)': 'Kinh doanh (Sales)',
       'Ban điều hành (BOD)': 'Ban điều hành (BOD)'
     };
     const systemRole = roleMap[roleId] || roleId || 'Nhân viên (Staff)';
 
-    const passwordHash = hashPassword(password);
+    const passwordHash = hashPasswordSecurely(password);
     const userId = (employeeId && employeeId.trim()) || ('usr-' + Date.now());
 
     if (employeeId && employeeId.trim()) {
@@ -238,12 +320,19 @@ exports.changePassword = async (req, res, next) => {
       return res.status(404).json({ error: 'Người dùng không tồn tại.' });
     }
 
-    const currentHash = hashPassword(currentPassword);
-    if (user.password !== currentHash) {
+    const currentSecureHash = hashPasswordSecurely(currentPassword);
+    const currentMd5Hash = hashPassword(currentPassword);
+
+    let isPasswordCorrect = false;
+    if (user.password === currentSecureHash || user.password === currentMd5Hash) {
+      isPasswordCorrect = true;
+    }
+
+    if (!isPasswordCorrect) {
       return res.status(400).json({ error: 'Mật khẩu hiện tại không chính xác.' });
     }
 
-    const newHash = hashPassword(newPassword);
+    const newHash = hashPasswordSecurely(newPassword);
     await prisma.user.update({
       where: { user_id: userId },
       data: { password: newHash }
@@ -262,7 +351,7 @@ exports.resetUserPassword = async (req, res, next) => {
       return res.status(400).json({ error: 'Thiếu thông tin đặt lại mật khẩu.' });
     }
 
-    const passwordHash = hashPassword(newPassword);
+    const passwordHash = hashPasswordSecurely(newPassword);
     await prisma.user.update({
       where: { user_id: userId },
       data: { password: passwordHash }
@@ -291,6 +380,33 @@ exports.deleteUser = async (req, res, next) => {
   }
 };
 
+exports.checkSession = async (req, res, next) => {
+  try {
+    const { userId, token } = req.body;
+    if (!userId || !token) {
+      return res.json({ valid: false });
+    }
+
+    const rows = await prisma.$queryRawUnsafe(
+      'SELECT `session_token` FROM `user` WHERE `user_id` = ?',
+      userId
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.json({ valid: false });
+    }
+
+    const dbToken = rows[0].session_token;
+    if (dbToken !== token) {
+      return res.json({ valid: false, reason: 'Tài khoản của bạn đã được đăng nhập từ một thiết bị khác.' });
+    }
+
+    res.json({ valid: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.testConnection = async (req, res, next) => {
   try {
     const result = await prisma.$queryRaw`SELECT 1 + 1 as val`;
@@ -301,5 +417,37 @@ exports.testConnection = async (req, res, next) => {
     }
   } catch (err) {
     res.status(500).json({ error: 'Kết nối thất bại: ' + err.message });
+  }
+};
+
+exports.updateUserRoleAndDept = async (req, res, next) => {
+  try {
+    const { userId, role, departmentId, fullName, email } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'Thiếu mã nhân viên cần cập nhật.' });
+    }
+
+    const updateData = {};
+    if (role !== undefined) {
+      updateData.role = role;
+    }
+    if (departmentId !== undefined) {
+      updateData.department_id = departmentId || null;
+    }
+    if (fullName !== undefined) {
+      updateData.full_name = fullName;
+    }
+    if (email !== undefined) {
+      updateData.email = email;
+    }
+
+    await prisma.user.update({
+      where: { user_id: userId },
+      data: updateData
+    });
+
+    res.json({ success: true, message: 'Cập nhật thông tin nhân sự thành công!' });
+  } catch (err) {
+    next(err);
   }
 };

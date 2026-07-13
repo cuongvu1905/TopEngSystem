@@ -7,6 +7,7 @@ router.post('/getProjectMembers', projectController.getProjectMembers);
 router.post('/saveProject', projectController.saveProject);
 router.post('/addProjectMember', projectController.addProjectMember);
 router.post('/removeProjectMember', projectController.removeProjectMember);
+router.post('/findProjectById', projectController.findProjectById);
 router.post('/getCustomers', projectController.getCustomers);
 router.post('/getDepartments', projectController.getDepartments);
 router.post('/saveDepartment', projectController.saveDepartment);
