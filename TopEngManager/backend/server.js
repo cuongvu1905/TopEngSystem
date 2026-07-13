@@ -53,7 +53,7 @@ app.use(compression()); // Compress responses
 // Configure basic rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1500, // limit each IP to 1500 requests per windowMs
+  max: 50000, // limit each IP to 1500 requests per windowMs
   message: { error: 'Quá nhiều yêu cầu từ địa chỉ IP này, vui lòng thử lại sau 15 phút.' },
   standardHeaders: true,
   legacyHeaders: false

@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const { createNotificationSafe } = require('./notificationController');
 
 const issueLocks = {}; // key: issueId, value: { userId, userName, lockedAt }
 
@@ -149,14 +150,11 @@ exports.createIssue = async (req, res, next) => {
 
     // If assignee is set, notify them
     if (assignee_id) {
-      await prisma.notificyations.create({
-        data: {
-          user_id: assignee_id,
-          title: 'Bạn được phân công một Issue mới',
-          content: `Bạn vừa được phân công giải quyết Issue: "${summary}" (${issueKey})`,
-          link_url: `#projects/${project_id}`,
-          is_read: false
-        }
+      await createNotificationSafe({
+        user_id: assignee_id,
+        title: 'Bạn được phân công một Issue mới',
+        content: `Bạn vừa được phân công giải quyết Issue: "${summary}" (${issueKey})`,
+        link_url: `#projects/${project_id}`
       });
     }
 
@@ -231,14 +229,11 @@ exports.updateIssue = async (req, res, next) => {
 
     // If assignee was changed, notify new assignee
     if (assignee_id && old.assignee_id !== assignee_id) {
-      await prisma.notificyations.create({
-        data: {
-          user_id: assignee_id,
-          title: 'Bạn được phân công một Issue',
-          content: `Bạn vừa được phân công giải quyết Issue: "${summary}" (${old.issue_key})`,
-          link_url: `#projects/${old.project_id}`,
-          is_read: false
-        }
+      await createNotificationSafe({
+        user_id: assignee_id,
+        title: 'Bạn được phân công một Issue',
+        content: `Bạn vừa được phân công giải quyết Issue: "${summary}" (${old.issue_key})`,
+        link_url: `#projects/${old.project_id}`
       });
     }
 

@@ -96,8 +96,12 @@ export default function ProjectDetail({ params }) {
   const queryTaskId = searchParams.get('taskId');
   const { currentUser, projects, tasks, documents, documentVersions, documentCategories, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
 
-  const [activeSubTab, setActiveSubTab] = useState('kanban');
-  const [isPendingInvite, setIsPendingInvite] = useState(false);
+   const [activeSubTab, setActiveSubTab] = useState('kanban');
+   const [isPendingInvite, setIsPendingInvite] = useState(false);
+
+   const [memberSearchQuery, setMemberSearchQuery] = useState('');
+   const [selectedMemberToAdd, setSelectedMemberToAdd] = useState(null);
+   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
 
   useEffect(() => {
     const checkInvitation = async () => {
@@ -554,8 +558,12 @@ export default function ProjectDetail({ params }) {
     })
     .filter(Boolean)
     .filter(u => {
-      const matchesSearch = u.name.toLowerCase().includes(jiraCreateAssigneeSearchQuery.toLowerCase()) ||
-                            u.email.toLowerCase().includes(jiraCreateAssigneeSearchQuery.toLowerCase());
+      const q = jiraCreateAssigneeSearchQuery.toLowerCase().trim();
+      const matchesSearch = !q ||
+                            u.name.toLowerCase().includes(q) ||
+                            u.email.toLowerCase().includes(q) ||
+                            (u.employee_id && u.employee_id.toLowerCase().includes(q)) ||
+                            (u.department_name && u.department_name.toLowerCase().includes(q));
       const matchesDept = !jiraCreateAssigneeSelectedDept || u.department_id === jiraCreateAssigneeSelectedDept;
       return matchesSearch && matchesDept;
     });
@@ -568,8 +576,12 @@ export default function ProjectDetail({ params }) {
     })
     .filter(Boolean)
     .filter(u => {
-      const matchesSearch = u.name.toLowerCase().includes(jiraDetailAssigneeSearchQuery.toLowerCase()) ||
-                            u.email.toLowerCase().includes(jiraDetailAssigneeSearchQuery.toLowerCase());
+      const q = jiraDetailAssigneeSearchQuery.toLowerCase().trim();
+      const matchesSearch = !q ||
+                            u.name.toLowerCase().includes(q) ||
+                            u.email.toLowerCase().includes(q) ||
+                            (u.employee_id && u.employee_id.toLowerCase().includes(q)) ||
+                            (u.department_name && u.department_name.toLowerCase().includes(q));
       const matchesDept = !jiraDetailAssigneeSelectedDept || u.department_id === jiraDetailAssigneeSelectedDept;
       return matchesSearch && matchesDept;
     });
@@ -1079,6 +1091,16 @@ export default function ProjectDetail({ params }) {
   const progress = pTasks.length > 0 ? Math.round((done / pTasks.length) * 100) : 0;
   const pMembers = projectMembers.filter(m => m.project_id === projectId);
 
+  const filteredEligible = users.filter(u => {
+    if (pMembers.some(m => m.user_id === u.id)) return false;
+    const q = memberSearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return u.name.toLowerCase().includes(q) || 
+           (u.employee_id && u.employee_id.toLowerCase().includes(q)) || 
+           (u.department_name && u.department_name.toLowerCase().includes(q)) ||
+           u.email.toLowerCase().includes(q);
+  });
+
   // Drag and drop task status change
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -1116,9 +1138,17 @@ export default function ProjectDetail({ params }) {
   // Add project member
   const handleAddMember = async (e) => {
     e.preventDefault();
-    const userId = e.target.elements.userId.value;
+    const userId = selectedMemberToAdd?.id;
     const role = e.target.elements.role.value;
-    if (!userId || !role) return;
+    if (!userId || !role) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Thông báo',
+        text: 'Vui lòng tìm và chọn một nhân viên để thêm.',
+        confirmButtonColor: 'var(--primary-color)'
+      });
+      return;
+    }
 
     const isPublic = project.visibility === 'Public';
     const status = isPublic ? 'PENDING' : 'ACTIVE';
@@ -1144,6 +1174,8 @@ export default function ProjectDetail({ params }) {
     });
 
     e.target.reset();
+    setSelectedMemberToAdd(null);
+    setMemberSearchQuery('');
     await reloadAll();
   };
 
@@ -1817,14 +1849,82 @@ export default function ProjectDetail({ params }) {
             {(canManageProject || (project.visibility === 'Public' && isProjectMember)) && (
               <div className="doc-filters" style={{ marginBottom: '16px' }}>
                 <form onSubmit={handleAddMember} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <select name="userId" className="doc-select-filter" required>
-                    <option value="">-- Chọn thành viên mới --</option>
-                    {users
-                      .filter(u => !pMembers.some(m => m.user_id === u.id))
-                      .map(u => (
-                        <option value={u.id} key={u.id}>{u.name} ({u.system_role})</option>
-                      ))}
-                  </select>
+                  <div style={{ position: 'relative', width: '450px' }}>
+                    <input
+                      type="text"
+                      className="doc-select-filter"
+                      style={{ width: '100%' }}
+                      placeholder="Tìm theo tên/mã NV/phòng ban..."
+                      value={selectedMemberToAdd ? `${selectedMemberToAdd.name} (${selectedMemberToAdd.employee_id || 'N/A'})` : memberSearchQuery}
+                      onChange={(e) => {
+                        if (selectedMemberToAdd) {
+                          setSelectedMemberToAdd(null);
+                        }
+                        setMemberSearchQuery(e.target.value);
+                        setShowMemberDropdown(true);
+                      }}
+                      onFocus={() => setShowMemberDropdown(true)}
+                    />
+                    {showMemberDropdown && (
+                      <div 
+                        className="dropdown-menu show" 
+                        style={{ 
+                          position: 'absolute', 
+                          top: '100%', 
+                          left: 0, 
+                          width: '100%', 
+                          maxHeight: '200px', 
+                          overflowY: 'auto', 
+                          zIndex: 100, 
+                          backgroundColor: '#fff', 
+                          border: '1px solid var(--neutral-border)', 
+                          borderRadius: '6px', 
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                          marginTop: '4px'
+                        }}
+                      >
+                        {filteredEligible.length === 0 ? (
+                          <div style={{ padding: '10px', fontSize: '13px', color: 'var(--neutral-muted)', textAlign: 'center' }}>Không tìm thấy nhân viên</div>
+                        ) : (
+                          filteredEligible.map(u => (
+                            <div 
+                              key={u.id}
+                              onClick={() => {
+                                setSelectedMemberToAdd(u);
+                                setMemberSearchQuery('');
+                                setShowMemberDropdown(false);
+                              }}
+                              style={{ 
+                                padding: '8px 12px', 
+                                cursor: 'pointer', 
+                                fontSize: '13px', 
+                                borderBottom: '1px solid #f1f5f9',
+                                transition: 'background-color 0.2s',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '2px'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                              <div style={{ fontWeight: '600', color: 'var(--neutral-dark)' }}>{u.name}</div>
+                              <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: 'var(--neutral-muted)' }}>
+                                <span>Mã NV: <strong>{u.employee_id || 'N/A'}</strong></span>
+                                <span>•</span>
+                                <span>Bộ phận: <strong>{u.department_name || 'Chưa phân phòng'}</strong></span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                    {showMemberDropdown && (
+                      <div 
+                        onClick={() => setShowMemberDropdown(false)} 
+                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }} 
+                      />
+                    )}
+                  </div>
                   <select name="role" className="doc-select-filter" style={{ minWidth: '100px' }} required>
                     <option value="Member">Thành viên</option>
                     <option value="PM">Quản lý</option>
@@ -2227,24 +2327,24 @@ export default function ProjectDetail({ params }) {
 
                     <div className="form-group">
                       <label>Thành viên liên quan</label>
-                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                        <input 
-                          type="text" 
-                          placeholder="Tìm kiếm thành viên..." 
-                          value={jiraCreateAssigneeSearchQuery} 
-                          onChange={(e) => setJiraCreateAssigneeSearchQuery(e.target.value)} 
-                          style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
-                        />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
                         <select 
                           value={jiraCreateAssigneeSelectedDept} 
                           onChange={(e) => setJiraCreateAssigneeSelectedDept(e.target.value)} 
-                          style={{ width: '130px', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
                         >
                           <option value="">Tất cả phòng ban</option>
                           {departments.map(dept => (
                             <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
                           ))}
                         </select>
+                        <input 
+                          type="text" 
+                          placeholder="Tìm kiếm thành viên..." 
+                          value={jiraCreateAssigneeSearchQuery} 
+                          onChange={(e) => setJiraCreateAssigneeSearchQuery(e.target.value)} 
+                          style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                        />
                       </div>
                       <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#fff' }}>
                         {filteredCreateAssignees.length === 0 ? (
@@ -2267,7 +2367,9 @@ export default function ProjectDetail({ params }) {
                                       }
                                     }}
                                   />
-                                  <label htmlFor={`jira-create-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>{m.name} ({m.project_role})</label>
+                                  <label htmlFor={`jira-create-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>
+                                    {m.name} ({m.employee_id || 'N/A'}) - {m.department_name || 'Chưa phân phòng'} ({m.project_role || 'Member'})
+                                  </label>
                                 </div>
                               </div>
                             );
@@ -2660,24 +2762,24 @@ export default function ProjectDetail({ params }) {
                     <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Thành viên liên quan</label>
                     {isEditingAssignee ? (
                       <div>
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                          <input 
-                            type="text" 
-                            placeholder="Tìm kiếm thành viên..." 
-                            value={jiraDetailAssigneeSearchQuery} 
-                            onChange={(e) => setJiraDetailAssigneeSearchQuery(e.target.value)} 
-                            style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
-                          />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
                           <select 
                             value={jiraDetailAssigneeSelectedDept} 
                             onChange={(e) => setJiraDetailAssigneeSelectedDept(e.target.value)} 
-                            style={{ width: '130px', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                            style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
                           >
                             <option value="">Tất cả phòng ban</option>
                             {departments.map(dept => (
                               <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
                             ))}
                           </select>
+                          <input 
+                            type="text" 
+                            placeholder="Tìm kiếm thành viên..." 
+                            value={jiraDetailAssigneeSearchQuery} 
+                            onChange={(e) => setJiraDetailAssigneeSearchQuery(e.target.value)} 
+                            style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                          />
                         </div>
                         <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#fff', marginBottom: '8px' }}>
                           {filteredDetailAssignees.length === 0 ? (
@@ -2698,7 +2800,9 @@ export default function ProjectDetail({ params }) {
                                         );
                                       }}
                                     />
-                                    <label htmlFor={`jira-detail-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>{m.name} ({m.project_role})</label>
+                                    <label htmlFor={`jira-detail-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>
+                                      {m.name} ({m.employee_id || 'N/A'}) - {m.department_name || 'Chưa phân phòng'} ({m.project_role || 'Member'})
+                                    </label>
                                   </div>
                                 </div>
                               );

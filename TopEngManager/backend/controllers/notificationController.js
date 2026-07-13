@@ -23,18 +23,52 @@ exports.getNotifications = async (req, res, next) => {
   }
 };
 
+exports.createNotificationSafe = async (data) => {
+  try {
+    const { user_id, title, content, link_url } = data;
+    
+    // Check if a similar notification was created in the last 5 seconds
+    const threshold = new Date(Date.now() - 5000);
+    const existing = await prisma.notificyations.findFirst({
+      where: {
+        user_id,
+        title,
+        content,
+        create_at: {
+          gte: threshold
+        }
+      }
+    });
+
+    if (existing) {
+      console.log(`Duplicate notification prevented for user ${user_id}: "${title}"`);
+      return existing;
+    }
+
+    return await prisma.notificyations.create({
+      data: {
+        user_id,
+        title,
+        content,
+        link_url: link_url || '',
+        is_read: false
+      }
+    });
+  } catch (err) {
+    console.error("Failed to create safe notification:", err);
+    throw err;
+  }
+};
+
 exports.createNotification = async (req, res, next) => {
   try {
     const { userId, title, content, linkUrl } = req.body;
     
-    await prisma.notificyations.create({
-      data: {
-        user_id: userId,
-        title: title,
-        content: content,
-        link_url: linkUrl || '',
-        is_read: false
-      }
+    await exports.createNotificationSafe({
+      user_id: userId,
+      title: title,
+      content: content,
+      link_url: linkUrl
     });
 
     res.json({ success: true });

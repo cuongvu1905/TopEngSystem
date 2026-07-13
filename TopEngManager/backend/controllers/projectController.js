@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const { createNotificationSafe } = require('./notificationController');
 
 exports.getProjects = async (req, res, next) => {
   try {
@@ -124,14 +125,11 @@ exports.saveProject = async (req, res, next) => {
 
         if (!oldUserIds.includes(m.user_id)) {
           try {
-            await prisma.notificyations.create({
-              data: {
-                user_id: m.user_id,
-                title: 'Bạn được thêm vào dự án mới',
-                content: `Bạn vừa được thêm vào dự án "${proj.name}" với vai trò ${m.project_role || 'Member'}.`,
-                link_url: `#projects/${id}`,
-                is_read: false
-              }
+            await createNotificationSafe({
+              user_id: m.user_id,
+              title: 'Bạn được thêm vào dự án mới',
+              content: `Bạn vừa được thêm vào dự án "${proj.name}" với vai trò ${m.project_role || 'Member'}.`,
+              link_url: `#projects/${id}`
             });
           } catch (notifErr) {
             console.error("Failed to send bulk member notification:", notifErr);
@@ -191,14 +189,11 @@ exports.addProjectMember = async (req, res, next) => {
         ? `Bạn vừa được mời tham gia dự án "${proj?.project_name || 'Dự án'}" với vai trò ${projectRole || 'Member'}. Hãy mở chi tiết để xác nhận.`
         : `Bạn vừa được thêm vào dự án "${proj?.project_name || 'Dự án'}" với vai trò ${projectRole || 'Member'}.`;
 
-      await prisma.notificyations.create({
-        data: {
-          user_id: userId,
-          title: notifTitle,
-          content: notifContent,
-          link_url: `#projects/${projectId}`,
-          is_read: false
-        }
+      await createNotificationSafe({
+        user_id: userId,
+        title: notifTitle,
+        content: notifContent,
+        link_url: `#projects/${projectId}`
       });
     } catch (notifErr) {
       console.error("Failed to send single member notification:", notifErr);

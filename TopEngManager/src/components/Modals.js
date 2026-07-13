@@ -21,26 +21,26 @@ const formatDateForInput = (dateVal) => {
 };
 
 // Modal Backdrop Wrapper
-const ModalWrapper = ({ isOpen, children, onClose }) => {
+const ModalWrapper = ({ isOpen, children, onClose, style }) => {
   if (!isOpen) return null;
   return (
     <div className="modal show" style={{ display: 'flex' }} onClick={(e) => {
       if (e.target === e.currentTarget) onClose();
     }}>
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-dialog" style={style} onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
   );
 };
 
-const ModalWrapperLg = ({ isOpen, children, onClose }) => {
+const ModalWrapperLg = ({ isOpen, children, onClose, style }) => {
   if (!isOpen) return null;
   return (
     <div className="modal show" style={{ display: 'flex' }} onClick={(e) => {
       if (e.target === e.currentTarget) onClose();
     }}>
-      <div className="modal-dialog modal-lg" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-dialog modal-lg" style={style} onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -183,14 +183,18 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
   };
 
   const filteredUsers = systemUsers.filter(u => {
-    const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          u.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q ||
+                          u.name.toLowerCase().includes(q) || 
+                          u.email.toLowerCase().includes(q) ||
+                          (u.employee_id && u.employee_id.toLowerCase().includes(q)) ||
+                          (u.department_name && u.department_name.toLowerCase().includes(q));
     const matchesDept = !selectedDept || u.department_id === selectedDept;
     return matchesSearch && matchesDept;
   });
 
   return (
-    <ModalWrapper isOpen={isOpen} onClose={onClose}>
+    <ModalWrapper isOpen={isOpen} onClose={onClose} style={{ maxWidth: '800px', width: '90%' }}>
       <div className="modal-content">
         <div className="modal-header">
           <h3>{projectId ? 'Chỉnh Sửa Dự Án' : 'Tạo Dự Án Mới'}</h3>
@@ -283,7 +287,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                             checked={isChecked} 
                             onChange={() => handleMemberToggle(u.id)}
                           />
-                          <label htmlFor={`modal-member-check-${u.id}`}>{u.name}</label>
+                          <label htmlFor={`modal-member-check-${u.id}`}>
+                            {u.name} ({u.employee_id || 'N/A'}) - {u.department_name || 'Chưa phân phòng'}
+                          </label>
                         </div>
                         <select 
                           value={role} 
@@ -633,8 +639,12 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
   };
 
   const filteredMembers = projectMembers.filter(m => {
-    const matchesSearch = m.name.toLowerCase().includes(assigneeSearchQuery.toLowerCase()) || 
-                          m.email.toLowerCase().includes(assigneeSearchQuery.toLowerCase());
+    const q = assigneeSearchQuery.toLowerCase().trim();
+    const matchesSearch = !q || 
+                          m.name.toLowerCase().includes(q) || 
+                          m.email.toLowerCase().includes(q) ||
+                          (m.employee_id && m.employee_id.toLowerCase().includes(q)) ||
+                          (m.department_name && m.department_name.toLowerCase().includes(q));
     const matchesDept = !assigneeSelectedDept || m.department_id === assigneeSelectedDept;
     return matchesSearch && matchesDept;
   });
@@ -644,7 +654,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
   const progressPercent = subtasks.length > 0 ? Math.round((doneSubtasks / subtasks.length) * 100) : 0;
 
   return (
-    <ModalWrapperLg isOpen={isOpen} onClose={onClose}>
+    <ModalWrapperLg isOpen={isOpen} onClose={onClose} style={{ maxWidth: '1100px', width: '95%' }}>
       <div className="modal-content">
         <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--neutral-border)' }}>
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
@@ -665,18 +675,18 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
               <option value="Done">Done</option>
             </select>
           </div>
-          <button className="btn-close-modal" onClick={onClose} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
+          <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
         {isLockedByOther && (
           <div style={{
             backgroundColor: '#fffbeb',
-            borderBottom: '1px solid #fde68a',
+            borderBottom: '1px solid #fef3c7',
             padding: '10px 20px',
+            fontSize: '13px',
+            color: '#b45309',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
-            color: '#b45309',
-            fontSize: '13.5px',
+            gap: '8px',
             fontWeight: '500'
           }}>
             <i className="fa-solid fa-lock" style={{ fontSize: '15px', color: '#d97706' }}></i>
@@ -701,24 +711,24 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                   <label>Người thực hiện</label>
                   {isPM ? (
                     <div>
-                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                        <input 
-                          type="text" 
-                          placeholder="Tìm kiếm thành viên..." 
-                          value={assigneeSearchQuery} 
-                          onChange={(e) => setAssigneeSearchQuery(e.target.value)} 
-                          style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
-                        />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
                         <select 
                           value={assigneeSelectedDept} 
                           onChange={(e) => setAssigneeSelectedDept(e.target.value)} 
-                          style={{ width: '130px', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
                         >
                           <option value="">Tất cả phòng ban</option>
                           {departments.map(dept => (
                             <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
                           ))}
                         </select>
+                        <input 
+                          type="text" 
+                          placeholder="Tìm kiếm thành viên..." 
+                          value={assigneeSearchQuery} 
+                          onChange={(e) => setAssigneeSearchQuery(e.target.value)} 
+                          style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
+                        />
                       </div>
                       <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#fff' }}>
                         {filteredMembers.length === 0 ? (
@@ -742,7 +752,9 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                                       }
                                     }}
                                   />
-                                  <label htmlFor={`task-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>{m.name} ({m.project_role})</label>
+                                  <label htmlFor={`task-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>
+                                    {m.name} ({m.employee_id || 'N/A'}) - {m.department_name || 'Chưa phân phòng'} ({m.project_role || 'Member'})
+                                  </label>
                                 </div>
                               </div>
                             );
