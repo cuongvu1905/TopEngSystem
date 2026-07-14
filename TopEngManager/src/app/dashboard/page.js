@@ -266,36 +266,9 @@ export default function Dashboard() {
 
   // 4. Resolve Daily Reports (Role-filtered and Padded)
   const getFilteredReports = () => {
-    const systemRole = currentUser.system_role || '';
-    const isAdminOrManagement = systemRole.includes("Admin") || systemRole.includes("BOD") || systemRole.includes("HR");
-
-    // Projects where current user is PM
-    const myPMProjects = projectMembers.filter(m => m.user_id === currentUser.id && m.project_role === 'PM').map(m => m.project_id);
-    const isPM = myPMProjects.length > 0;
-
-    if (isAdminOrManagement) {
-      // Ban quản trị: Xem báo cáo của Leader
-      const pmUserIds = new Set(projectMembers.filter(m => m.project_role === 'PM').map(m => m.user_id));
-      const leaderUserIds = new Set(
-        users.filter(u => u.system_role?.includes("Leader")).map(u => u.id)
-      );
-      pmUserIds.forEach(id => leaderUserIds.add(id));
-
-      return allReports.filter(r => leaderUserIds.has(r.user_id));
-    } else if (systemRole.includes("Leader") || isPM) {
-      // Leader: Hiển thị báo cáo của thành viên dự án quản lý
-      const memberUserIds = new Set(
-        projectMembers.filter(m => myPMProjects.includes(m.project_id) && m.user_id !== currentUser.id).map(m => m.user_id)
-      );
-      if (memberUserIds.size > 0) {
-        return allReports.filter(r => memberUserIds.has(r.user_id));
-      } else {
-        return allReports.filter(r => r.user_id === currentUser.id);
-      }
-    } else {
-      // Staff: Hiển thị báo cáo bản thân
-      return allReports.filter(r => r.user_id === currentUser.id);
-    }
+    // The backend API `getDailyReports` already returns exactly the reports the user is allowed to see.
+    // On the dashboard, we only show reports that are in "Chờ duyệt" (Pending) status.
+    return allReports.filter(r => r.status !== 'Approved' && r.status !== 'Rejected');
   };
 
   const padReports = (reportList) => {
@@ -373,7 +346,7 @@ export default function Dashboard() {
       const first = myProjectsSorted[0]?.id || null;
       setSelectedProjectIdForPopup(first);
     } else if (type === 'reports') {
-      const first = reportsPadded[0] || null;
+      const first = allReports[0] || null;
       setSelectedReportForPopup(first);
       setReportCommentText(first?.comment || '');
     }
@@ -471,7 +444,8 @@ export default function Dashboard() {
       });
     }
     if (activeDetailPopup === 'reports') {
-      return reportsPadded.filter(item => {
+      // In the detail popup, search and filter through all available real reports (including Approved and Rejected)
+      return allReports.filter(item => {
         const matchSearch = item.content.toLowerCase().includes(q) || item.user_name.toLowerCase().includes(q);
         const matchProject = !popupFilter1 || item.project_id === popupFilter1;
         const matchStatus = !popupFilter2 || item.status === popupFilter2;
@@ -488,7 +462,7 @@ export default function Dashboard() {
   const getCanReviewReport = (rep) => {
     if (!rep) return false;
     return (currentUser.id !== rep.user_id) && 
-      (hasPermission('approve_daily_report') || isPM);
+      hasPermission('approve_daily_report');
   };
 
   return (

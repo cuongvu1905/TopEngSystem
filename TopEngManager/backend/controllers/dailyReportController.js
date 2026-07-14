@@ -22,11 +22,53 @@ exports.getDailyReports = async (req, res, next) => {
     const { userId, userRole } = req.body;
 
     const roleStr = typeof userRole === 'string' ? userRole : '';
-    const canViewAll = hasPermission(roleStr, 'view_daily_reports');
+
+    // Check if the requesting user exists to find their department
+    const requestingUser = userId ? await prisma.user.findUnique({
+      where: { user_id: userId }
+    }) : null;
 
     let where = {};
-    if (!canViewAll && userId) {
-      where.user_id = userId;
+
+    if (roleStr === 'Quản trị viên (Admin)' || roleStr === 'Ban điều hành (BOD)' || roleStr === 'Nhân sự (HR)') {
+      // Admins, BOD, and HR see all reports
+      where = {};
+    } else if (roleStr === 'Team Leader') {
+      // Team Leaders see reports of users in their department and any sub-departments of their department
+      let allowedDepartmentIds = [];
+      if (requestingUser && requestingUser.department_id) {
+        allowedDepartmentIds.push(requestingUser.department_id);
+        
+        // Find sub-departments (parts)
+        const subDepts = await prisma.department.findMany({
+          where: { parent_id: requestingUser.department_id },
+          select: { department_id: true }
+        });
+        
+        subDepts.forEach(d => {
+          allowedDepartmentIds.push(d.department_id);
+        });
+      }
+
+      if (allowedDepartmentIds.length > 0) {
+        where = {
+          OR: [
+            { user_id: userId }, // include their own reports
+            {
+              user: {
+                department_id: { in: allowedDepartmentIds }
+              }
+            }
+          ]
+        };
+      } else {
+        where = { user_id: userId };
+      }
+    } else {
+      // Everyone else (Staff, Part Leader, Sales, etc.) only see their own reports
+      if (userId) {
+        where.user_id = userId;
+      }
     }
 
     const reports = await prisma.dailyreport.findMany({

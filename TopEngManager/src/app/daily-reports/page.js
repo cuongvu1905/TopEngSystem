@@ -107,6 +107,47 @@ export default function DailyReportsPage() {
     }));
   };
 
+  const handleTimeBlur = (cardId, field, val) => {
+    if (!val) return;
+    let formatted = val.trim();
+    
+    // Remove spaces
+    formatted = formatted.replace(/\s+/g, '');
+    
+    // Match H:MM or HH:MM
+    const matchHm = formatted.match(/^(\d{1,2}):(\d{2})$/);
+    if (matchHm) {
+      const hours = String(Number(matchHm[1])).padStart(2, '0');
+      const minutes = matchHm[2];
+      if (Number(hours) < 24 && Number(minutes) < 60) {
+        updateCardField(cardId, field, `${hours}:${minutes}`);
+        return;
+      }
+    }
+    
+    // Match single hour like H or HH
+    const matchH = formatted.match(/^(\d{1,2})$/);
+    if (matchH) {
+      const hours = String(Number(matchH[1])).padStart(2, '0');
+      if (Number(hours) < 24) {
+        updateCardField(cardId, field, `${hours}:00`);
+        return;
+      }
+    }
+
+    // Match 3 or 4 digits like 800 or 1430
+    const matchDigits = formatted.match(/^(\d{3,4})$/);
+    if (matchDigits) {
+      const len = matchDigits[1].length;
+      const hours = String(Number(matchDigits[1].substring(0, len - 2))).padStart(2, '0');
+      const minutes = matchDigits[1].substring(len - 2);
+      if (Number(hours) < 24 && Number(minutes) < 60) {
+        updateCardField(cardId, field, `${hours}:${minutes}`);
+        return;
+      }
+    }
+  };
+
   const handleAddReportCard = () => {
     let nextStart = '08:00';
     let nextEnd = '12:00';
@@ -393,37 +434,69 @@ export default function DailyReportsPage() {
                         Khung giờ:
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <input
-                          type="time"
-                          value={card.startTime}
-                          onChange={(e) => updateCardField(card.id, 'startTime', e.target.value)}
-                          required
-                          style={{ 
-                            padding: '8px 12px', 
-                            borderRadius: '4px', 
-                            border: '1px solid #0f172a', 
-                            fontSize: '13.5px', 
-                            outline: 'none',
-                            textAlign: 'center',
-                            flex: 1
-                          }}
-                        />
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          border: '1px solid #0f172a', 
+                          borderRadius: '4px', 
+                          padding: '0 8px',
+                          backgroundColor: '#fff',
+                          flex: 1
+                        }}>
+                          <input
+                            type="text"
+                            list="time-options"
+                            placeholder="08:00"
+                            pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                            title="Định dạng 24h (HH:mm), ví dụ: 08:30 hoặc 14:00"
+                            value={card.startTime}
+                            onChange={(e) => updateCardField(card.id, 'startTime', e.target.value)}
+                            onBlur={(e) => handleTimeBlur(card.id, 'startTime', e.target.value)}
+                            required
+                            style={{ 
+                              padding: '8px 4px', 
+                              border: 'none', 
+                              fontSize: '13.5px', 
+                              outline: 'none',
+                              textAlign: 'center',
+                              width: '100%',
+                              backgroundColor: 'transparent'
+                            }}
+                          />
+                          <i className="fa-regular fa-clock" style={{ color: '#64748b', fontSize: '14px', pointerEvents: 'none' }}></i>
+                        </div>
                         <span style={{ fontWeight: '600' }}>-</span>
-                        <input
-                          type="time"
-                          value={card.endTime}
-                          onChange={(e) => updateCardField(card.id, 'endTime', e.target.value)}
-                          required
-                          style={{ 
-                            padding: '8px 12px', 
-                            borderRadius: '4px', 
-                            border: '1px solid #0f172a', 
-                            fontSize: '13.5px', 
-                            outline: 'none',
-                            textAlign: 'center',
-                            flex: 1
-                          }}
-                        />
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          border: '1px solid #0f172a', 
+                          borderRadius: '4px', 
+                          padding: '0 8px',
+                          backgroundColor: '#fff',
+                          flex: 1
+                        }}>
+                          <input
+                            type="text"
+                            list="time-options"
+                            placeholder="12:00"
+                            pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                            title="Định dạng 24h (HH:mm), ví dụ: 08:30 hoặc 14:00"
+                            value={card.endTime}
+                            onChange={(e) => updateCardField(card.id, 'endTime', e.target.value)}
+                            onBlur={(e) => handleTimeBlur(card.id, 'endTime', e.target.value)}
+                            required
+                            style={{ 
+                              padding: '8px 4px', 
+                              border: 'none', 
+                              fontSize: '13.5px', 
+                              outline: 'none',
+                              textAlign: 'center',
+                              width: '100%',
+                              backgroundColor: 'transparent'
+                            }}
+                          />
+                          <i className="fa-regular fa-clock" style={{ color: '#64748b', fontSize: '14px', pointerEvents: 'none' }}></i>
+                        </div>
                       </div>
                     </div>
 
@@ -880,6 +953,17 @@ export default function DailyReportsPage() {
           </div>
         </div>
       )}
+      <datalist id="time-options">
+        {Array.from({ length: 24 }).map((_, h) => {
+          const hh = String(h).padStart(2, '0');
+          return (
+            <React.Fragment key={h}>
+              <option value={`${hh}:00`} />
+              <option value={`${hh}:30`} />
+            </React.Fragment>
+          );
+        })}
+      </datalist>
     </div>
   );
 }

@@ -240,9 +240,7 @@
       "edit_issue",
       "view_documents",
       "upload_documents",
-      "view_daily_reports",
       "create_daily_report",
-      "approve_daily_report",
       "chat_tag_all_project"
     ],
     "Nhân viên (Staff)": [
@@ -262,7 +260,6 @@
       "update_task_status",
       "view_documents",
       "upload_documents",
-      "view_daily_reports",
       "create_daily_report",
       "chat_tag_all_global",
       "chat_tag_all_project",
