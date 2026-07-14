@@ -182,9 +182,24 @@ export const AppContextProvider = ({ children }) => {
         }
       }, 5000);
 
+      // Periodically poll new notifications (every 4 seconds)
+      const notificationInterval = setInterval(async () => {
+        const sessionRes = await db.client.auth.getSession();
+        const session = sessionRes?.data?.session;
+        if (session && session.user) {
+          try {
+            const nots = await db.getNotifications(session.user.id).catch(() => []);
+            setNotifications(nots);
+          } catch (err) {
+            console.error('Failed to poll notifications:', err);
+          }
+        }
+      }, 4000);
+
       return () => {
         subscription.unsubscribe();
         clearInterval(sessionInterval);
+        clearInterval(notificationInterval);
       };
     }
   }, []);

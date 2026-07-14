@@ -107,17 +107,40 @@ exports.createIssue = async (req, res, next) => {
     });
     const projKey = proj?.project_key || 'PRJ';
 
-    // Get maximum issue key number
-    const maxResult = await prisma.$queryRaw`
-      SELECT MAX(CAST(SUBSTRING_INDEX(issue_key, '_', -1) AS UNSIGNED)) as max_num 
-      FROM Issue 
-      WHERE project_id = ${project_id}
-    `;
+    // Get all issue keys of this project to find max index
+    const issues = await prisma.issue.findMany({
+      where: { project_id: project_id },
+      select: { issue_key: true }
+    });
 
-    const maxNum = maxResult[0]?.max_num;
-    const nextNum = (Number(maxNum) || 0) + 1;
+    let maxNum = 0;
+    issues.forEach(iss => {
+      if (!iss.issue_key) return;
+      const parts = iss.issue_key.split('-I');
+      if (parts.length > 1) {
+        const num = parseInt(parts[1], 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      } else {
+        // Fallback for older formats like CRM-101 or CRM_101
+        const hyphenParts = iss.issue_key.split('-');
+        const underscoreParts = iss.issue_key.split('_');
+        const numPart = hyphenParts.length > 1 ? hyphenParts[1] : (underscoreParts.length > 1 ? underscoreParts[1] : '');
+        // Extract digits
+        const cleanNumPart = numPart.replace(/\D/g, '');
+        if (cleanNumPart) {
+          const cleanNum = parseInt(cleanNumPart, 10);
+          if (!isNaN(cleanNum) && cleanNum > maxNum) {
+            maxNum = cleanNum;
+          }
+        }
+      }
+    });
+
+    const nextNum = maxNum + 1;
     const paddedNum = String(nextNum).padStart(3, '0');
-    const issueKey = `${projKey}_${paddedNum}`;
+    const issueKey = `${projKey}-I${paddedNum}`;
 
     const result = await prisma.issue.create({
       data: {

@@ -106,9 +106,9 @@ INSERT INTO `Messages` (`message_id`, `room_id`, `sender_id`, `content`, `is_edi
 
 -- 13. INSERT JIRA STYLE ISSUES
 INSERT INTO `Issue` (`id`, `issue_key`, `project_id`, `summary`, `description`, `type`, `status`, `priority`, `reporter_id`, `assignee_id`) VALUES
-(1, 'CRM-101', 'proj-crm', 'Thiết kế giao diện Dashboard tổng quan', 'Xây dựng layout Dashboard hiển thị các biểu đồ doanh thu và thống kê khách hàng.', 'STORY', 'DONE', 'HIGH', 'usr-sarah', 'usr-john'),
-(2, 'CRM-102', 'proj-crm', 'Lỗi kết nối API đồng bộ dữ liệu', 'API trả về status 500 khi đồng bộ lượng lớn khách hàng từ tệp Excel.', 'BUG', 'IN_PROGRESS', 'CRITICAL', 'usr-john', 'usr-john'),
-(3, 'PAY-101', 'proj-ecommerce', 'Tích hợp cổng thanh toán Viettel Pay SDK', 'Tải SDK và cấu hình các endpoints callback giao dịch.', 'TASK', 'TO_DO', 'MEDIUM', 'usr-john', 'usr-sarah');
+(1, 'CRM-I101', 'proj-crm', 'Thiết kế giao diện Dashboard tổng quan', 'Xây dựng layout Dashboard hiển thị các biểu đồ doanh thu và thống kê khách hàng.', 'STORY', 'DONE', 'HIGH', 'usr-sarah', 'usr-john'),
+(2, 'CRM-I102', 'proj-crm', 'Lỗi kết nối API đồng bộ dữ liệu', 'API trả về status 500 khi đồng bộ lượng lớn khách hàng từ tệp Excel.', 'BUG', 'IN_PROGRESS', 'CRITICAL', 'usr-john', 'usr-john'),
+(3, 'PAY-I101', 'proj-ecommerce', 'Tích hợp cổng thanh toán Viettel Pay SDK', 'Tải SDK và cấu hình các endpoints callback giao dịch.', 'TASK', 'TO_DO', 'MEDIUM', 'usr-john', 'usr-sarah');
 
 -- 14. INSERT ISSUE COMMENTS
 INSERT INTO `IssueComments` (`issue_id`, `user_id`, `content`) VALUES

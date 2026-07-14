@@ -449,7 +449,7 @@ const SUBTASKS = [
 const ISSUES = [
   {
     id: 1,
-    issue_key: 'CRM-101',
+    issue_key: 'CRM-I101',
     project_id: 'proj-crm',
     summary: 'Thiết kế Dashboard hiển thị KPI doanh số',
     description: 'Xây dựng layout Dashboard hiển thị các biểu đồ doanh thu và thống kê khách hàng.',
@@ -461,7 +461,7 @@ const ISSUES = [
   },
   {
     id: 2,
-    issue_key: 'CRM-102',
+    issue_key: 'CRM-I102',
     project_id: 'proj-crm',
     summary: 'Lỗi null pointer exception khi lưu khách hàng không có email',
     description: 'API trả về status 500 khi lưu một record khách hàng mới không chứa trường email.',
@@ -473,7 +473,7 @@ const ISSUES = [
   },
   {
     id: 3,
-    issue_key: 'PAY-101',
+    issue_key: 'PAY-I101',
     project_id: 'proj-ecommerce',
     summary: 'Cập nhật SSL certificate cho sandbox API',
     description: 'Cần cập nhật cấu hình SSL mới cho server sandbox để tránh lỗi kết nối TLS từ cổng thanh toán.',
@@ -538,7 +538,7 @@ const DAILY_REPORTS = [
 
 const NOTIFICATIONS = [
   { user_id: 'usr-staff', title: 'Công việc mới', content: 'Bạn đã được phân công công việc "Thiết kế cơ sở dữ liệu CRM" trong dự án CRM.', link_url: '#tasks', is_read: false },
-  { user_id: 'usr-leader', title: 'Issue mới', content: 'Có issue mới cần xử lý: CRM-101', link_url: '#projects', is_read: false }
+  { user_id: 'usr-leader', title: 'Issue mới', content: 'Có issue mới cần xử lý: CRM-I101', link_url: '#projects', is_read: false }
 ];
 
 const ACTIVITY_LOGS = [

@@ -275,6 +275,25 @@ export default function Dashboard() {
     }
   }, [selectedIssueIdForPopup, loadIssueDetail]);
 
+  // Handle redirect from daily report notifications
+  useEffect(() => {
+    if (typeof window !== 'undefined' && allReports.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const reportIdParam = params.get('reportId');
+      if (reportIdParam) {
+        const report = allReports.find(r => r.id === parseInt(reportIdParam));
+        if (report) {
+          setSelectedReportForPopup(report);
+          setReportCommentText(report.comment || '');
+          setActiveDetailPopup('reports');
+          // Clear query params to keep URL clean
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }
+      }
+    }
+  }, [allReports]);
+
   if (!currentUser) return null;
 
   // Resolve which sections should actually show
@@ -374,6 +393,33 @@ export default function Dashboard() {
   const handleUpdateReportStatus = async (status) => {
     if (!selectedReportForPopup) return;
     const Swal = await getSwal();
+
+    if (status === 'Rejected') {
+      if (!reportCommentText || !reportCommentText.trim()) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Thiếu ý kiến nhận xét',
+          text: 'Vui lòng nhập ý kiến nhận xét/phản hồi của quản lý trước khi từ chối báo cáo ngày!'
+        });
+        return;
+      }
+
+      const confirmResult = await Swal.fire({
+        title: 'Xác nhận từ chối?',
+        text: 'Bạn có chắc chắn muốn từ chối (Reject) báo cáo ngày này không?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Xác nhận',
+        cancelButtonText: 'Hủy'
+      });
+
+      if (!confirmResult.isConfirmed) {
+        return;
+      }
+    }
+
     try {
       setSubmittingReview(true);
       await db.updateDailyReportStatus(selectedReportForPopup.id, status, reportCommentText);
@@ -530,10 +576,10 @@ export default function Dashboard() {
       return createdDate <= checkDate;
     });
 
-    // Get reports submitted on this date
+    // Get reports submitted on this date that are NOT Rejected
     const reportedUserIds = new Set(
       allReports
-        .filter(r => formatDateString(new Date(r.created_at)) === dateStr)
+        .filter(r => formatDateString(new Date(r.created_at)) === dateStr && r.status !== 'Rejected')
         .map(r => r.user_id)
     );
 

@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const prisma = require('../config/prisma');
+const { createNotificationSafe } = require('./notificationController');
 
 function hasPermission(userRole, permissionKey) {
   try {
@@ -181,6 +182,16 @@ exports.updateDailyReportStatus = async (req, res, next) => {
         comment: comment || null
       }
     });
+
+    if (status === 'Rejected') {
+      const reportDate = new Date(existingReport.created_at).toLocaleDateString('vi-VN');
+      await createNotificationSafe({
+        user_id: existingReport.user_id,
+        title: 'Báo cáo ngày bị từ chối',
+        content: `Báo cáo ngày ${reportDate} của bạn đã bị từ chối. Nhận xét: ${comment || 'Không có'}`,
+        link_url: `#dashboard?reportId=${reportId}`
+      });
+    }
 
     res.json({ success: true, report: updatedReport });
   } catch (err) {
