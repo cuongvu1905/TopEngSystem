@@ -3,7 +3,11 @@ const { createNotificationSafe } = require('./notificationController');
 
 exports.getProjects = async (req, res, next) => {
   try {
-    const dbProjects = await prisma.$queryRaw`SELECT * FROM Project`;
+    const dbProjects = await prisma.project.findMany({
+      include: {
+        user: true
+      }
+    });
     const projects = dbProjects.map(p => {
       const prefix = p.customer_id ? `[${p.customer_id}] ` : '';
       return {
@@ -15,6 +19,7 @@ exports.getProjects = async (req, res, next) => {
         start_date: p.start_date || '2026-06-01',
         end_date: p.end_date || '2026-12-31',
         create_by: p.create_by,
+        creator: p.user ? p.user.full_name : 'Hệ thống',
         customer_id: p.customer_id || null,
         visibility: p.visibility || 'Private',
         is_public: p.visibility === 'Public'
@@ -85,7 +90,7 @@ exports.saveProject = async (req, res, next) => {
 
       await prisma.$executeRaw`
         INSERT INTO Project (project_id, project_name, project_description, project_key, create_by, customer_id, status, start_date, end_date, visibility)
-        VALUES (${id}, ${finalProjectName}, ${proj.description}, ${projectKey}, ${proj.create_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'}, ${visibility})
+        VALUES (${id}, ${finalProjectName}, ${proj.description}, ${projectKey}, ${proj.create_by || proj.created_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'}, ${visibility})
       `;
     } else {
       await prisma.$executeRaw`
@@ -138,8 +143,10 @@ exports.saveProject = async (req, res, next) => {
       }
     }
 
-    const savedList = await prisma.$queryRaw`SELECT * FROM Project WHERE project_id = ${id}`;
-    const saved = savedList[0];
+    const saved = await prisma.project.findUnique({
+      where: { project_id: id },
+      include: { user: true }
+    });
 
     res.json({
       id: saved.project_id,
@@ -150,6 +157,7 @@ exports.saveProject = async (req, res, next) => {
       start_date: saved.start_date || '2026-06-01',
       end_date: saved.end_date || '2026-12-31',
       create_by: saved.create_by,
+      creator: saved.user ? saved.user.full_name : 'Hệ thống',
       visibility: saved.visibility || 'Private',
       is_public: saved.visibility === 'Public'
     });

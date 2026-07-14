@@ -79,7 +79,7 @@ export default function Projects() {
       if (result.isConfirmed && result.value) {
         const project = result.value;
         
-        const showTermsPopup = project.visibility === 'Public';
+        const showTermsPopup = true; // Luôn hiển thị điều khoản và checkbox đồng ý
 
         const performJoin = async () => {
           try {
@@ -128,12 +128,12 @@ export default function Projects() {
                 <div style="text-align: left; padding: 10px; font-size: 14.5px; line-height: 1.6;">
                   <div style="margin-bottom: 8px;"><strong>Tên dự án:</strong> ${project.name}</div>
                   <div style="margin-bottom: 8px;"><strong>Mã khóa (Key):</strong> <span class="badge badge-info">${project.project_key}</span></div>
-                  <div style="margin-bottom: 8px;"><strong>Người tạo:</strong> ${project.creator}</div>
+                  <div style="margin-bottom: 8px;"><strong>Người tạo:</strong> ${project.creator || 'Hệ thống'}</div>
                   <div style="margin-bottom: 8px;"><strong>Trạng thái:</strong> ${project.status}</div>
                   <div style="margin-bottom: 16px;"><strong>Mô tả:</strong> ${project.description}</div>
 
                   <div style="background-color: rgba(30, 64, 175, 0.05); border-left: 4px solid #1e40af; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
-                    <strong style="color: #1e40af;">Điều khoản tham gia dự án Public:</strong>
+                    <strong style="color: #1e40af;">Điều khoản tham gia dự án:</strong>
                     <p style="margin-top: 6px; font-size: 13px;">Bằng cách tham gia dự án, bạn đồng ý tuân thủ các quy định bảo mật, hoàn thành các nhiệm vụ được giao đúng hạn và chia sẻ thông tin công việc một cách minh bạch với các thành viên khác.</p>
                   </div>
                   
@@ -199,7 +199,7 @@ export default function Projects() {
               <div style="text-align: left; padding: 10px; font-size: 14.5px; line-height: 1.6;">
                 <div style="margin-bottom: 8px;"><strong>Tên dự án:</strong> ${project.name}</div>
                 <div style="margin-bottom: 8px;"><strong>Mã khóa (Key):</strong> <span class="badge badge-info">${project.project_key}</span></div>
-                <div style="margin-bottom: 8px;"><strong>Người tạo:</strong> ${project.creator}</div>
+                <div style="margin-bottom: 8px;"><strong>Người tạo:</strong> ${project.creator || 'Hệ thống'}</div>
                 <div style="margin-bottom: 8px;"><strong>Trạng thái:</strong> ${project.status}</div>
                 <div><strong>Mô tả:</strong> ${project.description}</div>
               </div>

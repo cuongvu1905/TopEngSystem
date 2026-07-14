@@ -600,8 +600,8 @@ async function main() {
     console.log('Seeded positions.');
 
     // 5. Seed Users
-    // Default password 'TopEngManager2026@' hashes to SHA-256 securely: '0864b2dd7ccf3a370c374a001db24b93de0fa5c03a5ff9da21d8dcc69b446efc'
-    const passwordHash = '0864b2dd7ccf3a370c374a001db24b93de0fa5c03a5ff9da21d8dcc69b446efc';
+    // Default password '123456' hashes to SHA-256 securely: 'f35c46b8d0e816b626dfc4fd55a711b2a712863f24843bb77d6141576cefb7a6'
+    const passwordHash = 'f35c46b8d0e816b626dfc4fd55a711b2a712863f24843bb77d6141576cefb7a6';
     for (const user of USERS_TO_SEED) {
       await db.query(
         'INSERT INTO `user` (`user_id`, `department_id`, `position_id`, `full_name`, `email`, `jandi_link`, `password`, `role`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -816,7 +816,7 @@ function generateAccountMarkdown() {
 Tài liệu này chứa thông tin các tài khoản thử nghiệm tương ứng với từng vai trò/vị trí trong hệ thống sau khi đã làm sạch và seed dữ liệu demo.
 
 ## Thông tin đăng nhập chung
-- **Mật khẩu mặc định**: \`TopEngManager2026@\`
+- **Mật khẩu mặc định**: \`123456\`
 - **Đường dẫn ứng dụng**: \`http://localhost:3000\`
 - **Mã đăng nhập nhanh**: Bạn có thể đăng nhập bằng Email hoặc Mã nhân viên (ví dụ: \`usr-admin\`).
 
@@ -864,7 +864,7 @@ Tài liệu này chứa thông tin các tài khoản thử nghiệm tương ứn
 
 ## Hướng dẫn kiểm thử nhanh
 1. Truy cập vào ứng dụng tại [http://localhost:3000](http://localhost:3000)
-2. Sử dụng email hoặc mã nhân viên của tài khoản muốn kiểm thử kèm mật khẩu \`TopEngManager2026@\` để đăng nhập.
+2. Sử dụng email hoặc mã nhân viên của tài khoản muốn kiểm thử kèm mật khẩu \`123456\` để đăng nhập.
 3. Kiểm tra các chức năng và quyền truy cập đặc thù của vai trò đó (Tham khảo phân quyền trong \`PHAN_QUYEN.md\`).
 4. Sử dụng nút đăng xuất nhanh ở góc trên bên phải để chuyển đổi giữa các tài khoản tiện lợi hơn.
 `;

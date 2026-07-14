@@ -20,10 +20,12 @@ async function main() {
     });
 
     const [rows] = await connection.query(query);
-    console.log(JSON.stringify({ success: true, results: rows }, null, 2));
+    console.log(JSON.stringify({ success: true, results: rows }, (key, value) => {
+      return typeof value === 'bigint' ? value.toString() : value;
+    }, 2));
   } catch (error) {
     console.error(JSON.stringify({ success: false, error: error.message }, null, 2));
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
     if (connection) await connection.end();
   }

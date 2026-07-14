@@ -157,6 +157,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
         start_date: startDate,
         end_date: endDate,
         visibility,
+        create_by: currentUser.id,
         created_by: currentUser.id
       };
 

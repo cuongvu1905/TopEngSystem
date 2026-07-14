@@ -24,7 +24,9 @@
       "Bash(npm view *)",
       "Bash(npx.cmd *)",
       "Bash(where codegraph *)",
-      "Bash(npm list *)"
+      "Bash(npm list *)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)"
     ]
   }
 }

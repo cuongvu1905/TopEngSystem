@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -156,6 +156,38 @@ export default function Dashboard() {
 
   // Unified Split-Screen Popup
   const [activeDetailPopup, setActiveDetailPopup] = useState(null); // 'issues' | 'tasks' | 'projects' | 'reports' | null
+
+  // Daily reports status checker calendar states
+  const [isCheckingStatusMode, setIsCheckingStatusMode] = useState(false);
+  const [checkerDate, setCheckerDate] = useState(new Date());
+  const [selectedCheckerDay, setSelectedCheckerDay] = useState(null);
+  const [selectedMissingUsers, setSelectedMissingUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
+
+  useEffect(() => {
+    const fetchDepts = async () => {
+      try {
+        const list = await db.getDepartments();
+        setDepartments(list || []);
+      } catch (err) {
+        console.error("Failed to load departments", err);
+      }
+    };
+    fetchDepts();
+  }, []);
+
+  useEffect(() => {
+    if (!activeDetailPopup) {
+      setIsCheckingStatusMode(false);
+      setSelectedCheckerDay(null);
+      setSelectedMissingUsers([]);
+    }
+  }, [activeDetailPopup]);
+
+  useEffect(() => {
+    setSelectedMissingUsers([]);
+  }, [checkerDate, selectedCheckerDay]);
+
   const [popupSearch, setPopupSearch] = useState('');
   const [popupFilter1, setPopupFilter1] = useState(''); // Priority or Status or Project
   const [popupFilter2, setPopupFilter2] = useState(''); // Type or Status
@@ -222,7 +254,7 @@ export default function Dashboard() {
     }
   }, [currentUser, projects]);
 
-  const loadIssueDetail = async (issueId) => {
+  const loadIssueDetail = useCallback(async (issueId) => {
     try {
       setLoadingIssueDetail(true);
       const res = await db.getIssueDetail(issueId);
@@ -232,7 +264,7 @@ export default function Dashboard() {
     } finally {
       setLoadingIssueDetail(false);
     }
-  };
+  }, [setSelectedIssueDetail, setLoadingIssueDetail]);
 
   // Fetch issue details on selectedIssueIdForPopup change
   useEffect(() => {
@@ -241,7 +273,7 @@ export default function Dashboard() {
     } else {
       setSelectedIssueDetail(null);
     }
-  }, [selectedIssueIdForPopup]);
+  }, [selectedIssueIdForPopup, loadIssueDetail]);
 
   if (!currentUser) return null;
 
@@ -411,6 +443,466 @@ export default function Dashboard() {
     const isPending = rep.status !== 'Approved' && rep.status !== 'Rejected';
     return isPending && (currentUser.id !== rep.user_id) && 
       hasPermission('approve_daily_report');
+  };
+
+  // Helper to format date string to YYYY-MM-DD
+  const formatDateString = (dateObj) => {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const getCalendarDays = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    
+    const firstDayOfMonth = new Date(year, month, 1);
+    let startDay = firstDayOfMonth.getDay(); 
+    // Convert Sunday (0) to 6, Monday (1) to 0, Tuesday (2) to 1...
+    startDay = startDay === 0 ? 6 : startDay - 1;
+    
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const days = [];
+    
+    for (let i = 0; i < startDay; i++) {
+      days.push(null);
+    }
+    
+    for (let d = 1; d <= totalDays; d++) {
+      days.push(new Date(year, month, d));
+    }
+    
+    // Pad to complete the 7-column grid up to 5 or 6 rows (35 or 42 cells)
+    const totalCells = days.length <= 35 ? 35 : 42;
+    while (days.length < totalCells) {
+      days.push(null);
+    }
+    
+    return days;
+  };
+
+  const getTeamMembers = () => {
+    if (!currentUser) return [];
+    const isTL = currentUser.system_role === 'Team Leader';
+    const isAdminUser = currentUser.system_role?.includes('Admin') || 
+                      currentUser.system_role?.includes('Ban điều hành') || 
+                      currentUser.system_role?.includes('BOD') || 
+                      currentUser.system_role?.includes('Nhân sự') || 
+                      currentUser.system_role?.includes('HR');
+
+    if (isAdminUser) {
+      // Admin/BOD/HR sees everyone whose role is check-worthy (Staff, TL, PL, Sales), excluding Admins themselves
+      return users.filter(u => 
+        !u.system_role?.includes('Admin') && 
+        !u.system_role?.includes('BOD') && 
+        !u.system_role?.includes('HR') && 
+        !u.system_role?.includes('Nhân sự') && 
+        !u.system_role?.includes('Ban điều hành')
+      );
+    }
+    if (isTL) {
+      return users.filter(u => {
+        return u.department_id === currentUser.department_id || 
+          departments.some(d => d.department_id === u.department_id && d.parent_id === currentUser.department_id);
+      });
+    }
+    return [];
+  };
+
+  const getMissingUsersForDay = (dayObj) => {
+    if (!dayObj) return [];
+    const dateStr = formatDateString(dayObj);
+    const team = getTeamMembers();
+    
+    // Filter team members created before or on this day
+    const teamForDay = team.filter(u => {
+      // Seed users (starting with 'usr-') are always active
+      if (u.id && u.id.startsWith('usr-')) return true;
+      if (!u.create_at) return true;
+      
+      const createdDate = new Date(u.create_at);
+      createdDate.setHours(0, 0, 0, 0);
+      
+      const checkDate = new Date(dayObj);
+      checkDate.setHours(23, 59, 59, 999);
+      
+      return createdDate <= checkDate;
+    });
+
+    // Get reports submitted on this date
+    const reportedUserIds = new Set(
+      allReports
+        .filter(r => formatDateString(new Date(r.created_at)) === dateStr)
+        .map(r => r.user_id)
+    );
+
+    return teamForDay.filter(u => !reportedUserIds.has(u.id));
+  };
+
+  const handleRemoveFromMissing = async (userIds) => {
+    if (!selectedCheckerDay) return;
+    const Swal = await getSwal();
+    const dateStr = formatDateString(selectedCheckerDay);
+    
+    Swal.fire({
+      title: 'Xác nhận xóa?',
+      text: `Bạn có chắc chắn muốn xóa ${userIds.length} nhân viên khỏi danh sách chưa báo cáo ngày ${selectedCheckerDay.toLocaleDateString('vi-VN')}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--danger-color)',
+      cancelButtonColor: '#cbd5e1',
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          Swal.fire({
+            title: 'Đang xử lý...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          
+          await Promise.all(userIds.map(async (uId) => {
+            const createRes = await fetch('/api/db', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'createDailyReport',
+                payload: {
+                  userId: uId,
+                  content: 'Được quản lý xác nhận miễn báo cáo ngày',
+                  projectId: null,
+                  fileUrl: null,
+                  createdAt: dateStr
+                }
+              })
+            });
+            const createData = await createRes.json();
+            if (createData.success && createData.report) {
+              await fetch('/api/db', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action: 'updateDailyReportStatus',
+                  payload: {
+                    reportId: createData.report.id,
+                    status: 'Approved',
+                    comment: 'Phê duyệt tự động khi miễn báo cáo'
+                  }
+                })
+              });
+            }
+          }));
+          
+          await loadDashboardData();
+          setSelectedMissingUsers([]);
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Thành công',
+            text: 'Đã xóa thành viên khỏi danh sách chưa báo cáo.',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } catch (err) {
+          console.error(err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Đã xảy ra lỗi khi thực hiện thao tác.'
+          });
+        }
+      }
+    });
+  };
+
+  const renderCalendarChecker = () => {
+    const days = getCalendarDays(checkerDate);
+    const team = getTeamMembers();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const prevMonth = () => {
+      setCheckerDate(new Date(checkerDate.getFullYear(), checkerDate.getMonth() - 1, 1));
+      setSelectedCheckerDay(null);
+      setSelectedMissingUsers([]);
+    };
+
+    const nextMonth = () => {
+      setCheckerDate(new Date(checkerDate.getFullYear(), checkerDate.getMonth() + 1, 1));
+      setSelectedCheckerDay(null);
+      setSelectedMissingUsers([]);
+    };
+
+    const missingForSelectedDay = selectedCheckerDay ? getMissingUsersForDay(selectedCheckerDay) : [];
+
+    const handleToggleUserSelect = (userId) => {
+      if (selectedMissingUsers.includes(userId)) {
+        setSelectedMissingUsers(selectedMissingUsers.filter(id => id !== userId));
+      } else {
+        setSelectedMissingUsers([...selectedMissingUsers, userId]);
+      }
+    };
+
+    const handleToggleSelectAll = (missingList) => {
+      if (selectedMissingUsers.length === missingList.length) {
+        setSelectedMissingUsers([]);
+      } else {
+        setSelectedMissingUsers(missingList.map(u => u.id));
+      }
+    };
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflowY: 'auto' }}>
+        
+        {/* Calendar Wrapper (Centered, Max Width 400px to keep cells compact) */}
+        <div style={{ maxWidth: '400px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          {/* Calendar Header with Navigation */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
+            <button 
+              type="button"
+              onClick={prevMonth}
+              style={{
+                padding: '6px 12px',
+                border: '1.5px solid #cbd5e1',
+                borderRadius: '6px',
+                backgroundColor: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '14px',
+                color: '#334155'
+              }}
+            >
+              &laquo;
+            </button>
+            <span style={{ fontSize: '16px', fontWeight: '750', color: '#1e293b' }}>
+              Tháng {checkerDate.getMonth() + 1} {checkerDate.getFullYear()}
+            </span>
+            <button 
+              type="button"
+              onClick={nextMonth}
+              style={{
+                padding: '6px 12px',
+                border: '1.5px solid #cbd5e1',
+                borderRadius: '6px',
+                backgroundColor: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '14px',
+                color: '#334155'
+              }}
+            >
+              &raquo;
+            </button>
+          </div>
+
+          {/* Days of Week Headers */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            borderTop: '4px solid #94a3b8',
+            borderLeft: '4px solid #94a3b8',
+            borderRight: '4px solid #94a3b8',
+            borderRadius: '8px 8px 0 0',
+            overflow: 'hidden',
+            flexShrink: 0
+          }}>
+            {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'].map((w, idx) => (
+              <div key={idx} style={{
+                padding: '10px 4px',
+                backgroundColor: '#f1f5f9',
+                textAlign: 'center',
+                fontWeight: '700',
+                fontSize: '12.5px',
+                color: '#475569',
+                borderRight: idx === 6 ? 'none' : '4px solid #94a3b8'
+              }}>
+                {w}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            borderBottom: '4px solid #94a3b8',
+            borderLeft: '4px solid #94a3b8',
+            borderRight: '4px solid #94a3b8',
+            borderRadius: '0 0 8px 8px',
+            overflow: 'hidden',
+            backgroundColor: '#ffffff',
+            flexShrink: 0
+          }}>
+            {days.map((d, idx) => {
+              if (d === null) {
+                return (
+                  <div key={`empty-${idx}`} style={{
+                    aspectRatio: '1',
+                    backgroundColor: '#f8fafc',
+                    borderBottom: idx + 7 < days.length ? '4px solid #cbd5e1' : 'none',
+                    borderRight: (idx + 1) % 7 === 0 ? 'none' : '4px solid #cbd5e1'
+                  }} />
+                );
+              }
+
+              const isSunday = d.getDay() === 0;
+              const isFuture = d > today;
+              const dateStr = formatDateString(d);
+
+              const missing = getMissingUsersForDay(d);
+              const hasMissing = missing.length > 0;
+
+              let bgColor = 'transparent';
+              let textColor = '#1e293b';
+              let cursorStyle = 'default';
+              
+              if (!isSunday && !isFuture) {
+                cursorStyle = 'pointer';
+                if (hasMissing) {
+                  bgColor = '#ef4444'; // Red
+                  textColor = '#ffffff';
+                } else {
+                  bgColor = '#10b981'; // Green
+                  textColor = '#ffffff';
+                }
+              } else if (isSunday) {
+                bgColor = '#f1f5f9';
+                textColor = '#94a3b8';
+              }
+
+              const isSelected = selectedCheckerDay && formatDateString(selectedCheckerDay) === dateStr;
+
+              return (
+                <div 
+                  key={dateStr}
+                  onClick={() => {
+                    if (!isSunday && !isFuture) {
+                      setSelectedCheckerDay(d);
+                    }
+                  }}
+                  style={{
+                    aspectRatio: '1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderBottom: idx + 7 < days.length ? '4px solid #cbd5e1' : 'none',
+                    borderRight: (idx + 1) % 7 === 0 ? 'none' : '4px solid #cbd5e1',
+                    backgroundColor: '#ffffff',
+                    cursor: cursorStyle,
+                    transition: 'all 0.2s',
+                    padding: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '8px',
+                    backgroundColor: bgColor,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: isSelected ? '0 0 0 4px #2563eb' : 'none',
+                    fontWeight: '700',
+                    color: textColor,
+                    fontSize: '14px',
+                    userSelect: 'none'
+                  }}>
+                    {d.getDate()}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Missing Reports Details Section */}
+        <div style={{ marginTop: '12px', flex: 1, minHeight: '120px' }}>
+          {selectedCheckerDay ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: '750', color: '#1e293b' }}>
+                  Danh sách chưa báo cáo ngày {selectedCheckerDay.toLocaleDateString('vi-VN')}:
+                </h4>
+                {selectedMissingUsers.length > 0 && (
+                  <button
+                    type="button"
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: 'var(--danger-color)',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s',
+                      boxShadow: 'var(--shadow-sm)'
+                    }}
+                    onClick={() => handleRemoveFromMissing(selectedMissingUsers)}
+                  >
+                    <i className="fa-solid fa-trash-can"></i> Xóa {selectedMissingUsers.length} đã chọn
+                  </button>
+                )}
+              </div>
+              {missingForSelectedDay.length > 0 ? (
+                <div style={{ border: '2px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #cbd5e1' }}>
+                        <th style={{ padding: '8px 12px', width: '40px', textAlign: 'center', borderRight: '1px solid #cbd5e1' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={missingForSelectedDay.length > 0 && selectedMissingUsers.length === missingForSelectedDay.length}
+                            onChange={() => handleToggleSelectAll(missingForSelectedDay)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        </th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569', borderRight: '1px solid #cbd5e1' }}>Mã NV</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569', borderRight: '1px solid #cbd5e1' }}>Họ và tên</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Bộ phận</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {missingForSelectedDay.map(u => (
+                        <tr key={u.id} style={{ borderBottom: '1px solid #cbd5e1' }}>
+                          <td style={{ padding: '8px 12px', textAlign: 'center', borderRight: '1px solid #cbd5e1' }}>
+                            <input 
+                              type="checkbox"
+                              checked={selectedMissingUsers.includes(u.id)}
+                              onChange={() => handleToggleUserSelect(u.id)}
+                              style={{ cursor: 'pointer' }}
+                            />
+                          </td>
+                          <td style={{ padding: '8px 12px', fontWeight: '600', color: '#334155', borderRight: '1px solid #cbd5e1' }}>{u.employee_id || u.id}</td>
+                          <td style={{ padding: '8px 12px', fontWeight: '500', color: '#0f172a', borderRight: '1px solid #cbd5e1' }}>{u.name}</td>
+                          <td style={{ padding: '8px 12px', color: '#475569' }}>{u.department_name}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ padding: '16px', backgroundColor: '#f0fdf4', border: '2px solid #b7ebc6', borderRadius: '6px', color: '#15803d', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <i className="fa-solid fa-circle-check"></i> Đầy đủ báo cáo.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '24px', backgroundColor: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', fontSize: '13px' }}>
+              Chọn một ngày màu đỏ trên lịch để xem danh sách nhân viên chưa nộp báo cáo.
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -632,8 +1124,7 @@ export default function Dashboard() {
           overflow: hidden;
         }
         .split-right-pane-50 {
-          width: 50vw;
-          flex: 0 0 50vw;
+          flex: 1;
           background-color: #ffffff;
           display: flex;
           flex-direction: column;
@@ -1070,11 +1561,11 @@ export default function Dashboard() {
         <div className="modal show modal-backdrop-centered" onClick={() => setActiveDetailPopup(null)}>
           <div 
             style={{ 
-              width: '75vw', 
-              height: '75vh', 
+              width: activeDetailPopup === 'reports' ? '100vw' : '75vw', 
+              height: activeDetailPopup === 'reports' ? '100vh' : '75vh', 
               backgroundColor: '#ffffff', 
-              border: '1.5px solid #cbd5e1', 
-              borderRadius: '12px', 
+              border: activeDetailPopup === 'reports' ? 'none' : '1.5px solid #cbd5e1', 
+              borderRadius: activeDetailPopup === 'reports' ? '0px' : '12px', 
               display: 'flex', 
               flexDirection: 'column', 
               overflow: 'hidden', 
@@ -1100,6 +1591,36 @@ export default function Dashboard() {
               
               {/* Left Pane: Master List (25vw width) */}
               <div className="split-left-pane-25" style={{ padding: '16px', borderRight: '1.5px solid #cbd5e1', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                
+                {/* Daily reports checker activation button */}
+                {activeDetailPopup === 'reports' && (currentUser?.system_role === 'Team Leader' || currentUser?.system_role?.includes('Admin') || currentUser?.system_role?.includes('BOD') || currentUser?.system_role?.includes('HR') || currentUser?.system_role?.includes('Nhân sự') || currentUser?.system_role?.includes('Ban điều hành')) && (
+                  <button 
+                    type="button"
+                    className="btn"
+                    style={{ 
+                      width: '100%', 
+                      padding: '10px 16px', 
+                      fontSize: '13px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '8px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: isCheckingStatusMode ? '#64748b' : 'var(--primary-color)',
+                      color: '#ffffff',
+                      boxShadow: 'var(--shadow-sm)',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onClick={() => setIsCheckingStatusMode(!isCheckingStatusMode)}
+                  >
+                    <i className={isCheckingStatusMode ? "fa-solid fa-list" : "fa-solid fa-calendar-check"}></i>
+                    {isCheckingStatusMode ? 'Xem danh sách báo cáo' : 'Kiểm tra tình trạng báo cáo'}
+                  </button>
+                )}
+
                 {/* Search Bar Oval shape */}
                 <div>
                   <input 
@@ -1221,8 +1742,13 @@ export default function Dashboard() {
                       return (
                         <div 
                           key={item.id} 
-                          className={`split-card-item ${isActive ? 'active' : ''}`}
+                          className={`split-card-item ${isActive && !isCheckingStatusMode ? 'active' : ''}`}
+                          style={{
+                            opacity: (activeDetailPopup === 'reports' && isCheckingStatusMode) ? 0.6 : 1,
+                            cursor: (activeDetailPopup === 'reports' && isCheckingStatusMode) ? 'not-allowed' : 'pointer'
+                          }}
                           onClick={() => {
+                            if (activeDetailPopup === 'reports' && isCheckingStatusMode) return;
                             if (activeDetailPopup === 'issues') {
                               setSelectedIssueIdForPopup(item.id);
                             } else if (activeDetailPopup === 'tasks') {
@@ -1581,7 +2107,9 @@ export default function Dashboard() {
 
                 {/* 4. REPORTS RIGHT PANE */}
                 {activeDetailPopup === 'reports' && (
-                  selectedReportForPopup ? (
+                  isCheckingStatusMode ? (
+                    renderCalendarChecker()
+                  ) : selectedReportForPopup ? (
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--neutral-border)', paddingBottom: '16px' }}>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

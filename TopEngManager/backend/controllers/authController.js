@@ -206,7 +206,8 @@ exports.getUsers = async (req, res, next) => {
       system_role: u.role,
       department_id: u.department_id,
       department_name: u.department ? u.department.name : 'Chưa phân phòng',
-      color: '#1E40AF'
+      color: '#1E40AF',
+      create_at: u.create_at
     }));
     res.json(users);
   } catch (err) {

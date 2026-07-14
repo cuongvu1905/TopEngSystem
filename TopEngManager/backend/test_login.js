@@ -66,13 +66,13 @@ async function runTests() {
   console.log("=== STARTING AUTHENTICATION VERIFICATION TESTS ===");
   
   console.log("\n1. Testing Login with Email:");
-  const test1 = await testLogin('admin@test.com', 'TopEngManager2026@');
+  const test1 = await testLogin('admin@test.com', '123456');
   
   console.log("\n2. Testing Login with Employee Code:");
-  const test2 = await testLogin('usr-admin', 'TopEngManager2026@');
+  const test2 = await testLogin('usr-admin', '123456');
   
   console.log("\n3. Testing Login with Staff Account (Employee Code):");
-  const test3 = await testLogin('usr-staff', 'TopEngManager2026@');
+  const test3 = await testLogin('usr-staff', '123456');
 
   console.log("\n4. Testing Login with Incorrect Password:");
   const test4 = await testLogin('admin@test.com', 'wrong_password_123');
