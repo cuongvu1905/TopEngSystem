@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18'
           cache: 'npm'
 
       - name: Install Frontend Dependencies
@@ -30,6 +30,9 @@ jobs:
 
   backend-ci:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,16 +40,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
       - name: Install Backend Dependencies
-        run: |
-          cd backend
-          npm ci
+        run: npm ci
 
       - name: Check Backend Entry Point
-        run: |
-          cd backend
-          node --check server.js
+        run: node --check server.js

@@ -271,6 +271,34 @@ export default function ProjectDetail({ params }) {
     }
   }, [projectMembers, projectId, currentUser]);
 
+  async function handleOpenIssueDetail(issueId) {
+    if (lockIntervalRef.current) {
+      clearInterval(lockIntervalRef.current);
+      lockIntervalRef.current = null;
+    }
+
+    try {
+      await loadIssueDetail(issueId);
+
+      const lockRes = await db.lockIssue(issueId, currentUser.id);
+      if (lockRes.success) {
+        setIsLockedByOther(false);
+        setLockOwnerName('');
+        lockIntervalRef.current = setInterval(async () => {
+          await db.lockIssue(issueId, currentUser.id);
+        }, 10000);
+      } else {
+        setIsLockedByOther(true);
+        setLockOwnerName(lockRes.lockedBy || 'Người dùng khác');
+      }
+    } catch (err) {
+      console.error("Locking issue failed:", err);
+    }
+
+    setIsDetailModalOpen(true);
+    setIsEditingIssue(false);
+  }
+
   useEffect(() => {
     if (queryIssueId) {
       setActiveSubTab('issues');
@@ -696,7 +724,7 @@ export default function ProjectDetail({ params }) {
   }, [project, activeSubTab]);
 
   // Issue Detail & Comments & History handlers
-  const loadIssueDetail = async (issueId) => {
+  async function loadIssueDetail(issueId) {
     try {
       const res = await db.getIssueDetail(issueId);
       setActiveIssueDetail(res.issue);
@@ -902,35 +930,7 @@ export default function ProjectDetail({ params }) {
     } catch (err) {
       Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu thay đổi: " + err.message });
     }
-  };
-
-  const handleOpenIssueDetail = async (issueId) => {
-    if (lockIntervalRef.current) {
-      clearInterval(lockIntervalRef.current);
-      lockIntervalRef.current = null;
-    }
-
-    try {
-      await loadIssueDetail(issueId);
-
-      const lockRes = await db.lockIssue(issueId, currentUser.id);
-      if (lockRes.success) {
-        setIsLockedByOther(false);
-        setLockOwnerName('');
-        lockIntervalRef.current = setInterval(async () => {
-          await db.lockIssue(issueId, currentUser.id);
-        }, 10000);
-      } else {
-        setIsLockedByOther(true);
-        setLockOwnerName(lockRes.lockedBy || 'Người dùng khác');
-      }
-    } catch (err) {
-      console.error("Locking issue failed:", err);
-    }
-
-    setIsDetailModalOpen(true);
-    setIsEditingIssue(false);
-  };
+  }
 
   const handleCloseIssueDetail = async () => {
     if (lockIntervalRef.current) {

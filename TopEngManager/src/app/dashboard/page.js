@@ -222,6 +222,27 @@ export default function Dashboard() {
     }
   }, [currentUser, projects]);
 
+  const loadIssueDetail = async (issueId) => {
+    try {
+      setLoadingIssueDetail(true);
+      const res = await db.getIssueDetail(issueId);
+      setSelectedIssueDetail(res);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingIssueDetail(false);
+    }
+  };
+
+  // Fetch issue details on selectedIssueIdForPopup change
+  useEffect(() => {
+    if (selectedIssueIdForPopup) {
+      loadIssueDetail(selectedIssueIdForPopup);
+    } else {
+      setSelectedIssueDetail(null);
+    }
+  }, [selectedIssueIdForPopup]);
+
   if (!currentUser) return null;
 
   // Resolve which sections should actually show
@@ -352,26 +373,6 @@ export default function Dashboard() {
     }
   };
 
-  const loadIssueDetail = async (issueId) => {
-    try {
-      setLoadingIssueDetail(true);
-      const res = await db.getIssueDetail(issueId);
-      setSelectedIssueDetail(res);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingIssueDetail(false);
-    }
-  };
-
-  // Fetch issue details on selectedIssueIdForPopup change
-  useEffect(() => {
-    if (selectedIssueIdForPopup) {
-      loadIssueDetail(selectedIssueIdForPopup);
-    } else {
-      setSelectedIssueDetail(null);
-    }
-  }, [selectedIssueIdForPopup]);
 
   const handleAddComment = async (e) => {
     e.preventDefault();
