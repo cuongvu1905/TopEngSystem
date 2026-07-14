@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, use, useCallback } from 'react';
+import React, { useState, useEffect, useRef, use, useCallback, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
 import { db } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
@@ -733,42 +733,43 @@ export default function ProjectDetail({ params }) {
 
   const project = projects.find(p => p.id === projectId);
 
-  const filteredCreateAssignees = projectMembers
-    .filter(m => m.project_id === projectId)
-    .map(m => {
-      const u = users.find(usr => usr.id === m.user_id);
-      return u ? { ...u, project_role: m.project_role } : null;
-    })
-    .filter(Boolean)
-    .filter(u => {
-      const q = jiraCreateAssigneeSearchQuery.toLowerCase().trim();
-      const matchesSearch = !q ||
-                            u.name.toLowerCase().includes(q) ||
-                            u.email.toLowerCase().includes(q) ||
-                            (u.employee_id && u.employee_id.toLowerCase().includes(q)) ||
-                            (u.department_name && u.department_name.toLowerCase().includes(q));
-      const matchesDept = !jiraCreateAssigneeSelectedDept || u.department_id === jiraCreateAssigneeSelectedDept;
-      return matchesSearch && matchesDept;
-    });
-
-  const filteredDetailAssignees = projectMembers
-    .filter(m => m.project_id === projectId)
-    .map(m => {
-      const u = users.find(usr => usr.id === m.user_id);
-      return u ? { ...u, project_role: m.project_role } : null;
-    })
-    .filter(Boolean)
-    .filter(u => {
-      const q = jiraDetailAssigneeSearchQuery.toLowerCase().trim();
-      const matchesSearch = !q ||
-                            u.name.toLowerCase().includes(q) ||
-                            u.email.toLowerCase().includes(q) ||
-                            (u.employee_id && u.employee_id.toLowerCase().includes(q)) ||
-                            (u.department_name && u.department_name.toLowerCase().includes(q));
-      const matchesDept = !jiraDetailAssigneeSelectedDept || u.department_id === jiraDetailAssigneeSelectedDept;
-      return matchesSearch && matchesDept;
-    });
-
+  const projectUserMembers = useMemo(() => {
+    return projectMembers
+      .filter(m => m.project_id === projectId)
+      .map(m => {
+        const u = users.find(usr => usr.id === m.user_id);
+        return u ? { ...u, project_role: m.project_role } : null;
+      })
+      .filter(Boolean);
+  }, [projectMembers, projectId, users]);
+
+  const filteredCreateAssignees = useMemo(() => {
+    return projectUserMembers.filter(u => {
+      const q = jiraCreateAssigneeSearchQuery.toLowerCase().trim();
+      const matchesSearch = !q ||
+                            u.name.toLowerCase().includes(q) ||
+                            u.email.toLowerCase().includes(q) ||
+                            (u.employee_id && u.employee_id.toLowerCase().includes(q)) ||
+                            (u.department_name && u.department_name.toLowerCase().includes(q));
+      const matchesDept = !jiraCreateAssigneeSelectedDept || u.department_id === jiraCreateAssigneeSelectedDept;
+      return matchesSearch && matchesDept;
+    });
+  }, [projectUserMembers, jiraCreateAssigneeSearchQuery, jiraCreateAssigneeSelectedDept]);
+
+  const filteredDetailAssignees = useMemo(() => {
+    return projectUserMembers.filter(u => {
+      const q = jiraDetailAssigneeSearchQuery.toLowerCase().trim();
+      const matchesSearch = !q ||
+                            u.name.toLowerCase().includes(q) ||
+                            u.email.toLowerCase().includes(q) ||
+                            (u.employee_id && u.employee_id.toLowerCase().includes(q)) ||
+                            (u.department_name && u.department_name.toLowerCase().includes(q));
+      const matchesDept = !jiraDetailAssigneeSelectedDept || u.department_id === jiraDetailAssigneeSelectedDept;
+      return matchesSearch && matchesDept;
+    });
+  }, [projectUserMembers, jiraDetailAssigneeSearchQuery, jiraDetailAssigneeSelectedDept]);
+
+
   // Resolve chat room linked to project
   useEffect(() => {
     if (project && chatRooms.length > 0) {

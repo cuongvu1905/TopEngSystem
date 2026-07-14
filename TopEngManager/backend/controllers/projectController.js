@@ -1,6 +1,25 @@
 const prisma = require('../config/prisma');
 const { createNotificationSafe } = require('./notificationController');
 
+const formatProjectDto = (p) => {
+  if (!p) return null;
+  const prefix = p.customer_id && !p.project_name.startsWith('[') ? `[${p.customer_id}] ` : '';
+  return {
+    id: p.project_id,
+    name: `${prefix}${p.project_name}`,
+    description: p.project_description || 'Không có mô tả.',
+    project_key: p.project_key || p.project_id.split('-').pop().toUpperCase().slice(0, 5),
+    status: p.status || 'Thực thi',
+    start_date: p.start_date || '2026-06-01',
+    end_date: p.end_date || '2026-12-31',
+    create_by: p.create_by,
+    creator: p.user ? p.user.full_name : 'Hệ thống',
+    customer_id: p.customer_id || null,
+    visibility: p.visibility || 'Private',
+    is_public: p.visibility === 'Public'
+  };
+};
+
 exports.getProjects = async (req, res, next) => {
   try {
     const dbProjects = await prisma.project.findMany({
@@ -8,23 +27,7 @@ exports.getProjects = async (req, res, next) => {
         user: true
       }
     });
-    const projects = dbProjects.map(p => {
-      const prefix = p.customer_id ? `[${p.customer_id}] ` : '';
-      return {
-        id: p.project_id,
-        name: `${prefix}${p.project_name}`,
-        description: p.project_description,
-        project_key: p.project_key || p.project_id.split('-').pop().toUpperCase().slice(0, 5),
-        status: p.status || 'Thực thi',
-        start_date: p.start_date || '2026-06-01',
-        end_date: p.end_date || '2026-12-31',
-        create_by: p.create_by,
-        creator: p.user ? p.user.full_name : 'Hệ thống',
-        customer_id: p.customer_id || null,
-        visibility: p.visibility || 'Private',
-        is_public: p.visibility === 'Public'
-      };
-    });
+    const projects = dbProjects.map(formatProjectDto);
     res.json(projects);
   } catch (err) {
     next(err);
@@ -148,19 +151,7 @@ exports.saveProject = async (req, res, next) => {
       include: { user: true }
     });
 
-    res.json({
-      id: saved.project_id,
-      name: saved.project_name,
-      description: saved.project_description,
-      project_key: saved.project_key || 'PRJ',
-      status: saved.status || 'Thực thi',
-      start_date: saved.start_date || '2026-06-01',
-      end_date: saved.end_date || '2026-12-31',
-      create_by: saved.create_by,
-      creator: saved.user ? saved.user.full_name : 'Hệ thống',
-      visibility: saved.visibility || 'Private',
-      is_public: saved.visibility === 'Public'
-    });
+    res.json(formatProjectDto(saved));
   } catch (err) {
     next(err);
   }
@@ -394,15 +385,7 @@ exports.findProjectById = async (req, res, next) => {
       return res.status(404).json({ error: 'Không tìm thấy dự án nào khớp với mã vừa nhập.' });
     }
 
-    res.json({
-      id: dbProject.project_id,
-      name: dbProject.project_name,
-      description: dbProject.project_description || 'Không có mô tả.',
-      project_key: dbProject.project_key || 'PRJ',
-      status: dbProject.status || 'Thực thi',
-      creator: dbProject.user ? dbProject.user.full_name : 'Hệ thống',
-      visibility: dbProject.visibility || 'Private'
-    });
+    res.json(formatProjectDto(dbProject));
   } catch (err) {
     next(err);
   }
