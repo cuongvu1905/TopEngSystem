@@ -264,63 +264,14 @@ export default function Dashboard() {
     .filter(issue => visibleProjectIds.has(issue.project_id) && isMentionedInIssue(issue, currentUser, users))
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  // 4. Resolve Daily Reports (Role-filtered and Padded)
+  // 4. Resolve Daily Reports (Role-filtered)
   const getFilteredReports = () => {
     // The backend API `getDailyReports` already returns exactly the reports the user is allowed to see.
     // On the dashboard, we only show reports that are in "Chờ duyệt" (Pending) status.
     return allReports.filter(r => r.status !== 'Approved' && r.status !== 'Rejected');
   };
 
-  const padReports = (reportList) => {
-    if (reportList.length >= 3) return reportList;
-    const mockList = [...reportList];
-    const sampleReports = [
-      {
-        id: 'mock-report-1',
-        user_id: 'user-mock-1',
-        user_name: 'Trần Thế An',
-        user_role: 'Leader/Part Leader',
-        created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-        content: 'Báo cáo ngày: Đã hoàn thành thiết kế luồng API cho phân hệ Quản lý dự án. Hiện tại đang triển khai giao diện chi tiết JIRA board. Không gặp khó khăn gì.',
-        project_id: null,
-        status: 'Pending',
-        comment: ''
-      },
-      {
-        id: 'mock-report-2',
-        user_id: 'user-mock-2',
-        user_name: 'Lê Thị Bình',
-        user_role: 'Nhân viên (Staff)',
-        created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-        content: 'Báo cáo tiến độ: Đã kiểm thử lại luồng chat trực tiếp 1-1 và sửa một số lỗi giao diện CSS bị lệch trên trình duyệt di động. Kế hoạch ngày mai kiểm thử tiếp phân hệ Tài liệu.',
-        project_id: null,
-        status: 'Pending',
-        comment: ''
-      },
-      {
-        id: 'mock-report-3',
-        user_id: 'user-mock-3',
-        user_name: 'Phạm Minh Cường',
-        user_role: 'Nhân viên (Staff)',
-        created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-        content: 'Báo cáo ngày: Đã hoàn thiện đồng bộ dữ liệu MockDB với cơ sở dữ liệu MySQL cục bộ. Toàn bộ các API chính đã được chuyển đổi sang kết nối MySQL thành công.',
-        project_id: null,
-        status: 'Pending',
-        comment: ''
-      }
-    ];
-
-    for (let i = mockList.length; i < 3; i++) {
-      mockList.push({
-        ...sampleReports[i],
-        created_at: new Date(Date.now() - (i + 1) * 3600000 * 4).toISOString()
-      });
-    }
-    return mockList;
-  };
-
   const reportsFiltered = getFilteredReports();
-  const reportsPadded = padReports(reportsFiltered);
 
   // Toggle Visibility Configuration
   const handleToggleSection = (sec) => {
@@ -389,12 +340,7 @@ export default function Dashboard() {
   // Update Report Approval/Rejection status in MySQL/MockDB
   const handleUpdateReportStatus = async (status) => {
     if (!selectedReportForPopup) return;
-    const isMock = String(selectedReportForPopup.id).startsWith('mock-');
     const Swal = await getSwal();
-    if (isMock) {
-      Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Không thể duyệt hoặc từ chối báo cáo mẫu." });
-      return;
-    }
     try {
       setSubmittingReview(true);
       await db.updateDailyReportStatus(selectedReportForPopup.id, status, reportCommentText);
@@ -461,7 +407,8 @@ export default function Dashboard() {
   
   const getCanReviewReport = (rep) => {
     if (!rep) return false;
-    return (currentUser.id !== rep.user_id) && 
+    const isPending = rep.status !== 'Approved' && rep.status !== 'Rejected';
+    return isPending && (currentUser.id !== rep.user_id) && 
       hasPermission('approve_daily_report');
   };
 
@@ -1055,9 +1002,14 @@ export default function Dashboard() {
             <div className="widget-box-body">
               {loadingData ? (
                 <div className="empty-widget-state"><i className="fa-solid fa-circle-notch fa-spin"></i> Đang tải dữ liệu...</div>
+              ) : reportsFiltered.length === 0 ? (
+                <div className="empty-widget-state" style={{ color: 'var(--neutral-muted)', fontSize: '13px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '24px' }}>
+                  <i className="fa-solid fa-circle-check" style={{ color: 'var(--success-color)', fontSize: '24px' }}></i>
+                  Không có báo cáo nào chờ duyệt.
+                </div>
               ) : (
                 <div className="reports-grid-dashboard">
-                  {reportsPadded.slice(0, 3).map((report, idx) => {
+                  {reportsFiltered.slice(0, 3).map((report, idx) => {
                     const userColor = users.find(u => u.id === report.user_id)?.color || '#3b82f6';
                     const proj = projects.find(p => p.id === report.project_id);
 
