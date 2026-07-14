@@ -24,7 +24,7 @@ export default function Sidebar() {
           <i className="fa-solid fa-cubes-stacked"></i>
         </div>
         <div className="brand-name">
-          <h2>TOPVSystem0.1</h2>
+          <h2>TOPVSystem</h2>
           <span>Manager</span>
         </div>
       </div>

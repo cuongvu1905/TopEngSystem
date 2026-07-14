@@ -162,6 +162,18 @@ exports.updateDailyReportStatus = async (req, res, next) => {
       return res.status(400).json({ error: 'Thiếu mã báo cáo hoặc trạng thái cập nhật' });
     }
 
+    const existingReport = await prisma.dailyreport.findUnique({
+      where: { id: parseInt(reportId) }
+    });
+
+    if (!existingReport) {
+      return res.status(404).json({ error: 'Không tìm thấy báo cáo' });
+    }
+
+    if (existingReport.status === 'Approved' || existingReport.status === 'Rejected') {
+      return res.status(400).json({ error: 'Báo cáo đã được duyệt hoặc từ chối và không thể thay đổi thông tin nữa.' });
+    }
+
     const updatedReport = await prisma.dailyreport.update({
       where: { id: parseInt(reportId) },
       data: {

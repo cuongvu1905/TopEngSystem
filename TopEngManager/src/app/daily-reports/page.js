@@ -71,7 +71,14 @@ const formatReportContentHtml = (content, projects) => {
 };
 
 export default function DailyReportsPage() {
-  const { currentUser, users, projects } = useApp();
+  const { currentUser, users, projects, projectMembers } = useApp();
+  
+  const systemRole = currentUser?.system_role || '';
+  const isAdminOrManagement = systemRole.includes("Admin") || systemRole.includes("BOD") || systemRole.includes("HR");
+
+  const myProjects = isAdminOrManagement 
+    ? projects 
+    : projects.filter(p => projectMembers?.some(m => m.project_id === p.id && m.user_id === currentUser?.id));
   
   const getTodayDateString = () => {
     const today = new Date();
@@ -520,7 +527,7 @@ export default function DailyReportsPage() {
                         }}
                       >
                         <option value="">-- Chọn dự án --</option>
-                        {projects?.map(p => (
+                        {myProjects?.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>

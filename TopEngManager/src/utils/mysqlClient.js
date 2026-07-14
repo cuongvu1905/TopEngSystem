@@ -235,8 +235,8 @@ export const MySQLAdapter = {
     return await callApi('updateIssueStatus', { issueId, status, userId });
   },
 
-  deleteIssue: async function(issueId) {
-    return await callApi('deleteIssue', { issueId });
+  deleteIssue: async function(issueId, userId) {
+    return await callApi('deleteIssue', { issueId, userId });
   },
 
   addComment: async function(issueId, userId, content) {

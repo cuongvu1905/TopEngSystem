@@ -45,7 +45,7 @@ export const StreamChatAdapter = {
     }
   },
 
-  joinChannel: async function(roomId, roomName, type = 'messaging') {
+  joinChannel: async function(roomId, roomName, type = 'livestream') {
     if (!this.client) return null;
     try {
       // Normalize room ID because Stream Chat IDs can only contain lowercase alphanumeric, '_' and '-'
