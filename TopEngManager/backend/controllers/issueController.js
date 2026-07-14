@@ -164,6 +164,47 @@ exports.createIssue = async (req, res, next) => {
   }
 };
 
+const checkIssuePermission = async (issueId, userId) => {
+  // Find user
+  const user = await prisma.user.findUnique({
+    where: { user_id: userId }
+  });
+  if (!user) return false;
+
+  // Find issue
+  const issue = await prisma.issue.findUnique({
+    where: { id: parseInt(issueId) }
+  });
+  if (!issue) return false;
+
+  // Check reporter
+  if (issue.reporter_id === userId) return true;
+
+  // Check assignee
+  if (issue.assignee_id === userId) return true;
+
+  // Check description JSON fields (relatedUserIds & issueTasks)
+  if (issue.description) {
+    try {
+      const parsed = JSON.parse(issue.description);
+      if (parsed) {
+        if (parsed.relatedUserIds?.includes(userId)) return true;
+        if (Array.isArray(parsed.issueTasks)) {
+          const isAssigned = parsed.issueTasks.some(t => {
+            const assignedNames = t.assignee ? t.assignee.split('@').map(s => s.trim()).filter(Boolean) : [];
+            return assignedNames.includes(user.full_name.trim());
+          });
+          if (isAssigned) return true;
+        }
+      }
+    } catch (e) {
+      // not JSON description
+    }
+  }
+
+  return false;
+};
+
 exports.updateIssue = async (req, res, next) => {
   try {
     const { id, summary, description, type, status, priority, assignee_id, epic_id, parent_id, userId } = req.body;
@@ -173,6 +214,11 @@ exports.updateIssue = async (req, res, next) => {
     });
     if (!old) {
       return res.status(404).json({ error: 'Issue not found' });
+    }
+
+    const hasPermission = await checkIssuePermission(id, userId);
+    if (!hasPermission) {
+      return res.status(403).json({ error: 'Bạn không có quyền chỉnh sửa Issue này (Chỉ dành cho người liên quan).' });
     }
 
     let finalStatus = status;
@@ -261,6 +307,11 @@ exports.updateIssueStatus = async (req, res, next) => {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
+    const hasPermission = await checkIssuePermission(issueId, userId);
+    if (!hasPermission) {
+      return res.status(403).json({ error: 'Bạn không có quyền chỉnh sửa Issue này (Chỉ dành cho người liên quan).' });
+    }
+
     let updatedDescription = old.description;
     try {
       if (old.description) {
@@ -309,7 +360,13 @@ exports.updateIssueStatus = async (req, res, next) => {
 
 exports.deleteIssue = async (req, res, next) => {
   try {
-    const { issueId } = req.body;
+    const { issueId, userId } = req.body;
+    if (userId) {
+      const hasPermission = await checkIssuePermission(issueId, userId);
+      if (!hasPermission) {
+        return res.status(403).json({ error: 'Bạn không có quyền xóa Issue này (Chỉ dành cho người liên quan).' });
+      }
+    }
     await prisma.issue.delete({
       where: { id: parseInt(issueId) }
     });

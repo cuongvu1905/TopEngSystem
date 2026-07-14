@@ -1593,20 +1593,14 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', display: 'block' }}>Thời gian gửi:</span>
+                          <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', display: 'block' }}>Báo cáo ngày:</span>
                           <strong style={{ fontSize: '12px', color: '#334155' }}>
-                            {new Date(selectedReportForPopup.created_at).toLocaleString('vi-VN')}
+                            {new Date(selectedReportForPopup.created_at).toLocaleDateString('vi-VN')}
                           </strong>
                         </div>
                       </div>
 
                       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        {selectedReportForPopup.project_id && (
-                          <span style={{ fontSize: '11px', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                            <i className="fa-solid fa-folder" style={{ marginRight: '4px' }}></i>
-                            Dự án liên kết: {projects.find(p => p.id === selectedReportForPopup.project_id)?.name || 'N/A'}
-                          </span>
-                        )}
                         <span style={{ 
                           fontSize: '11px', 
                           backgroundColor: selectedReportForPopup.status === 'Approved' ? 'var(--success-light)' : selectedReportForPopup.status === 'Rejected' ? 'var(--danger-light)' : 'var(--warning-light)', 

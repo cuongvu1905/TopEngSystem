@@ -272,11 +272,11 @@ export default function ProjectDetail({ params }) {
   }, [projectMembers, projectId, currentUser]);
 
   useEffect(() => {
-    if (queryIssueId) {
+    if (queryIssueId && currentUser && projectMembers.length > 0) {
       setActiveSubTab('issues');
       handleOpenIssueDetail(queryIssueId);
     }
-  }, [queryIssueId]);
+  }, [queryIssueId, currentUser, projectMembers]);
   
   // Chat state inside project room
   const [chatRoomId, setChatRoomId] = useState(null);
@@ -703,15 +703,41 @@ export default function ProjectDetail({ params }) {
       setIssueComments(res.comments);
       setIssueHistory(res.history);
 
-      if (res.lock && res.lock.isLocked) {
+      const parsed = parseDescription(res.issue.description);
+
+      // Check permission to edit
+      if (!currentUser) return { isRelated: false, lock: res.lock };
+
+      const isReporter = res.issue.reporter_id === currentUser.id;
+      const isAssignee = res.issue.assignee_id === currentUser.id;
+      
+      const isRelatedUser = parsed.relatedUserIds?.includes(currentUser.id);
+      const isAssignedInSubtask = (parsed.issueTasks || []).some(t => {
+        const assignedNames = t.assignee ? t.assignee.split('@').map(s => s.trim()).filter(Boolean) : [];
+        return assignedNames.includes(currentUser.name.trim());
+      });
+
+      const isRelated = isReporter || isAssignee || isRelatedUser || isAssignedInSubtask;
+
+      console.log("=== ISSUE PERMISSION DEBUG ===");
+      console.log("Current User ID:", currentUser.id);
+      console.log("Current User Name:", currentUser.name);
+      console.log("isReporter (issue reporter:", res.issue.reporter_id, "):", isReporter);
+      console.log("isAssignee (issue assignee:", res.issue.assignee_id, "):", isAssignee);
+      console.log("isRelatedUser:", isRelatedUser);
+      console.log("isAssignedInSubtask:", isAssignedInSubtask);
+      console.log("Final isRelated:", isRelated);
+
+      if (!isRelated) {
+        setIsLockedByOther(true);
+        setLockOwnerName('Chế độ xem (Chỉ dành cho người liên quan)');
+      } else if (res.lock && res.lock.isLocked) {
         setIsLockedByOther(true);
         setLockOwnerName(res.lock.lockedBy);
       } else {
         setIsLockedByOther(false);
         setLockOwnerName('');
       }
-      
-      const parsed = parseDescription(res.issue.description);
       
       setDetailText(parsed.text || '');
       setEditIssueDesc(parsed.text || '');
@@ -753,8 +779,10 @@ export default function ProjectDetail({ params }) {
           }
         ]);
       }
+      return { isRelated, lock: res.lock };
     } catch (e) {
       console.error("Failed to load issue detail:", e);
+      return { isRelated: false, lock: null };
     }
   };
 
@@ -867,8 +895,40 @@ export default function ProjectDetail({ params }) {
     setIsSubTaskPopupOpen(false);
   };
 
+  const validateSubTasks = (tasksList) => {
+    for (let i = 0; i < tasksList.length; i++) {
+      const t = tasksList[i];
+      const name = t.name ? t.name.trim() : '';
+      const deadline = t.deadline ? t.deadline.trim() : '';
+      const performer = getPerformerForTask(t);
+      const assignedNames = performer ? performer.split('@').map(s => s.trim()).filter(Boolean) : [];
+      
+      const hasName = name !== '';
+      const hasDeadline = deadline !== '';
+      const hasAssignee = assignedNames.length > 0;
+
+      if (hasName || hasDeadline || hasAssignee) {
+        if (!hasName || !hasDeadline || !hasAssignee) {
+          return {
+            valid: false,
+            message: `Vui lòng điền đầy đủ Tên công việc, Deadline và Người được giao cho công việc số ${i + 1} trong bảng chi tiết.`
+          };
+        }
+      }
+    }
+    return { valid: true };
+  };
+
   const handleSaveAllIssueTasks = async () => {
     if (!activeIssueDetail) return;
+
+    // Validate subtasks
+    const subTaskCheck = validateSubTasks(projectTasks);
+    if (!subTaskCheck.valid) {
+      Swal.fire({ icon: 'warning', title: 'Thông tin chưa đầy đủ', text: subTaskCheck.message });
+      return;
+    }
+
     if (activeIssueDetail.status === 'DONE') {
       if (!jiraDetailHienTrang.trim() || !jiraDetailNguyenNhan.trim() || !jiraDetailHuongGiaiQuyet.trim() || !jiraDetailKetQua.trim()) {
         Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Lỗi: Trạng thái Issue hiện tại là DONE. Chỉ khi cả 4 mục (Hiện trạng, Nguyên nhân, Hướng giải quyết, Kết quả) đều có thông tin mới có thể lưu!" });
@@ -911,18 +971,20 @@ export default function ProjectDetail({ params }) {
     }
 
     try {
-      await loadIssueDetail(issueId);
+      const { isRelated } = await loadIssueDetail(issueId);
 
-      const lockRes = await db.lockIssue(issueId, currentUser.id);
-      if (lockRes.success) {
-        setIsLockedByOther(false);
-        setLockOwnerName('');
-        lockIntervalRef.current = setInterval(async () => {
-          await db.lockIssue(issueId, currentUser.id);
-        }, 10000);
-      } else {
-        setIsLockedByOther(true);
-        setLockOwnerName(lockRes.lockedBy || 'Người dùng khác');
+      if (isRelated) {
+        const lockRes = await db.lockIssue(issueId, currentUser.id);
+        if (lockRes.success) {
+          setIsLockedByOther(false);
+          setLockOwnerName('');
+          lockIntervalRef.current = setInterval(async () => {
+            await db.lockIssue(issueId, currentUser.id);
+          }, 10000);
+        } else {
+          setIsLockedByOther(true);
+          setLockOwnerName(lockRes.lockedBy || 'Người dùng khác');
+        }
       }
     } catch (err) {
       console.error("Locking issue failed:", err);
@@ -946,6 +1008,46 @@ export default function ProjectDetail({ params }) {
     }
     setIsDetailModalOpen(false);
   };
+
+  // Inactivity close timer for Issue Detail Popup (10 minutes)
+  useEffect(() => {
+    if (!isDetailModalOpen) return;
+
+    let timeoutId;
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        // Automatically close popup after 10 minutes of inactivity
+        handleCloseIssueDetail();
+        Swal.fire({
+          icon: 'info',
+          title: 'Hết thời gian chờ',
+          text: 'Popup Chi tiết Issue đã tự động đóng do bạn không hoạt động trong 10 phút.',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      }, 10 * 60 * 1000); // 10 minutes
+    };
+
+    // Initial start
+    resetTimer();
+
+    // Event listeners for activity
+    const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    
+    activityEvents.forEach(evt => {
+      window.addEventListener(evt, resetTimer);
+    });
+
+    // Cleanup
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      activityEvents.forEach(evt => {
+        window.removeEventListener(evt, resetTimer);
+      });
+    };
+  }, [isDetailModalOpen, activeIssueDetail]);
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -1007,6 +1109,32 @@ export default function ProjectDetail({ params }) {
     const issueId = e.dataTransfer.getData('text/plain');
     if (!issueId) return;
     try {
+      const issue = issues.find(i => String(i.id) === String(issueId));
+      if (!issue) return;
+
+      // Check permission to drag/drop
+      const isReporter = issue.reporter_id === currentUser.id;
+      const issueAssigneeId = issue.assignee_id;
+      const isAssignee = issueAssigneeId === currentUser.id;
+      
+      const parsed = parseDescription(issue.description);
+      const isRelatedUser = parsed.relatedUserIds?.includes(currentUser.id);
+      const isAssignedInSubtask = (parsed.issueTasks || []).some(t => {
+        const assignedNames = t.assignee ? t.assignee.split('@').map(s => s.trim()).filter(Boolean) : [];
+        return assignedNames.includes(currentUser.name.trim());
+      });
+
+      const isRelated = isReporter || isAssignee || isRelatedUser || isAssignedInSubtask;
+
+      if (!isRelated) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Từ chối truy cập',
+          text: 'Bạn không có quyền chuyển trạng thái Issue này (Chế độ Read-only).'
+        });
+        return;
+      }
+
       await db.updateIssueStatus(issueId, targetStatus, currentUser.id);
       loadIssues();
     } catch (err) {
@@ -2278,6 +2406,13 @@ export default function ProjectDetail({ params }) {
                   Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Vui lòng chọn Người chịu trách nhiệm cho Issue!" });
                   return;
                 }
+                // Validate subtasks
+                const subTaskCheck = validateSubTasks(projectTasks);
+                if (!subTaskCheck.valid) {
+                  Swal.fire({ icon: 'warning', title: 'Thông tin chưa đầy đủ', text: subTaskCheck.message });
+                  return;
+                }
+
                 if (issueStatus === 'DONE') {
                   if (!jiraCreateHienTrang.trim() || !jiraCreateNguyenNhan.trim() || !jiraCreateHuongGiaiQuyet.trim() || !jiraCreateKetQua.trim()) {
                     Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Lỗi: Chỉ khi cả 4 mục (Hiện trạng, Nguyên nhân, Hướng giải quyết, Kết quả) đều có thông tin mới có thể tạo Issue ở trạng thái DONE!" });
@@ -2572,7 +2707,9 @@ export default function ProjectDetail({ params }) {
                   }}>
                     <i className="fa-solid fa-lock" style={{ fontSize: '16px', color: '#d97706' }}></i>
                     <span>
-                      Thẻ này đang được chỉnh sửa bởi <strong>{lockOwnerName}</strong>. Chế độ xem chỉ đọc (Read-only).
+                      {lockOwnerName.startsWith('Chế độ')
+                        ? 'Bạn không có quyền chỉnh sửa Issue này. Chế độ xem chỉ đọc (Read-only).'
+                        : `Thẻ này đang được chỉnh sửa bởi ${lockOwnerName}. Chế độ xem chỉ đọc (Read-only).`}
                     </span>
                   </div>
                 )}
@@ -2931,12 +3068,13 @@ export default function ProjectDetail({ params }) {
                     <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '8px' }}>
                       <input 
                         type="text" 
-                        placeholder="Viết bình luận..." 
+                        placeholder={isLockedByOther ? "Bạn không có quyền bình luận..." : "Viết bình luận..."} 
                         value={newCommentText} 
                         onChange={(e) => setNewCommentText(e.target.value)} 
-                        style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
+                        disabled={isLockedByOther}
+                        style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', backgroundColor: isLockedByOther ? '#f1f5f9' : '#fff' }}
                       />
-                      <button type="submit" className="btn btn-primary btn-sm">Gửi</button>
+                      <button type="submit" className="btn btn-primary btn-sm" disabled={isLockedByOther}>Gửi</button>
                     </form>
                   </div>
 
@@ -3179,7 +3317,7 @@ export default function ProjectDetail({ params }) {
                         });
                         if (!confirmResult.isConfirmed) return;
                         try {
-                          await db.deleteIssue(activeIssueDetail.id);
+                          await db.deleteIssue(activeIssueDetail.id, currentUser.id);
                           setIsDetailModalOpen(false);
                           loadIssues();
                           Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã xóa issue thành công!" });
