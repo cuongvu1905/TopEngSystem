@@ -3,19 +3,25 @@
 let authListeners = [];
 
 const callApi = async (action, payload = {}) => {
+  let res, data;
   try {
-    const res = await fetch('/api/db', {
+    res = await fetch('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, payload })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'MySQL API error');
-    return data;
+    data = await res.json();
   } catch (e) {
     console.error(`API Call [${action}] failed:`, e);
     throw e;
   }
+
+  if (!res.ok) {
+    // Expected business errors (e.g. wrong credentials) are not unexpected
+    // exceptions, so don't surface them as console errors / dev overlays.
+    throw new Error(data.error || 'MySQL API error');
+  }
+  return data;
 };
 
 export const MySQLAdapter = {
@@ -343,7 +349,7 @@ export const MySQLAdapter = {
   uploadFile: async function(file) {
     const formData = new FormData();
     formData.append('file', file);
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:5000/api';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5000/api';
     const res = await fetch(`${backendUrl}/uploadFile`, {
       method: 'POST',
       body: formData
@@ -361,12 +367,16 @@ export const MySQLAdapter = {
     return await callApi('createDailyReport', report);
   },
 
-  updateDailyReportStatus: async function(reportId, status, comment) {
-    return await callApi('updateDailyReportStatus', { reportId, status, comment });
+  updateDailyReportStatus: async function(reportId, status, comment, userRole) {
+    return await callApi('updateDailyReportStatus', { reportId, status, comment, userRole });
   },
 
-  updateDailyReport: async function(reportId, content, fileUrl, projectId) {
-    return await callApi('updateDailyReport', { reportId, content, fileUrl, projectId });
+  updateDailyReport: async function(reportId, content, fileUrl, projectId, createdAt) {
+    return await callApi('updateDailyReport', { reportId, content, fileUrl, projectId, createdAt });
+  },
+
+  deleteDailyReport: async function(reportId) {
+    return await callApi('deleteDailyReport', { reportId });
   },
 
   getRolesPermissions: async function() {

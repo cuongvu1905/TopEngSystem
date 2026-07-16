@@ -1206,7 +1206,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
   };
 
   return (
-    <ModalWrapperLg isOpen={isOpen} onClose={onClose}>
+    <ModalWrapperLg isOpen={isOpen} onClose={onClose} style={{ maxWidth: '1000px', width: '95%' }}>
       <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '520px', maxHeight: '90vh' }}>
         <div className="modal-header" style={{ borderBottom: '1px solid var(--neutral-border)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
@@ -1273,9 +1273,8 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                       gap: '8px',
                       marginBottom: '4px',
                       transition: 'all 0.15s',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word'
                     }}
                   >
                     <i className="fa-solid fa-user-tie" style={{ fontSize: '13px', opacity: 0.7 }}></i>
@@ -1312,15 +1311,20 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                       Tên Khách Hàng <span className="required" style={{ color: '#ef4444' }}>*</span>
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
-                      <input 
-                        type="text" 
-                        value={custName} 
-                        onChange={(e) => setCustName(e.target.value)} 
-                        disabled={!isEditing}
-                        style={{ width: '100%', border: isEditing ? '1px solid #cbd5e1' : 'none', backgroundColor: isEditing ? '#fff' : 'transparent', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
-                        placeholder="Nhập tên khách hàng..."
-                        required
-                      />
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={custName} 
+                          onChange={(e) => setCustName(e.target.value)} 
+                          style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                          placeholder="Nhập tên khách hàng..."
+                          required
+                        />
+                      ) : (
+                        <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                          {custName}
+                        </div>
+                      )}
                     </td>
                   </tr>
                   <tr>
@@ -1328,15 +1332,20 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                       Mã Khách Hàng <span className="required" style={{ color: '#ef4444' }}>*</span>
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
-                      <input 
-                        type="text" 
-                        value={custCode} 
-                        onChange={(e) => setCustCode(e.target.value)} 
-                        disabled={!isEditing || activeCustomerId !== 'new'}
-                        style={{ width: '100%', border: (isEditing && activeCustomerId === 'new') ? '1px solid #cbd5e1' : 'none', backgroundColor: (isEditing && activeCustomerId === 'new') ? '#fff' : 'transparent', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
-                        placeholder="Nhập mã khách hàng..."
-                        required
-                      />
+                      {isEditing && activeCustomerId === 'new' ? (
+                        <input 
+                          type="text" 
+                          value={custCode} 
+                          onChange={(e) => setCustCode(e.target.value)} 
+                          style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                          placeholder="Nhập mã khách hàng..."
+                          required
+                        />
+                      ) : (
+                        <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                          {custCode}
+                        </div>
+                      )}
                     </td>
                   </tr>
                   <tr>
@@ -1344,14 +1353,19 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                       Địa chỉ
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
-                      <input 
-                        type="text" 
-                        value={address} 
-                        onChange={(e) => setAddress(e.target.value)} 
-                        disabled={!isEditing}
-                        style={{ width: '100%', border: isEditing ? '1px solid #cbd5e1' : 'none', backgroundColor: isEditing ? '#fff' : 'transparent', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
-                        placeholder="Nhập địa chỉ..."
-                      />
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={address} 
+                          onChange={(e) => setAddress(e.target.value)} 
+                          style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                          placeholder="Nhập địa chỉ..."
+                        />
+                      ) : (
+                        <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                          {address || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Chưa có thông tin</span>}
+                        </div>
+                      )}
                     </td>
                   </tr>
                   <tr>
@@ -1359,14 +1373,19 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                       Mã số thuế
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
-                      <input 
-                        type="text" 
-                        value={taxCode} 
-                        onChange={(e) => setTaxCode(e.target.value)} 
-                        disabled={!isEditing}
-                        style={{ width: '100%', border: isEditing ? '1px solid #cbd5e1' : 'none', backgroundColor: isEditing ? '#fff' : 'transparent', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
-                        placeholder="Nhập mã số thuế..."
-                      />
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={taxCode} 
+                          onChange={(e) => setTaxCode(e.target.value)} 
+                          style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                          placeholder="Nhập mã số thuế..."
+                        />
+                      ) : (
+                        <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                          {taxCode || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Chưa có thông tin</span>}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 </tbody>

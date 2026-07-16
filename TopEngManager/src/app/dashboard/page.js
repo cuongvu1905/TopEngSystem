@@ -40,6 +40,10 @@ const parseIssueDescription = (desc) => {
     if (data && typeof data === 'object') {
       return {
         text: data.text || '',
+        hientrang: data.hientrang || '',
+        nguyennhan: data.nguyennhan || '',
+        huonggiaiquyet: data.huonggiaiquyet || '',
+        ketqua: data.ketqua || '',
         issueTasks: data.issueTasks || [],
         assigneesText: data.assigneesText || ''
       };
@@ -49,6 +53,10 @@ const parseIssueDescription = (desc) => {
   }
   return {
     text: desc || '',
+    hientrang: '',
+    nguyennhan: '',
+    huonggiaiquyet: '',
+    ketqua: '',
     issueTasks: [],
     assigneesText: ''
   };
@@ -211,9 +219,9 @@ export default function Dashboard() {
   const isAdmin = currentUser?.system_role?.includes("Admin");
   const isHR = currentUser?.system_role?.includes("Nhân sự");
   
-  const canAccessIssues = !isHR;
-  const canAccessTasks = !isHR;
-  const canAccessProjects = !isHR;
+  const canAccessIssues = true;
+  const canAccessTasks = true;
+  const canAccessProjects = true;
   const canAccessReports = true;
 
   // Load configuration from localstorage on mount
@@ -333,7 +341,7 @@ export default function Dashboard() {
   // 3. Resolve My Mentioned Issues (Created-date sorted)
   const visibleProjectIds = new Set(visibleProjectsList.map(p => p.id));
   const myIssuesSorted = allIssues
-    .filter(issue => visibleProjectIds.has(issue.project_id) && isMentionedInIssue(issue, currentUser, users))
+    .filter(issue => visibleProjectIds.has(issue.project_id) && isMentionedInIssue(issue, currentUser, users) && issue.status !== 'DONE')
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   // 4. Resolve Daily Reports (Role-filtered)
@@ -422,7 +430,7 @@ export default function Dashboard() {
 
     try {
       setSubmittingReview(true);
-      await db.updateDailyReportStatus(selectedReportForPopup.id, status, reportCommentText);
+      await db.updateDailyReportStatus(selectedReportForPopup.id, status, reportCommentText, currentUser.system_role);
       Swal.fire({ icon: 'success', title: 'Thành công', text: `Đã ${status === 'Approved' ? 'Duyệt' : 'Từ chối'} báo cáo thành công!` });
       
       // Reload reports and find the updated report
@@ -530,7 +538,14 @@ export default function Dashboard() {
 
   const getTeamMembers = () => {
     if (!currentUser) return [];
+    
     const isTL = currentUser.system_role === 'Team Leader';
+    const isPL = currentUser.system_role === 'Part Leader';
+    const isRootDeptMember = (() => {
+      const myDept = departments.find(d => d.department_id === currentUser.department_id);
+      return myDept && !myDept.parent_id;
+    })();
+
     const isAdminUser = currentUser.system_role?.includes('Admin') || 
                       currentUser.system_role?.includes('Ban điều hành') || 
                       currentUser.system_role?.includes('BOD') || 
@@ -547,10 +562,21 @@ export default function Dashboard() {
         !u.system_role?.includes('Ban điều hành')
       );
     }
-    if (isTL) {
+
+    const isDescendant = (childId, parentId) => {
+      if (!childId || !parentId) return false;
+      let curr = departments.find(d => d.department_id === childId);
+      while (curr && curr.parent_id) {
+        if (curr.parent_id === parentId) return true;
+        curr = departments.find(d => d.department_id === curr.parent_id);
+      }
+      return false;
+    };
+
+    if (isTL || isPL || isRootDeptMember || hasPermission?.('view_daily_reports')) {
       return users.filter(u => {
         return u.department_id === currentUser.department_id || 
-          departments.some(d => d.department_id === u.department_id && d.parent_id === currentUser.department_id);
+          isDescendant(u.department_id, currentUser.department_id);
       });
     }
     return [];
@@ -636,7 +662,8 @@ export default function Dashboard() {
                   payload: {
                     reportId: createData.report.id,
                     status: 'Approved',
-                    comment: 'Phê duyệt tự động khi miễn báo cáo'
+                    comment: 'Phê duyệt tự động khi miễn báo cáo',
+                    userRole: currentUser.system_role
                   }
                 })
               });
@@ -1886,7 +1913,40 @@ export default function Dashboard() {
                       <div>
                         <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>Mô tả chi tiết</label>
                         <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
-                          {parseIssueDescription(selectedIssueDetail.issue.description).text || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết.</span>}
+                          {(() => {
+                            const parsed = parseIssueDescription(selectedIssueDetail.issue.description);
+                            if (parsed.hientrang || parsed.nguyennhan || parsed.huonggiaiquyet || parsed.ketqua) {
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  {parsed.hientrang && (
+                                    <div>
+                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[Hiện trạng]:</strong>
+                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.hientrang}</p>
+                                    </div>
+                                  )}
+                                  {parsed.nguyennhan && (
+                                    <div>
+                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[Nguyên nhân]:</strong>
+                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.nguyennhan}</p>
+                                    </div>
+                                  )}
+                                  {parsed.huonggiaiquyet && (
+                                    <div>
+                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[Hướng giải quyết]:</strong>
+                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.huonggiaiquyet}</p>
+                                    </div>
+                                  )}
+                                  {parsed.ketqua && (
+                                    <div>
+                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[Kết quả]:</strong>
+                                      <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#334155' }}>{parsed.ketqua}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return parsed.text || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết.</span>;
+                          })()}
                         </div>
                       </div>
 

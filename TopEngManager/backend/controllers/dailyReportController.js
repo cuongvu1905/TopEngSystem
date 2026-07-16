@@ -22,6 +22,10 @@ exports.getDailyReports = async (req, res, next) => {
   try {
     const { userId, userRole } = req.body;
 
+    if (!userId) {
+      return res.json([]);
+    }
+
     const roleStr = typeof userRole === 'string' ? userRole : '';
 
     // Check if the requesting user exists to find their department
@@ -31,44 +35,53 @@ exports.getDailyReports = async (req, res, next) => {
 
     let where = {};
 
-    if (roleStr === 'Quản trị viên (Admin)' || roleStr === 'Ban điều hành (BOD)' || roleStr === 'Nhân sự (HR)') {
-      // Admins, BOD, and HR see all reports
-      where = {};
-    } else if (roleStr === 'Team Leader') {
-      // Team Leaders see reports of users in their department and any sub-departments of their department
-      let allowedDepartmentIds = [];
-      if (requestingUser && requestingUser.department_id) {
-        allowedDepartmentIds.push(requestingUser.department_id);
-        
-        // Find sub-departments (parts)
-        const subDepts = await prisma.department.findMany({
-          where: { parent_id: requestingUser.department_id },
-          select: { department_id: true }
-        });
-        
-        subDepts.forEach(d => {
-          allowedDepartmentIds.push(d.department_id);
-        });
-      }
+    const hasViewPermission = hasPermission(roleStr, 'view_daily_reports');
 
-      if (allowedDepartmentIds.length > 0) {
-        where = {
-          OR: [
-            { user_id: userId }, // include their own reports
-            {
-              user: {
-                department_id: { in: allowedDepartmentIds }
+    if (!hasViewPermission) {
+      where = { user_id: userId };
+    } else {
+      if (roleStr === 'Quản trị viên (Admin)' || roleStr === 'Ban điều hành (BOD)' || roleStr === 'Nhân sự (HR)') {
+        // Admins, BOD, and HR see all reports
+        where = {};
+      } else {
+        // Team Leaders, Part Leaders, and other roles with permission see reports of users in their department and any sub-departments recursively
+        let allowedDepartmentIds = [];
+        if (requestingUser && requestingUser.department_id) {
+          allowedDepartmentIds.push(requestingUser.department_id);
+          
+          // Recursive sub-departments lookup
+          let queue = [requestingUser.department_id];
+          let index = 0;
+          while (index < queue.length) {
+            const currentId = queue[index];
+            const subDepts = await prisma.department.findMany({
+              where: { parent_id: currentId },
+              select: { department_id: true }
+            });
+            for (const sd of subDepts) {
+              if (!queue.includes(sd.department_id)) {
+                queue.push(sd.department_id);
+                allowedDepartmentIds.push(sd.department_id);
               }
             }
-          ]
-        };
-      } else {
-        where = { user_id: userId };
-      }
-    } else {
-      // Everyone else (Staff, Part Leader, Sales, etc.) only see their own reports
-      if (userId) {
-        where.user_id = userId;
+            index++;
+          }
+        }
+
+        if (allowedDepartmentIds.length > 0) {
+          where = {
+            OR: [
+              { user_id: userId }, // include their own reports
+              {
+                user: {
+                  department_id: { in: allowedDepartmentIds }
+                }
+              }
+            ]
+          };
+        } else {
+          where = { user_id: userId };
+        }
       }
     }
 
@@ -157,7 +170,11 @@ exports.createDailyReport = async (req, res, next) => {
 
 exports.updateDailyReportStatus = async (req, res, next) => {
   try {
-    const { reportId, status, comment } = req.body;
+    const { reportId, status, comment, userRole } = req.body;
+
+    if (userRole && !hasPermission(userRole, 'approve_daily_report')) {
+      return res.status(403).json({ error: 'Bạn không có quyền phê duyệt báo cáo ngày.' });
+    }
 
     if (!reportId || !status) {
       return res.status(400).json({ error: 'Thiếu mã báo cáo hoặc trạng thái cập nhật' });
@@ -201,7 +218,7 @@ exports.updateDailyReportStatus = async (req, res, next) => {
 
 exports.updateDailyReport = async (req, res, next) => {
   try {
-    const { reportId, content, fileUrl, projectId } = req.body;
+    const { reportId, content, fileUrl, projectId, createdAt } = req.body;
 
     if (!reportId || !content) {
       return res.status(400).json({ error: 'Thiếu mã báo cáo hoặc nội dung cập nhật' });
@@ -219,16 +236,53 @@ exports.updateDailyReport = async (req, res, next) => {
       return res.status(400).json({ error: 'Chỉ có thể chỉnh sửa báo cáo ở trạng thái Chờ duyệt' });
     }
 
+    const updateData = {
+      content: content,
+      file_url: fileUrl !== undefined ? fileUrl : report.file_url,
+      project_id: projectId !== undefined ? projectId : report.project_id
+    };
+
+    // Update report date if provided
+    if (createdAt) {
+      updateData.created_at = new Date(createdAt);
+    }
+
     const updated = await prisma.dailyreport.update({
       where: { id: parseInt(reportId) },
-      data: {
-        content: content,
-        file_url: fileUrl !== undefined ? fileUrl : report.file_url,
-        project_id: projectId !== undefined ? projectId : report.project_id
-      }
+      data: updateData
     });
 
     res.json({ success: true, report: updated });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteDailyReport = async (req, res, next) => {
+  try {
+    const { reportId } = req.body;
+
+    if (!reportId) {
+      return res.status(400).json({ error: 'Thiếu mã báo cáo cần xóa' });
+    }
+
+    const report = await prisma.dailyreport.findUnique({
+      where: { id: parseInt(reportId) }
+    });
+
+    if (!report) {
+      return res.status(404).json({ error: 'Không tìm thấy báo cáo' });
+    }
+
+    if (report.status !== 'Pending' && report.status !== 'pending' && report.status !== 'Chờ duyệt') {
+      return res.status(400).json({ error: 'Chỉ có thể xóa báo cáo ở trạng thái Chờ duyệt' });
+    }
+
+    await prisma.dailyreport.delete({
+      where: { id: parseInt(reportId) }
+    });
+
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }

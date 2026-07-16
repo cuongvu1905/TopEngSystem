@@ -21,6 +21,16 @@ const Swal = {
   }
 };
 
+const isDescendant = (childId, parentId, depts) => {
+  if (!childId || !parentId) return false;
+  let curr = depts.find(d => d.department_id === childId);
+  while (curr && curr.parent_id) {
+    if (curr.parent_id === parentId) return true;
+    curr = depts.find(d => d.department_id === curr.parent_id);
+  }
+  return false;
+};
+
 export default function HRManagement() {
   const { currentUser, users, projects, tasks, reloadAll, hasPermission } = useApp();
   const [activeTab, setActiveTab] = useState('users');
@@ -47,6 +57,9 @@ export default function HRManagement() {
   const isTeamLeader = currentUser?.system_role === 'Team Leader';
   const isAdmin = currentUser?.system_role?.includes("Admin");
   const isHR = currentUser?.system_role?.includes("Nhân sự");
+
+  const currentUserDept = departments.find(d => d.department_id === currentUser?.department_id);
+  const isCurrentUserInRootDept = currentUserDept && !currentUserDept.parent_id;
 
   // Department CRUD states
   const [isDeptOpen, setIsDeptOpen] = useState(false);
@@ -94,7 +107,7 @@ export default function HRManagement() {
   // Set default selectedDeptId in tree view
   useEffect(() => {
     if (departments.length > 0 && !selectedDeptId) {
-      if (isTeamLeader && currentUser.department_id) {
+      if ((isTeamLeader || isCurrentUserInRootDept) && currentUser.department_id) {
         setSelectedDeptId(currentUser.department_id);
       } else {
         const rootDept = departments.find(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
@@ -184,14 +197,15 @@ export default function HRManagement() {
     setUserCurrentPage(1);
   }, [userSearchQuery, selectedDeptFilter]);
 
-  // Enforce access control: only Admin, HR, or Team Leader can see this
-  if (!isAdmin && !isHR && !isTeamLeader) {
+  // Enforce access control: only Admin, HR, Team Leader, user with view_hr permission or Root Dept Member can see this
+  const canAccessHR = isAdmin || isHR || isTeamLeader || hasPermission('view_hr') || isCurrentUserInRootDept;
+  if (!canAccessHR) {
     return (
       <div className="scrollable-view" style={{ textAlign: 'center', padding: '40px' }}>
         <div className="card" style={{ maxWidth: '500px', margin: '40px auto', padding: '32px' }}>
           <i className="fa-solid fa-lock" style={{ fontSize: '48px', color: 'var(--danger-color)', marginBottom: '16px' }}></i>
           <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>Không có quyền truy cập</h2>
-          <p className="text-muted" style={{ fontSize: '13px' }}>Chỉ bộ phận Nhân sự (HR), Admin, hoặc Team Leader mới có quyền quản lý cấu trúc.</p>
+          <p className="text-muted" style={{ fontSize: '13px' }}>Chỉ bộ phận Nhân sự (HR), Admin, Team Leader, hoặc các tài khoản Ban điều hành mới có quyền quản lý cấu trúc.</p>
         </div>
       </div>
     );
@@ -555,8 +569,8 @@ export default function HRManagement() {
     // Filter available departments to transfer to
     // If Admin/HR: show all departments
     // If Team Leader: show only their own team and parts inside their team
-    const availableDepts = isTeamLeader
-      ? departments.filter(d => d.department_id === currentUser.department_id || d.parent_id === currentUser.department_id)
+    const availableDepts = (isTeamLeader || isCurrentUserInRootDept)
+      ? departments.filter(d => d.department_id === currentUser.department_id || isDescendant(d.department_id, currentUser.department_id, departments))
       : departments;
 
     // Filter available roles
@@ -867,9 +881,9 @@ export default function HRManagement() {
         </div>
       </div>
 
-      {(hasPermission('view_hr_members') || hasPermission('manage_role_permissions') || hasPermission('manage_departments') || isTeamLeader) && (
+      {(hasPermission('view_hr_members') || hasPermission('manage_role_permissions') || hasPermission('manage_departments') || isTeamLeader || isCurrentUserInRootDept) && (
         <div className="project-tabs" style={{ marginTop: '16px', marginBottom: '16px' }}>
-          {hasPermission('view_hr_members') && (
+          {(hasPermission('view_hr_members') || isCurrentUserInRootDept) && (
             <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
               <i className="fa-solid fa-users"></i> Nhân sự & Tài khoản
             </button>
@@ -879,7 +893,7 @@ export default function HRManagement() {
               <i className="fa-solid fa-shield-halved"></i> Bảng Phân Quyền
             </button>
           )}
-          {(hasPermission('manage_departments') || isTeamLeader) && (
+          {(hasPermission('manage_departments') || isTeamLeader || isCurrentUserInRootDept) && (
             <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
               Quản lý phòng ban
             </button>
@@ -946,8 +960,10 @@ export default function HRManagement() {
               <tbody>
                 {paginatedUsers.map(u => {
                   const isMemberOfMyTeam = u.department_id === currentUser.department_id || 
-                    departments.some(d => d.department_id === u.department_id && d.parent_id === currentUser.department_id);
-                  const canEditUser = hasPermission('edit_employee_info') || (isTeamLeader && isMemberOfMyTeam);
+                    isDescendant(u.department_id, currentUser.department_id, departments);
+                  const canEditUser = hasPermission('edit_employee_info') && (
+                    isAdmin || isHR || (isTeamLeader && isMemberOfMyTeam) || (isCurrentUserInRootDept && isMemberOfMyTeam)
+                  );
 
                   return (
                     <tr key={u.id}>
@@ -980,7 +996,7 @@ export default function HRManagement() {
                             <i className="fa-solid fa-user-pen"></i> Sửa
                           </button>
                         )}
-                        {hasPermission('edit_employee_info') && (
+                        {canEditUser && (
                           <button 
                             className="btn btn-secondary btn-sm" 
                             style={{ padding: '4px 8px', fontSize: '12px' }}
@@ -989,7 +1005,7 @@ export default function HRManagement() {
                             <i className="fa-solid fa-key"></i> Đặt lại
                           </button>
                         )}
-                        {hasPermission('edit_employee_info') && u.id !== currentUser.id && (
+                        {canEditUser && u.id !== currentUser.id && (
                           <button 
                             className="btn btn-danger btn-sm" 
                             style={{ padding: '4px 8px', fontSize: '12px' }}
@@ -1057,7 +1073,7 @@ export default function HRManagement() {
             </div>
             <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '4px' }}>
               {(() => {
-                const visibleRootDepts = isTeamLeader 
+                const visibleRootDepts = (isTeamLeader || isCurrentUserInRootDept)
                   ? departments.filter(d => d.department_id === currentUser.department_id)
                   : departments.filter(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
                 
@@ -1085,9 +1101,21 @@ export default function HRManagement() {
               const parentDept = departments.find(d => d.department_id === currentSelectedDept.parent_id);
               const deptMembers = users.filter(u => u.department_id === currentSelectedDept.department_id);
 
-              const canEditDept = hasPermission('manage_departments') || (isTeamLeader && currentSelectedDept.parent_id === currentUser.department_id);
-              const canDeleteDept = hasPermission('manage_departments') || (isTeamLeader && currentSelectedDept.parent_id === currentUser.department_id);
-              const canAddMember = hasPermission('edit_employee_info') || (isTeamLeader && (currentSelectedDept.department_id === currentUser.department_id || currentSelectedDept.parent_id === currentUser.department_id));
+              const isTargetDeptAllowed = currentSelectedDept.department_id === currentUser.department_id || 
+                isDescendant(currentSelectedDept.department_id, currentUser.department_id, departments);
+              const isParentDeptAllowed = isDescendant(currentSelectedDept.department_id, currentUser.department_id, departments);
+
+              const canEditDept = hasPermission('manage_departments') && (
+                isAdmin || isHR || (isTeamLeader && isParentDeptAllowed) || (isCurrentUserInRootDept && isParentDeptAllowed)
+              );
+
+              const canDeleteDept = hasPermission('manage_departments') && (
+                isAdmin || isHR || (isTeamLeader && isParentDeptAllowed) || (isCurrentUserInRootDept && isParentDeptAllowed)
+              );
+
+              const canAddMember = hasPermission('edit_employee_info') && (
+                isAdmin || isHR || (isTeamLeader && isTargetDeptAllowed) || (isCurrentUserInRootDept && isTargetDeptAllowed)
+              );
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1143,8 +1171,10 @@ export default function HRManagement() {
                         <tbody>
                           {deptMembers.map(member => {
                             const isMemberOfMyTeam = member.department_id === currentUser.department_id || 
-                              departments.some(d => d.department_id === member.department_id && d.parent_id === currentUser.department_id);
-                             const canManageMemberRole = hasPermission('edit_employee_info') || (isTeamLeader && isMemberOfMyTeam);
+                              isDescendant(member.department_id, currentUser.department_id, departments);
+                             const canManageMemberRole = hasPermission('edit_employee_info') && (
+                               isAdmin || isHR || (isTeamLeader && isMemberOfMyTeam) || (isCurrentUserInRootDept && isMemberOfMyTeam)
+                             );
 
                             return (
                               <tr key={member.id}>

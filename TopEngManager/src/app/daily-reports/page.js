@@ -242,7 +242,7 @@ export default function DailyReportsPage() {
       const firstProjectId = reportCards[0]?.projectId || null;
 
       if (editingReportId) {
-        await db.updateDailyReport(editingReportId, serializedContent, null, firstProjectId);
+        await db.updateDailyReport(editingReportId, serializedContent, null, firstProjectId, reportDate);
         Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã cập nhật báo cáo ngày thành công!" });
         setEditingReportId(null);
       } else {
@@ -950,6 +950,50 @@ export default function DailyReportsPage() {
                           <span style={{ fontSize: '11px', color: '#64748b' }}>
                             {report.file_url ? <><i className="fa-solid fa-paperclip"></i> Có đính kèm</> : 'Không có đính kèm'}
                           </span>
+                          {(report.status === 'Pending' || report.status === 'pending' || report.status === 'Chờ duyệt') && report.user_id === currentUser?.id && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const SwalInstance = (await import('sweetalert2')).default;
+                                const result = await SwalInstance.fire({
+                                  icon: 'warning',
+                                  title: 'Xác nhận xóa',
+                                  text: 'Bạn có chắc chắn muốn xóa báo cáo này? Hành động này không thể hoàn tác.',
+                                  showCancelButton: true,
+                                  confirmButtonText: 'Xóa báo cáo',
+                                  cancelButtonText: 'Hủy',
+                                  confirmButtonColor: '#ef4444',
+                                  cancelButtonColor: '#64748b',
+                                });
+                                if (result.isConfirmed) {
+                                  try {
+                                    await db.deleteDailyReport(report.id);
+                                    await loadReports();
+                                    SwalInstance.fire({ icon: 'success', title: 'Đã xóa', text: 'Báo cáo đã được xóa thành công!', timer: 2000, showConfirmButton: false });
+                                  } catch (err) {
+                                    SwalInstance.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể xóa báo cáo: ' + err.message });
+                                  }
+                                }
+                              }}
+                              style={{
+                                background: 'none',
+                                border: '1px solid #fecaca',
+                                borderRadius: '6px',
+                                color: '#ef4444',
+                                fontSize: '11px',
+                                padding: '3px 10px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                transition: 'all 0.15s ease',
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.borderColor = '#ef4444'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#fecaca'; }}
+                            >
+                              <i className="fa-solid fa-trash-can" style={{ fontSize: '10px' }}></i> Xóa
+                            </button>
+                          )}
                         </div>
                       </div>
                     );

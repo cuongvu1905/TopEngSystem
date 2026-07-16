@@ -37,6 +37,10 @@ function hashPasswordSecurely(password, salt = 'top_eng_manager_secure_salt_key'
   return crypto.createHmac('sha256', salt).update(password).digest('hex');
 }
 
+function hashPasswordPlainSha256(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -46,12 +50,14 @@ exports.login = async (req, res, next) => {
 
     const inputSecureHash = hashPasswordSecurely(password);
     const inputMd5Hash = hashPassword(password);
+    const inputPlainSha256 = hashPasswordPlainSha256(password);
 
     const users = await prisma.user.findMany({
       where: {
         OR: [
           { email: email },
-          { user_id: email }
+          { user_id: email },
+          { full_name: email }
         ]
       }
     });
@@ -65,10 +71,17 @@ exports.login = async (req, res, next) => {
 
     if (user.password === inputSecureHash) {
       isPasswordCorrect = true;
+    } else if (user.password === inputPlainSha256) {
+      isPasswordCorrect = true;
+      console.log(`Upgrading plain SHA-256 password hash to secure Hmac-SHA256 for user: ${user.email}`);
+      await prisma.user.update({
+        where: { user_id: user.user_id },
+        data: { password: inputSecureHash }
+      });
     } else if (user.password === inputMd5Hash) {
       isPasswordCorrect = true;
       // Upgrade hash algorithm to SHA-256 for backward compatibility
-      console.log(`Upgrading password hash to SHA-256 for user: ${user.email}`);
+      console.log(`Upgrading MD5 password hash to secure Hmac-SHA256 for user: ${user.email}`);
       await prisma.user.update({
         where: { user_id: user.user_id },
         data: { password: inputSecureHash }

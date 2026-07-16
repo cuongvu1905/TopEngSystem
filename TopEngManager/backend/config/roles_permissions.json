@@ -205,7 +205,21 @@
       "view_daily_reports",
       "approve_daily_report",
       "chat_tag_all_global",
-      "chat_confirm_send"
+      "chat_confirm_send",
+      "view_activity_logs",
+      "manage_departments",
+      "view_hr",
+      "view_hr_members",
+      "upload_documents",
+      "edit_issue",
+      "create_issue",
+      "update_task_status",
+      "create_task",
+      "manage_project_members",
+      "manage_role_permissions",
+      "create_daily_report",
+      "chat_tag_all_project",
+      "edit_employee_info"
     ],
     "Team Leader": [
       "view_dashboard",
@@ -241,7 +255,8 @@
       "view_documents",
       "upload_documents",
       "create_daily_report",
-      "chat_tag_all_project"
+      "chat_tag_all_project",
+      "view_daily_reports"
     ],
     "Nhân viên (Staff)": [
       "view_dashboard",
