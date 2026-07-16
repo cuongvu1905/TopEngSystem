@@ -194,6 +194,13 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
     return matchesSearch && matchesDept;
   });
 
+  const canEditProjectKey = !projectId || 
+    currentUser?.system_role?.includes("Admin") || 
+    currentUser?.system_role?.includes("Leader") || 
+    currentUser?.system_role?.includes("Kinh doanh") || 
+    currentUser?.system_role?.includes("Sales") || 
+    selectedMembers[currentUser?.id] === 'PM';
+
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} style={{ maxWidth: '800px', width: '90%' }}>
       <div className="modal-content">
@@ -214,7 +221,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                 value={projectKey} 
                 onChange={(e) => setProjectKey(e.target.value.toUpperCase())} 
                 required 
-                disabled={!!projectId}
+                disabled={!canEditProjectKey}
                 placeholder="Ví dụ: PS000000,PP00000..." 
               />
             </div>
