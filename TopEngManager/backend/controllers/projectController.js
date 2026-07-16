@@ -96,10 +96,27 @@ exports.saveProject = async (req, res, next) => {
         VALUES (${id}, ${finalProjectName}, ${proj.description}, ${projectKey}, ${proj.create_by || proj.created_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'}, ${visibility})
       `;
     } else {
+      let projectKey = proj.project_key ? proj.project_key.trim().toUpperCase() : null;
+      if (!projectKey) {
+        return res.status(400).json({ error: 'Mã dự án không được để trống.' });
+      }
+
+      // Check unique
+      const existing = await prisma.project.findFirst({
+        where: { 
+          project_key: projectKey,
+          NOT: { project_id: id }
+        }
+      });
+      if (existing) {
+        return res.status(400).json({ error: `Mã dự án '${projectKey}' đã tồn tại ở dự án khác!` });
+      }
+
       await prisma.$executeRaw`
         UPDATE Project 
         SET project_name = ${finalProjectName}, 
             project_description = ${proj.description}, 
+            project_key = ${projectKey},
             customer_id = ${proj.customer_id || null},
             status = ${proj.status || 'Thực thi'}, 
             start_date = ${proj.start_date || '2026-06-01'}, 
