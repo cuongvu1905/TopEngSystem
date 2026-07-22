@@ -6,13 +6,15 @@ import { LANGUAGES, translations } from '@/utils/translations';
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  const [currentLang, setCurrentLang] = useState('vi');
+  const [currentLang, setCurrentLang] = useState('en');
 
   useEffect(() => {
     try {
       const savedLang = localStorage.getItem('app_language');
       if (savedLang && LANGUAGES.some(l => l.code === savedLang)) {
         setCurrentLang(savedLang);
+      } else {
+        setCurrentLang('en');
       }
     } catch (e) {
       console.error("Failed to load language preference:", e);
@@ -60,11 +62,11 @@ export const useLanguage = () => {
   if (!context) {
     // Return a safe fallback if used outside Provider
     return {
-      currentLang: 'vi',
-      currentLanguageObj: LANGUAGES[0],
+      currentLang: 'en',
+      currentLanguageObj: LANGUAGES.find(l => l.code === 'en') || LANGUAGES[1],
       languages: LANGUAGES,
       changeLanguage: () => {},
-      t: (key, fallback = '') => translations.vi[key] || fallback || key
+      t: (key, fallback = '') => translations.en[key] || fallback || key
     };
   }
   return context;

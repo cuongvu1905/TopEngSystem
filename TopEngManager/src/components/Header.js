@@ -251,7 +251,7 @@ export default function Header() {
             <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
               <i class="fa-solid fa-user" style="font-size: 11px; color: var(--neutral-muted); width: 12px; text-align: center;"></i>
               <span>${u.name}</span>
-              <span class="badge ${u.system_role.includes('Leader') ? 'badge-danger' : 'badge-info'}" style="font-size: 10px; padding: 1px 4px;">${u.system_role}</span>
+              <span class="badge ${u.system_role.includes('Leader') ? 'badge-danger' : 'badge-info'}" style="font-size: 10px; padding: 1px 4px;">${formatSystemRole(u.system_role, t)}</span>
             </div>`;
         });
       }
@@ -280,7 +280,7 @@ export default function Header() {
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
                 <i class="fa-solid fa-user" style="font-size: 11px; color: var(--neutral-muted); width: 12px; text-align: center;"></i>
                 <span>${u.name}</span>
-                <span class="badge ${u.system_role.includes('Leader') ? 'badge-warning' : 'badge-info'}" style="font-size: 10px; padding: 1px 4px;">${u.system_role}</span>
+                <span class="badge ${u.system_role.includes('Leader') ? 'badge-warning' : 'badge-info'}" style="font-size: 10px; padding: 1px 4px;">${formatSystemRole(u.system_role, t)}</span>
               </div>`;
           });
         }
@@ -353,16 +353,16 @@ export default function Header() {
               <span id="view-team-link" style="color: #1e40af; text-decoration: underline; cursor: pointer; font-weight: 600;">${teamName}</span>
             ` : ''}
             <strong style="color: var(--neutral-muted);">Phòng ban:</strong>
-            <span>${currentUser.department_name || 'Chưa phân phòng'}</span>
+            <span>${translateDepartmentName(currentUser.department_name, t)}</span>
             <strong style="color: var(--neutral-muted);">Quyền hạn:</strong>
-            <span>${currentUser.system_role}</span>
+            <span>${formatSystemRole(currentUser.system_role, t)}</span>
           </div>
         </div>
       `,
       showDenyButton: true,
-      denyButtonText: 'Đổi mật khẩu',
+      denyButtonText: t('header.changePassword', 'Đổi mật khẩu'),
       denyButtonColor: '#64748b',
-      confirmButtonText: 'Đóng',
+      confirmButtonText: t('common.close', 'Đóng'),
       confirmButtonColor: 'var(--primary-color)',
       didOpen: () => {
         const link = document.getElementById('view-team-link');
@@ -389,16 +389,16 @@ export default function Header() {
       html: `
         <div style="text-align: left; padding: 10px;">
           <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Mật khẩu hiện tại <span style="color: red;">*</span></label>
-            <input type="password" id="current-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="Nhập mật khẩu hiện tại...">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">${t('header.currentPasswordLabel', 'Mật khẩu hiện tại')} <span style="color: red;">*</span></label>
+            <input type="password" id="current-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="${t('header.currentPasswordPlaceholder', 'Nhập mật khẩu hiện tại...')}">
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Mật khẩu mới <span style="color: red;">*</span></label>
-            <input type="password" id="new-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="Nhập mật khẩu mới...">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">${t('header.newPasswordLabel', 'Mật khẩu mới')} <span style="color: red;">*</span></label>
+            <input type="password" id="new-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="${t('header.newPasswordPlaceholder', 'Nhập mật khẩu mới...')}">
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Xác nhận mật khẩu mới <span style="color: red;">*</span></label>
-            <input type="password" id="confirm-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="Xác nhận mật khẩu mới...">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">${t('header.confirmPasswordLabel', 'Xác nhận mật khẩu mới')} <span style="color: red;">*</span></label>
+            <input type="password" id="confirm-password" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" placeholder="${t('header.confirmPasswordPlaceholder', 'Xác nhận mật khẩu mới...')}">
           </div>
         </div>
       `,
@@ -412,15 +412,15 @@ export default function Header() {
         const newPassword = document.getElementById('new-password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         if (!currentPassword || !newPassword || !confirmPassword) {
-          Swal.showValidationMessage('Vui lòng nhập đầy đủ thông tin.');
+          Swal.showValidationMessage(t('team.requiredFieldsWarning', 'Vui lòng điền đầy đủ thông tin bắt buộc.'));
           return false;
         }
         if (newPassword !== confirmPassword) {
-          Swal.showValidationMessage('Mật khẩu mới và xác nhận mật khẩu không khớp.');
+          Swal.showValidationMessage(t('header.passwordsDoNotMatch', 'Mật khẩu mới và xác nhận mật khẩu không khớp.'));
           return false;
         }
         if (newPassword.length < 6) {
-          Swal.showValidationMessage('Mật khẩu mới phải từ 6 ký tự trở lên.');
+          Swal.showValidationMessage(t('team.passwordTooShort', 'Mật khẩu mới phải từ 6 ký tự trở lên.'));
           return false;
         }
         return { currentPassword, newPassword };
@@ -430,7 +430,7 @@ export default function Header() {
         const { currentPassword, newPassword } = result.value;
         try {
           Swal.fire({
-            title: 'Đang xử lý...',
+            title: t('common.processing', 'Đang xử lý...'),
             allowOutsideClick: false,
             didOpen: () => {
               Swal.showLoading();
@@ -448,16 +448,16 @@ export default function Header() {
 
           Swal.fire({
             icon: 'success',
-            title: 'Thành công',
-            text: 'Đổi mật khẩu thành công!',
+            title: t('common.success', 'Thành công'),
+            text: t('header.changePasswordSuccess', 'Đổi mật khẩu thành công!'),
             confirmButtonColor: 'var(--primary-color)'
           });
         } catch (err) {
           console.error(err);
           Swal.fire({
             icon: 'error',
-            title: 'Thất bại',
-            text: err.message || 'Không thể đổi mật khẩu.',
+            title: t('common.failed', 'Thất bại'),
+            text: err.message || t('header.changePasswordFailed', 'Không thể đổi mật khẩu.'),
             confirmButtonColor: 'var(--primary-color)'
           });
         }
@@ -613,8 +613,8 @@ export default function Header() {
               {/* <div className="dropdown-header" style={{ paddingBottom: '4px' }}>Hồ sơ cá nhân</div>
               <div style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neutral-muted)', borderBottom: '1px solid var(--neutral-border)' }}>
                 <div>Email: {currentUser.email}</div>
-                <div style={{ marginTop: '2px' }}>Phòng ban: {currentUser.department_name || 'Chưa phân phòng'}</div>
-                <div style={{ marginTop: '2px' }}>Quyền: <span className="badge badge-info" style={{ fontSize: '10px' }}>{currentUser.system_role}</span></div>
+                <div style={{ marginTop: '2px' }}>Phòng ban: {translateDepartmentName(currentUser.department_name, t)}</div>
+                <div style={{ marginTop: '2px' }}>Quyền: <span className="badge badge-info" style={{ fontSize: '10px' }}>{formatSystemRole(currentUser.system_role, t)}</span></div>
               </div> */}
               <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button 

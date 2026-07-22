@@ -7,6 +7,20 @@ import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 
 
+
+const formatSystemRole = (role, t) => {
+  if (!role) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  const r = String(role);
+  if (r.includes('Admin') || r.includes('Quản trị viên')) return t('role.admin', 'QUẢN TRỊ VIÊN (ADMIN)');
+  if (r.includes('HR') || r.includes('Nhân sự')) return t('role.hr', 'NHÂN SỰ (HR)');
+  if (r.includes('Staff') || r.includes('Nhân viên')) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  if (r.includes('Team Leader')) return t('role.teamLeader', 'TEAM LEADER');
+  if (r.includes('Part Leader')) return t('role.partLeader', 'PART LEADER');
+  if (r.includes('Sales') || r.includes('Kinh doanh')) return t('role.sales', 'KINH DOANH (SALES)');
+  if (r.includes('BOD') || r.includes('Ban điều hành')) return t('role.bod', 'BAN ĐIỀU HÀNH (BOD)');
+  return r.toUpperCase();
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { currentUser, reloadAll, hasPermission } = useApp();
@@ -77,7 +91,7 @@ export default function Sidebar() {
           </div>
           <div className="user-info">
             <h4>{currentUser.name}</h4>
-            <span>{currentUser.system_role}</span>
+            <span>{formatSystemRole(currentUser.system_role, t)}</span>
           </div>
         </div>
       </div>

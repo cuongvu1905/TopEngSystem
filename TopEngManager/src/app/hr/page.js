@@ -787,8 +787,8 @@ export default function HRManagement() {
 
       Swal.fire({
         icon: 'success',
-        title: 'Thành công',
-        text: `Đã thêm ${selectedIdsArray.length} nhân viên vào phòng ban thành công!`,
+        title: t('common.success', 'Thành công'),
+        text: t('team.addUsersSuccess', 'Đã thêm {count} nhân viên vào phòng ban thành công!').replace('{count}', selectedIdsArray.length),
         confirmButtonColor: 'var(--primary-color)'
       });
 
@@ -798,8 +798,8 @@ export default function HRManagement() {
       console.error(err);
       Swal.fire({
         icon: 'error',
-        title: 'Thất bại',
-        text: 'Lỗi thêm thành viên: ' + (err.message || err),
+        title: t('common.failed', 'Thất bại'),
+        text: t('team.addUsersFailed', 'Lỗi thêm thành viên: ') + (err.message || err),
         confirmButtonColor: 'var(--primary-color)'
       });
     } finally {
@@ -1283,7 +1283,7 @@ export default function HRManagement() {
 
               const trimmed = newRoleName.trim();
               if (localRoles.some(r => r.name.toLowerCase() === trimmed.toLowerCase())) {
-                Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: "Vai trò này đã tồn tại!" });
+                Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('team.roleExists', 'Vai trò này đã tồn tại!') });
                 return;
               }
 
@@ -1308,9 +1308,9 @@ export default function HRManagement() {
                   `đã thêm vai trò người dùng mới '${trimmed}'`
                 );
                 await reloadAll();
-                Swal.fire({ icon: 'success', title: 'Thành công', text: `Đã thêm vai trò '${trimmed}' thành công! Hãy cấu hình quyền hạn cho vai trò này.` });
+                Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('team.addRoleSuccess', "Đã thêm vai trò '{name}' thành công! Hãy cấu hình quyền hạn cho vai trò này.").replace('{name}', trimmed) });
               } catch (err) {
-                Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi thêm vai trò: " + err.message });
+                Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('team.addRoleFailed', "Lỗi thêm vai trò: ") + err.message });
               }
             }} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input 
@@ -1379,9 +1379,9 @@ export default function HRManagement() {
                                     `đã xóa vai trò người dùng '${role.name}'`
                                   );
                                   await reloadAll();
-                                  Swal.fire('Thành công', `Đã xóa vai trò "${role.name}"!`, 'success');
+                                  Swal.fire(t('common.success', 'Thành công'), t('team.deleteRoleSuccess', 'Đã xóa vai trò "{name}"!').replace('{name}', role.name), 'success');
                                 } catch (err) {
-                                  Swal.fire('Lỗi', `Không thể xóa vai trò: ${err.message}`, 'error');
+                                  Swal.fire(t('common.error', 'Lỗi'), t('team.deleteRoleFailed', 'Không thể xóa vai trò: {error}').replace('{error}', err.message), 'error');
                                 }
                               }
                             }}

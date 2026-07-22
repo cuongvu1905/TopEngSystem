@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
 
 const Swal = {
@@ -20,6 +21,7 @@ const Swal = {
 };
 export default function Login() {
   const { login } = useApp();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -35,8 +37,8 @@ export default function Login() {
     } catch (err) {
       Swal.fire({
         icon: 'error',
-        title: 'Lỗi đăng nhập',
-        text: err.message || 'Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại.',
+        title: t('login.errorTitle', 'Lỗi đăng nhập'),
+        text: err.message || t('login.errorText', 'Tài khoản hoặc mật khẩu không chính xác. Vui lòng thử lại.'),
       });
 
       setLoading(false);
@@ -51,8 +53,8 @@ export default function Login() {
           <i className="fa-solid fa-layer-group"></i>
           <span>TopEng Manager</span>
         </div>
-        <h2 className="login-title">Đăng nhập hệ thống</h2>
-        <p className="login-subtitle">Vui lòng đăng nhập để truy cập tài nguyên doanh nghiệp</p>
+        <h2 className="login-title">{t('login.systemLogin', 'Đăng nhập hệ thống')}</h2>
+        <p className="login-subtitle">{t('login.subtitle', 'Vui lòng đăng nhập để truy cập tài nguyên doanh nghiệp')}</p>
 
         {errorMsg && (
           <div className="login-alert danger">
@@ -65,7 +67,7 @@ export default function Login() {
 
 
           <div className="form-group">
-            <label>Email hoặc Mã nhân viên</label>
+            <label>{t('login.usernameLabel', 'Email hoặc Mã nhân viên')}</label>
             <div className="input-with-icon">
               <i className="fa-regular fa-user"></i>
               <input 
@@ -76,14 +78,14 @@ export default function Login() {
                 }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@topengnet.com hoặc mã nhân viên" 
+                placeholder={t('login.usernamePlaceholder', 'name@topengnet.com hoặc mã nhân viên')} 
                 required 
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label>Mật khẩu</label>
+            <label>{t('login.passwordLabel', 'Mật khẩu')}</label>
             <div className="input-with-icon">
               <i className="fa-solid fa-lock"></i>
               <input 
@@ -100,13 +102,13 @@ export default function Login() {
             {loading ? (
               <span className="spinner-border"></span>
             ) : (
-              <span>Đăng nhập</span>
+              <span>{t('login.submitBtn', 'Đăng nhập')}</span>
             )}
           </button>
         </form>
 
         <div className="login-toggle" style={{ fontSize: '12px', color: 'var(--neutral-muted)', textAlign: 'center', marginTop: '16px' }}>
-          <i className="fa-solid fa-circle-info"></i> Tài khoản của bạn được cấp và quản lý bởi phòng nhân sự (HR).
+          <i className="fa-solid fa-circle-info"></i> {t('login.hrNote', 'Tài khoản của bạn được cấp và quản lý bởi phòng nhân sự (HR).')}
         </div>
       </div>
     </div>

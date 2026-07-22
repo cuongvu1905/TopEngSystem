@@ -138,6 +138,37 @@ const renderReportContentVisual = (content, projects) => {
   return <div style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineheight: '1.5', color: '#334155' }}>{content}</div>;
 };
 
+
+const formatSystemRole = (role, t) => {
+  if (!role) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  const r = String(role);
+  if (r.includes('Admin') || r.includes('Quản trị viên')) return t('role.admin', 'QUẢN TRỊ VIÊN (ADMIN)');
+  if (r.includes('HR') || r.includes('Nhân sự')) return t('role.hr', 'NHÂN SỰ (HR)');
+  if (r.includes('Staff') || r.includes('Nhân viên')) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  if (r.includes('Team Leader')) return t('role.teamLeader', 'TEAM LEADER');
+  if (r.includes('Part Leader')) return t('role.partLeader', 'PART LEADER');
+  if (r.includes('Sales') || r.includes('Kinh doanh')) return t('role.sales', 'KINH DOANH (SALES)');
+  if (r.includes('BOD') || r.includes('Ban điều hành')) return t('role.bod', 'BAN ĐIỀU HÀNH (BOD)');
+  return r.toUpperCase();
+};
+
+
+const translateDepartmentName = (name, t) => {
+  if (!name || name === 'Chưa phân phòng') return t('dept.unassigned', 'Chưa phân phòng');
+  const n = String(name);
+  if (n.includes('Hành chính Nhân sự') || n === 'HR') return t('dept.hr', 'Phòng Hành chính Nhân sự (HR)');
+  if (n.includes('Phát triển Phần mềm') || n === 'R&D') return t('dept.rd', 'Phòng Phát triển Phần mềm (R&D)');
+  if (n.includes('Kinh doanh') || n === 'Sales') return t('dept.sales', 'Phòng Kinh doanh (Sales)');
+  if (n.includes('Kế toán Tài chính') || n.includes('Finance')) return t('dept.finance', 'Phòng Kế toán Tài chính');
+  if (n.includes('Truyền thông Marketing') || n.includes('Marketing')) return t('dept.marketing', 'Phòng Truyền thông Marketing');
+  if (n.includes('BOD TOPV') || n === 'BOD') return t('dept.bod', 'BOD TOPV');
+  if (n === 'Nhân sự 1') return t('dept.hr1', 'Nhân sự 1');
+  if (n === 'PC') return t('dept.pc', 'PC');
+  if (n === 'PC1') return t('dept.pc1', 'PC1');
+  if (n === 'PC2') return t('dept.pc2', 'PC2');
+  return n;
+};
+
 export default function ProjectDetail({ params }) {
   const { id: projectId } = use(params);
   const searchParams = useSearchParams();
@@ -2283,7 +2314,7 @@ export default function ProjectDetail({ params }) {
                               <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: 'var(--neutral-muted)' }}>
                                 <span>Mã NV: <strong>{u.employee_id || 'N/A'}</strong></span>
                                 <span>•</span>
-                                <span>Bộ phận: <strong>{u.department_name || 'Chưa phân phòng'}</strong></span>
+                                <span>Bộ phận: <strong>{translateDepartmentName(u.department_name, t)}</strong></span>
                               </div>
                             </div>
                           ))
@@ -2335,7 +2366,7 @@ export default function ProjectDetail({ params }) {
                           </div>
                         </td>
                         <td>{u.email}</td>
-                        <td>{u.system_role}</td>
+                        <td>{formatSystemRole(u.system_role, t)}</td>
                         <td><span className={`badge ${m.project_role === 'PM' ? 'badge-info' : 'badge-success'}`}>{m.project_role}</span></td>
                         <td>
                           <span className={`badge ${m.status === 'PENDING' ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: '11px', padding: '3px 6px' }}>
@@ -3101,7 +3132,7 @@ export default function ProjectDetail({ params }) {
                                     }}
                                   />
                                   <label htmlFor={`jira-create-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>
-                                    {m.name} ({m.employee_id || 'N/A'}) - {m.department_name || 'Chưa phân phòng'} ({m.project_role || 'Member'})
+                                    {m.name} ({m.employee_id || 'N/A'}) - {translateDepartmentName(m.department_name, t)} ({m.project_role || 'Member'})
                                   </label>
                                 </div>
                               </div>
@@ -3723,7 +3754,7 @@ export default function ProjectDetail({ params }) {
                                       }}
                                     />
                                     <label htmlFor={`jira-detail-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>
-                                      {m.name} ({m.employee_id || 'N/A'}) - {m.department_name || 'Chưa phân phòng'} ({m.project_role || 'Member'})
+                                      {m.name} ({m.employee_id || 'N/A'}) - {translateDepartmentName(m.department_name, t)} ({m.project_role || 'Member'})
                                     </label>
                                   </div>
                                 </div>

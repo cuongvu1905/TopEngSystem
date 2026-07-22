@@ -298,7 +298,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                             onChange={() => handleMemberToggle(u.id)}
                           />
                           <label htmlFor={`modal-member-check-${u.id}`}>
-                            {u.name} ({u.employee_id || 'N/A'}) - {u.department_name || 'Chưa phân phòng'}
+                            {u.name} ({u.employee_id || 'N/A'}) - {translateDepartmentName(u.department_name, t)}
                           </label>
                         </div>
                         <select 
@@ -764,7 +764,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                                     }}
                                   />
                                   <label htmlFor={`task-assignee-check-${m.id}`} style={{ cursor: 'pointer', margin: 0, fontSize: '13px' }}>
-                                    {m.name} ({m.employee_id || 'N/A'}) - {m.department_name || 'Chưa phân phòng'} ({m.project_role || 'Member'})
+                                    {m.name} ({m.employee_id || 'N/A'}) - {translateDepartmentName(m.department_name, t)} ({m.project_role || 'Member'})
                                   </label>
                                 </div>
                               </div>

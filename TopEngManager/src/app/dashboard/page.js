@@ -167,9 +167,40 @@ const parseIssueDescription = (desc) => {
   };
 };
 
+
+const formatSystemRole = (role, t) => {
+  if (!role) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  const r = String(role);
+  if (r.includes('Admin') || r.includes('Quản trị viên')) return t('role.admin', 'QUẢN TRỊ VIÊN (ADMIN)');
+  if (r.includes('HR') || r.includes('Nhân sự')) return t('role.hr', 'NHÂN SỰ (HR)');
+  if (r.includes('Staff') || r.includes('Nhân viên')) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  if (r.includes('Team Leader')) return t('role.teamLeader', 'TEAM LEADER');
+  if (r.includes('Part Leader')) return t('role.partLeader', 'PART LEADER');
+  if (r.includes('Sales') || r.includes('Kinh doanh')) return t('role.sales', 'KINH DOANH (SALES)');
+  if (r.includes('BOD') || r.includes('Ban điều hành')) return t('role.bod', 'BAN ĐIỀU HÀNH (BOD)');
+  return r.toUpperCase();
+};
+
+
+const translateDepartmentName = (name, t) => {
+  if (!name || name === 'Chưa phân phòng') return t('dept.unassigned', 'Chưa phân phòng');
+  const n = String(name);
+  if (n.includes('Hành chính Nhân sự') || n === 'HR') return t('dept.hr', 'Phòng Hành chính Nhân sự (HR)');
+  if (n.includes('Phát triển Phần mềm') || n === 'R&D') return t('dept.rd', 'Phòng Phát triển Phần mềm (R&D)');
+  if (n.includes('Kinh doanh') || n === 'Sales') return t('dept.sales', 'Phòng Kinh doanh (Sales)');
+  if (n.includes('Kế toán Tài chính') || n.includes('Finance')) return t('dept.finance', 'Phòng Kế toán Tài chính');
+  if (n.includes('Truyền thông Marketing') || n.includes('Marketing')) return t('dept.marketing', 'Phòng Truyền thông Marketing');
+  if (n.includes('BOD TOPV') || n === 'BOD') return t('dept.bod', 'BOD TOPV');
+  if (n === 'Nhân sự 1') return t('dept.hr1', 'Nhân sự 1');
+  if (n === 'PC') return t('dept.pc', 'PC');
+  if (n === 'PC1') return t('dept.pc1', 'PC1');
+  if (n === 'PC2') return t('dept.pc2', 'PC2');
+  return n;
+};
+
 export default function Dashboard() {
   const { currentUser, projects, tasks, subtasks, documents, notifications, projectMembers, users, reloadAll, hasPermission } = useApp();
-  const { t } = useLanguage();
+  const { t, currentLang } = useLanguage();
   const router = useRouter();
 
   // Customization state
@@ -998,7 +1029,7 @@ export default function Dashboard() {
                           </td>
                           <td style={{ padding: '8px 12px', fontWeight: '600', color: '#334155', borderRight: '1px solid #cbd5e1' }}>{u.employee_id || u.id}</td>
                           <td style={{ padding: '8px 12px', fontWeight: '500', color: '#0f172a', borderRight: '1px solid #cbd5e1' }}>{u.name}</td>
-                          <td style={{ padding: '8px 12px', color: '#475569' }}>{u.department_name}</td>
+                          <td style={{ padding: '8px 12px', color: '#475569' }}>{translateDepartmentName(u.department_name, t)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1327,7 +1358,7 @@ export default function Dashboard() {
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--neutral-dark)' }}>{t('dashboard.overview', 'Giao diện Tổng quan')}</h1>
           <p style={{ fontSize: '13px', color: 'var(--neutral-muted)', marginTop: '2px' }}>
-            {t('dashboard.welcomePrefix', 'Xin chào, ')}<strong>{currentUser.name}</strong> ({currentUser.system_role}){t('dashboard.welcomeSuffix', '. Dưới đây là hoạt động hôm nay của bạn.')}
+            {t('dashboard.welcomePrefix', 'Xin chào, ')}<strong>{currentUser.name}</strong> ({formatSystemRole(currentUser.system_role, t)}){t('dashboard.welcomeSuffix', '. Dưới đây là hoạt động hôm nay của bạn.')}
           </p>
         </div>
         <div style={{ position: 'relative' }}>
