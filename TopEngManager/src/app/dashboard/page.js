@@ -64,6 +64,11 @@ const getReportSnippet = (content) => {
   if (!content) return 'Không có nội dung';
   try {
     const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) {
+      const texts = parsed.map(card => card.content).filter(Boolean);
+      const joined = texts.join(' | ');
+      return joined.length > 80 ? joined.slice(0, 80) + '...' : joined || 'Không có nội dung';
+    }
     if (parsed && typeof parsed === 'object') {
       const text = parsed.text || parsed.hientrang || parsed.workDone || parsed.content || '';
       return text.length > 80 ? text.slice(0, 80) + '...' : text || 'Không có nội dung';
