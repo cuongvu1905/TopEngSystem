@@ -623,7 +623,7 @@ export default function ProjectDetail({ params }) {
         const parts = t.assignee.split('@');
         for (let i = 1; i < parts.length; i++) {
           const part = parts[i];
-          const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
+          const matchedUser = (users || []).find(u => u && u.name && part.toLowerCase().startsWith(u.name.toLowerCase()));
           if (matchedUser && matchedUser.id !== currentUser.id) {
             notifiedUserIds.add(matchedUser.id);
           }
@@ -651,7 +651,7 @@ export default function ProjectDetail({ params }) {
     const parts = assigneeText.split('@');
     for (let i = 1; i < parts.length; i++) {
       const part = parts[i];
-      const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
+      const matchedUser = (users || []).find(u => u && u.name && part.toLowerCase().startsWith(u.name.toLowerCase()));
       if (matchedUser && matchedUser.id !== currentUser.id) {
         notifiedUserIds.add(matchedUser.id);
       }

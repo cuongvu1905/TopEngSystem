@@ -11,7 +11,7 @@ import { getSwal } from '@/utils/swal';
 
 // Helper to check if a user is mentioned in an issue
 const isMentionedInIssue = (issue, user, users) => {
-  if (!user) return false;
+  if (!user || !user.name) return false;
   if (issue.assignee_id === user.id) return true;
   if (!issue.description) return false;
   try {
@@ -20,7 +20,7 @@ const isMentionedInIssue = (issue, user, users) => {
     const parts = assigneesText.split('@');
     for (let i = 1; i < parts.length; i++) {
       const part = parts[i];
-      const matchedUser = users.find(u => part.toLowerCase().startsWith(u.name.toLowerCase()));
+      const matchedUser = (users || []).find(u => u && u.name && part.toLowerCase().startsWith(u.name.toLowerCase()));
       if (matchedUser && matchedUser.id === user.id) {
         return true;
       }
