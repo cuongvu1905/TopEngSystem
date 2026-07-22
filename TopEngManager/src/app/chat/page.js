@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
 import { getSwal } from '@/utils/swal';
@@ -22,8 +23,29 @@ const Swal = {
   }
 };
 
+
+const formatRoomName = (name, t) => {
+  if (!name) return '';
+  const n = String(name);
+  if (n === 'Kênh thảo luận toàn công ty') return t('chat.globalRoomName', 'Kênh thảo luận toàn công ty');
+  if (n.startsWith('Trò chuyện với ')) {
+    const userName = n.replace('Trò chuyện với ', '');
+    return t('chat.chatWithPrefix', 'Trò chuyện với {name}').replace('{name}', userName);
+  }
+  return n;
+};
+
+const formatRoomDesc = (room, t) => {
+  if (!room) return '';
+  if (room.type === 'global') return t('chat.globalRoomDesc', 'Kênh thảo luận công ty chung.');
+  if (room.type === 'project') return t('chat.projectRoomDesc', 'Kênh dự án nội bộ.');
+  if (room.type === 'direct') return t('chat.directRoomDesc', 'Phòng chat riêng tư 1-1.');
+  return '';
+};
+
 function Chat() {
   const { currentUser, projects, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
+  const { t } = useLanguage();
 
   const isAdmin = currentUser?.system_role?.includes("Admin") || false;
   const isMemberOfProject = (projId) => {
@@ -154,14 +176,14 @@ function Chat() {
     const shouldConfirm = hasPermission('chat_confirm_send');
     if (shouldConfirm) {
       const confirmResult = await Swal.fire({
-        title: 'Xác nhận gửi',
-        text: "Bạn có chắc chắn muốn gửi tin nhắn này?",
+        title: t('chat.confirmSendTitle', 'Xác nhận gửi'),
+        text: t('chat.confirmSendText', 'Bạn có chắc chắn muốn gửi tin nhắn này?'),
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Gửi',
-        cancelButtonText: 'Hủy'
+        confirmButtonText: t('common.confirm', 'Đồng ý'),
+        cancelButtonText: t('header.cancel', 'Hủy')
       });
       if (!confirmResult.isConfirmed) {
         return;
@@ -174,13 +196,13 @@ function Chat() {
       if (roomType === 'global') {
         const canTagAll = hasPermission('chat_tag_all_global');
         if (!canTagAll) {
-          Swal.fire({ icon: 'error', title: 'Quyền hạn', text: "Bạn không có quyền tag @all trong phòng chat chung doanh nghiệp." });
+          Swal.fire({ icon: 'error', title: t('team.permissionsTitle', 'Quyền hạn'), text: t('chat.noTagAllGlobalPermission', 'Bạn không có quyền tag @all trong phòng chat chung doanh nghiệp.') });
           return;
         }
       } else if (roomType === 'project') {
         const canTagAll = hasPermission('chat_tag_all_project');
         if (!canTagAll) {
-          Swal.fire({ icon: 'error', title: 'Quyền hạn', text: "Bạn không có quyền tag @all trong phòng chat dự án." });
+          Swal.fire({ icon: 'error', title: t('team.permissionsTitle', 'Quyền hạn'), text: t('chat.noTagAllProjectPermission', 'Bạn không có quyền tag @all trong phòng chat dự án.') });
           return;
         }
       }
@@ -287,7 +309,7 @@ function Chat() {
     await db.sendMessage({
       room_id: activeChatRoomId,
       sender_id: currentUser.id,
-      content: `Đã gửi tệp đính kèm: ${file.name}`,
+      content: t('chat.sentAttachmentMsg', 'Đã gửi tệp đính kèm: {filename}').replace('{filename}', file.name),
       attachments: [{ file_url: file.name, file_type: file.type }]
     });
     await loadChatMessages();
@@ -306,19 +328,19 @@ function Chat() {
     });
 
     const { value: targetId } = await Swal.fire({
-      title: 'Nhắn tin trực tiếp',
+      title: t('chat.directMessageTitle', 'Nhắn tin trực tiếp'),
       input: 'select',
       inputOptions: inputOptions,
-      inputPlaceholder: 'Chọn người dùng muốn trò chuyện',
+      inputPlaceholder: t('chat.selectUserPlaceholder', 'Chọn người dùng muốn trò chuyện'),
       showCancelButton: true,
-      confirmButtonText: 'Đồng ý',
-      cancelButtonText: 'Hủy'
+      confirmButtonText: t('common.confirm', 'Đồng ý'),
+      cancelButtonText: t('header.cancel', 'Hủy')
     });
     if (!targetId) return;
 
     const targetUser = others.find(o => o.id === targetId);
     if (!targetUser) {
-      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Người dùng không hợp lệ!" });
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('chat.invalidUser', 'Người dùng không hợp lệ!') });
       return;
     }
 
@@ -328,7 +350,7 @@ function Chat() {
   };
 
   const handleDownloadDoc = (att) => {
-    Swal.fire({ icon: 'info', title: 'Đang tải file', text: `Đang tải file: ${att.file_url}` });
+    Swal.fire({ icon: 'info', title: t('chat.downloadingFileTitle', 'Đang tải file'), text: t('chat.downloadingFileText', 'Đang tải file: {filename}').replace('{filename}', att.file_url) });
   };
 
   return (
@@ -336,24 +358,24 @@ function Chat() {
       <div className="chat-layout" style={{ height: '100%' }}>
         <div className="chat-rooms-sidebar">
         <div className="chat-rooms-search">
-          <input type="text" placeholder="Tìm kiếm phòng chat..." />
+          <input type="text" placeholder={t('chat.searchPlaceholder', 'Tìm kiếm phòng chat...')} />
         </div>
         <div className="chat-rooms-section">
           <div>
-            <div className="chat-section-header"><span>Kênh Thảo Luận</span></div>
+            <div className="chat-section-header"><span>{t('chat.discussionChannels', 'Kênh Thảo Luận')}</span></div>
             <div className="chat-room-list">
               {allowedRooms
                 .filter(r => r.type === "global" || r.type === "project")
                 .map(r => (
                   <div className={`chat-room-item ${r.id === activeChatRoomId ? 'active' : ''}`} onClick={() => setActiveChatRoomId(r.id)} key={r.id}>
-                    <span>{r.name}</span>
+                    <span>{formatRoomName(r.name, t)}</span>
                   </div>
                 ))}
             </div>
           </div>
           <div>
             <div className="chat-section-header">
-              <span>Trực Tiếp</span>
+              <span>{t('chat.directMessages', 'Trực Tiếp')}</span>
               <button className="btn-add-room" onClick={handleAddDirectRoom}><i className="fa-solid fa-plus"></i></button>
             </div>
             <div className="chat-room-list">
@@ -361,7 +383,7 @@ function Chat() {
                 .filter(r => r.type === "direct")
                 .map(r => (
                   <div className={`chat-room-item ${r.id === activeChatRoomId ? 'active' : ''}`} onClick={() => setActiveChatRoomId(r.id)} key={r.id}>
-                    <span>{r.name}</span>
+                    <span>{formatRoomName(r.name, t)}</span>
                   </div>
                 ))}
             </div>
@@ -372,16 +394,14 @@ function Chat() {
       <div className="chat-main-area">
         <div className="chat-area-header">
           <div className="chat-header-info">
-            <h3>{activeRoomObj ? activeRoomObj.name : 'Vui lòng chọn phòng chat'}</h3>
+            <h3>{activeRoomObj ? formatRoomName(activeRoomObj.name, t) : t('chat.pleaseSelectRoom', 'Vui lòng chọn phòng chat')}</h3>
             <p className="text-muted">
-              {activeRoomObj?.type === "global" && "Kênh thảo luận công ty chung."}
-              {activeRoomObj?.type === "project" && "Kênh dự án nội bộ."}
-              {activeRoomObj?.type === "direct" && "Phòng chat riêng tư 1-1."}
+              {formatRoomDesc(activeRoomObj, t)}
             </p>
           </div>
           <div className="chat-header-actions">
             <div className="chat-search-box">
-              <input type="text" value={chatSearchQuery} onChange={(e) => setChatSearchQuery(e.target.value)} placeholder="Tìm tin nhắn..." />
+              <input type="text" value={chatSearchQuery} onChange={(e) => setChatSearchQuery(e.target.value)} placeholder={t('chat.searchMessagesPlaceholder', 'Tìm tin nhắn...')} />
             </div>
           </div>
         </div>
@@ -426,7 +446,7 @@ function Chat() {
               <div className="typing-dot"></div>
               <div className="typing-dot"></div>
               <div className="typing-dot"></div>
-              <span style={{ fontSize: '10px', color: 'var(--neutral-muted)', marginLeft: '6px' }}>{typingUser} đang gõ...</span>
+              <span style={{ fontSize: '10px', color: 'var(--neutral-muted)', marginLeft: '6px' }}>{typingUser} {t('chat.isTyping', 'đang gõ...')}</span>
             </div>
           )}
         </div>
@@ -438,7 +458,7 @@ function Chat() {
               value={chatInput} 
               onChange={handleChatInputChange} 
               onKeyDown={handleKeyDown}
-              placeholder="Nhập tin nhắn... Gõ @ nhắc tên" 
+              placeholder={t('chat.inputPlaceholder', 'Nhập tin nhắn... Gõ @ nhắc tên')} 
               rows="1"
             />
             {mentionQuery !== null && (

@@ -91,14 +91,14 @@ const renderReportContentVisual = (content, projects) => {
               <div 
                 key={card.id || idx} 
                 style={{ 
-                  border: '1px solid #cbd5e1', 
+                  border: '1px solid var(--neutral-border)', 
                   borderRadius: '6px', 
                   padding: '10px 12px', 
-                  backgroundColor: '#f8fafc',
+                  backgroundColor: 'var(--neutral-bg-card)',
                   marginBottom: '8px'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', borderBottom: '1px dashed #e2e8f0', paddingBottom: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', borderBottom: '1px dashed var(--neutral-border)', paddingBottom: '4px' }}>
                   <span style={{ fontSize: '11px', fontWeight: '700', color: '#0f766e', backgroundColor: '#ccfbf1', padding: '1px 5px', borderRadius: '4px' }}>
                     <i className="fa-regular fa-clock"></i> {card.startTime} - {card.endTime}
                   </span>
@@ -106,7 +106,7 @@ const renderReportContentVisual = (content, projects) => {
                     {projName}
                   </span>
                 </div>
-                <div style={{ fontSize: '12.5px', color: '#334155', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                <div style={{ fontSize: '12.5px', color: 'var(--neutral-dark)', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
                   {card.content}
                 </div>
                 {card.fileUrl && (
@@ -125,7 +125,7 @@ const renderReportContentVisual = (content, projects) => {
     }
   } catch (e) {}
   
-  return <div style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineHeight: '1.5', color: '#334155' }}>{content}</div>;
+  return <div style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineHeight: '1.5', color: 'var(--neutral-dark)' }}>{content}</div>;
 };
 
 
@@ -1071,7 +1071,7 @@ export default function Dashboard() {
           align-items: center;
           gap: 8px;
           padding: 8px 16px;
-          background: #ffffff;
+          background: var(--neutral-bg-card);
           border: 1.5px solid var(--neutral-border);
           border-radius: 8px;
           font-weight: 600;
@@ -1083,13 +1083,13 @@ export default function Dashboard() {
         }
         .config-btn:hover {
           background: var(--neutral-bg-hover);
-          border-color: #cbd5e1;
+          border-color: var(--neutral-border);
         }
         .config-dropdown {
           position: absolute;
           top: 45px;
           right: 0;
-          background: #ffffff;
+          background: var(--neutral-bg-card);
           border: 1.5px solid var(--neutral-border);
           border-radius: 8px;
           box-shadow: var(--shadow-lg);
@@ -1114,8 +1114,8 @@ export default function Dashboard() {
         }
         
         .stat-card-clickable {
-          background: #ffffff;
-          border: 1.5px solid #cbd5e1;
+          background: var(--neutral-bg-card);
+          border: 1.5px solid var(--neutral-border);
           border-radius: 12px;
           padding: 20px;
           display: flex;
@@ -1138,9 +1138,9 @@ export default function Dashboard() {
           gap: 24px;
         }
         .widget-box {
-          border: 1.5px solid #cbd5e1;
+          border: 1.5px solid var(--neutral-border);
           border-radius: 12px;
-          background: #ffffff;
+          background: var(--neutral-bg-card);
           display: flex;
           flex-direction: column;
           height: 400px;
@@ -1154,18 +1154,18 @@ export default function Dashboard() {
         }
         .widget-box-header {
           padding: 12px 20px;
-          border-bottom: 1.5px solid #cbd5e1;
-          background: #f8fafc;
+          border-bottom: 1.5px solid var(--neutral-border);
+          background: var(--neutral-bg-card);
           cursor: pointer;
           transition: background 0.15s ease;
         }
         .widget-box-header:hover {
-          background: #f1f5f9;
+          background: var(--neutral-bg-hover);
         }
         .widget-box-title {
           font-size: 15px;
           font-weight: 750;
-          color: #0f172a;
+          color: var(--neutral-dark);
           text-align: center;
           text-decoration: underline;
           text-underline-offset: 4px;
@@ -1196,9 +1196,9 @@ export default function Dashboard() {
         /* Item Card Layouts */
         .item-row-card {
           padding: 14px;
-          border: 1.5px solid #e2e8f0;
+          border: 1.5px solid var(--neutral-border);
           border-radius: 8px;
-          background: #ffffff;
+          background: var(--neutral-bg-card);
           cursor: pointer;
           transition: var(--transition-fast);
           display: flex;
@@ -1207,7 +1207,7 @@ export default function Dashboard() {
           box-shadow: 0 1px 2px rgba(0,0,0,0.01);
         }
         .item-row-card:hover {
-          background: #f8fafc;
+          background: var(--neutral-bg-hover);
           border-color: var(--primary-color);
           transform: translateY(-2px);
           box-shadow: var(--shadow-sm);
@@ -1222,10 +1222,10 @@ export default function Dashboard() {
         .report-grid-card {
           height: 100px;
           max-height: 100px;
-          border: 1.5px solid #e2e8f0;
+          border: 1.5px solid var(--neutral-border);
           border-radius: 8px;
           padding: 10px 12px;
-          background: #ffffff;
+          background: var(--neutral-bg-card);
           display: flex;
           flex-direction: column;
           gap: 4px;
@@ -1233,14 +1233,14 @@ export default function Dashboard() {
           transition: var(--transition-fast);
         }
         .report-grid-card:hover {
-          background: #f8fafc;
+          background: var(--neutral-bg-hover);
           border-color: var(--primary-color);
           transform: translateY(-2px);
           box-shadow: var(--shadow-sm);
         }
         .report-snippet {
           font-size: 12px;
-          color: #475569;
+          color: var(--neutral-muted);
           overflow: hidden;
           text-overflow: ellipsis;
           display: -webkit-box;
@@ -1268,15 +1268,15 @@ export default function Dashboard() {
         .split-left-pane-25 {
           width: 25vw;
           flex: 0 0 25vw;
-          border-right: 1.5px solid #cbd5e1;
-          background-color: #f8fafc;
+          border-right: 1.5px solid var(--neutral-border);
+          background-color: var(--neutral-bg-card);
           display: flex;
           flex-direction: column;
           overflow: hidden;
         }
         .split-right-pane-50 {
           flex: 1;
-          background-color: #ffffff;
+          background-color: var(--neutral-bg-card);
           display: flex;
           flex-direction: column;
           overflow-y: auto;
@@ -1285,8 +1285,8 @@ export default function Dashboard() {
         .split-card-item {
           padding: 12px;
           border-radius: 8px;
-          border: 1.5px solid #e2e8f0;
-          background: #ffffff;
+          border: 1.5px solid var(--neutral-border);
+          background: var(--neutral-bg-card);
           cursor: pointer;
           transition: var(--transition-fast);
         }
@@ -1297,7 +1297,7 @@ export default function Dashboard() {
         }
         .split-card-item:hover:not(.active) {
           background: var(--neutral-bg-hover);
-          border-color: #cbd5e1;
+          border-color: var(--neutral-border);
         }
         
         /* Search pill in popup */
@@ -1305,10 +1305,10 @@ export default function Dashboard() {
           width: 100%;
           padding: 8px 16px 8px 36px;
           border-radius: 24px;
-          border: 1.5px solid #cbd5e1;
+          border: 1.5px solid var(--neutral-border);
           font-size: 13px;
           outline: none;
-          background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat 12px center;
+          background: var(--neutral-bg-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat 12px center;
           background-size: 16px 16px;
           transition: border-color 0.15s ease;
         }
@@ -1319,10 +1319,11 @@ export default function Dashboard() {
           width: 100%;
           padding: 6px 10px;
           border-radius: 6px;
-          border: 1.5px solid #cbd5e1;
+          border: 1.5px solid var(--neutral-border);
           font-size: 12.5px;
           outline: none;
-          background: #ffffff;
+          background: var(--neutral-bg-card);
+          color: var(--neutral-dark);
           cursor: pointer;
         }
         .rectangular-filter-select:focus {
@@ -1725,8 +1726,8 @@ export default function Dashboard() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="modal-header" style={{ borderBottom: '1.5px solid #e2e8f0', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+            <div className="modal-header" style={{ borderBottom: '1.5px solid var(--neutral-border)', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--neutral-bg-card)' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
                 {activeDetailPopup === 'issues' && t('dashboard.mentionedIssueDetail', 'Chi tiết vướng mắc được Mention')}
                 {activeDetailPopup === 'tasks' && t('dashboard.assignedTaskDetail', 'Chi tiết công việc được giao')}
                 {activeDetailPopup === 'projects' && t('dashboard.joinedProjectDetail', 'Chi tiết dự án tham gia')}
@@ -1741,7 +1742,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
               
               {/* Left Pane: Master List (25vw width) */}
-              <div className="split-left-pane-25" style={{ padding: '16px', borderRight: '1.5px solid #cbd5e1', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="split-left-pane-25" style={{ padding: '16px', borderRight: '1.5px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 
                 {/* Daily reports checker activation button */}
                 {activeDetailPopup === 'reports' && (currentUser?.system_role === 'Team Leader' || currentUser?.system_role?.includes('Admin') || currentUser?.system_role?.includes('BOD') || currentUser?.system_role?.includes('HR') || currentUser?.system_role?.includes('Nhân sự') || currentUser?.system_role?.includes('Ban điều hành')) && (
@@ -1913,7 +1914,7 @@ export default function Dashboard() {
                           }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--neutral-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
                               {cardTitle}
                             </span>
                             <span style={{ fontSize: '9.5px', color: cardBadgeColor, fontWeight: 'bold' }}>
@@ -1990,7 +1991,7 @@ export default function Dashboard() {
 
                       <div>
                         <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>{t('issues.detailedDescription', 'Mô tả chi tiết')}</label>
-                        <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
+                        <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'var(--neutral-bg-main)', border: '1px solid var(--neutral-border)', fontSize: '13px', color: 'var(--neutral-dark)', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                           {(() => {
                             const parsed = parseIssueDescription(selectedIssueDetail.issue.description);
                             if (parsed.hientrang || parsed.nguyennhan || parsed.huonggiaiquyet || parsed.ketqua) {
@@ -2059,8 +2060,8 @@ export default function Dashboard() {
 
                                 return (
                                   <tr key={idx}>
-                                    <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', fontWeight: '500' }}>{t.name || t.title || ''}</td>
-                                    <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1' }}>{getPerformerForTask(t)}</td>
+                                    <td style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', color: 'var(--neutral-dark)', fontWeight: '500' }}>{t.name || t.title || ''}</td>
+                                    <td style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', color: 'var(--neutral-dark)' }}>{getPerformerForTask(t)}</td>
                                     <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1' }}>{formatDate(t.deadline || t.dueDate)}</td>
                                     <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
                                       <span style={{ 
@@ -2085,8 +2086,8 @@ export default function Dashboard() {
                       )}
 
                       {/* Comments inside Issue */}
-                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
-                        <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '8px', color: '#475569' }}>
+                      <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '12px' }}>
+                        <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '8px', color: 'var(--neutral-dark)' }}>
                           {t('issues.discussionComments', 'Bình luận trao đổi')} ({selectedIssueDetail.comments?.length || 0})
                         </label>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '150px', overflowY: 'auto', marginBottom: '12px' }}>
@@ -2096,16 +2097,16 @@ export default function Dashboard() {
                             selectedIssueDetail.comments.map(c => {
                               const cColor = users.find(u => u.id === c.user_id)?.color || '#3b82f6';
                               return (
-                                <div key={c.id} style={{ display: 'flex', gap: '8px', backgroundColor: '#f8fafc', padding: '8px', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                                <div key={c.id} style={{ display: 'flex', gap: '8px', backgroundColor: 'var(--neutral-bg-card)', padding: '8px', borderRadius: '6px', border: '1px solid var(--neutral-border)' }}>
                                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: cColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px', flexShrink: 0 }}>
                                     {c.user_name?.split(' ').pop().charAt(0)}
                                   </div>
                                   <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontSize: '11px' }}>
-                                      <strong style={{ color: '#0f172a' }}>{c.user_name}</strong>
+                                      <strong style={{ color: 'var(--neutral-dark)' }}>{c.user_name}</strong>
                                       <span style={{ color: 'var(--neutral-muted)' }}>{new Date(c.created_at).toLocaleTimeString('vi-VN')}</span>
                                     </div>
-                                    <p style={{ fontSize: '12.5px', color: '#475569', margin: 0 }}>{c.content}</p>
+                                    <p style={{ fontSize: '12.5px', color: 'var(--neutral-dark)', margin: 0 }}>{c.content}</p>
                                   </div>
                                 </div>
                               );
@@ -2118,7 +2119,7 @@ export default function Dashboard() {
                             placeholder={t('issues.commentPlaceholder', 'Nhập câu trả lời hoặc thảo luận...')} 
                             value={newCommentText} 
                             onChange={(e) => setNewCommentText(e.target.value)} 
-                            style={{ flex: 1, padding: '6px 12px', borderRadius: '6px', border: '1.5px solid #cbd5e1', fontSize: '12.5px', outline: 'none' }}
+                            style={{ flex: 1, padding: '6px 12px', borderRadius: '6px', border: '1.5px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '12.5px', outline: 'none' }}
                             required
                           />
                           <button type="submit" className="btn btn-primary btn-sm">{t('common.send', 'Gửi')}</button>
@@ -2126,7 +2127,7 @@ export default function Dashboard() {
                       </div>
 
                       {/* Metadata */}
-                      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
+                      <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
                         <div>{t('issues.priority', 'Độ ưu tiên:')} <strong>{selectedIssueDetail.issue.priority}</strong></div>
                         <div>{t('issues.type', 'Loại issue:')} <strong>{selectedIssueDetail.issue.type}</strong></div>
                         <div>{t('issues.creator', 'Người báo cáo:')} <strong>{users.find(u => u.id === selectedIssueDetail.issue.reporter_id)?.name || 'N/A'}</strong></div>
@@ -2176,9 +2177,9 @@ export default function Dashboard() {
                                 </Link>
                               )}
                             </div>
-                            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '6px 0 0 0' }}>
+                            <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)', margin: '6px 0 0 0' }}>
                               {taskProj ? (
-                                <Link href={`/projects/${taskProj.id}?taskId=${task.id}`} style={{ color: '#0f172a', textDecoration: 'none' }} title="Xem trong dự án">
+                                <Link href={`/projects/${taskProj.id}?taskId=${task.id}`} style={{ color: 'var(--neutral-dark)', textDecoration: 'none' }} title="Xem trong dự án">
                                   {task.title}
                                 </Link>
                               ) : (
@@ -2190,7 +2191,7 @@ export default function Dashboard() {
                         </div>
 
                         <div>
-                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>{t('tasks.description', 'Mô tả công việc')}</label>
+                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: 'var(--neutral-muted)' }}>{t('tasks.description', 'Mô tả công việc')}</label>
                           <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                             {(() => {
                               try {
@@ -2206,14 +2207,14 @@ export default function Dashboard() {
 
                         {taskSubtasks.length > 0 && (
                           <div>
-                            <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: '#475569' }}>
+                            <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: 'var(--neutral-muted)' }}>
                               {t('tasks.subtaskChecklist', 'Checklist công việc phụ')} ({taskSubtasks.filter(st => st.status === 'Done').length}/{taskSubtasks.length})
                             </label>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                               {taskSubtasks.map(st => (
-                                <div key={st.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', padding: '6px 8px', border: '1px solid #f1f5f9', borderRadius: '4px' }}>
+                                <div key={st.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', padding: '6px 8px', border: '1px solid var(--neutral-border)', borderRadius: '4px' }}>
                                   <input type="checkbox" checked={st.status === 'Done'} readOnly style={{ cursor: 'default' }} />
-                                  <span style={{ textDecoration: st.status === 'Done' ? 'line-through' : 'none', color: st.status === 'Done' ? 'var(--neutral-muted)' : '#334155' }}>
+                                  <span style={{ textDecoration: st.status === 'Done' ? 'line-through' : 'none', color: st.status === 'Done' ? 'var(--neutral-muted)' : 'var(--neutral-dark)' }}>
                                     {st.title}
                                   </span>
                                 </div>
@@ -2222,7 +2223,7 @@ export default function Dashboard() {
                           </div>
                         )}
 
-                        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
+                        <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
                           <div>Độ ưu tiên: <strong>{task.priority}</strong></div>
                           <div>Hạn chót: <strong>{task.due_date ? new Date(task.due_date).toLocaleDateString('vi-VN') : 'N/A'}</strong></div>
                           <div>Người nhận việc: <strong>{users.find(u => u.id === task.assignee_id)?.name || 'Chưa gán'}</strong></div>
@@ -2250,32 +2251,32 @@ export default function Dashboard() {
                             <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
                               KEY: {proj.project_key}
                             </span>
-                            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '6px 0 0 0' }}>{proj.name}</h2>
+                            <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)', margin: '6px 0 0 0' }}>{proj.name}</h2>
                           </div>
                           <span className="badge badge-warning">{(proj.status === 'Thực thi' || proj.status === 'Ongoing') ? 'ONGOING' : (proj.status === 'Giám sát' || proj.status === 'Monitoring') ? 'MONITORING' : (proj.status === 'Kết thúc' || proj.status === 'Finished') ? 'FINISHED' : (proj.status ? proj.status.toUpperCase() : 'ONGOING')}</span>
                         </div>
 
                         <div>
-                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>{t('projects.description', 'Mô tả dự án')}</label>
-                          <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
+                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: 'var(--neutral-muted)' }}>{t('projects.description', 'Mô tả dự án')}</label>
+                          <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'var(--neutral-bg-main)', border: '1px solid var(--neutral-border)', fontSize: '13px', color: 'var(--neutral-dark)', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                             {proj.description || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>{t('projects.noDescription', 'Không có mô tả chi tiết dự án.')}</span>}
                           </div>
                         </div>
 
                         <div>
-                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: '#475569' }}>
+                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: 'var(--neutral-muted)' }}>
                             {t('projects.joinedMembers', 'Thành viên tham gia')} ({members.length})
                           </label>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {members.map((m, idx) => (
-                              <span key={idx} style={{ fontSize: '12px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: '16px', color: '#334155' }}>
+                              <span key={idx} style={{ fontSize: '12px', backgroundColor: 'var(--neutral-bg-hover)', border: '1px solid var(--neutral-border)', padding: '4px 8px', borderRadius: '16px', color: 'var(--neutral-dark)' }}>
                                 {m.name} <em>({m.role})</em>
                               </span>
                             ))}
                           </div>
                         </div>
 
-                        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: '12px', color: 'var(--neutral-muted)' }}>
                             {t('projects.endDate', 'Hạn kết thúc:')} <strong>{proj.end_date ? new Date(proj.end_date).toLocaleDateString('vi-VN') : t('projects.noEndDate', 'Chưa định hạn')}</strong>
                           </span>
@@ -2301,13 +2302,13 @@ export default function Dashboard() {
                             {selectedReportForPopup.user_name.split(' ').pop().charAt(0)}
                           </div>
                           <div>
-                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>{selectedReportForPopup.user_name}</h3>
+                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--neutral-dark)' }}>{selectedReportForPopup.user_name}</h3>
                             <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', fontWeight: '600' }}>{selectedReportForPopup.user_role}</span>
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', display: 'block' }}>{t('reports.reportDateLabel', 'Báo cáo ngày:')}</span>
-                          <strong style={{ fontSize: '12px', color: '#334155' }}>
+                          <strong style={{ fontSize: '12px', color: 'var(--neutral-dark)' }}>
                             {new Date(selectedReportForPopup.created_at).toLocaleDateString('vi-VN')}
                           </strong>
                         </div>
@@ -2327,14 +2328,14 @@ export default function Dashboard() {
                       </div>
 
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontWeight: '700', fontSize: '12.5px', display: 'block', marginBottom: '6px', color: '#475569' }}>{t('reports.reportContentLabel', 'Nội dung báo cáo:')}</label>
-                        <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.6', backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', minHeight: '120px' }}>
+                        <label style={{ fontWeight: '700', fontSize: '12.5px', display: 'block', marginBottom: '6px', color: 'var(--neutral-dark)' }}>{t('reports.reportContentLabel', 'Nội dung báo cáo:')}</label>
+                        <div style={{ fontSize: '13px', color: 'var(--neutral-dark)', lineHeight: '1.6', backgroundColor: 'var(--neutral-bg-card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--neutral-border)', minHeight: '120px' }}>
                           {renderReportContentVisual(selectedReportForPopup.content, projects)}
                         </div>
                       </div>
 
                       {selectedReportForPopup.file_url && (
-                        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', display: 'flex', alignItems: 'center' }}>
+                        <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '10px', display: 'flex', alignItems: 'center' }}>
                           <a 
                             href={selectedReportForPopup.file_url} 
                             target="_blank" 
@@ -2409,7 +2410,7 @@ export default function Dashboard() {
             </div>
 
             {/* Modal Footer */}
-            <div className="modal-footer" style={{ borderTop: '1.5px solid #e2e8f0', padding: '12px 24px', display: 'flex', justifyContent: 'flex-end', backgroundColor: '#f8fafc' }}>
+            <div className="modal-footer" style={{ borderTop: '1.5px solid var(--neutral-border)', padding: '12px 24px', display: 'flex', justifyContent: 'flex-end', backgroundColor: 'var(--neutral-bg-card)' }}>
               <button className="btn btn-secondary" onClick={() => setActiveDetailPopup(null)}>{t('common.close', 'Đóng')}</button>
             </div>
           </div>

@@ -152,6 +152,35 @@ export default function Header() {
   const { currentLang, changeLanguage, languages, currentLanguageObj, t } = useLanguage();
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
+
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        setIsDarkMode(true);
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        setIsDarkMode(false);
+        document.documentElement.removeAttribute('data-theme');
+      }
+    } catch (e) {}
+  }, []);
+
+  const toggleDarkMode = () => {
+    const nextDark = !isDarkMode;
+    setIsDarkMode(nextDark);
+    try {
+      if (nextDark) {
+        localStorage.setItem('theme', 'dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        localStorage.setItem('theme', 'light');
+        document.documentElement.removeAttribute('data-theme');
+      }
+    } catch (e) {}
+  };
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -630,6 +659,21 @@ export default function Header() {
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
                   <i className="fa-solid fa-key"></i> {t('header.changePassword', 'Đổi mật khẩu')}
+                </button>
+                <button 
+                  onClick={toggleDarkMode} 
+                  className="btn btn-secondary btn-sm" 
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  {isDarkMode ? (
+                    <>
+                      <i className="fa-solid fa-sun" style={{ color: '#fbbf24' }}></i> {t('header.lightMode', 'Chế độ sáng')}
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-moon"></i> {t('header.darkMode', 'Chế độ tối')}
+                    </>
+                  )}
                 </button>
                 <button 
                   onClick={handleLogout} 

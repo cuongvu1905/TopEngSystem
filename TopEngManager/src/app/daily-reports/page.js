@@ -50,8 +50,8 @@ const formatReportContentHtml = (content, projects) => {
           ? `<div style="margin-top: 6px;"><a href="${card.fileUrl}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 12px;"><i class="fa-solid fa-paperclip"></i> ${card.fileName || 'Tệp đính kèm'}</a></div>`
           : '';
         return `
-          <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 12px; background-color: #f8fafc; text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px;">
+          <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 12px; background-color: var(--neutral-bg-card); text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,0.02); color: var(--neutral-dark);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed var(--neutral-border); padding-bottom: 4px;">
               <span style="font-size: 11.5px; font-weight: 700; color: #0f766e; background-color: #ccfbf1; padding: 2px 6px; border-radius: 4px;">
                 <i class="fa-regular fa-clock"></i> ${card.startTime} - ${card.endTime}
               </span>
@@ -59,7 +59,7 @@ const formatReportContentHtml = (content, projects) => {
                 ${projName}
               </span>
             </div>
-            <div style="font-size: 13px; color: #334155; white-space: pre-wrap; line-height: 1.5;">${card.content}</div>
+            <div style="font-size: 13px; color: var(--neutral-dark); white-space: pre-wrap; line-height: 1.5;">${card.content}</div>
             ${fileHtml}
           </div>
         `;
@@ -68,7 +68,7 @@ const formatReportContentHtml = (content, projects) => {
     }
   } catch (e) {}
 
-  return `<div style="text-align: left; background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; white-space: pre-wrap; font-size: 13.5px; line-height: 1.6;">${content}</div>`;
+  return `<div style="text-align: left; background-color: var(--neutral-bg-card); padding: 12px; border-radius: 6px; border: 1px solid var(--neutral-border); white-space: pre-wrap; font-size: 13.5px; line-height: 1.6; color: var(--neutral-dark);">${content}</div>`;
 };
 
 export default function DailyReportsPage() {
@@ -348,9 +348,9 @@ export default function DailyReportsPage() {
 
       {/* Main write daily report form centered */}
       <div style={{ width: '100%', maxWidth: '100%', margin: '0 auto' }}>
-        <div className="card" style={{ padding: '24px', borderRadius: '8px', border: '1px solid var(--neutral-border)', backgroundColor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+        <div className="card" style={{ padding: '24px', borderRadius: '8px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--neutral-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="fa-solid fa-pen-nib" style={{ color: 'var(--primary-color)' }}></i>
               {t('reports.createDailyReport', 'Viết báo cáo')}
             </h3>
@@ -367,7 +367,7 @@ export default function DailyReportsPage() {
                   outline: 'none', 
                   fontSize: '13px', 
                   fontWeight: '500',
-                  color: '#334155'
+                  color: 'var(--neutral-dark)', backgroundColor: 'var(--neutral-bg-card)', border: '1px solid var(--neutral-border)'
                 }} 
               />
             </div>
@@ -378,11 +378,11 @@ export default function DailyReportsPage() {
                 <div 
                   key={card.id} 
                   style={{ 
-                    border: '1.5px solid #0f172a', 
+                    border: '1.5px solid var(--neutral-border)', 
                     borderRadius: '4px', 
                     padding: '20px', 
                     position: 'relative',
-                    backgroundColor: '#fff',
+                    backgroundColor: 'var(--neutral-bg-card)',
                     display: 'flex',
                     gap: '24px'
                   }}
@@ -412,7 +412,7 @@ export default function DailyReportsPage() {
 
                   {/* Left Column: Content Textarea */}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ display: 'block', fontSize: '14.5px', fontWeight: '600', color: '#1e293b' }}>
+                    <label style={{ display: 'block', fontSize: '14.5px', fontWeight: '600', color: 'var(--neutral-dark)' }}>
                       {t('reports.content', 'Nội dung')} <span style={{ color: 'red' }}>*</span>
                     </label>
                     <textarea
@@ -425,7 +425,9 @@ export default function DailyReportsPage() {
                         width: '100%', 
                         padding: '12px', 
                         borderRadius: '4px', 
-                        border: '1px solid #94a3b8', 
+                        border: '1px solid var(--neutral-border)', 
+                        backgroundColor: 'var(--neutral-bg-card)',
+                        color: 'var(--neutral-dark)',
                         outline: 'none', 
                         resize: 'vertical', 
                         fontSize: '14px', 
@@ -439,21 +441,21 @@ export default function DailyReportsPage() {
                     
                     {/* Time fields */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#1e293b' }}>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-dark)' }}>
                         {t('reports.timeframe', 'Khung giờ:')}
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
-                          border: '1px solid #0f172a', 
+                          border: '1px solid var(--neutral-border)', 
                           borderRadius: '4px', 
                           padding: '0 8px',
-                          backgroundColor: '#fff',
+                          backgroundColor: 'var(--neutral-bg-card)',
                           flex: 1
                         }}>
                           <input
-                            type="text"
+                            type="time"
                             list="time-options"
                             placeholder="08:00"
                             pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
@@ -469,7 +471,8 @@ export default function DailyReportsPage() {
                               outline: 'none',
                               textAlign: 'center',
                               width: '100%',
-                              backgroundColor: 'transparent'
+                              backgroundColor: 'transparent',
+                              color: 'var(--neutral-dark)'
                             }}
                           />
                           <i className="fa-regular fa-clock" style={{ color: '#64748b', fontSize: '14px', pointerEvents: 'none' }}></i>
@@ -478,14 +481,14 @@ export default function DailyReportsPage() {
                         <div style={{ 
                           display: 'flex', 
                           alignItems: 'center', 
-                          border: '1px solid #0f172a', 
+                          border: '1px solid var(--neutral-border)', 
                           borderRadius: '4px', 
                           padding: '0 8px',
-                          backgroundColor: '#fff',
+                          backgroundColor: 'var(--neutral-bg-card)',
                           flex: 1
                         }}>
                           <input
-                            type="text"
+                            type="time"
                             list="time-options"
                             placeholder="12:00"
                             pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
@@ -501,7 +504,8 @@ export default function DailyReportsPage() {
                               outline: 'none',
                               textAlign: 'center',
                               width: '100%',
-                              backgroundColor: 'transparent'
+                              backgroundColor: 'transparent',
+                              color: 'var(--neutral-dark)'
                             }}
                           />
                           <i className="fa-regular fa-clock" style={{ color: '#64748b', fontSize: '14px', pointerEvents: 'none' }}></i>
@@ -511,7 +515,7 @@ export default function DailyReportsPage() {
 
                     {/* Project select */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#1e293b' }}>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-dark)' }}>
                         {t('reports.selectProject', 'Chọn dự án')}
                       </label>
                       <select
@@ -521,10 +525,11 @@ export default function DailyReportsPage() {
                           width: '100%', 
                           padding: '10px', 
                           borderRadius: '4px', 
-                          border: '1px solid #0f172a', 
+                          border: '1px solid var(--neutral-border)', 
+                          backgroundColor: 'var(--neutral-bg-card)',
                           outline: 'none', 
                           fontSize: '13.5px', 
-                          color: '#334155' 
+                          color: 'var(--neutral-dark)' 
                         }}
                       >
                         <option value="">{t('reports.selectProjectOptional', '-- Chọn dự án (Không bắt buộc) --')}</option>
@@ -550,10 +555,10 @@ export default function DailyReportsPage() {
                           style={{ 
                             padding: '8px 16px', 
                             fontSize: '13px',
-                            border: '1px solid #0f172a',
+                            border: '1px solid var(--neutral-border)',
                             borderRadius: '4px',
-                            backgroundColor: '#fff',
-                            color: '#0f172a',
+                            backgroundColor: 'var(--neutral-bg-card)',
+                            color: 'var(--neutral-dark)',
                             cursor: 'pointer',
                             fontWeight: '600'
                           }}
@@ -561,8 +566,8 @@ export default function DailyReportsPage() {
                           {t('common.selectAttachment', 'Chọn Tệp')}
                         </button>
                         {card.fileName && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
-                            <span style={{ color: '#475569', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--neutral-bg-hover)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                            <span style={{ color: 'var(--neutral-dark)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {card.fileName}
                             </span>
                             <button
@@ -678,7 +683,7 @@ export default function DailyReportsPage() {
             style={{ 
               width: '75vw', 
               height: '75vh', 
-              backgroundColor: '#ffffff', 
+              backgroundColor: 'var(--neutral-bg-card)', 
               border: '1.5px solid #cbd5e1', 
               borderRadius: '12px', 
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
@@ -689,8 +694,8 @@ export default function DailyReportsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <i className="fa-solid fa-clock-rotate-left" style={{ color: 'var(--primary-color)' }}></i> {t('report.historyTitle', 'Lịch sử báo cáo đã gửi')}
               </h3>
               <button 
@@ -703,23 +708,23 @@ export default function DailyReportsPage() {
             </div>
 
             {/* Date Filters Row */}
-            <div style={{ padding: '12px 24px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
+            <div style={{ padding: '12px 24px', borderBottom: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>{t('report.fromDate', 'Từ ngày:')}</label>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--neutral-dark)' }}>{t('report.fromDate', 'Từ ngày:')}</label>
                 <input 
                   type="date" 
                   value={startDateFilter} 
                   onChange={(e) => setStartDateFilter(e.target.value)} 
-                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} 
+                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13px', outline: 'none' }} 
                 />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>{t('report.toDate', 'Đến ngày:')}</label>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--neutral-dark)' }}>{t('report.toDate', 'Đến ngày:')}</label>
                 <input 
                   type="date" 
                   value={endDateFilter} 
                   onChange={(e) => setEndDateFilter(e.target.value)} 
-                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} 
+                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13px', outline: 'none' }} 
                 />
               </div>
               {(startDateFilter || endDateFilter) && (
@@ -749,7 +754,7 @@ export default function DailyReportsPage() {
             </div>
 
             {/* Modal Body (Scrollable Grid of Cards) */}
-            <div style={{ flex: 1, padding: '24px', overflowY: 'auto', backgroundColor: '#f1f5f9' }}>
+            <div style={{ flex: 1, padding: '24px', overflowY: 'auto', backgroundColor: 'var(--neutral-bg-main)' }}>
               {isLoading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b' }}>
                   <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '32px', marginBottom: '12px', color: 'var(--primary-color)' }}></i>
@@ -770,10 +775,10 @@ export default function DailyReportsPage() {
                       <div 
                         key={report.id} 
                         style={{ 
-                          border: '1.5px solid #e2e8f0', 
+                          border: '1.5px solid var(--neutral-border)', 
                           borderRadius: '8px', 
                           padding: '16px', 
-                          background: '#ffffff', 
+                          background: 'var(--neutral-bg-card)', 
                           display: 'flex', 
                           flexDirection: 'column', 
                           gap: '12px', 
@@ -799,20 +804,20 @@ export default function DailyReportsPage() {
                               : 'Pending'; // Always Pending in English
 
                           const htmlContent = isJsonReport
-                            ? `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: #334155;">
-                                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+                            ? `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: var(--neutral-dark);">
+                                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--neutral-border); display: flex; justify-content: space-between;">
                                    <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
                                    <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
                                  </div>
                                  ${formatReportContentHtml(report.content, projects)}
                                </div>`
-                            : `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: #334155;">
-                                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+                            : `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: var(--neutral-dark);">
+                                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--neutral-border); display: flex; justify-content: space-between;">
                                    <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
                                    <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
                                  </div>
                                  ${report.project_id ? `<div style="margin-bottom: 12px;"><span style="background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Dự án: ${proj?.name || 'Liên kết'}</span></div>` : ''}
-                                 <textarea id="swal-report-content" style="width: 100%; min-height: 250px; background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 13.5px; line-height: 1.6; outline: none; resize: vertical; box-sizing: border-box;" ${isPending ? '' : 'readonly'}>${report.content}</textarea>
+                                 <textarea id="swal-report-content" style="width: 100%; min-height: 250px; background-color: var(--neutral-bg-main); color: var(--neutral-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--neutral-border); font-family: inherit; font-size: 13.5px; line-height: 1.6; outline: none; resize: vertical; box-sizing: border-box;" ${isPending ? '' : 'readonly'}>${report.content}</textarea>
                                  ${report.file_url ? `<div style="margin-top: 12px;"><a href="${report.file_url}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600;"><i class="fa-solid fa-paperclip"></i> Tệp đính kèm tài liệu</a></div>` : ''}
                                </div>`;
 
@@ -905,7 +910,7 @@ export default function DailyReportsPage() {
                         onMouseLeave={(e) => {
                           e.currentTarget.style.transform = 'translateY(0)';
                           e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                          e.currentTarget.style.borderColor = '#e2e8f0';
+                          e.currentTarget.style.borderColor = 'var(--neutral-border)';
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -941,7 +946,7 @@ export default function DailyReportsPage() {
                         <div 
                           style={{ 
                             fontSize: '12px', 
-                            color: '#475569', 
+                            color: 'var(--neutral-muted)', 
                             overflow: 'hidden', 
                             textOverflow: 'ellipsis', 
                             display: '-webkit-box', 
@@ -954,7 +959,7 @@ export default function DailyReportsPage() {
                           {getReportSnippet(report.content)}
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--neutral-border)', paddingTop: '8px' }}>
                           <span style={{ fontSize: '11px', color: '#64748b' }}>
                             {report.file_url ? <><i className="fa-solid fa-paperclip"></i> {t('report.hasAttachment', 'Có đính kèm')}</> : t('report.noAttachment', 'Không có đính kèm')}
                           </span>
