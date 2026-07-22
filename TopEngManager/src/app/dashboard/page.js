@@ -33,6 +33,31 @@ const isMentionedInIssue = (issue, user, users) => {
   }
   return false;
 };
+// Helper to get performer for task
+const getPerformerForTask = (row) => {
+  if (!row.solutions || !Array.isArray(row.solutions)) return row.assignee || '';
+  const executors = row.solutions
+    .filter(s => s.action?.trim() && s.executor?.trim())
+    .map(s => s.executor.trim());
+  if (executors.length > 0) {
+    const uniqueExecutors = Array.from(new Set(executors));
+    return uniqueExecutors.map(name => name.startsWith('@') ? name : `@${name}`).join(' ');
+  }
+  return row.assignee || '';
+};
+
+// Helper to format date
+const formatDate = (dateVal) => {
+  if (!dateVal) return '';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return String(dateVal);
+    return d.toLocaleDateString('vi-VN');
+  } catch (e) {
+    return String(dateVal);
+  }
+};
+
 
 // Helper to get text snippet from report content
 const getReportSnippet = (content) => {
