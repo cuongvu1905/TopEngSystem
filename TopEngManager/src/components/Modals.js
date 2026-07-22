@@ -682,12 +682,12 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
   return (
     <ModalWrapperLg isOpen={isOpen} onClose={onClose} style={{ maxWidth: '1100px', width: '95%' }}>
       <div className="modal-content">
-        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--neutral-border)' }}>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
+        <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', backgroundColor: 'var(--neutral-bg-card)', borderBottom: '1px solid var(--neutral-border)' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
             {taskId ? t('task.taskDetail', 'Chi tiết công việc') : t('task.assignNewTask', 'Giao việc mới')}
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', marginRight: '16px' }}>
-            <label style={{ fontWeight: '600', fontSize: '13px', color: '#475569', margin: 0 }}>{t('common.status', 'Trạng thái:')}</label>
+            <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-muted)', margin: 0 }}>{t('common.status', 'Trạng thái:')}</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
@@ -705,17 +705,17 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
         </div>
         {isLockedByOther && (
           <div style={{
-            backgroundColor: '#fffbeb',
-            borderBottom: '1px solid #fef3c7',
+            backgroundColor: 'var(--warning-light)',
+            borderBottom: '1px solid var(--neutral-border)',
             padding: '10px 20px',
             fontSize: '13px',
-            color: '#b45309',
+            color: 'var(--warning-color)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
             fontWeight: '500'
           }}>
-            <i className="fa-solid fa-lock" style={{ fontSize: '15px', color: '#d97706' }}></i>
+            <i className="fa-solid fa-lock" style={{ fontSize: '15px', color: 'var(--warning-color)' }}></i>
             <span>
               Công việc này đang được chỉnh sửa bởi <strong>{lockOwnerName}</strong>. Chế độ xem chỉ đọc (Read-only).
             </span>
@@ -756,7 +756,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                           style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
                         />
                       </div>
-                      <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#fff' }}>
+                      <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: 'var(--neutral-bg-card)' }}>
                         {filteredMembers.length === 0 ? (
                           <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '12px', textAlign: 'center' }}>Không tìm thấy nhân viên phù hợp</div>
                         ) : (
@@ -789,10 +789,10 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                       </div>
                     </div>
                   ) : (
-                    <div style={{ padding: '8px 12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', backgroundColor: '#f8fafc', fontSize: '13px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    <div style={{ padding: '8px 12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', backgroundColor: 'var(--neutral-bg-main)', fontSize: '13px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {assigneeIds.length > 0 ? (
                         projectMembers.filter(m => assigneeIds.includes(m.id)).map(m => (
-                          <span key={m.id} style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: '#e2e8f0', color: '#334155', fontWeight: '500', fontSize: '12px' }}>
+                          <span key={m.id} style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: 'var(--neutral-bg-hover)', color: 'var(--neutral-dark)', fontWeight: '500', fontSize: '12px' }}>
                             {m.name}
                           </span>
                         ))
