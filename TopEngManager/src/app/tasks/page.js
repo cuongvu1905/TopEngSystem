@@ -22,6 +22,13 @@ const Swal = {
   }
 };
 
+const formatDate = (dateStr, fallback = 'N/A') => {
+  if (!dateStr) return fallback;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return fallback;
+  return d.toLocaleDateString('vi-VN');
+};
+
 const parseTaskDescription = (desc) => {
   try {
     const data = JSON.parse(desc);
@@ -50,6 +57,15 @@ export default function Tasks() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(null);
   const [draggedTaskId, setDraggedTaskId] = useState(null);
+
+  if (!currentUser) {
+    return (
+      <div className="scrollable-view" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
+        <div style={{ color: 'var(--neutral-muted)', fontSize: '14px' }}>Loading tasks...</div>
+      </div>
+    );
+  }
+
 
   const isAdmin = currentUser.system_role.includes("Admin");
   const isBOD = currentUser.system_role.includes("Ban điều hành");
@@ -195,13 +211,13 @@ export default function Tasks() {
                 >
                   {colTasks.map(t => {
                     const parsedTask = parseTaskDescription(t.description);
-                    const isOverdue = new Date(t.due_date) < new Date() && t.status !== "Done";
+                    const isOverdue = t.due_date && !isNaN(new Date(t.due_date).getTime()) && new Date(t.due_date) < new Date() && t.status !== "Done";
                     let pClass = "badge-info";
                     if (t.priority === "Cao") pClass = "badge-danger";
                     else if (t.priority === "Trung bình") pClass = "badge-warning";
                     else pClass = "badge-success";
 
-                    let currentAssigneeIds = parsedTask.assigneeIds;
+                    let currentAssigneeIds = Array.isArray(parsedTask.assigneeIds) ? parsedTask.assigneeIds : [];
                     if (currentAssigneeIds.length === 0 && t.assignee_id) {
                       currentAssigneeIds = [t.assignee_id];
                     }
@@ -251,7 +267,7 @@ export default function Tasks() {
                         <p className="task-card-desc">{parsedTask.text || 'Không có mô tả.'}</p>
                         <div className="task-card-meta">
                           <span className={`task-card-due ${isOverdue ? 'overdue' : ''}`}>
-                            <i className="fa-regular fa-clock"></i> {t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}
+                            <i className="fa-regular fa-clock"></i> {formatDate(t.due_date, 'Không hạn')}
                           </span>
                         </div>
                       </div>
@@ -294,11 +310,11 @@ export default function Tasks() {
                   <tr key={t.id}>
                     <td><a href="#" onClick={(e) => { e.preventDefault(); openTaskDetail(t.id); }} style={{ color: 'var(--neutral-dark)', fontWeight: '500' }}>{t.title}</a></td>
                     <td><span className={`badge ${pClass}`}>{(t.priority === 'Cao' || t.priority === 'High' || t.priority === 'HIGH') ? 'HIGH' : (t.priority === 'Trung bình' || t.priority === 'Medium' || t.priority === 'MEDIUM') ? 'MEDIUM' : (t.priority === 'Thấp' || t.priority === 'Low' || t.priority === 'LOW') ? 'LOW' : (t.priority === 'Khẩn cấp' || t.priority === 'Critical' || t.priority === 'CRITICAL') ? 'CRITICAL' : (t.priority ? t.priority.toUpperCase() : 'MEDIUM')}</span></td>
-                    <td style={{ color: isOverdue ? 'var(--danger-color)' : 'inherit', fontWeight: isOverdue ? '600' : 'normal' }}>{t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'N/A'}</td>
+                    <td style={{ color: isOverdue ? 'var(--danger-color)' : 'inherit', fontWeight: isOverdue ? '600' : 'normal' }}>{formatDate(t.due_date, 'N/A')}</td>
                     <td>
                       {(() => {
                         const parsed = parseTaskDescription(t.description);
-                        let currentAssigneeIds = parsed.assigneeIds;
+                        let currentAssigneeIds = Array.isArray(parsed.assigneeIds) ? parsed.assigneeIds : [];
                         if (currentAssigneeIds.length === 0 && t.assignee_id) {
                           currentAssigneeIds = [t.assignee_id];
                         }
