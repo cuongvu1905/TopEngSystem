@@ -380,11 +380,24 @@ export default function Header() {
             <button 
               className="icon-btn" 
               onClick={() => setIsLangOpen(!isLangOpen)}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', border: '1px solid var(--neutral-border)', backgroundColor: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%', 
+                border: '1px solid var(--neutral-border)', 
+                backgroundColor: '#fff', 
+                cursor: 'pointer', 
+                fontSize: '11px', 
+                fontWeight: '700',
+                color: '#1e293b',
+                padding: 0 
+              }}
+              title={currentLanguageObj.name}
             >
-              <span style={{ fontSize: '16px' }}>{currentLanguageObj.flag}</span>
-              <span style={{ fontSize: '12px', color: '#1e293b' }}>{currentLanguageObj.code.toUpperCase()}</span>
-              <i className="fa-solid fa-chevron-down" style={{ fontSize: '10px', color: '#64748b' }}></i>
+              <span>{currentLanguageObj.code.toUpperCase()}</span>
             </button>
             <div 
               className={`dropdown-menu ${isLangOpen ? 'show' : ''}`} 
