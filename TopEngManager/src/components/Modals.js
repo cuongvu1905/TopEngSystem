@@ -4,6 +4,21 @@ import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
 
+const translateDepartmentName = (name, t) => {
+  if (!name || name === 'Chưa phân phòng') return t('dept.unassigned', 'Chưa phân phòng');
+  if (name.includes('Hành chính Nhân sự') || name === 'HR') return t('dept.hr', 'Phòng Hành chính Nhân sự (HR)');
+  if (name.includes('Phát triển Phần mềm') || name === 'R&D') return t('dept.rd', 'Phòng Phát triển Phần mềm (R&D)');
+  if (name.includes('Kinh doanh') || name === 'Sales') return t('dept.sales', 'Phòng Kinh doanh (Sales)');
+  if (name.includes('Kế toán Tài chính') || name.includes('Finance')) return t('dept.finance', 'Phòng Kế toán Tài chính');
+  if (name.includes('Truyền thông Marketing') || name.includes('Marketing')) return t('dept.marketing', 'Phòng Truyền thông Marketing');
+  if (name.includes('BOD TOPV') || name === 'BOD') return t('dept.bod', 'BOD TOPV');
+  if (name === 'Nhân sự 1') return t('dept.hr1', 'Nhân sự 1');
+  if (name === 'PC') return t('dept.pc', 'PC');
+  if (name === 'PC1') return t('dept.pc1', 'PC1');
+  if (name === 'PC2') return t('dept.pc2', 'PC2');
+  return name;
+};
+
 const formatDateForInput = (dateVal) => {
   if (!dateVal) return '';
   if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
