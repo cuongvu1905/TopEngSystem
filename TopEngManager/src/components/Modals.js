@@ -1040,11 +1040,11 @@ export const DocumentModal = ({ isOpen, onClose, docId, projId, currentUser, cur
                 <div className="form-group">
                   <label>Giai đoạn dự án <span className="required">*</span></label>
                   <select value={phase} onChange={(e) => setPhase(e.target.value)}>
-                    <option value="Khởi tạo">Khởi tạo</option>
-                    <option value="Lập kế hoạch">Lập kế hoạch</option>
-                    <option value="Thực thi">Thực thi</option>
-                    <option value="Giám sát">Giám sát</option>
-                    <option value="Kết thúc">Kết thúc</option>
+                    <option value="Khởi tạo">{t('project.phase.initiating', 'Khởi tạo')}</option>
+                    <option value="Lập kế hoạch">{t('project.phase.planning', 'Lập kế hoạch')}</option>
+                    <option value="Thực thi">{t('project.status.executing', 'Thực thi')}</option>
+                    <option value="Giám sát">{t('project.status.monitoring', 'Giám sát')}</option>
+                    <option value="Kết thúc">{t('project.status.closed', 'Kết thúc')}</option>
                   </select>
                 </div>
               </div>

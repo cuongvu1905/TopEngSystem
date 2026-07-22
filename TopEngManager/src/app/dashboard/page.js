@@ -769,7 +769,7 @@ export default function Dashboard() {
               &laquo;
             </button>
             <span style={{ fontSize: '16px', fontWeight: '750', color: '#1e293b' }}>
-              Tháng {checkerDate.getMonth() + 1} {checkerDate.getFullYear()}
+              {t('calendar.monthHeader', 'Tháng {month} {year}').replace('{month}', checkerDate.getMonth() + 1).replace('{year}', checkerDate.getFullYear())}
             </span>
             <button 
               type="button"
@@ -800,7 +800,7 @@ export default function Dashboard() {
             overflow: 'hidden',
             flexShrink: 0
           }}>
-            {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'].map((w, idx) => (
+            {[t('calendar.mon', 'Thứ 2'), t('calendar.tue', 'Thứ 3'), t('calendar.wed', 'Thứ 4'), t('calendar.thu', 'Thứ 5'), t('calendar.fri', 'Thứ 6'), t('calendar.sat', 'Thứ 7'), t('calendar.sun', 'CN')].map((w, idx) => (
               <div key={idx} style={{
                 padding: '10px 4px',
                 backgroundColor: '#f1f5f9',
@@ -916,7 +916,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: '750', color: '#1e293b' }}>
-                  Danh sách chưa báo cáo ngày {selectedCheckerDay.toLocaleDateString('vi-VN')}:
+                  {t('report.missingReportsListHeader', 'Danh sách chưa báo cáo ngày {date}:').replace('{date}', selectedCheckerDay.toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US'))}
                 </h4>
                 {selectedMissingUsers.length > 0 && (
                   <button
@@ -955,9 +955,9 @@ export default function Dashboard() {
                             style={{ cursor: 'pointer' }}
                           />
                         </th>
-                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569', borderRight: '1px solid #cbd5e1' }}>Mã NV</th>
-                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569', borderRight: '1px solid #cbd5e1' }}>Họ và tên</th>
-                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Bộ phận</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569', borderRight: '1px solid #cbd5e1' }}>{t('report.employeeIdCol', 'Mã NV')}</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569', borderRight: '1px solid #cbd5e1' }}>{t('team.fullName', 'Họ và tên')}</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>{t('team.departmentPart', 'Bộ phận')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -981,13 +981,13 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div style={{ padding: '16px', backgroundColor: '#f0fdf4', border: '2px solid #b7ebc6', borderRadius: '6px', color: '#15803d', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <i className="fa-solid fa-circle-check"></i> Đầy đủ báo cáo.
+                  <i className="fa-solid fa-circle-check"></i> {t('report.allReportsSubmitted', 'Đầy đủ báo cáo.')}
                 </div>
               )}
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '24px', backgroundColor: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', fontSize: '13px' }}>
-              Chọn một ngày màu đỏ trên lịch để xem danh sách nhân viên chưa nộp báo cáo.
+              {t('report.calendarInstruction', 'Chọn một ngày màu đỏ trên lịch để xem danh sách nhân viên chưa nộp báo cáo.')}
             </div>
           )}
         </div>
@@ -1322,7 +1322,7 @@ export default function Dashboard() {
                   disabled={!canAccessIssues}
                   onChange={() => handleToggleSection('issues')} 
                 />
-                Vướng mắc (Issues)
+                {t('dashboard.issuesOption', 'Vướng mắc (Issues)')}
               </label>
               <label className="config-dropdown-item" style={{ opacity: canAccessTasks ? 1 : 0.5 }}>
                 <input 
@@ -1331,7 +1331,7 @@ export default function Dashboard() {
                   disabled={!canAccessTasks}
                   onChange={() => handleToggleSection('tasks')} 
                 />
-                Việc cần làm (Tasks)
+                {t('dashboard.tasksOption', 'Việc cần làm (Tasks)')}
               </label>
               <label className="config-dropdown-item" style={{ opacity: canAccessProjects ? 1 : 0.5 }}>
                 <input 
@@ -1340,7 +1340,7 @@ export default function Dashboard() {
                   disabled={!canAccessProjects}
                   onChange={() => handleToggleSection('projects')} 
                 />
-                Dự án tham gia
+                {t('dashboard.projectsOption', 'Dự án tham gia')}
               </label>
               <label className="config-dropdown-item" style={{ opacity: canAccessReports ? 1 : 0.5 }}>
                 <input 
@@ -1349,7 +1349,7 @@ export default function Dashboard() {
                   disabled={!canAccessReports}
                   onChange={() => handleToggleSection('reports')} 
                 />
-                Báo cáo hàng ngày
+                {t('dashboard.reportsOption', 'Báo cáo hàng ngày')}
               </label>
             </div>
           )}
@@ -1765,9 +1765,9 @@ export default function Dashboard() {
                   {activeDetailPopup === 'projects' && (
                     <select value={popupFilter1} onChange={(e) => setPopupFilter1(e.target.value)} className="rectangular-filter-select">
                       <option value="">{t('projects.statusAll', 'Trạng thái dự án (Tất cả)')}</option>
-                      <option value="Thực thi">Thực thi</option>
-                      <option value="Giám sát">Giám sát</option>
-                      <option value="Kết thúc">Kết thúc</option>
+                      <option value="Thực thi">{t('project.status.executing', 'Thực thi')}</option>
+                      <option value="Giám sát">{t('project.status.monitoring', 'Giám sát')}</option>
+                      <option value="Kết thúc">{t('project.status.closed', 'Kết thúc')}</option>
                     </select>
                   )}
 

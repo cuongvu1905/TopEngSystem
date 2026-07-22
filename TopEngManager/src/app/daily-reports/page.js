@@ -73,7 +73,7 @@ const formatReportContentHtml = (content, projects) => {
 
 export default function DailyReportsPage() {
   const { currentUser, users, projects, projectMembers } = useApp();
-  const { t } = useLanguage();
+  const { t, currentLang } = useLanguage();
   
   const systemRole = currentUser?.system_role || '';
   const isAdminOrManagement = systemRole.includes("Admin") || systemRole.includes("BOD") || systemRole.includes("HR");
@@ -234,7 +234,7 @@ export default function DailyReportsPage() {
     e.preventDefault();
     if (!currentUser) return;
     if (reportCards.some(c => !c.content.trim() || !c.projectId)) {
-      Swal.fire({ icon: 'warning', title: 'Cảnh báo', text: 'Vui lòng điền đầy đủ nội dung và chọn dự án cho tất cả các thẻ báo cáo!' });
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('report.incompleteCardsWarning', 'Vui lòng điền đầy đủ nội dung và chọn dự án cho tất cả các thẻ báo cáo!') });
       return;
     }
 
@@ -245,7 +245,7 @@ export default function DailyReportsPage() {
 
       if (editingReportId) {
         await db.updateDailyReport(editingReportId, serializedContent, null, firstProjectId, reportDate);
-        Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã cập nhật báo cáo ngày thành công!" });
+        Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('report.updateSuccessText', 'Đã cập nhật báo cáo ngày thành công!') });
         setEditingReportId(null);
       } else {
         await db.createDailyReport({
@@ -255,7 +255,7 @@ export default function DailyReportsPage() {
           projectId: firstProjectId,
           createdAt: reportDate
         });
-        Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã gửi báo cáo ngày thành công!" });
+        Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('report.submitSuccessText', 'Đã gửi báo cáo ngày thành công!') });
       }
 
       setReportCards([
@@ -272,7 +272,7 @@ export default function DailyReportsPage() {
       setReportDate(getTodayDateString());
       await loadReports();
     } catch (err) {
-      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu báo cáo: " + err.message });
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('report.saveErrorText', 'Lỗi lưu báo cáo: ') + err.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -691,7 +691,7 @@ export default function DailyReportsPage() {
             {/* Modal Header */}
             <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <i className="fa-solid fa-clock-rotate-left" style={{ color: 'var(--primary-color)' }}></i> Lịch sử báo cáo đã gửi
+                <i className="fa-solid fa-clock-rotate-left" style={{ color: 'var(--primary-color)' }}></i> {t('report.historyTitle', 'Lịch sử báo cáo đã gửi')}
               </h3>
               <button 
                 type="button" 
@@ -705,7 +705,7 @@ export default function DailyReportsPage() {
             {/* Date Filters Row */}
             <div style={{ padding: '12px 24px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Từ ngày:</label>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>{t('report.fromDate', 'Từ ngày:')}</label>
                 <input 
                   type="date" 
                   value={startDateFilter} 
@@ -714,7 +714,7 @@ export default function DailyReportsPage() {
                 />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Đến ngày:</label>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>{t('report.toDate', 'Đến ngày:')}</label>
                 <input 
                   type="date" 
                   value={endDateFilter} 
@@ -740,11 +740,11 @@ export default function DailyReportsPage() {
                     gap: '4px'
                   }}
                 >
-                  <i className="fa-solid fa-trash-can"></i> Xóa bộ lọc
+                  <i className="fa-solid fa-trash-can"></i> {t('report.clearFilters', 'Xóa bộ lọc')}
                 </button>
               )}
               <span style={{ marginLeft: 'auto', fontSize: '12.5px', color: '#64748b', fontWeight: '500' }}>
-                Tìm thấy <strong>{reportsFilteredByDate.length}</strong> báo cáo của bạn
+                {t('report.foundReportsCountBefore', 'Tìm thấy')} <strong>{reportsFilteredByDate.length}</strong> {t('report.foundReportsCountAfter', 'báo cáo của bạn')}
               </span>
             </div>
 
@@ -758,7 +758,7 @@ export default function DailyReportsPage() {
               ) : reportsFilteredByDate.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b' }}>
                   <i className="fa-solid fa-folder-open" style={{ fontSize: '48px', marginBottom: '12px', color: '#94a3b8' }}></i>
-                  <p style={{ fontSize: '14px', margin: 0 }}>Không tìm thấy báo cáo nào trong khoảng thời gian này.</p>
+                  <p style={{ fontSize: '14px', margin: 0 }}>{t('report.noReportsFound', 'Không tìm thấy báo cáo nào trong khoảng thời gian này.')}</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
@@ -791,18 +791,25 @@ export default function DailyReportsPage() {
                             } catch (e) { return false; }
                           })();
 
+                          const formattedDate = new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US');
+                          const statusText = report.status === 'Approved' 
+                            ? t('report.approvedStatus', 'Đã duyệt') 
+                            : report.status === 'Rejected' 
+                              ? t('report.rejectedStatus', 'Từ chối') 
+                              : 'Pending'; // Always Pending in English
+
                           const htmlContent = isJsonReport
                             ? `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: #334155;">
                                  <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
-                                   <span>Thời gian: <strong>${new Date(report.created_at).toLocaleString('vi-VN')}</strong></span>
-                                   <span>Trạng thái: <strong>${report.status === 'Approved' ? 'Đã duyệt' : report.status === 'Rejected' ? 'Từ chối' : 'Chờ duyệt'}</strong></span>
+                                   <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
+                                   <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
                                  </div>
                                  ${formatReportContentHtml(report.content, projects)}
                                </div>`
                             : `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: #334155;">
                                  <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
-                                   <span>Thời gian: <strong>${new Date(report.created_at).toLocaleString('vi-VN')}</strong></span>
-                                   <span>Trạng thái: <strong>${report.status === 'Approved' ? 'Đã duyệt' : report.status === 'Rejected' ? 'Từ chối' : 'Chờ duyệt'}</strong></span>
+                                   <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
+                                   <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
                                  </div>
                                  ${report.project_id ? `<div style="margin-bottom: 12px;"><span style="background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Dự án: ${proj?.name || 'Liên kết'}</span></div>` : ''}
                                  <textarea id="swal-report-content" style="width: 100%; min-height: 250px; background-color: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 13.5px; line-height: 1.6; outline: none; resize: vertical; box-sizing: border-box;" ${isPending ? '' : 'readonly'}>${report.content}</textarea>
@@ -810,13 +817,13 @@ export default function DailyReportsPage() {
                                </div>`;
 
                           const result = await SwalInstance.fire({
-                            title: 'Chi tiết báo cáo ngày',
+                            title: t('dashboard.dailyReportDetail', 'Chi tiết báo cáo ngày'),
                             html: htmlContent,
                             width: '600px',
                             showConfirmButton: isPending,
-                            confirmButtonText: isJsonReport ? 'Chỉnh sửa' : 'Lưu thay đổi',
+                            confirmButtonText: isJsonReport ? t('common.edit', 'Chỉnh sửa') : t('common.saveChanges', 'Lưu thay đổi'),
                             showDenyButton: true,
-                            denyButtonText: 'Đóng',
+                            denyButtonText: t('common.close', 'Đóng'),
                             denyButtonColor: 'var(--primary-color)',
                             didOpen: () => {
                               if (!isJsonReport && isPending) {
@@ -913,14 +920,14 @@ export default function DailyReportsPage() {
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                             <span style={{ fontSize: '9.5px', color: 'var(--neutral-muted)' }}>
-                              {new Date(report.created_at).toLocaleDateString('vi-VN')}
+                              {new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US')}
                             </span>
                             <span style={{ 
                               fontSize: '9px', 
                               color: report.status === 'Approved' ? 'var(--success-color)' : report.status === 'Rejected' ? 'var(--danger-color)' : 'var(--warning-color)', 
                               fontWeight: 'bold' 
                             }}>
-                              {report.status === 'Approved' ? 'Đã duyệt' : report.status === 'Rejected' ? 'Từ chối' : 'Chờ duyệt'}
+                              {report.status === 'Approved' ? t('report.approvedStatus', 'Đã duyệt') : report.status === 'Rejected' ? t('report.rejectedStatus', 'Từ chối') : 'Pending'}
                             </span>
                           </div>
                         </div>
@@ -949,7 +956,7 @@ export default function DailyReportsPage() {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
                           <span style={{ fontSize: '11px', color: '#64748b' }}>
-                            {report.file_url ? <><i className="fa-solid fa-paperclip"></i> Có đính kèm</> : 'Không có đính kèm'}
+                            {report.file_url ? <><i className="fa-solid fa-paperclip"></i> {t('report.hasAttachment', 'Có đính kèm')}</> : t('report.noAttachment', 'Không có đính kèm')}
                           </span>
                           {(report.status === 'Pending' || report.status === 'pending' || report.status === 'Chờ duyệt') && report.user_id === currentUser?.id && (
                             <button
@@ -958,11 +965,11 @@ export default function DailyReportsPage() {
                                 const SwalInstance = (await import('sweetalert2')).default;
                                 const result = await SwalInstance.fire({
                                   icon: 'warning',
-                                  title: 'Xác nhận xóa',
-                                  text: 'Bạn có chắc chắn muốn xóa báo cáo này? Hành động này không thể hoàn tác.',
+                                  title: t('common.confirmDelete', 'Xác nhận xóa'),
+                                  text: t('report.confirmDeleteText', 'Bạn có chắc chắn muốn xóa báo cáo này? Hành động này không thể hoàn tác.'),
                                   showCancelButton: true,
-                                  confirmButtonText: 'Xóa báo cáo',
-                                  cancelButtonText: 'Hủy',
+                                  confirmButtonText: t('report.deleteReportBtn', 'Xóa báo cáo'),
+                                  cancelButtonText: t('common.cancel', 'Hủy'),
                                   confirmButtonColor: '#ef4444',
                                   cancelButtonColor: '#64748b',
                                 });
@@ -970,7 +977,7 @@ export default function DailyReportsPage() {
                                   try {
                                     await db.deleteDailyReport(report.id);
                                     await loadReports();
-                                    SwalInstance.fire({ icon: 'success', title: 'Đã xóa', text: 'Báo cáo đã được xóa thành công!', timer: 2000, showConfirmButton: false });
+                                    SwalInstance.fire({ icon: 'success', title: t('common.deleted', 'Đã xóa'), text: t('report.deleteSuccessText', 'Báo cáo đã được xóa thành công!'), timer: 2000, showConfirmButton: false });
                                   } catch (err) {
                                     SwalInstance.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể xóa báo cáo: ' + err.message });
                                   }
@@ -992,7 +999,7 @@ export default function DailyReportsPage() {
                               onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.borderColor = '#ef4444'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#fecaca'; }}
                             >
-                              <i className="fa-solid fa-trash-can" style={{ fontSize: '10px' }}></i> Xóa
+                              <i className="fa-solid fa-trash-can" style={{ fontSize: '10px' }}></i> {t('common.delete', 'Xóa')}
                             </button>
                           )}
                         </div>

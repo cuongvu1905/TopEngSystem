@@ -35,6 +35,118 @@ const formatSystemRole = (role, t) => {
   return role.toUpperCase();
 };
 
+
+const translateNotifTitle = (title, t) => {
+  if (!title) return '';
+  if (title.includes("Bạn được phân công một Issue mới")) {
+    return t('notif.title.assignedNewIssue', "Bạn được phân công một Issue mới");
+  }
+  if (title.includes("Bạn được phân công một Issue")) {
+    return t('notif.title.assignedIssue', "Bạn được phân công một Issue");
+  }
+  if (title.includes("Được nhắc tên trong Issue (Người chịu trách nhiệm)")) {
+    return t('notif.title.mentionedInIssueAssignee', "Được nhắc tên trong Issue (Người chịu trách nhiệm)");
+  }
+  if (title.includes("Được nhắc tên trong chi tiết công việc Issue")) {
+    return t('notif.title.mentionedInSubtask', "Được nhắc tên trong chi tiết công việc Issue");
+  }
+  if (title.includes("Được nhắc tên trong Chat")) {
+    return t('notif.title.mentionedInChat', "Được nhắc tên trong Chat");
+  }
+  if (title.includes("Công việc mới được giao")) {
+    return t('notif.title.newJobAssigned', "Công việc mới được giao");
+  }
+  if (title.includes("Bình luận mới trong công việc")) {
+    return t('notif.title.newCommentOnTask', "Bình luận mới trong công việc");
+  }
+  if (title.includes("Bạn được thêm vào dự án mới")) {
+    return t('notif.title.addedToNewProject', "Bạn được thêm vào dự án mới");
+  }
+  if (title.includes("Lời mời tham gia dự án")) {
+    return t('notif.title.projectJoinInvitation', "Lời mời tham gia dự án");
+  }
+  if (title.includes("Báo cáo ngày bị từ chối")) {
+    return t('notif.title.dailyReportRejected', "Báo cáo ngày bị từ chối");
+  }
+  return title;
+};
+
+const translateNotifContent = (title, content, t) => {
+  if (!content) return '';
+  
+  // 1. Assigned New Issue
+  let match = content.match(/^Bạn vừa được phân công giải quyết Issue: "(.*)" \((.*)\)$/);
+  if (match) {
+    return t('notif.content.assignedNewIssueTemplate', 'Bạn vừa được phân công giải quyết Issue: "{summary}" ({key})')
+      .replace('{summary}', match[1]).replace('{key}', match[2]);
+  }
+
+  // 2. Assigned Responsibility
+  match = content.match(/^(.*) đã giao trách nhiệm cho bạn trong Issue "(.*)" \((.*)\)$/);
+  if (match) {
+    return t('notif.content.assignedResponsibilityTemplate', '{name} đã giao trách nhiệm cho bạn trong Issue "{summary}" ({key})')
+      .replace('{name}', match[1]).replace('{summary}', match[2]).replace('{key}', match[3]);
+  }
+
+  // 3. Mentioned in Issue
+  match = content.match(/^(.*) đã nhắc tên bạn trong Issue "(.*)" \((.*)\)$/);
+  if (match) {
+    return t('notif.content.mentionedInIssueTemplate', '{name} đã nhắc tên bạn trong Issue "{summary}" ({key})')
+      .replace('{name}', match[1]).replace('{summary}', match[2]).replace('{key}', match[3]);
+  }
+
+  // 4. Mentioned in sub-task
+  match = content.match(/^(.*) đã nhắc tên bạn trong chi tiết công việc "(.*)" \((.*)\)$/);
+  if (match) {
+    return t('notif.content.mentionedInSubtaskTemplate', '{name} đã nhắc tên bạn trong chi tiết công việc "{summary}" ({key})')
+      .replace('{name}', match[1]).replace('{summary}', match[2]).replace('{key}', match[3]);
+  }
+
+  // 5. Mentioned in Chat
+  match = content.match(/^(.*) đã nhắc tên bạn trong kênh trò chuyện\.$/);
+  if (match) {
+    return t('notif.content.mentionedInChatTemplate', '{name} đã nhắc tên bạn trong kênh trò chuyện.')
+      .replace('{name}', match[1]);
+  }
+
+  // 6. Assigned Task
+  match = content.match(/^Bạn được giao công việc '(.*)'$/);
+  if (match) {
+    return t('notif.content.assignedTaskTemplate', "Bạn được giao công việc '{title}'")
+      .replace('{title}', match[1]);
+  }
+
+  // 7. Comment on Task
+  match = content.match(/^(.*) đã bình luận trong công việc '(.*)'$/);
+  if (match) {
+    return t('notif.content.commentOnTaskTemplate', "{name} đã bình luận trong công việc '{title}'")
+      .replace('{name}', match[1]).replace('{title}', match[2]);
+  }
+
+  // 8. Added to project
+  match = content.match(/^Bạn vừa được thêm vào dự án "(.*)" với vai trò (.*)\.$/);
+  if (match) {
+    return t('notif.content.addedToProjectTemplate', 'Bạn vừa được thêm vào dự án "{name}" với vai trò {role}.')
+      .replace('{name}', match[1]).replace('{role}', match[2]);
+  }
+
+  // 9. Project Invitation
+  match = content.match(/^Bạn vừa được mời tham gia dự án "(.*)" với vai trò (.*)\. Hãy mở chi tiết để xác nhận\.$/);
+  if (match) {
+    return t('notif.content.projectInvitationTemplate', 'Bạn vừa được mời tham gia dự án "{name}" với vai trò {role}. Hãy mở chi tiết để xác nhận.')
+      .replace('{name}', match[1]).replace('{role}', match[2]);
+  }
+
+  // 10. Daily report rejected
+  match = content.match(/^Báo cáo ngày (.*) của bạn đã bị từ chối\. Nhận xét: (.*)$/);
+  if (match) {
+    return t('notif.content.dailyReportRejectedTemplate', 'Báo cáo ngày {date} của bạn đã bị từ chối. Nhận xét: {comment}')
+      .replace('{date}', match[1]).replace('{comment}', match[2]);
+  }
+
+  return content;
+};
+
 export default function Header() {
   const { currentUser, logout, users, notifications, reloadAll } = useApp();
   const { currentLang, changeLanguage, languages, currentLanguageObj, t } = useLanguage();
@@ -455,12 +567,12 @@ export default function Header() {
             </button>
             <div className={`dropdown-menu notification-menu ${isNotificationsOpen ? 'show' : ''}`} style={{ right: 0 }}>
               <div className="dropdown-header">
-                <h3>Thông báo mới</h3>
-                <button className="btn-text" onClick={handleMarkAllRead}>Đánh dấu tất cả đã đọc</button>
+                <h3>{t('notif.newNotificationsTitle', 'Thông báo mới')}</h3>
+                <button className="btn-text" onClick={handleMarkAllRead}>{t('notif.markAllAsRead', 'Đánh dấu tất cả đã đọc')}</button>
               </div>
               <div className="notification-list">
                 {notifications.length === 0 ? (
-                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--neutral-muted)' }}>Không có thông báo mới</div>
+                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--neutral-muted)' }}>{t('notif.noNewNotifications', 'Không có thông báo mới')}</div>
                 ) : (
                   notifications.map(n => {
                     const date = new Date(n.created_at);
@@ -477,8 +589,8 @@ export default function Header() {
                         }
                         await reloadAll();
                       }}>
-                        <div className="notification-title">{n.title}</div>
-                        <div className="notification-body">{n.content}</div>
+                        <div className="notification-title">{translateNotifTitle(n.title, t)}</div>
+                        <div className="notification-body">{translateNotifContent(n.title, n.content, t)}</div>
                         <div className="notification-time">{timeStr}</div>
                       </div>
                     );
