@@ -643,7 +643,7 @@ export default function DailyReportsPage() {
                   className="btn btn-secondary"
                   style={{ flex: 1, padding: '12px 16px' }}
                 >
-                  Hủy Sửa
+                  {t('reports.cancelEdit', 'Hủy Sửa')}
                 </button>
               )}
               <button
@@ -872,13 +872,13 @@ export default function DailyReportsPage() {
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                                 SwalInstance.fire({
                                   icon: 'info',
-                                  title: 'Chỉnh sửa báo cáo',
-                                  text: 'Đã tải nội dung báo cáo vào khung soạn thảo trên trang chính. Sau khi chỉnh sửa xong, nhấn Cập Nhật Báo Cáo để lưu!',
+                                  title: t('reports.editReportAlertTitle', 'Chỉnh sửa báo cáo'),
+                                  text: t('reports.editReportAlertText', 'Đã tải nội dung báo cáo vào khung soạn thảo trên trang chính. Sau khi chỉnh sửa xong, nhấn Cập Nhật Báo Cáo để lưu!'),
                                   timer: 3000,
                                   showConfirmButton: false
                                 });
                               } catch (e) {
-                                SwalInstance.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể tải báo cáo để sửa: ' + e.message });
+                                SwalInstance.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: t('report.loadErrorText', 'Không thể tải báo cáo để sửa: ') + e.message });
                               }
                             } else {
                               const newContent = document.getElementById('swal-report-content')?.value;
@@ -888,14 +888,14 @@ export default function DailyReportsPage() {
                                   await loadReports();
                                   SwalInstance.fire({
                                     icon: 'success',
-                                    title: 'Thành công',
-                                    text: 'Đã cập nhật nội dung báo cáo!'
+                                    title: t('common.success', 'Thành công'),
+                                    text: t('report.updateSuccessText', 'Đã cập nhật nội dung báo cáo!')
                                   });
                                 } catch (err) {
                                   SwalInstance.fire({
                                     icon: 'error',
-                                    title: 'Thất bại',
-                                    text: 'Lỗi cập nhật: ' + err.message
+                                    title: t('common.failed', 'Thất bại'),
+                                    text: t('report.updateFailedText', 'Lỗi cập nhật: ') + err.message
                                   });
                                 }
                               }
@@ -984,7 +984,7 @@ export default function DailyReportsPage() {
                                     await loadReports();
                                     SwalInstance.fire({ icon: 'success', title: t('common.deleted', 'Đã xóa'), text: t('report.deleteSuccessText', 'Báo cáo đã được xóa thành công!'), timer: 2000, showConfirmButton: false });
                                   } catch (err) {
-                                    SwalInstance.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể xóa báo cáo: ' + err.message });
+                                    SwalInstance.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: t('report.deleteErrorText', 'Không thể xóa báo cáo: ') + err.message });
                                   }
                                 }
                               }}

@@ -384,7 +384,7 @@ export default function Tasks() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         taskId={activeTaskId}
-        projId={selectedProj === 'all' ? projectsList[0]?.id : selectedProj}
+        projId={activeTaskId ? (tasks.find(t => t.id === activeTaskId)?.project_id || (selectedProj === 'all' ? projectsList[0]?.id : selectedProj)) : (selectedProj === 'all' ? projectsList[0]?.id : selectedProj)}
         currentUser={currentUser}
         onSaved={reloadAll}
       />

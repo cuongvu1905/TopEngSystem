@@ -38,34 +38,39 @@ const formatSystemRole = (role, t) => {
 
 const translateNotifTitle = (title, t) => {
   if (!title) return '';
-  if (title.includes("Bạn được phân công một Issue mới")) {
+  const uTitle = String(title).trim();
+  
+  if (uTitle.includes("Bạn được phân công một Issue mới") || uTitle.includes("You have been assigned a new Issue")) {
     return t('notif.title.assignedNewIssue', "Bạn được phân công một Issue mới");
   }
-  if (title.includes("Bạn được phân công một Issue")) {
+  if (uTitle.includes("Bạn được phân công một Issue") || uTitle.includes("You have been assigned an Issue")) {
     return t('notif.title.assignedIssue', "Bạn được phân công một Issue");
   }
-  if (title.includes("Được nhắc tên trong Issue (Người chịu trách nhiệm)")) {
+  if (uTitle.includes("Được nhắc tên trong Issue (Người chịu trách nhiệm)") || uTitle.includes("Mentioned in Issue (Assignee)")) {
     return t('notif.title.mentionedInIssueAssignee', "Được nhắc tên trong Issue (Người chịu trách nhiệm)");
   }
-  if (title.includes("Được nhắc tên trong chi tiết công việc Issue")) {
+  if (uTitle.includes("Được nhắc tên trong chi tiết công việc Issue") || uTitle.includes("Mentioned in sub-task of Issue")) {
     return t('notif.title.mentionedInSubtask', "Được nhắc tên trong chi tiết công việc Issue");
   }
-  if (title.includes("Được nhắc tên trong Chat")) {
+  if (uTitle.includes("Được nhắc tên trong Chat") || uTitle.includes("Mentioned in Chat")) {
     return t('notif.title.mentionedInChat', "Được nhắc tên trong Chat");
   }
-  if (title.includes("Công việc mới được giao")) {
+  if (uTitle.includes("Công việc mới được giao") || uTitle.includes("New job assigned")) {
     return t('notif.title.newJobAssigned', "Công việc mới được giao");
   }
-  if (title.includes("Bình luận mới trong công việc")) {
+  if (uTitle.includes("Bình luận mới trong công việc") || uTitle.includes("New comment on task")) {
     return t('notif.title.newCommentOnTask', "Bình luận mới trong công việc");
   }
-  if (title.includes("Bạn được thêm vào dự án mới")) {
+  if (uTitle.includes("Bạn được thêm vào dự án mới") || uTitle.includes("Added to new project")) {
     return t('notif.title.addedToNewProject', "Bạn được thêm vào dự án mới");
   }
-  if (title.includes("Lời mời tham gia dự án")) {
+  if (uTitle.includes("Bạn là thành viên liên quan của một Issue") || uTitle.includes("You are a related member of an Issue")) {
+    return t('notif.title.relatedMember', "Bạn là thành viên liên quan của một Issue");
+  }
+  if (uTitle.includes("Lời mời tham gia dự án") || uTitle.includes("Project invitation")) {
     return t('notif.title.projectJoinInvitation', "Lời mời tham gia dự án");
   }
-  if (title.includes("Báo cáo ngày bị từ chối")) {
+  if (uTitle.includes("Báo cáo ngày bị từ chối") || uTitle.includes("Daily report rejected")) {
     return t('notif.title.dailyReportRejected', "Báo cáo ngày bị từ chối");
   }
   return title;
@@ -74,71 +79,93 @@ const translateNotifTitle = (title, t) => {
 const translateNotifContent = (title, content, t) => {
   if (!content) return '';
   
+  let match;
+
   // 1. Assigned New Issue
-  let match = content.match(/^Bạn vừa được phân công giải quyết Issue: "(.*)" \((.*)\)$/);
+  match = content.match(/^Bạn vừa được phân công giải quyết Issue: "(.*)" ((.*))$/) ||
+          content.match(/^You have been assigned to resolve Issue: "(.*)" ((.*))$/);
   if (match) {
     return t('notif.content.assignedNewIssueTemplate', 'Bạn vừa được phân công giải quyết Issue: "{summary}" ({key})')
       .replace('{summary}', match[1]).replace('{key}', match[2]);
   }
 
   // 2. Assigned Responsibility
-  match = content.match(/^(.*) đã giao trách nhiệm cho bạn trong Issue "(.*)" \((.*)\)$/);
+  match = content.match(/^(.*) đã giao trách nhiệm cho bạn trong Issue "(.*)" ((.*))$/) ||
+          content.match(/^(.*) assigned responsibility to you in Issue "(.*)" ((.*))$/);
   if (match) {
     return t('notif.content.assignedResponsibilityTemplate', '{name} đã giao trách nhiệm cho bạn trong Issue "{summary}" ({key})')
       .replace('{name}', match[1]).replace('{summary}', match[2]).replace('{key}', match[3]);
   }
 
   // 3. Mentioned in Issue
-  match = content.match(/^(.*) đã nhắc tên bạn trong Issue "(.*)" \((.*)\)$/);
+  match = content.match(/^(.*) đã nhắc tên bạn trong Issue "(.*)" ((.*))$/) ||
+          content.match(/^(.*) mentioned you in Issue "(.*)" ((.*))$/);
   if (match) {
     return t('notif.content.mentionedInIssueTemplate', '{name} đã nhắc tên bạn trong Issue "{summary}" ({key})')
       .replace('{name}', match[1]).replace('{summary}', match[2]).replace('{key}', match[3]);
   }
 
-  // 4. Mentioned in sub-task
-  match = content.match(/^(.*) đã nhắc tên bạn trong chi tiết công việc "(.*)" \((.*)\)$/);
+  // 4. Mentioned/Assigned in sub-task
+  match = content.match(/^(.*) đã nhắc tên bạn trong chi tiết công việc "(.*)" ((.*))$/) ||
+          content.match(/^(.*) đã giao một công việc cho bạn trong chi tiết của Issue "(.*)" ((.*))$/) ||
+          content.match(/^(.*) mentioned you in sub-task of Issue "(.*)" ((.*))$/) ||
+          content.match(/^(.*) assigned a task to you in sub-task of Issue "(.*)" ((.*))$/);
   if (match) {
     return t('notif.content.mentionedInSubtaskTemplate', '{name} đã nhắc tên bạn trong chi tiết công việc "{summary}" ({key})')
       .replace('{name}', match[1]).replace('{summary}', match[2]).replace('{key}', match[3]);
   }
 
   // 5. Mentioned in Chat
-  match = content.match(/^(.*) đã nhắc tên bạn trong kênh trò chuyện\.$/);
+  match = content.match(/^(.*) đã nhắc tên bạn trong kênh trò chuyện.$/) ||
+          content.match(/^(.*) mentioned you in chat.$/);
   if (match) {
     return t('notif.content.mentionedInChatTemplate', '{name} đã nhắc tên bạn trong kênh trò chuyện.')
       .replace('{name}', match[1]);
   }
 
   // 6. Assigned Task
-  match = content.match(/^Bạn được giao công việc '(.*)'$/);
+  match = content.match(/^Bạn được giao công việc '(.*)'$/) ||
+          content.match(/^You were assigned the task '(.*)'$/);
   if (match) {
     return t('notif.content.assignedTaskTemplate', "Bạn được giao công việc '{title}'")
       .replace('{title}', match[1]);
   }
 
   // 7. Comment on Task
-  match = content.match(/^(.*) đã bình luận trong công việc '(.*)'$/);
+  match = content.match(/^(.*) đã bình luận trong công việc '(.*)'$/) ||
+          content.match(/^(.*) commented on task '(.*)'$/);
   if (match) {
     return t('notif.content.commentOnTaskTemplate', "{name} đã bình luận trong công việc '{title}'")
       .replace('{name}', match[1]).replace('{title}', match[2]);
   }
 
   // 8. Added to project
-  match = content.match(/^Bạn vừa được thêm vào dự án "(.*)" với vai trò (.*)\.$/);
+  match = content.match(/^Bạn vừa được thêm vào dự án "(.*)" với vai trò (.*).$/) ||
+          content.match(/^You have been added to project "(.*)" with role (.*).$/);
   if (match) {
     return t('notif.content.addedToProjectTemplate', 'Bạn vừa được thêm vào dự án "{name}" với vai trò {role}.')
       .replace('{name}', match[1]).replace('{role}', match[2]);
   }
 
   // 9. Project Invitation
-  match = content.match(/^Bạn vừa được mời tham gia dự án "(.*)" với vai trò (.*)\. Hãy mở chi tiết để xác nhận\.$/);
+  match = content.match(/^Bạn vừa được mời tham gia dự án "(.*)" với vai trò (.*). Hãy mở chi tiết để xác nhận.$/) ||
+          content.match(/^You have been invited to join project "(.*)" with role (.*). Please open details to confirm.$/);
   if (match) {
     return t('notif.content.projectInvitationTemplate', 'Bạn vừa được mời tham gia dự án "{name}" với vai trò {role}. Hãy mở chi tiết để xác nhận.')
       .replace('{name}', match[1]).replace('{role}', match[2]);
   }
 
-  // 10. Daily report rejected
-  match = content.match(/^Báo cáo ngày (.*) của bạn đã bị từ chối\. Nhận xét: (.*)$/);
+  // 10. Related Member of Issue
+  match = content.match(/^(.*) đã thêm bạn làm thành viên liên quan trong Issue "(.*)" ((.*))$/) ||
+          content.match(/^(.*) added you as a related member in Issue "(.*)" ((.*))$/);
+  if (match) {
+    return t('notif.content.relatedMemberTemplate', '{name} đã thêm bạn làm thành viên liên quan trong Issue "{summary}" ({key})')
+      .replace('{name}', match[1]).replace('{summary}', match[2]).replace('{key}', match[3]);
+  }
+
+  // 11. Daily report rejected
+  match = content.match(/^Báo cáo ngày (.*) của bạn đã bị từ chối\. Nhận xét: (.*)$/) ||
+          content.match(/^Your daily report for (.*) was rejected\. Comment: (.*)$/);
   if (match) {
     return t('notif.content.dailyReportRejectedTemplate', 'Báo cáo ngày {date} của bạn đã bị từ chối. Nhận xét: {comment}')
       .replace('{date}', match[1]).replace('{comment}', match[2]);

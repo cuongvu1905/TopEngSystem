@@ -187,6 +187,19 @@ const formatSystemRole = (role, t) => {
 };
 
 
+const formatUserRoleForDailyReport = (role, t) => {
+  if (!role) return '';
+  const r = String(role);
+  if (r.includes('Admin') || r.includes('Quản trị viên')) return t('role.adminShort', 'Admin');
+  if (r.includes('HR') || r.includes('Nhân sự')) return t('role.hrShort', 'HR');
+  if (r.includes('Staff') || r.includes('Nhân viên')) return t('role.staffShort', 'Staff');
+  if (r.includes('Team Leader') || r.includes('Trưởng nhóm')) return t('role.teamLeaderShort', 'Team Leader');
+  if (r.includes('Part Leader') || r.includes('Trưởng bộ phận')) return t('role.partLeaderShort', 'Part Leader');
+  if (r.includes('Sales') || r.includes('Kinh doanh')) return t('role.salesShort', 'Sales');
+  if (r.includes('BOD') || r.includes('Ban điều hành')) return t('role.bodShort', 'BOD');
+  return r;
+};
+
 const translateDepartmentName = (name, t) => {
   if (!name || name === 'Chưa phân phòng') return t('dept.unassigned', 'Chưa phân phòng');
   const n = String(name);
@@ -1472,7 +1485,7 @@ export default function Dashboard() {
         {/* Widget 1: Issues */}
         {showIssues && (
           <div className="widget-box">
-            <div className="widget-box-header" onClick={() => handleOpenDetailPopup('issues')} title="Xem chi tiết vướng mắc">
+            <div className="widget-box-header" onClick={() => handleOpenDetailPopup('issues')} title={t('dashboard.viewIssueDetailsTooltip', 'Xem chi tiết vướng mắc')}>
               <h3 className="widget-box-title">ISSUE</h3>
             </div>
             <div className="widget-box-body">
@@ -1530,7 +1543,7 @@ export default function Dashboard() {
         {/* Widget 2: Việc cần làm */}
         {showTasks && (
           <div className="widget-box">
-            <div className="widget-box-header" onClick={() => handleOpenDetailPopup('tasks')} title="Xem chi tiết việc cần làm">
+            <div className="widget-box-header" onClick={() => handleOpenDetailPopup('tasks')} title={t('dashboard.viewTaskDetailsTooltip', 'Xem chi tiết việc cần làm')}>
               <h3 className="widget-box-title">{t('dashboard.toDoTasks', 'Việc cần làm')}</h3>
             </div>
             <div className="widget-box-body">
@@ -1594,7 +1607,7 @@ export default function Dashboard() {
         {/* Widget 3: Dự án */}
         {showProjects && (
           <div className="widget-box">
-            <div className="widget-box-header" onClick={() => handleOpenDetailPopup('projects')} title="Xem chi tiết dự án">
+            <div className="widget-box-header" onClick={() => handleOpenDetailPopup('projects')} title={t('dashboard.viewProjectDetailsTooltip', 'Xem chi tiết dự án')}>
               <h3 className="widget-box-title">{t('sidebar.projects', 'Dự án')}</h3>
             </div>
             <div className="widget-box-body">
@@ -1640,7 +1653,7 @@ export default function Dashboard() {
         {/* Widget 4: Báo cáo */}
         {showReports && (
           <div className="widget-box">
-            <div className="widget-box-header" onClick={() => handleOpenDetailPopup('reports')} title="Xem chi tiết báo cáo">
+            <div className="widget-box-header" onClick={() => handleOpenDetailPopup('reports')} title={t('dashboard.viewReportDetailsTooltip', 'Xem chi tiết báo cáo')}>
               <h3 className="widget-box-title">{t('sidebar.dailyReports', 'Báo cáo')}</h3>
             </div>
             <div className="widget-box-body">
@@ -1674,8 +1687,8 @@ export default function Dashboard() {
                               {report.user_name.split(' ').pop().charAt(0)}
                             </div>
                             <div>
-                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: '#1e293b', margin: 0 }}>{report.user_name}</h4>
-                              <span style={{ fontSize: '9px', color: 'var(--neutral-muted)', display: 'block', marginTop: '-2px' }}>{report.user_role}</span>
+                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--neutral-dark)', margin: 0 }}>{report.user_name}</h4>
+                              <span style={{ fontSize: '9px', color: 'var(--neutral-muted)', display: 'block', marginTop: '-2px' }}>{formatUserRoleForDailyReport(report.user_role, t)}</span>
                             </div>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
@@ -1808,18 +1821,18 @@ export default function Dashboard() {
                   {activeDetailPopup === 'tasks' && (
                     <>
                       <select value={popupFilter1} onChange={(e) => setPopupFilter1(e.target.value)} className="rectangular-filter-select">
-                        <option value="">Độ ưu tiên (Tất cả)</option>
-                        <option value="Khẩn cấp">Khẩn cấp</option>
-                        <option value="Cao">Cao</option>
-                        <option value="Trung bình">Trung bình</option>
-                        <option value="Thấp">Thấp</option>
+                        <option value="">{t('tasks.priorityAll', 'Độ ưu tiên (Tất cả)')}</option>
+                        <option value="Khẩn cấp">{t('tasks.priorityCritical', 'Khẩn cấp')}</option>
+                        <option value="Cao">{t('tasks.priorityHigh', 'Cao')}</option>
+                        <option value="Trung bình">{t('tasks.priorityMedium', 'Trung bình')}</option>
+                        <option value="Thấp">{t('tasks.priorityLow', 'Thấp')}</option>
                       </select>
                       <select value={popupFilter2} onChange={(e) => setPopupFilter2(e.target.value)} className="rectangular-filter-select">
                         <option value="">{t('common.statusAll', 'Trạng thái (Tất cả)')}</option>
-                        <option value="Todo">Todo</option>
-                        <option value="InProgress">InProgress</option>
-                        <option value="Review">Review</option>
-                        <option value="Done">Done</option>
+                        <option value="Todo">{t('common.status.todo', 'To do')}</option>
+                        <option value="InProgress">{t('common.status.inProgress', 'In progress')}</option>
+                        <option value="Review">{t('common.status.review', 'Review')}</option>
+                        <option value="Done">{t('common.status.done', 'Done')}</option>
                       </select>
                     </>
                   )}
@@ -1944,7 +1957,7 @@ export default function Dashboard() {
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                              <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-hover)', backgroundColor: 'var(--primary-light)', padding: '2px 8px', borderRadius: '4px' }}>
                                 {t('common.projectLabel', 'DỰ ÁN:')} {issueProj?.name || 'Chung'}
                               </span>
                               {issueProj && (
@@ -1981,8 +1994,8 @@ export default function Dashboard() {
                                selectedIssueDetail.issue.status}
                             </span>
                           </div>
-                          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '4px 0 0 0' }}>
-                            <Link href={`/projects/${selectedIssueDetail.issue.project_id}?issueId=${selectedIssueDetail.issue.id}`} style={{ color: '#0f172a', textDecoration: 'none' }} title="Xem chi tiết trong dự án">
+                          <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)', margin: '4px 0 0 0' }}>
+                            <Link href={`/projects/${selectedIssueDetail.issue.project_id}?issueId=${selectedIssueDetail.issue.id}`} style={{ color: 'var(--neutral-dark)', textDecoration: 'none' }} title="Xem chi tiết trong dự án">
                               {selectedIssueDetail.issue.summary}
                             </Link>
                           </h2>
@@ -1990,7 +2003,7 @@ export default function Dashboard() {
                       </div>
 
                       <div>
-                        <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>{t('issues.detailedDescription', 'Mô tả chi tiết')}</label>
+                        <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: 'var(--neutral-muted)' }}>{t('issues.detailedDescription', 'Mô tả chi tiết')}</label>
                         <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'var(--neutral-bg-main)', border: '1px solid var(--neutral-border)', fontSize: '13px', color: 'var(--neutral-dark)', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                           {(() => {
                             const parsed = parseIssueDescription(selectedIssueDetail.issue.description);
@@ -1999,26 +2012,26 @@ export default function Dashboard() {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                   {parsed.hientrang && (
                                     <div>
-                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[{t('issues.currentStatus', 'Hiện trạng')}]:</strong>
-                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.hientrang}</p>
+                                      <strong style={{ color: 'var(--neutral-dark)', fontSize: '12px' }}>[{t('issues.currentStatus', 'Hiện trạng')}]:</strong>
+                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: 'var(--neutral-dark)' }}>{parsed.hientrang}</p>
                                     </div>
                                   )}
                                   {parsed.nguyennhan && (
                                     <div>
-                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[{t('issues.cause', 'Nguyên nhân')}]:</strong>
-                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.nguyennhan}</p>
+                                      <strong style={{ color: 'var(--neutral-dark)', fontSize: '12px' }}>[{t('issues.cause', 'Nguyên nhân')}]:</strong>
+                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: 'var(--neutral-dark)' }}>{parsed.nguyennhan}</p>
                                     </div>
                                   )}
                                   {parsed.huonggiaiquyet && (
                                     <div>
-                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[{t('issues.solution', 'Hướng giải quyết')}]:</strong>
-                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.huonggiaiquyet}</p>
+                                      <strong style={{ color: 'var(--neutral-dark)', fontSize: '12px' }}>[{t('issues.solution', 'Hướng giải quyết')}]:</strong>
+                                      <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: 'var(--neutral-dark)' }}>{parsed.huonggiaiquyet}</p>
                                     </div>
                                   )}
                                   {parsed.ketqua && (
                                     <div>
-                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[{t('issues.result', 'Kết quả')}]:</strong>
-                                      <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#334155' }}>{parsed.ketqua}</p>
+                                      <strong style={{ color: 'var(--neutral-dark)', fontSize: '12px' }}>[{t('issues.result', 'Kết quả')}]:</strong>
+                                      <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: 'var(--neutral-dark)' }}>{parsed.ketqua}</p>
                                     </div>
                                   )}
                                 </div>
@@ -2031,14 +2044,14 @@ export default function Dashboard() {
 
                       {parseIssueDescription(selectedIssueDetail.issue.description).issueTasks?.length > 0 && (
                         <div>
-                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: '#475569' }}>{t('issues.subtasksTableTitle', 'Bảng chi tiết công việc phụ & giải pháp')}</label>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', fontSize: '12px' }}>
+                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: 'var(--neutral-muted)' }}>{t('issues.subtasksTableTitle', 'Bảng chi tiết công việc phụ & giải pháp')}</label>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--neutral-border)', fontSize: '12px', color: 'var(--neutral-dark)' }}>
                             <thead>
-                              <tr style={{ backgroundColor: '#f1f5f9' }}>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '40%' }}>{t('issues.subtaskName', 'Tên công việc phụ')}</th>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%' }}>{t('issues.subtaskAssignee', 'Người thực hiện')}</th>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%' }}>{t('issues.subtaskDeadline', 'Hạn chót')}</th>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '15%' }}>Trạng thái</th>
+                              <tr style={{ backgroundColor: 'var(--neutral-bg-hover)', color: 'var(--neutral-dark)' }}>
+                                <th style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', textAlign: 'left', width: '40%' }}>{t('issues.subtaskName', 'Tên công việc phụ')}</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', textAlign: 'left', width: '25%' }}>{t('issues.subtaskAssignee', 'Người thực hiện')}</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', textAlign: 'left', width: '20%' }}>{t('issues.subtaskDeadline', 'Hạn chót')}</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', textAlign: 'left', width: '15%' }}>Trạng thái</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -2062,8 +2075,8 @@ export default function Dashboard() {
                                   <tr key={idx}>
                                     <td style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', color: 'var(--neutral-dark)', fontWeight: '500' }}>{t.name || t.title || ''}</td>
                                     <td style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', color: 'var(--neutral-dark)' }}>{getPerformerForTask(t)}</td>
-                                    <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1' }}>{formatDate(t.deadline || t.dueDate)}</td>
-                                    <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
+                                    <td style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)' }}>{formatDate(t.deadline || t.dueDate)}</td>
+                                    <td style={{ padding: '6px 8px', border: '1px solid var(--neutral-border)', textAlign: 'center' }}>
                                       <span style={{ 
                                         display: 'inline-block',
                                         padding: '2px 8px', 
@@ -2192,7 +2205,7 @@ export default function Dashboard() {
 
                         <div>
                           <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: 'var(--neutral-muted)' }}>{t('tasks.description', 'Mô tả công việc')}</label>
-                          <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
+                          <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'var(--neutral-bg-main)', border: '1px solid var(--neutral-border)', fontSize: '13px', color: 'var(--neutral-dark)', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                             {(() => {
                               try {
                                 const parsed = JSON.parse(task.description);
@@ -2303,7 +2316,7 @@ export default function Dashboard() {
                           </div>
                           <div>
                             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--neutral-dark)' }}>{selectedReportForPopup.user_name}</h3>
-                            <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', fontWeight: '600' }}>{selectedReportForPopup.user_role}</span>
+                            <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', fontWeight: '600' }}>{formatUserRoleForDailyReport(selectedReportForPopup.user_role, t)}</span>
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>

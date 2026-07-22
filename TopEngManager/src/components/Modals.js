@@ -292,11 +292,11 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                 >
                   <option value="">{t('task.allDepartments', 'Tất cả phòng ban')}</option>
                   {departments.map(dept => (
-                    <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
+                    <option key={dept.department_id} value={dept.department_id}>{translateDepartmentName(dept.name, t)}</option>
                   ))}
                 </select>
               </div>
-              <div className="project-members-selector-list" style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="project-members-selector-list" style={{ maxHeight: '280px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {filteredUsers.length === 0 ? (
                   <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '13px', textAlign: 'center' }}>{t('project.noMatchingEmployees', 'Không tìm thấy nhân viên phù hợp')}</div>
                 ) : (
@@ -701,7 +701,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
               <option value="Done">Done</option>
             </select>
           </div>
-          <button className="close-btn" onClick={onClose}>&times;</button>
+          <button className="btn-close-modal" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
         </div>
         {isLockedByOther && (
           <div style={{
@@ -745,7 +745,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                         >
                           <option value="">{t('task.allDepartments', 'Tất cả phòng ban')}</option>
                           {departments.map(dept => (
-                            <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
+                            <option key={dept.department_id} value={dept.department_id}>{translateDepartmentName(dept.name, t)}</option>
                           ))}
                         </select>
                         <input 
@@ -756,7 +756,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                           style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
                         />
                       </div>
-                      <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: 'var(--neutral-bg-card)' }}>
+                      <div className="project-members-selector-list" style={{ maxHeight: '280px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: 'var(--neutral-bg-card)' }}>
                         {filteredMembers.length === 0 ? (
                           <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '12px', textAlign: 'center' }}>Không tìm thấy nhân viên phù hợp</div>
                         ) : (

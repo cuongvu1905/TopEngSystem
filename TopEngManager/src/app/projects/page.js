@@ -328,9 +328,9 @@ export default function Projects() {
             className="btn btn-secondary" 
             onClick={handleJoinProjectClick}
             style={{ 
-              backgroundColor: '#fff', 
-              color: '#334155', 
-              border: '1px solid #cbd5e1',
+              backgroundColor: 'var(--neutral-bg-card)', 
+              color: 'var(--neutral-dark)', 
+              border: '1px solid var(--neutral-border)',
               padding: '8px 16px',
               borderRadius: '6px',
               fontSize: '13px',
@@ -347,9 +347,9 @@ export default function Projects() {
             className="btn btn-secondary" 
             onClick={() => setIsCustomerModalOpen(true)}
             style={{ 
-              backgroundColor: '#fff', 
-              color: '#334155', 
-              border: '1px solid #cbd5e1',
+              backgroundColor: 'var(--neutral-bg-card)', 
+              color: 'var(--neutral-dark)', 
+              border: '1px solid var(--neutral-border)',
               padding: '8px 16px',
               borderRadius: '6px',
               fontSize: '13px',

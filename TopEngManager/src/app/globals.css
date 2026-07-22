@@ -1582,13 +1582,19 @@ h1, h2, h3, h4, h5, h6 {
 .btn-close-modal {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 24px;
   color: var(--neutral-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s, transform 0.2s;
 }
 .btn-close-modal:hover {
-  color: var(--neutral-dark);
+  color: var(--danger-color);
+  transform: scale(1.15);
 }
-
 .modal-body {
   padding: 20px;
   overflow-y: auto;
@@ -2237,4 +2243,11 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder {
   color: var(--neutral-muted) !important;
+}
+
+/* Invert native date & time picker calendar/clock icons in Dark Mode */
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) !important;
+  cursor: pointer;
 }
