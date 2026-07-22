@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AppContextProvider } from "@/context/AppContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import AppLayout from "@/components/AppLayout";
 
 export const metadata = {
@@ -18,11 +19,13 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <AppContextProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
-        </AppContextProvider>
+        <LanguageProvider>
+          <AppContextProvider>
+            <AppLayout>
+              {children}
+            </AppLayout>
+          </AppContextProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

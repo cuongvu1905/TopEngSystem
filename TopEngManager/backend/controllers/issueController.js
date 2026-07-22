@@ -42,20 +42,37 @@ exports.getIssues = async (req, res, next) => {
 exports.getIssueDetail = async (req, res, next) => {
   try {
     const { issueId, userId } = req.body;
-    const issue = await prisma.issue.findUnique({
-      where: { id: parseInt(issueId) }
-    });
+    
+    if (!issueId) {
+      return res.status(400).json({ error: 'Issue ID/Key is required' });
+    }
+
+    let issue = null;
+    const numericId = parseInt(issueId, 10);
+    
+    if (!isNaN(numericId) && String(numericId) === String(issueId).trim()) {
+      issue = await prisma.issue.findUnique({
+        where: { id: numericId }
+      });
+    }
+
+    if (!issue) {
+      issue = await prisma.issue.findUnique({
+        where: { issue_key: String(issueId).trim() }
+      });
+    }
     
     if (!issue) {
       return res.status(404).json({ error: 'Issue not found' });
     }
 
-    const existingLock = issueLocks[issueId];
+    const targetIssueId = issue.id;
+    const existingLock = issueLocks[targetIssueId];
     const now = Date.now();
     const isLocked = existingLock && existingLock.userId !== userId && (now - existingLock.lockedAt) < 15000;
 
     const dbComments = await prisma.issuecomments.findMany({
-      where: { issue_id: parseInt(issueId) },
+      where: { issue_id: targetIssueId },
       orderBy: { created_at: 'asc' },
       include: { user: true }
     });
@@ -70,7 +87,7 @@ exports.getIssueDetail = async (req, res, next) => {
     }));
 
     const dbHistory = await prisma.issuehistory.findMany({
-      where: { issue_id: parseInt(issueId) },
+      where: { issue_id: targetIssueId },
       orderBy: { changed_at: 'desc' },
       include: { user: true }
     });
@@ -195,9 +212,18 @@ const checkIssuePermission = async (issueId, userId) => {
   if (!user) return false;
 
   // Find issue
-  const issue = await prisma.issue.findUnique({
-    where: { id: parseInt(issueId) }
-  });
+  let issue = null;
+  const numericId = parseInt(issueId, 10);
+  if (!isNaN(numericId) && String(numericId) === String(issueId).trim()) {
+    issue = await prisma.issue.findUnique({
+      where: { id: numericId }
+    });
+  }
+  if (!issue) {
+    issue = await prisma.issue.findUnique({
+      where: { issue_key: String(issueId).trim() }
+    });
+  }
   if (!issue) return false;
 
   // Check reporter

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { getSwal } from '@/utils/swal';
 
@@ -72,6 +73,7 @@ const formatReportContentHtml = (content, projects) => {
 
 export default function DailyReportsPage() {
   const { currentUser, users, projects, projectMembers } = useApp();
+  const { t } = useLanguage();
   
   const systemRole = currentUser?.system_role || '';
   const isAdminOrManagement = systemRole.includes("Admin") || systemRole.includes("BOD") || systemRole.includes("HR");
@@ -313,10 +315,10 @@ export default function DailyReportsPage() {
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
             <i className="fa-solid fa-file-invoice" style={{ marginRight: '10px', color: 'var(--primary-color)' }}></i>
-            Báo Cáo Hàng Ngày
+            {t('reports.title', 'Báo Cáo Hàng Ngày')}
           </h1>
           <p style={{ fontSize: '14px', color: 'var(--neutral-muted)', marginTop: '4px' }}>
-            Gửi báo cáo tiến độ công việc hàng ngày và quản lý danh sách báo cáo của cá nhân.
+            {t('reports.subtitle', 'Gửi báo cáo tiến độ công việc hàng ngày và quản lý danh sách báo cáo của cá nhân.')}
           </p>
         </div>
         <div>
@@ -339,7 +341,7 @@ export default function DailyReportsPage() {
               boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
-            <i className="fa-solid fa-clock-rotate-left"></i> Lịch sử báo cáo đã gửi
+            <i className="fa-solid fa-clock-rotate-left"></i> {t('reports.history', 'Lịch sử báo cáo đã gửi')}
           </button>
         </div>
       </div>
@@ -350,10 +352,10 @@ export default function DailyReportsPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="fa-solid fa-pen-nib" style={{ color: 'var(--primary-color)' }}></i>
-              Viết báo cáo
+              {t('reports.createDailyReport', 'Viết báo cáo')}
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--neutral-muted)' }}>Ngày báo cáo:</span>
+              <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--neutral-muted)' }}>{t('reports.reportDate', 'Ngày báo cáo:')}</span>
               <input 
                 type="date" 
                 value={reportDate} 
@@ -411,13 +413,13 @@ export default function DailyReportsPage() {
                   {/* Left Column: Content Textarea */}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ display: 'block', fontSize: '14.5px', fontWeight: '600', color: '#1e293b' }}>
-                      Nội dung <span style={{ color: 'red' }}>*</span>
+                      {t('reports.content', 'Nội dung')} <span style={{ color: 'red' }}>*</span>
                     </label>
                     <textarea
                       value={card.content}
                       onChange={(e) => updateCardField(card.id, 'content', e.target.value)}
                       required
-                      placeholder="Nhập nội dung báo cáo trong khung giờ này..."
+                      placeholder={t('reports.placeholderContent', 'Nhập nội dung báo cáo trong khung giờ này...')}
                       rows="6"
                       style={{ 
                         width: '100%', 
@@ -438,7 +440,7 @@ export default function DailyReportsPage() {
                     {/* Time fields */}
                     <div>
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#1e293b' }}>
-                        Khung giờ:
+                        {t('reports.timeframe', 'Khung giờ:')}
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ 
@@ -510,12 +512,11 @@ export default function DailyReportsPage() {
                     {/* Project select */}
                     <div>
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#1e293b' }}>
-                        Chọn dự án <span style={{ color: 'red' }}>*</span>
+                        {t('reports.selectProject', 'Chọn dự án')}
                       </label>
                       <select
                         value={card.projectId}
                         onChange={(e) => updateCardField(card.id, 'projectId', e.target.value)}
-                        required
                         style={{ 
                           width: '100%', 
                           padding: '10px', 
@@ -526,7 +527,7 @@ export default function DailyReportsPage() {
                           color: '#334155' 
                         }}
                       >
-                        <option value="">-- Chọn dự án --</option>
+                        <option value="">{t('reports.selectProjectOptional', '-- Chọn dự án (Không bắt buộc) --')}</option>
                         {myProjects?.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
@@ -557,7 +558,7 @@ export default function DailyReportsPage() {
                             fontWeight: '600'
                           }}
                         >
-                          Chọn Tệp
+                          {t('common.selectAttachment', 'Chọn Tệp')}
                         </button>
                         {card.fileName && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
@@ -647,7 +648,7 @@ export default function DailyReportsPage() {
                 style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontWeight: '700' }}
               >
                 <i className="fa-solid fa-paper-plane"></i>
-                {isSubmitting ? "Đang xử lý..." : editingReportId ? "Cập Nhật Báo Cáo" : "Gửi Báo Cáo"}
+                {isSubmitting ? t('common.submitting', 'Đang xử lý...') : editingReportId ? t('reports.updateReport', 'Cập Nhật Báo Cáo') : t('common.submit', 'Gửi Báo Cáo')}
               </button>
             </div>
           </form>

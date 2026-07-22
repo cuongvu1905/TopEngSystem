@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '@/utils/db';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
 
 const formatDateForInput = (dateVal) => {
@@ -49,6 +50,7 @@ const ModalWrapperLg = ({ isOpen, children, onClose, style }) => {
 
 // ================= 1. PROJECT MODAL =================
 export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved }) => {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [projectKey, setProjectKey] = useState('');
   const [description, setDescription] = useState('');
@@ -179,7 +181,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
       onClose();
     } catch (e) {
       const Swal = await getSwal();
-      Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu dự án: " + e.message });
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('project.saveProjectError', 'Lỗi lưu dự án: ') + e.message });
     }
   };
 
@@ -205,34 +207,34 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
     <ModalWrapper isOpen={isOpen} onClose={onClose} style={{ maxWidth: '800px', width: '90%' }}>
       <div className="modal-content">
         <div className="modal-header">
-          <h3>{projectId ? 'Chỉnh Sửa Dự Án' : 'Tạo Dự Án Mới'}</h3>
+          <h3>{projectId ? t('project.editProjectTitle', 'Chỉnh Sửa Dự Án') : t('project.createProjectTitle', 'Tạo Dự Án Mới')}</h3>
           <button className="btn-close-modal" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             <div className="form-group">
-              <label>Tên dự án <span className="required">*</span></label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Nhập tên dự án..." />
+              <label>{t('project.projectName', 'Tên dự án')} <span className="required">*</span></label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder={t('project.projectNamePlaceholder', 'Nhập tên dự án...')} />
             </div>
             <div className="form-group">
-              <label>Mã dự án <span className="required">*</span></label>
+              <label>{t('project.projectKey', 'Mã dự án')} <span className="required">*</span></label>
               <input 
                 type="text" 
                 value={projectKey} 
                 onChange={(e) => setProjectKey(e.target.value.toUpperCase())} 
                 required 
                 disabled={!canEditProjectKey}
-                placeholder="Ví dụ: PS000000,PP00000..." 
+                placeholder={t('project.projectKeyPlaceholder', 'Ví dụ: PS000000,PP00000...')} 
               />
             </div>
             <div className="form-group">
-              <label>Mô tả</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="3" placeholder="Nhập mô tả dự án..."></textarea>
+              <label>{t('project.projectDesc', 'Mô tả')}</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="3" placeholder={t('project.projectDescPlaceholder', 'Nhập mô tả dự án...')}></textarea>
             </div>
             <div className="form-group">
-              <label>Khách hàng</label>
+              <label>{t('project.customer', 'Khách hàng')}</label>
               <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', width: '100%', outline: 'none' }}>
-                <option value="">-- Chọn khách hàng --</option>
+                <option value="">{t('project.selectCustomerDefault', '-- Chọn khách hàng --')}</option>
                 {customers.map(c => (
                   <option key={c.customer_id} value={c.customer_id}>{c.customer_name}</option>
                 ))}
@@ -240,30 +242,30 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
             </div>
 
             <div className="form-group">
-              <label>Phân loại dự án <span className="required">*</span></label>
+              <label>{t('project.projectClassification', 'Phân loại dự án')} <span className="required">*</span></label>
               <select value={visibility} onChange={(e) => setVisibility(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', width: '100%', outline: 'none' }}>
-                <option value="Private">Private (Dự án nội bộ - Giữ nguyên tính năng bảo mật)</option>
-                <option value="Public">Public (Dự án công khai - Mở rộng mời/tham gia tự do)</option>
+                <option value="Private">{t('project.privateOption', 'Private (Dự án nội bộ - Giữ nguyên tính năng bảo mật)')}</option>
+                <option value="Public">{t('project.publicOption', 'Public (Dự án công khai - Mở rộng mời/tham gia tự do)')}</option>
               </select>
             </div>
 
             <div className="form-row" style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
               <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                <label>Ngày bắt đầu</label>
+                <label>{t('project.startDate', 'Ngày bắt đầu')}</label>
                 <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} />
               </div>
               <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                <label>Ngày kết thúc</label>
+                <label>{t('project.endDate', 'Ngày kết thúc')}</label>
                 <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} />
               </div>
             </div>
             
             <div className="form-group">
-              <label>Thành viên dự án</label>
+              <label>{t('project.projectMembers', 'Thành viên dự án')}</label>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                 <input 
                   type="text" 
-                  placeholder="Tìm kiếm thành viên..." 
+                  placeholder={t('task.searchMember', 'Tìm kiếm thành viên...')} 
                   value={searchQuery} 
                   onChange={(e) => setSearchQuery(e.target.value)} 
                   style={{ flex: 1, padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
@@ -273,7 +275,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
                   onChange={(e) => setSelectedDept(e.target.value)} 
                   style={{ width: '160px', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
                 >
-                  <option value="">Tất cả phòng ban</option>
+                  <option value="">{t('task.allDepartments', 'Tất cả phòng ban')}</option>
                   {departments.map(dept => (
                     <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
                   ))}
@@ -281,7 +283,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
               </div>
               <div className="project-members-selector-list" style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {filteredUsers.length === 0 ? (
-                  <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '13px', textAlign: 'center' }}>Không tìm thấy nhân viên phù hợp</div>
+                  <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '13px', textAlign: 'center' }}>{t('project.noMatchingEmployees', 'Không tìm thấy nhân viên phù hợp')}</div>
                 ) : (
                   filteredUsers.map(u => {
                     const isChecked = !!selectedMembers[u.id];
@@ -316,8 +318,8 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
             </div>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>Hủy</button>
-            <button type="submit" className="btn btn-primary">{projectId ? 'Lưu thay đổi' : 'Tạo dự án'}</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>{t('common.cancel', 'Hủy')}</button>
+            <button type="submit" className="btn btn-primary">{projectId ? t('project.saveChanges', 'Lưu thay đổi') : t('project.createProjectBtn', 'Tạo dự án')}</button>
           </div>
         </form>
       </div>
@@ -327,6 +329,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
 
 // ================= 2. TASK MODAL (DETAIL & COLLAB) =================
 export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSaved }) => {
+  const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
@@ -666,10 +669,10 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
       <div className="modal-content">
         <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--neutral-border)' }}>
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
-            {taskId ? 'Chi tiết công việc' : 'Giao việc mới'}
+            {taskId ? t('task.taskDetail', 'Chi tiết công việc') : t('task.assignNewTask', 'Giao việc mới')}
           </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', marginRight: '16px' }}>
-            <label style={{ fontWeight: '600', fontSize: '13px', color: '#475569', margin: 0 }}>Trạng thái:</label>
+            <label style={{ fontWeight: '600', fontSize: '13px', color: '#475569', margin: 0 }}>{t('common.status', 'Trạng thái:')}</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
@@ -707,16 +710,16 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
           <div className="modal-split-left">
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Tiêu đề công việc <span className="required">*</span></label>
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} disabled={!isPM || isLockedByOther} required placeholder="Nhập tiêu đề công việc..." />
+                <label>{t('task.taskTitle', 'Tiêu đề công việc')} <span className="required">*</span></label>
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} disabled={!isPM || isLockedByOther} required placeholder={t('task.enterTaskTitle', 'Nhập tiêu đề công việc...')} />
               </div>
               <div className="form-group">
-                <label>Mô tả công việc</label>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={!isPM || isLockedByOther} rows="4" placeholder="Nhập mô tả chi tiết..."></textarea>
+                <label>{t('task.taskDescription', 'Mô tả công việc')}</label>
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={!isPM || isLockedByOther} rows="4" placeholder={t('task.enterDescription', 'Nhập mô tả chi tiết...')}></textarea>
               </div>
               <div className="form-row" style={{ display: 'flex', gap: '16px' }}>
                 <div className="form-group col-6" style={{ flex: 1 }}>
-                  <label>Người thực hiện</label>
+                  <label>{t('project.assigneeLabel', 'Người thực hiện')}</label>
                   {isPM ? (
                     <div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
@@ -725,14 +728,14 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                           onChange={(e) => setAssigneeSelectedDept(e.target.value)} 
                           style={{ width: '100%', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
                         >
-                          <option value="">Tất cả phòng ban</option>
+                          <option value="">{t('task.allDepartments', 'Tất cả phòng ban')}</option>
                           {departments.map(dept => (
                             <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
                           ))}
                         </select>
                         <input 
                           type="text" 
-                          placeholder="Tìm kiếm thành viên..." 
+                          placeholder={t('task.searchMember', 'Tìm kiếm thành viên...')} 
                           value={assigneeSearchQuery} 
                           onChange={(e) => setAssigneeSearchQuery(e.target.value)} 
                           style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '12px', outline: 'none' }}
@@ -787,21 +790,21 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                
               </div>
                <div className="form-group col-6" style={{ width: '100%' }}>
-                  <label>Hạn chót (Deadline)</label>
+                  <label>{t('task.dueDate', 'Hạn chót (Deadline)')}</label>
                   <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={!isPM || isLockedByOther} style={{ width: '100%' }} />
                 </div>
               <div className="form-row">
                 <div className="form-group col-12" style={{ width: '100%' }}>
-                  <label>Độ ưu tiên</label>
+                  <label>{t('task.priority', 'Độ ưu tiên')}</label>
                   <select value={priority} onChange={(e) => setPriority(e.target.value)} disabled={!isPM || isLockedByOther} style={{ width: '100%' }}>
-                    <option value="Thấp">Thấp</option>
-                    <option value="Trung bình">Trung bình</option>
-                    <option value="Cao">Cao</option>
+                    <option value="Thấp">{t('task.priorityLow', 'Thấp')}</option>
+                    <option value="Trung bình">{t('task.priorityMedium', 'Trung bình')}</option>
+                    <option value="Cao">{t('task.priorityHigh', 'Cao')}</option>
                   </select>
                 </div>
               </div>
               <div className="task-form-actions">
-                {isPM && !isLockedByOther && <button type="submit" className="btn btn-primary">Lưu thay đổi</button>}
+                {isPM && !isLockedByOther && <button type="submit" className="btn btn-primary">{t('common.saveChanges', 'Lưu thay đổi')}</button>}
               </div>
             </form>
 
@@ -812,10 +815,10 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
             <div className="modal-split-right">
               {/* Attachments */}
               <div className="task-section">
-                <h4 className="section-title"><i className="fa-solid fa-paperclip"></i> Đính kèm</h4>
+                <h4 className="section-title"><i className="fa-solid fa-paperclip"></i> {t('task.attachments', 'Đính kèm')}</h4>
                 <div className="attachment-list">
                   {attachments.length === 0 ? (
-                    <p className="text-muted" style={{ fontSize: '11.5px' }}>Chưa đính kèm tài liệu nào.</p>
+                    <p className="text-muted" style={{ fontSize: '11.5px' }}>{t('task.noAttachmentsYet', 'Chưa đính kèm tài liệu nào.')}</p>
                   ) : (
                     attachments.map((att, idx) => (
                       <div className="attachment-item" key={idx}>
@@ -843,7 +846,7 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                     className="btn btn-secondary btn-sm btn-block" 
                     style={{ marginBottom: 0, opacity: isLockedByOther ? 0.6 : 1, pointerEvents: isLockedByOther ? 'none' : 'auto', cursor: isLockedByOther ? 'not-allowed' : 'pointer' }}
                   >
-                    <i className="fa-solid fa-cloud-arrow-up"></i> Tải file lên
+                    <i className="fa-solid fa-cloud-arrow-up"></i> {t('task.uploadFile', 'Tải file lên')}
                     <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isLockedByOther} />
                   </label>
                 </div>
@@ -851,10 +854,10 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
 
               {/* Comments */}
               <div className="task-section comment-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <h4 className="section-title"><i className="fa-solid fa-comments"></i> Chat với người giao task</h4>
+                <h4 className="section-title"><i className="fa-solid fa-comments"></i> {t('task.chatWithReporter', 'Chat với người giao task')}</h4>
                 <div className="comments-list" style={{ maxHeight: '180px', overflowY: 'auto', padding: '4px' }}>
                   {comments.length === 0 ? (
-                    <p className="text-muted" style={{ fontSize: '11.5px', textAlign: 'center', padding: '12px' }}>Chưa có tin nhắn thảo luận nào.</p>
+                    <p className="text-muted" style={{ fontSize: '11.5px', textAlign: 'center', padding: '12px' }}>{t('task.noDiscussionMessages', 'Chưa có tin nhắn thảo luận nào.')}</p>
                   ) : (
                     comments.map(c => {
                       const u = projectMembers.find(m => m.id === c.user_id) || users.find(usr => usr.id === c.user_id) || { name: c.user_id, color: 'var(--neutral-muted)' };
@@ -889,10 +892,10 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                         handleAddComment();
                       }
                     }}
-                    placeholder="Nhập nội dung trao đổi..." 
+                    placeholder={t('task.enterMessagePlaceholder', 'Nhập nội dung trao đổi...')} 
                     style={{ flex: 1, padding: '8px 12px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--neutral-border)', outline: 'none' }} 
                   />
-                  <button type="button" className="btn btn-primary btn-sm" style={{ padding: '6px 12px' }} onClick={handleAddComment}>Gửi</button>
+                  <button type="button" className="btn btn-primary btn-sm" style={{ padding: '6px 12px' }} onClick={handleAddComment}>{t('common.send', 'Gửi')}</button>
                 </div>
               </div>
             </div>
@@ -1070,6 +1073,7 @@ export const DocumentModal = ({ isOpen, onClose, docId, projId, currentUser, cur
 
 // ================= 4. CUSTOMER MODAL =================
 export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
+  const { t } = useLanguage();
   const [customers, setCustomers] = useState([]);
   const [activeCustomerId, setActiveCustomerId] = useState('new');
   
@@ -1156,7 +1160,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!custName || !custCode) {
-      setErrorMsg('Tên khách hàng và Mã khách hàng là bắt buộc.');
+      setErrorMsg(t('customer.nameAndCodeRequired', 'Tên khách hàng và Mã khách hàng là bắt buộc.'));
       return;
     }
 
@@ -1175,7 +1179,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
 
       const res = await db.saveCustomer(payload);
       if (res.success) {
-        const message = activeCustomerId === 'new' ? 'Đã thêm khách hàng thành công!' : 'Đã cập nhật thông tin khách hàng!';
+        const message = activeCustomerId === 'new' ? t('customer.addCustomerSuccess', 'Đã thêm khách hàng thành công!') : t('customer.updateCustomerSuccess', 'Đã cập nhật thông tin khách hàng!');
         setSuccessMsg(message);
         
         await db.logActivity(
@@ -1199,7 +1203,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || 'Lỗi khi lưu khách hàng.');
+      setErrorMsg(err.message || t('customer.saveCustomerError', 'Lỗi khi lưu khách hàng.'));
     } finally {
       setLoading(false);
     }
@@ -1210,7 +1214,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
       <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '520px', maxHeight: '90vh' }}>
         <div className="modal-header" style={{ borderBottom: '1px solid var(--neutral-border)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
-            <i className="fa-solid fa-user-tie" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i> Quản lý khách hàng
+            <i className="fa-solid fa-user-tie" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i> {t('customer.manageCustomers', 'Quản lý khách hàng')}
           </h3>
           <button className="btn-close-modal" onClick={onClose} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
         </div>
@@ -1218,7 +1222,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
           {/* Left panel - Customer List */}
           <div style={{ width: '240px', borderRight: '1px solid var(--neutral-border)', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc', height: '100%' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: '#475569', backgroundColor: '#f1f5f9' }}>
-              Danh sách khách hàng
+              {t('customer.customerList', 'Danh sách khách hàng')}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
               <button 
@@ -1242,14 +1246,14 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                   transition: 'all 0.15s'
                 }}
               >
-                <i className="fa-solid fa-plus-circle" style={{ fontSize: '14px' }}></i> Thêm khách hàng
+                <i className="fa-solid fa-plus-circle" style={{ fontSize: '14px' }}></i> {t('customer.addCustomer', 'Thêm khách hàng')}
               </button>
               
               <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '8px 0' }} />
               
               {customers.length === 0 ? (
                 <div style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: 'var(--neutral-muted)' }}>
-                  Chưa có khách hàng nào
+                  {t('customer.noCustomers', 'Chưa có khách hàng nào')}
                 </div>
               ) : (
                 customers.map(c => (
@@ -1288,7 +1292,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
           {/* Right panel - Customer Form */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#fff', overflowY: 'auto', padding: '24px' }}>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#1e293b', borderBottom: '2px solid #3b82f6', paddingBottom: '8px', display: 'inline-block', width: 'fit-content' }}>
-              {activeCustomerId === 'new' ? 'Thêm khách hàng' : activeCustomerId === 'new' ? 'Thêm khách hàng' : custName}
+              {activeCustomerId === 'new' ? t('customer.addCustomer', 'Thêm khách hàng') : custName}
             </h4>
             
             {errorMsg && (
@@ -1308,7 +1312,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                 <tbody>
                   <tr>
                     <td style={{ width: '30%', backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
-                      Tên Khách Hàng <span className="required" style={{ color: '#ef4444' }}>*</span>
+                      {t('customer.customerName', 'Tên Khách Hàng')} <span className="required" style={{ color: '#ef4444' }}>*</span>
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
                       {isEditing ? (
@@ -1317,7 +1321,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                           value={custName} 
                           onChange={(e) => setCustName(e.target.value)} 
                           style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
-                          placeholder="Nhập tên khách hàng..."
+                          placeholder={t('customer.enterCustomerName', 'Nhập tên khách hàng...')}
                           required
                         />
                       ) : (
@@ -1329,7 +1333,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                   </tr>
                   <tr>
                     <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
-                      Mã Khách Hàng <span className="required" style={{ color: '#ef4444' }}>*</span>
+                      {t('customer.customerId', 'Mã Khách Hàng')} <span className="required" style={{ color: '#ef4444' }}>*</span>
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
                       {isEditing && activeCustomerId === 'new' ? (
@@ -1338,7 +1342,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                           value={custCode} 
                           onChange={(e) => setCustCode(e.target.value)} 
                           style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
-                          placeholder="Nhập mã khách hàng..."
+                          placeholder={t('customer.enterCustomerId', 'Nhập mã khách hàng...')}
                           required
                         />
                       ) : (
@@ -1350,7 +1354,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                   </tr>
                   <tr>
                     <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
-                      Địa chỉ
+                      {t('customer.address', 'Địa chỉ')}
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
                       {isEditing ? (
@@ -1359,18 +1363,18 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                           value={address} 
                           onChange={(e) => setAddress(e.target.value)} 
                           style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
-                          placeholder="Nhập địa chỉ..."
+                          placeholder={t('customer.enterAddress', 'Nhập địa chỉ...')}
                         />
                       ) : (
                         <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
-                          {address || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Chưa có thông tin</span>}
+                          {address || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>{t('customer.noInfo', 'Chưa có thông tin')}</span>}
                         </div>
                       )}
                     </td>
                   </tr>
                   <tr>
                     <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
-                      Mã số thuế
+                      {t('customer.taxCode', 'Mã số thuế')}
                     </td>
                     <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
                       {isEditing ? (
@@ -1379,7 +1383,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                           value={taxCode} 
                           onChange={(e) => setTaxCode(e.target.value)} 
                           style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
-                          placeholder="Nhập mã số thuế..."
+                          placeholder={t('customer.enterTaxCode', 'Nhập mã số thuế...')}
                         />
                       ) : (
                         <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
@@ -1400,14 +1404,14 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                       onClick={handleCancelEdit}
                       disabled={loading}
                     >
-                      Hủy
+                      {t('common.cancel', 'Hủy')}
                     </button>
                     <button 
                       type="submit" 
                       className="btn btn-primary" 
                       disabled={loading}
                     >
-                      {loading ? 'Đang lưu...' : 'Lưu'}
+                      {loading ? t('common.saving', 'Đang lưu...') : t('common.save', 'Lưu')}
                     </button>
                   </>
                 ) : (
@@ -1416,7 +1420,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                     className="btn btn-primary" 
                     onClick={handleStartEdit}
                   >
-                    Sửa
+                    {t('common.edit', 'Sửa')}
                   </button>
                 )}
               </div>

@@ -363,8 +363,16 @@ export const MySQLAdapter = {
     return await callApi('getDailyReports', { userId, userRole });
   },
 
+  getProjectReports: async function(projectId) {
+    return await callApi('getProjectReports', { projectId });
+  },
+
   createDailyReport: async function(report) {
     return await callApi('createDailyReport', report);
+  },
+
+  createProjectReport: async function(report) {
+    return await callApi('createProjectReport', report);
   },
 
   updateDailyReportStatus: async function(reportId, status, comment, userRole) {

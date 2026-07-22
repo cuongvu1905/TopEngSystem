@@ -2,12 +2,43 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { usePathname, useRouter } from 'next/navigation';
 import { getSwal } from '@/utils/swal';
 
+
+const translateDepartmentName = (name, t) => {
+  if (!name || name === 'Chưa phân phòng') return t('dept.unassigned', 'Chưa phân phòng');
+  if (name.includes('Hành chính Nhân sự') || name === 'HR') return t('dept.hr', 'Phòng Hành chính Nhân sự (HR)');
+  if (name.includes('Phát triển Phần mềm') || name === 'R&D') return t('dept.rd', 'Phòng Phát triển Phần mềm (R&D)');
+  if (name.includes('Kinh doanh') || name === 'Sales') return t('dept.sales', 'Phòng Kinh doanh (Sales)');
+  if (name.includes('Kế toán Tài chính') || name.includes('Finance')) return t('dept.finance', 'Phòng Kế toán Tài chính');
+  if (name.includes('Truyền thông Marketing') || name.includes('Marketing')) return t('dept.marketing', 'Phòng Truyền thông Marketing');
+  if (name.includes('BOD TOPV') || name === 'BOD') return t('dept.bod', 'BOD TOPV');
+  if (name === 'Nhân sự 1') return t('dept.hr1', 'Nhân sự 1');
+  if (name === 'PC') return t('dept.pc', 'PC');
+  if (name === 'PC1') return t('dept.pc1', 'PC1');
+  if (name === 'PC2') return t('dept.pc2', 'PC2');
+  return name;
+};
+
+const formatSystemRole = (role, t) => {
+  if (!role) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  if (role.includes('Admin') || role.includes('Quản trị viên')) return t('role.admin', 'QUẢN TRỊ VIÊN (ADMIN)');
+  if (role.includes('HR') || role.includes('Nhân sự')) return t('role.hr', 'NHÂN SỰ (HR)');
+  if (role.includes('Staff') || role.includes('Nhân viên')) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  if (role.includes('Team Leader')) return t('role.teamLeader', 'TEAM LEADER');
+  if (role.includes('Part Leader')) return t('role.partLeader', 'PART LEADER');
+  if (role.includes('Sales') || role.includes('Kinh doanh')) return t('role.sales', 'KINH DOANH (SALES)');
+  if (role.includes('BOD') || role.includes('Ban điều hành')) return t('role.bod', 'BAN ĐIỀU HÀNH (BOD)');
+  return role.toUpperCase();
+};
+
 export default function Header() {
   const { currentUser, logout, users, notifications, reloadAll } = useApp();
+  const { currentLang, changeLanguage, languages, currentLanguageObj, t } = useLanguage();
+  const [isLangOpen, setIsLangOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const pathname = usePathname();
@@ -26,17 +57,21 @@ export default function Header() {
   if (!currentUser) return null;
 
   // Title translation logic based on pathname
-  let pageTitle = "Bảng điều khiển";
+  let pageTitle = t('sidebar.dashboard', 'Bảng điều khiển');
   if (pathname.startsWith('/projects')) {
-    pageTitle = pathname.includes('/projects/') ? "Chi tiết dự án" : "Quản lý Dự án";
+    pageTitle = pathname.includes('/projects/') ? t('projects.projectDetailTitle', 'Chi tiết dự án') : t('sidebar.projects', 'Quản lý Dự án');
   } else if (pathname === '/tasks') {
-    pageTitle = "Quản lý Công việc";
+    pageTitle = t('sidebar.tasks', 'Quản lý Công việc');
   } else if (pathname === '/chat') {
-    pageTitle = "Hộp thoại Trò chuyện";
+    pageTitle = t('sidebar.chat', 'Hộp thoại Trò chuyện');
   } else if (pathname === '/documents') {
-    pageTitle = "Quản lý Tài liệu";
+    pageTitle = t('sidebar.documents', 'Quản lý Tài liệu');
   } else if (pathname === '/activity-logs') {
-    pageTitle = "Lịch sử Hoạt động";
+    pageTitle = t('sidebar.activityLogs', 'Lịch sử Hoạt động');
+  } else if (pathname === '/hr') {
+    pageTitle = t('sidebar.teamManagement', 'Quản lý nhân sự');
+  } else if (pathname === '/daily-reports') {
+    pageTitle = t('sidebar.dailyReports', 'Báo cáo hàng ngày');
   }
 
   const handleShowTeamTree = async () => {
@@ -151,7 +186,7 @@ export default function Header() {
       Swal.fire({
         title: 'Cơ cấu Team',
         html: treeHtml,
-        confirmButtonText: 'Đóng',
+        confirmButtonText: t('header.close', 'Đóng'),
         confirmButtonColor: 'var(--primary-color)'
       });
 
@@ -186,7 +221,7 @@ export default function Header() {
     }
 
     Swal.fire({
-      title: 'Hồ sơ cá nhân',
+      title: t('header.profileTitle', 'Hồ sơ cá nhân'),
       html: `
         <div style="text-align: left; padding: 10px;">
           <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--neutral-border); padding-bottom: 15px;">
@@ -199,7 +234,7 @@ export default function Header() {
             </div>
           </div>
           <div style="display: grid; grid-template-columns: 100px 1fr; gap: 10px; font-size: 14px;">
-            <strong style="color: var(--neutral-muted);">Mã nhân viên:</strong>
+            <strong style="color: var(--neutral-muted);">` + t('header.employeeIdLabel', 'Mã nhân viên:') + `</strong>
             <span>${currentUser.id}</span>
             ${teamName ? `
               <strong style="color: var(--neutral-muted);">Team:</strong>
@@ -238,7 +273,7 @@ export default function Header() {
   const handleShowChangePassword = async () => {
     const Swal = await getSwal();
     Swal.fire({
-      title: 'Đổi mật khẩu',
+      title: t('header.changePasswordTitle', 'Đổi mật khẩu'),
       html: `
         <div style="text-align: left; padding: 10px;">
           <div class="form-group" style="margin-bottom: 12px;">
@@ -256,8 +291,8 @@ export default function Header() {
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Đổi mật khẩu',
-      cancelButtonText: 'Hủy',
+      confirmButtonText: t('header.changePasswordTitle', 'Đổi mật khẩu'),
+      cancelButtonText: t('header.cancel', 'Hủy'),
       confirmButtonColor: 'var(--primary-color)',
       focusConfirm: false,
       preConfirm: () => {
@@ -340,6 +375,66 @@ export default function Header() {
         
         <div className="header-right">
           {/* Notification dropdown */}
+          {/* Flag / Language Combobox Dropdown */}
+          <div className="header-action-item language-dropdown-wrapper" style={{ position: 'relative', marginRight: '8px' }}>
+            <button 
+              className="icon-btn" 
+              onClick={() => setIsLangOpen(!isLangOpen)}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', border: '1px solid var(--neutral-border)', backgroundColor: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}
+            >
+              <span style={{ fontSize: '16px' }}>{currentLanguageObj.flag}</span>
+              <span style={{ fontSize: '12px', color: '#1e293b' }}>{currentLanguageObj.code.toUpperCase()}</span>
+              <i className="fa-solid fa-chevron-down" style={{ fontSize: '10px', color: '#64748b' }}></i>
+            </button>
+            <div 
+              className={`dropdown-menu ${isLangOpen ? 'show' : ''}`} 
+              style={{ 
+                position: 'absolute',
+                top: '100%',
+                right: 0, 
+                minWidth: '160px',
+                padding: '6px',
+                borderRadius: '8px',
+                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)',
+                backgroundColor: '#ffffff',
+                zIndex: 1000,
+                display: isLangOpen ? 'block' : 'none'
+              }}
+            >
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', padding: '6px 10px', textTransform: 'uppercase' }}>
+                {t('header.language', 'Ngôn ngữ')}
+              </div>
+              {languages.map(lang => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    changeLanguage(lang.code);
+                    setIsLangOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 12px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: currentLang === lang.code ? '#eff6ff' : 'transparent',
+                    color: currentLang === lang.code ? 'var(--primary-color)' : '#334155',
+                    fontWeight: currentLang === lang.code ? '700' : '500',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span style={{ fontSize: '16px' }}>{lang.flag}</span>
+                  <span>{lang.name}</span>
+                  {currentLang === lang.code && <i className="fa-solid fa-check" style={{ marginLeft: 'auto', fontSize: '11px' }}></i>}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="header-action-item notification-dropdown-wrapper">
             <button className="icon-btn" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}>
               <i className="fa-regular fa-bell"></i>
@@ -402,21 +497,21 @@ export default function Header() {
                   className="btn btn-secondary btn-sm" 
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  <i className="fa-solid fa-user"></i> Chi tiết tài khoản
+                  <i className="fa-solid fa-user"></i> {t('header.accountDetails', 'Chi tiết tài khoản')}
                 </button>
                 <button 
                   onClick={handleShowChangePassword} 
                   className="btn btn-secondary btn-sm" 
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  <i className="fa-solid fa-key"></i> Đổi mật khẩu
+                  <i className="fa-solid fa-key"></i> {t('header.changePassword', 'Đổi mật khẩu')}
                 </button>
                 <button 
                   onClick={handleLogout} 
                   className="btn btn-danger btn-sm" 
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                 >
-                  <i className="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                  <i className="fa-solid fa-arrow-right-from-bracket"></i> {t('header.logout', 'Đăng xuất')}
                 </button>
               </div>
             </div>

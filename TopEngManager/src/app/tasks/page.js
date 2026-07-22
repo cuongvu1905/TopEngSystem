@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { TaskModal } from '@/components/Modals';
 import { getSwal } from '@/utils/swal';
@@ -39,6 +40,7 @@ const parseTaskDescription = (desc) => {
 
 export default function Tasks() {
   const { currentUser, projects, tasks, projectMembers, users, reloadAll } = useApp();
+  const { t } = useLanguage();
 
   const [selectedProj, setSelectedProj] = useState('all');
   const [selectedAssignee, setSelectedAssignee] = useState('all');
@@ -136,17 +138,17 @@ export default function Tasks() {
     <div className="scrollable-view">
       <div className="view-header">
         <div className="view-title-group">
-          <h2>Bảng Quản lý Công việc</h2>
-          <p>Lọc công việc theo dự án và cập nhật trạng thái trực quan.</p>
+          <h2>{t('tasks.boardTitle', 'Bảng Quản lý Công việc')}</h2>
+          <p>{t('tasks.boardSubtitle', 'Lọc công việc theo dự án và cập nhật trạng thái trực quan.')}</p>
         </div>
       </div>
       
       <div className="doc-filters" style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <label style={{ fontWeight: 500 }}>Dự án:</label>
+            <label style={{ fontWeight: 500 }}>{t('common.projectLabel', 'Dự án:')}</label>
             <select value={selectedProj} onChange={(e) => setSelectedProj(e.target.value)} className="doc-select-filter" style={{ minWidth: '220px' }}>
-              <option value="all">--- Tất cả dự án ---</option>
+              <option value="all">{t('projects.allProjects', '--- Tất cả dự án ---')}</option>
               {projectsList.map(p => (
                 <option value={p.id} key={p.id}>{p.name}</option>
               ))}
@@ -154,16 +156,16 @@ export default function Tasks() {
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <label style={{ fontWeight: 500 }}>Người nhận:</label>
+            <label style={{ fontWeight: 500 }}>{t('tasks.assigneeLabel', 'Người nhận:')}</label>
             <select value={selectedAssignee} onChange={(e) => setSelectedAssignee(e.target.value)} className="doc-select-filter">
-              <option value="all">Tất cả mọi người</option>
-              <option value="me">Chỉ mình tôi</option>
+              <option value="all">{t('tasks.allPeople', 'Tất cả mọi người')}</option>
+              <option value="me">{t('tasks.myTasksFilter', 'Chỉ mình tôi')}</option>
             </select>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
             <button className={`btn btn-secondary btn-sm ${viewMode === 'kanban' ? 'active' : ''}`} onClick={() => setViewMode('kanban')}><i className="fa-solid fa-cubes"></i> Kanban</button>
-            <button className={`btn btn-secondary btn-sm ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}><i className="fa-solid fa-list"></i> Danh sách</button>
+            <button className={`btn btn-secondary btn-sm ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}><i className="fa-solid fa-list"></i> {t('tasks.listView', 'Danh sách')}</button>
           </div>
         </div>
       </div>
@@ -171,10 +173,10 @@ export default function Tasks() {
       {viewMode === 'kanban' ? (
         <div className="kanban-board">
           {[
-            { id: "Todo", title: "Cần làm", class: "todo" },
-            { id: "InProgress", title: "Đang làm", class: "inprogress" },
-            { id: "Review", title: "Đang duyệt", class: "review" },
-            { id: "Done", title: "Hoàn thành", class: "done" }
+            { id: "Todo", title: "TO DO", class: "todo" },
+            { id: "InProgress", title: "IN PROGRESS", class: "inprogress" },
+            { id: "Review", title: "REVIEW", class: "review" },
+            { id: "Done", title: "DONE", class: "done" }
           ].map(col => {
             const colTasks = filteredTasks.filter(t => t.status === col.id);
             return (
@@ -213,7 +215,7 @@ export default function Tasks() {
                         key={t.id}
                       >
                         <div className="task-card-header">
-                          <span className={`badge ${pClass}`}>{t.priority}</span>
+                          <span className={`badge ${pClass}`}>{(t.priority === 'Cao' || t.priority === 'High' || t.priority === 'HIGH') ? 'HIGH' : (t.priority === 'Trung bình' || t.priority === 'Medium' || t.priority === 'MEDIUM') ? 'MEDIUM' : (t.priority === 'Thấp' || t.priority === 'Low' || t.priority === 'LOW') ? 'LOW' : (t.priority === 'Khẩn cấp' || t.priority === 'Critical' || t.priority === 'CRITICAL') ? 'CRITICAL' : (t.priority ? t.priority.toUpperCase() : 'MEDIUM')}</span>
                           <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                             {currentAssigneeIds.length > 0 ? (
                               currentAssigneeIds.map((id, idx) => {
@@ -265,12 +267,12 @@ export default function Tasks() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Tiêu đề</th>
-                <th>Độ ưu tiên</th>
-                <th>Hạn chót</th>
-                <th>Người phụ trách</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
+                <th>{t('tasks.titleCol', 'Tiêu đề')}</th>
+                <th>{t('tasks.priorityCol', 'Độ ưu tiên')}</th>
+                <th>{t('tasks.deadlineCol', 'Hạn chót')}</th>
+                <th>{t('tasks.assigneeCol', 'Người phụ trách')}</th>
+                <th>{t('common.status', 'Trạng thái')}</th>
+                <th>{t('tasks.actionsCol', 'Hành động')}</th>
               </tr>
             </thead>
             <tbody>
@@ -291,7 +293,7 @@ export default function Tasks() {
                 return (
                   <tr key={t.id}>
                     <td><a href="#" onClick={(e) => { e.preventDefault(); openTaskDetail(t.id); }} style={{ color: 'var(--neutral-dark)', fontWeight: '500' }}>{t.title}</a></td>
-                    <td><span className={`badge ${pClass}`}>{t.priority}</span></td>
+                    <td><span className={`badge ${pClass}`}>{(t.priority === 'Cao' || t.priority === 'High' || t.priority === 'HIGH') ? 'HIGH' : (t.priority === 'Trung bình' || t.priority === 'Medium' || t.priority === 'MEDIUM') ? 'MEDIUM' : (t.priority === 'Thấp' || t.priority === 'Low' || t.priority === 'LOW') ? 'LOW' : (t.priority === 'Khẩn cấp' || t.priority === 'Critical' || t.priority === 'CRITICAL') ? 'CRITICAL' : (t.priority ? t.priority.toUpperCase() : 'MEDIUM')}</span></td>
                     <td style={{ color: isOverdue ? 'var(--danger-color)' : 'inherit', fontWeight: isOverdue ? '600' : 'normal' }}>{t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'N/A'}</td>
                     <td>
                       {(() => {
@@ -345,12 +347,12 @@ export default function Tasks() {
                             <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--neutral-muted)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9.5px', fontWeight: '600' }}>
                               ?
                             </div>
-                            <span>Chưa giao</span>
+                            <span>{t('tasks.unassigned', 'Chưa giao')}</span>
                           </div>
                         );
                       })()}
                     </td>
-                    <td><span className={`badge ${statusBadgeClass}`}>{t.status}</span></td>
+                    <td><span className={`badge ${statusBadgeClass}`}>{t.status === 'Todo' ? 'TO DO' : t.status === 'InProgress' ? 'IN PROGRESS' : t.status === 'Review' ? 'REVIEW' : t.status === 'Done' ? 'DONE' : t.status}</span></td>
                     <td>
                       <button className="btn-icon-sm" onClick={() => openTaskDetail(t.id)}><i className="fa-solid fa-eye"></i></button>
                     </td>

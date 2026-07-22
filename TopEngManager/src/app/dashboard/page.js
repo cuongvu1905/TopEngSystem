@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/utils/db';
@@ -33,69 +34,22 @@ const isMentionedInIssue = (issue, user, users) => {
   return false;
 };
 
-// Helper to parse description from issue JSON
-const parseIssueDescription = (desc) => {
-  try {
-    const data = JSON.parse(desc);
-    if (data && typeof data === 'object') {
-      return {
-        text: data.text || '',
-        hientrang: data.hientrang || '',
-        nguyennhan: data.nguyennhan || '',
-        huonggiaiquyet: data.huonggiaiquyet || '',
-        ketqua: data.ketqua || '',
-        issueTasks: data.issueTasks || [],
-        assigneesText: data.assigneesText || ''
-      };
-    }
-  } catch (e) {
-    // ignore
-  }
-  return {
-    text: desc || '',
-    hientrang: '',
-    nguyennhan: '',
-    huonggiaiquyet: '',
-    ketqua: '',
-    issueTasks: [],
-    assigneesText: ''
-  };
-};
-
-const getPerformerForTask = (task) => {
-  if (!task.solutions || !Array.isArray(task.solutions)) return task.assignee || 'Chưa phân công';
-  const executors = task.solutions
-    .filter(s => s.action?.trim() && s.executor?.trim())
-    .map(s => s.executor.trim());
-  if (executors.length > 0) {
-    const uniqueExecutors = Array.from(new Set(executors));
-    return uniqueExecutors.map(name => name.startsWith('@') ? name : `@${name}`).join(' ');
-  }
-  return task.assignee || 'Chưa phân công';
-};
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return 'N/A';
-  try {
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('vi-VN');
-    }
-  } catch (e) {}
-  return dateStr;
-};
-
+// Helper to get text snippet from report content
 const getReportSnippet = (content) => {
+  if (!content) return 'Không có nội dung';
   try {
     const parsed = JSON.parse(content);
-    if (Array.isArray(parsed)) {
-      return parsed.map(c => `[${c.startTime}-${c.endTime}] ${c.content}`).join(' | ');
+    if (parsed && typeof parsed === 'object') {
+      const text = parsed.text || parsed.hientrang || parsed.workDone || parsed.content || '';
+      return text.length > 80 ? text.slice(0, 80) + '...' : text || 'Không có nội dung';
     }
   } catch (e) {}
-  return content;
+  return content.length > 80 ? content.slice(0, 80) + '...' : content;
 };
 
+// Helper to render report content visually with cards/time/project/attachment info
 const renderReportContentVisual = (content, projects) => {
+  if (!content) return null;
   try {
     const parsed = JSON.parse(content);
     if (Array.isArray(parsed)) {
@@ -144,8 +98,53 @@ const renderReportContentVisual = (content, projects) => {
   return <div style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineHeight: '1.5', color: '#334155' }}>{content}</div>;
 };
 
+
+
+// Helper to parse issue description JSON
+const parseIssueDescription = (desc) => {
+  if (!desc) {
+    return {
+      text: '',
+      hientrang: '',
+      nguyennhan: '',
+      huonggiaiquyet: '',
+      ketqua: '',
+      deadline: '',
+      issueTasks: [],
+      assigneesText: ''
+    };
+  }
+  try {
+    const data = JSON.parse(desc);
+    if (data && typeof data === 'object') {
+      return {
+        text: data.text || '',
+        hientrang: data.hientrang || '',
+        nguyennhan: data.nguyennhan || '',
+        huonggiaiquyet: data.huonggiaiquyet || '',
+        ketqua: data.ketqua || '',
+        deadline: data.deadline || '',
+        issueTasks: data.issueTasks || [],
+        assigneesText: data.assigneesText || '',
+        relatedUserIds: data.relatedUserIds || []
+      };
+    }
+  } catch (e) {}
+  return {
+    text: desc || '',
+    hientrang: '',
+    nguyennhan: '',
+    huonggiaiquyet: '',
+    ketqua: '',
+    deadline: '',
+    issueTasks: [],
+    assigneesText: ''
+  };
+};
+
 export default function Dashboard() {
   const { currentUser, projects, tasks, subtasks, documents, notifications, projectMembers, users, reloadAll, hasPermission } = useApp();
+  const { t } = useLanguage();
   const router = useRouter();
 
   // Customization state
@@ -268,7 +267,19 @@ export default function Dashboard() {
       const res = await db.getIssueDetail(issueId);
       setSelectedIssueDetail(res);
     } catch (err) {
-      console.error(err);
+      console.warn("Failed to load issue detail:", err.message || err);
+      setSelectedIssueDetail(null);
+      if (typeof setSelectedIssueIdForPopup === 'function') {
+        setSelectedIssueIdForPopup(null);
+      }
+      import('sweetalert2').then((Swal) => {
+        Swal.default.fire({
+          icon: 'error',
+          title: 'Không tìm thấy Issue',
+          text: 'Issue không tồn tại hoặc đã bị xóa khỏi hệ thống.',
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      });
     } finally {
       setLoadingIssueDetail(false);
     }
@@ -546,14 +557,20 @@ export default function Dashboard() {
       return myDept && !myDept.parent_id;
     })();
 
+    const isBOD = currentUser.system_role?.includes('Ban điều hành') || 
+                  currentUser.system_role?.includes('BOD');
+
     const isAdminUser = currentUser.system_role?.includes('Admin') || 
-                      currentUser.system_role?.includes('Ban điều hành') || 
-                      currentUser.system_role?.includes('BOD') || 
                       currentUser.system_role?.includes('Nhân sự') || 
                       currentUser.system_role?.includes('HR');
 
+    if (isBOD) {
+      // BOD only tracks Team Leaders
+      return users.filter(u => u.system_role === 'Team Leader');
+    }
+
     if (isAdminUser) {
-      // Admin/BOD/HR sees everyone whose role is check-worthy (Staff, TL, PL, Sales), excluding Admins themselves
+      // Admin/HR sees everyone whose role is check-worthy (Staff, TL, PL, Sales), excluding Admins/BOD themselves
       return users.filter(u => 
         !u.system_role?.includes('Admin') && 
         !u.system_role?.includes('BOD') && 
@@ -1283,20 +1300,20 @@ export default function Dashboard() {
       {/* Top Header bar with personalization toggle */}
       <div className="dashboard-header-bar">
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--neutral-dark)' }}>Giao diện Tổng quan</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--neutral-dark)' }}>{t('dashboard.overview', 'Giao diện Tổng quan')}</h1>
           <p style={{ fontSize: '13px', color: 'var(--neutral-muted)', marginTop: '2px' }}>
-            Xin chào, <strong>{currentUser.name}</strong> ({currentUser.system_role}). Dưới đây là hoạt động hôm nay của bạn.
+            {t('dashboard.welcomePrefix', 'Xin chào, ')}<strong>{currentUser.name}</strong> ({currentUser.system_role}){t('dashboard.welcomeSuffix', '. Dưới đây là hoạt động hôm nay của bạn.')}
           </p>
         </div>
         <div style={{ position: 'relative' }}>
           <button className="config-btn" onClick={() => setShowConfigDropdown(!showConfigDropdown)}>
             <i className="fa-solid fa-sliders"></i>
-            Tùy chỉnh Dashboard
+            {t('dashboard.customize', 'Tùy chỉnh Dashboard')}
           </button>
           {showConfigDropdown && (
             <div className="config-dropdown">
               <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--neutral-muted)', paddingBottom: '4px', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}>
-                Chọn thẻ hiển thị
+                {t('dashboard.selectCards', 'Chọn thẻ hiển thị')}
               </span>
               <label className="config-dropdown-item" style={{ opacity: canAccessIssues ? 1 : 0.5 }}>
                 <input 
@@ -1345,7 +1362,7 @@ export default function Dashboard() {
           <div className="stat-card-clickable" onClick={() => handleOpenDetailPopup('issues')}>
             <div className="stat-info">
               <h3>{myIssuesSorted.length}</h3>
-              <p>Issue được Mention</p>
+              <p>{t('dashboard.mentionedIssues', 'Issue được Mention')}</p>
             </div>
             <div className="stat-icon warning" style={{ backgroundColor: 'var(--warning-light)', color: 'var(--warning-color)' }}>
               <i className="fa-solid fa-circle-exclamation"></i>
@@ -1356,7 +1373,7 @@ export default function Dashboard() {
           <div className="stat-card-clickable" onClick={() => handleOpenDetailPopup('tasks')}>
             <div className="stat-info">
               <h3>{myTasksSorted.length}</h3>
-              <p>Công việc được giao</p>
+              <p>{t('dashboard.assignedTasks', 'Công việc được giao')}</p>
             </div>
             <div className="stat-icon danger" style={{ backgroundColor: 'var(--danger-light)', color: 'var(--danger-color)' }}>
               <i className="fa-solid fa-list-check"></i>
@@ -1367,7 +1384,7 @@ export default function Dashboard() {
           <div className="stat-card-clickable" onClick={() => handleOpenDetailPopup('projects')}>
             <div className="stat-info">
               <h3>{myProjectsSorted.length}</h3>
-              <p>Dự án tham gia</p>
+              <p>{t('dashboard.joinedProjects', 'Dự án tham gia')}</p>
             </div>
             <div className="stat-icon primary" style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary-color)' }}>
               <i className="fa-solid fa-folder-open"></i>
@@ -1378,7 +1395,7 @@ export default function Dashboard() {
           <div className="stat-card-clickable" onClick={() => handleOpenDetailPopup('reports')}>
             <div className="stat-info">
               <h3>{reportsFiltered.length}</h3>
-              <p>Báo cáo ghi nhận</p>
+              <p>{t('dashboard.recordedReports', 'Báo cáo ghi nhận')}</p>
             </div>
             <div className="stat-icon success" style={{ backgroundColor: 'var(--success-light)', color: 'var(--success-color)' }}>
               <i className="fa-solid fa-file-invoice"></i>
@@ -1402,7 +1419,7 @@ export default function Dashboard() {
               ) : myIssuesSorted.length === 0 ? (
                 <div className="empty-widget-state">
                   <i className="fa-solid fa-circle-check" style={{ fontSize: '28px', color: 'var(--success-color)' }}></i>
-                  Không có vướng mắc nào nhắc tên bạn.
+                  {t('dashboard.noMentionedIssues', 'Không có vướng mắc nào nhắc tên bạn.')}
                 </div>
               ) : (
                 myIssuesSorted.slice(0, 4).map(issue => {
@@ -1452,7 +1469,7 @@ export default function Dashboard() {
         {showTasks && (
           <div className="widget-box">
             <div className="widget-box-header" onClick={() => handleOpenDetailPopup('tasks')} title="Xem chi tiết việc cần làm">
-              <h3 className="widget-box-title">Việc cần làm</h3>
+              <h3 className="widget-box-title">{t('dashboard.toDoTasks', 'Việc cần làm')}</h3>
             </div>
             <div className="widget-box-body">
               {loadingData ? (
@@ -1460,7 +1477,7 @@ export default function Dashboard() {
               ) : myTasksSorted.length === 0 ? (
                 <div className="empty-widget-state">
                   <i className="fa-solid fa-calendar-check" style={{ fontSize: '28px', color: 'var(--success-color)' }}></i>
-                  Tuyệt vời! Bạn không có việc nào chưa hoàn thành.
+                  {t('dashboard.noPendingTasks', 'Tuyệt vời! Bạn không có việc nào chưa hoàn thành.')}
                 </div>
               ) : (
                 myTasksSorted.slice(0, 4).map(task => {
@@ -1516,7 +1533,7 @@ export default function Dashboard() {
         {showProjects && (
           <div className="widget-box">
             <div className="widget-box-header" onClick={() => handleOpenDetailPopup('projects')} title="Xem chi tiết dự án">
-              <h3 className="widget-box-title">Dự án</h3>
+              <h3 className="widget-box-title">{t('sidebar.projects', 'Dự án')}</h3>
             </div>
             <div className="widget-box-body">
               {loadingData ? (
@@ -1524,7 +1541,7 @@ export default function Dashboard() {
               ) : myProjectsSorted.length === 0 ? (
                 <div className="empty-widget-state">
                   <i className="fa-solid fa-folder" style={{ fontSize: '28px' }}></i>
-                  Bạn chưa được phân công vào dự án nào.
+                  {t('dashboard.noAssignedProjects', 'Bạn chưa được phân công vào dự án nào.')}
                 </div>
               ) : (
                 myProjectsSorted.slice(0, 4).map(proj => {
@@ -1536,14 +1553,14 @@ export default function Dashboard() {
                     <div key={proj.id} className="item-row-card" onClick={() => router.push(`/projects/${proj.id}`)}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className="item-title-text" style={{ fontSize: '13.5px' }}>{proj.name}</span>
-                        <span className="badge badge-info">{proj.status || 'Thực thi'}</span>
+                        <span className="badge badge-info">{(proj.status === 'Thực thi' || proj.status === 'Ongoing') ? 'ONGOING' : (proj.status === 'Giám sát' || proj.status === 'Monitoring') ? 'MONITORING' : (proj.status === 'Kết thúc' || proj.status === 'Finished') ? 'FINISHED' : (proj.status ? proj.status.toUpperCase() : 'ONGOING')}</span>
                       </div>
                       <p style={{ fontSize: '12px', color: 'var(--neutral-muted)', margin: '4px 0', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                        {proj.description || 'Không có mô tả dự án.'}
+                        {proj.description || t('projects.noDescription', 'Không có mô tả dự án.')}
                       </p>
                       <div style={{ marginTop: '4px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontSize: '11px', fontWeight: 'bold' }}>
-                          <span>Tiến độ</span>
+                          <span>{t('project.progress', 'Tiến độ')}</span>
                           <span>{progress}%</span>
                         </div>
                         <div className="progress-bar-outer" style={{ height: '5px', borderRadius: '4px', backgroundColor: '#e2e8f0' }}>
@@ -1562,7 +1579,7 @@ export default function Dashboard() {
         {showReports && (
           <div className="widget-box">
             <div className="widget-box-header" onClick={() => handleOpenDetailPopup('reports')} title="Xem chi tiết báo cáo">
-              <h3 className="widget-box-title">Báo cáo</h3>
+              <h3 className="widget-box-title">{t('sidebar.dailyReports', 'Báo cáo')}</h3>
             </div>
             <div className="widget-box-body">
               {loadingData ? (
@@ -1570,7 +1587,7 @@ export default function Dashboard() {
               ) : reportsFiltered.length === 0 ? (
                 <div className="empty-widget-state" style={{ color: 'var(--neutral-muted)', fontSize: '13px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '24px' }}>
                   <i className="fa-solid fa-circle-check" style={{ color: 'var(--success-color)', fontSize: '24px' }}></i>
-                  Không có báo cáo nào chờ duyệt.
+                  {t('dashboard.noPendingReports', 'Không có báo cáo nào chờ duyệt.')}
                 </div>
               ) : (
                 <div className="reports-grid-dashboard">
@@ -1604,7 +1621,7 @@ export default function Dashboard() {
                               {new Date(report.created_at).toLocaleDateString('vi-VN')}
                             </span>
                             <span style={{ fontSize: '9px', color: report.status === 'Approved' ? 'var(--success-color)' : report.status === 'Rejected' ? 'var(--danger-color)' : 'var(--warning-color)', fontWeight: 'bold' }}>
-                              {report.status === 'Approved' ? 'Đã duyệt' : report.status === 'Rejected' ? 'Từ chối' : 'Chờ duyệt'}
+                              {report.status === 'Approved' ? 'APPROVED' : report.status === 'Rejected' ? 'REJECTED' : 'PENDING'}
                             </span>
                           </div>
                         </div>
@@ -1649,10 +1666,10 @@ export default function Dashboard() {
             {/* Modal Header */}
             <div className="modal-header" style={{ borderBottom: '1.5px solid #e2e8f0', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-                {activeDetailPopup === 'issues' && "Chi tiết vướng mắc được Mention"}
-                {activeDetailPopup === 'tasks' && "Chi tiết công việc được giao"}
-                {activeDetailPopup === 'projects' && "Chi tiết dự án tham gia"}
-                {activeDetailPopup === 'reports' && "Chi tiết báo cáo ngày"}
+                {activeDetailPopup === 'issues' && t('dashboard.mentionedIssueDetail', 'Chi tiết vướng mắc được Mention')}
+                {activeDetailPopup === 'tasks' && t('dashboard.assignedTaskDetail', 'Chi tiết công việc được giao')}
+                {activeDetailPopup === 'projects' && t('dashboard.joinedProjectDetail', 'Chi tiết dự án tham gia')}
+                {activeDetailPopup === 'reports' && t('dashboard.dailyReportDetail', 'Chi tiết báo cáo ngày')}
               </h3>
               <button className="btn-close-modal" style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '18px', color: '#64748b' }} onClick={() => setActiveDetailPopup(null)}>
                 <i className="fa-solid fa-xmark"></i>
@@ -1690,7 +1707,7 @@ export default function Dashboard() {
                     onClick={() => setIsCheckingStatusMode(!isCheckingStatusMode)}
                   >
                     <i className={isCheckingStatusMode ? "fa-solid fa-list" : "fa-solid fa-calendar-check"}></i>
-                    {isCheckingStatusMode ? 'Xem danh sách báo cáo' : 'Kiểm tra tình trạng báo cáo'}
+                    {isCheckingStatusMode ? t('reports.viewReportList', 'Xem danh sách báo cáo') : t('reports.checkStatusMode', 'Kiểm tra tình trạng báo cáo')}
                   </button>
                 )}
 
@@ -1698,7 +1715,7 @@ export default function Dashboard() {
                 <div>
                   <input 
                     type="text" 
-                    placeholder="Search" 
+                    placeholder={t('common.search', 'Tìm kiếm...')} 
                     value={popupSearch}
                     onChange={(e) => setPopupSearch(e.target.value)}
                     className="pill-search-input"
@@ -1710,14 +1727,14 @@ export default function Dashboard() {
                   {activeDetailPopup === 'issues' && (
                     <>
                       <select value={popupFilter1} onChange={(e) => setPopupFilter1(e.target.value)} className="rectangular-filter-select">
-                        <option value="">Độ ưu tiên (Tất cả)</option>
+                        <option value="">{t('issues.priorityAll', 'Độ ưu tiên (Tất cả)')}</option>
                         <option value="CRITICAL">CRITICAL</option>
                         <option value="HIGH">HIGH</option>
                         <option value="MEDIUM">MEDIUM</option>
                         <option value="LOW">LOW</option>
                       </select>
                       <select value={popupFilter2} onChange={(e) => setPopupFilter2(e.target.value)} className="rectangular-filter-select">
-                        <option value="">Loại Issue (Tất cả)</option>
+                        <option value="">{t('issues.typeAll', 'Loại Issue (Tất cả)')}</option>
                         <option value="STORY">STORY</option>
                         <option value="TASK">TASK</option>
                         <option value="BUG">BUG</option>
@@ -1736,7 +1753,7 @@ export default function Dashboard() {
                         <option value="Thấp">Thấp</option>
                       </select>
                       <select value={popupFilter2} onChange={(e) => setPopupFilter2(e.target.value)} className="rectangular-filter-select">
-                        <option value="">Trạng thái (Tất cả)</option>
+                        <option value="">{t('common.statusAll', 'Trạng thái (Tất cả)')}</option>
                         <option value="Todo">Todo</option>
                         <option value="InProgress">InProgress</option>
                         <option value="Review">Review</option>
@@ -1747,7 +1764,7 @@ export default function Dashboard() {
 
                   {activeDetailPopup === 'projects' && (
                     <select value={popupFilter1} onChange={(e) => setPopupFilter1(e.target.value)} className="rectangular-filter-select">
-                      <option value="">Trạng thái dự án (Tất cả)</option>
+                      <option value="">{t('projects.statusAll', 'Trạng thái dự án (Tất cả)')}</option>
                       <option value="Thực thi">Thực thi</option>
                       <option value="Giám sát">Giám sát</option>
                       <option value="Kết thúc">Kết thúc</option>
@@ -1757,16 +1774,16 @@ export default function Dashboard() {
                   {activeDetailPopup === 'reports' && (
                     <>
                       <select value={popupFilter1} onChange={(e) => setPopupFilter1(e.target.value)} className="rectangular-filter-select">
-                        <option value="">Dự án liên kết (Tất cả)</option>
+                        <option value="">{t('reports.linkedProjectAll', 'Dự án liên kết (Tất cả)')}</option>
                         {projects.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
                       <select value={popupFilter2} onChange={(e) => setPopupFilter2(e.target.value)} className="rectangular-filter-select">
-                        <option value="">Trạng thái duyệt (Tất cả)</option>
-                        <option value="Pending">Chờ duyệt</option>
-                        <option value="Approved">Đã duyệt</option>
-                        <option value="Rejected">Từ chối</option>
+                        <option value="">{t('reports.statusAll', 'Trạng thái duyệt (Tất cả)')}</option>
+                        <option value="Pending">PENDING</option>
+                        <option value="Approved">APPROVED</option>
+                        <option value="Rejected">REJECTED</option>
                       </select>
                     </>
                   )}
@@ -1775,7 +1792,7 @@ export default function Dashboard() {
                 {/* Items List (Scrollable) */}
                 <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                   {getFilteredItems().length === 0 ? (
-                    <div style={{ color: 'var(--neutral-muted)', fontSize: '12.5px', textAlign: 'center', padding: '24px 0' }}>Không tìm thấy dữ liệu.</div>
+                    <div style={{ color: 'var(--neutral-muted)', fontSize: '12.5px', textAlign: 'center', padding: '24px 0' }}>{t('common.noDataFound', 'Không tìm thấy dữ liệu.')}</div>
                   ) : (
                     getFilteredItems().map(item => {
                       let isActive = false;
@@ -1802,13 +1819,13 @@ export default function Dashboard() {
                         isActive = item.id === selectedProjectIdForPopup;
                         cardTitle = item.name;
                         cardSubtext = item.project_key;
-                        cardBadgeText = item.status || 'Thực thi';
+                        cardBadgeText = (item.status === 'Thực thi' || item.status === 'Ongoing') ? 'Ongoing' : (item.status === 'Giám sát' || item.status === 'Monitoring') ? 'Monitoring' : (item.status === 'Kết thúc' || item.status === 'Finished') ? 'Finished' : (item.status || 'Ongoing');
                         cardBadgeColor = 'var(--primary-color)';
                       } else if (activeDetailPopup === 'reports') {
                         isActive = item.id === selectedReportForPopup?.id;
                         cardTitle = item.user_name;
                         cardSubtext = new Date(item.created_at).toLocaleDateString('vi-VN');
-                        cardBadgeText = item.status === 'Approved' ? 'Duyệt' : item.status === 'Rejected' ? 'Từ chối' : 'Chờ';
+                        cardBadgeText = item.status === 'Approved' ? 'APPROVED' : item.status === 'Rejected' ? 'REJECTED' : 'PENDING';
                         cardBadgeColor = item.status === 'Approved' ? 'var(--success-color)' : item.status === 'Rejected' ? 'var(--danger-color)' : 'var(--warning-color)';
                       }
 
@@ -1866,7 +1883,7 @@ export default function Dashboard() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                               <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
-                                DỰ ÁN: {issueProj?.name || 'Chung'}
+                                {t('common.projectLabel', 'DỰ ÁN:')} {issueProj?.name || 'Chung'}
                               </span>
                               {issueProj && (
                                 <Link 
@@ -1886,7 +1903,7 @@ export default function Dashboard() {
                                   }}
                                   title="Đi tới chi tiết vướng mắc trong dự án"
                                 >
-                                  Xem trong dự án <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: '9px' }}></i>
+                                  {t('issues.viewInProject', 'Xem trong dự án')} <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: '9px' }}></i>
                                 </Link>
                               )}
                             </div>
@@ -1911,7 +1928,7 @@ export default function Dashboard() {
                       </div>
 
                       <div>
-                        <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>Mô tả chi tiết</label>
+                        <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>{t('issues.detailedDescription', 'Mô tả chi tiết')}</label>
                         <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                           {(() => {
                             const parsed = parseIssueDescription(selectedIssueDetail.issue.description);
@@ -1920,45 +1937,45 @@ export default function Dashboard() {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                   {parsed.hientrang && (
                                     <div>
-                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[Hiện trạng]:</strong>
+                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[{t('issues.currentStatus', 'Hiện trạng')}]:</strong>
                                       <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.hientrang}</p>
                                     </div>
                                   )}
                                   {parsed.nguyennhan && (
                                     <div>
-                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[Nguyên nhân]:</strong>
+                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[{t('issues.cause', 'Nguyên nhân')}]:</strong>
                                       <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.nguyennhan}</p>
                                     </div>
                                   )}
                                   {parsed.huonggiaiquyet && (
                                     <div>
-                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[Hướng giải quyết]:</strong>
+                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[{t('issues.solution', 'Hướng giải quyết')}]:</strong>
                                       <p style={{ margin: '2px 0 6px 0', fontSize: '13px', color: '#334155' }}>{parsed.huonggiaiquyet}</p>
                                     </div>
                                   )}
                                   {parsed.ketqua && (
                                     <div>
-                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[Kết quả]:</strong>
+                                      <strong style={{ color: '#0f172a', fontSize: '12px' }}>[{t('issues.result', 'Kết quả')}]:</strong>
                                       <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#334155' }}>{parsed.ketqua}</p>
                                     </div>
                                   )}
                                 </div>
                               );
                             }
-                            return parsed.text || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết.</span>;
+                            return parsed.text || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>{t('issues.noDescription', 'Không có mô tả chi tiết.')}</span>;
                           })()}
                         </div>
                       </div>
 
                       {parseIssueDescription(selectedIssueDetail.issue.description).issueTasks?.length > 0 && (
                         <div>
-                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: '#475569' }}>Bảng chi tiết công việc phụ & giải pháp</label>
+                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: '#475569' }}>{t('issues.subtasksTableTitle', 'Bảng chi tiết công việc phụ & giải pháp')}</label>
                           <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', fontSize: '12px' }}>
                             <thead>
                               <tr style={{ backgroundColor: '#f1f5f9' }}>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '40%' }}>Tên công việc phụ</th>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%' }}>Người thực hiện</th>
-                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%' }}>Hạn chót</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '40%' }}>{t('issues.subtaskName', 'Tên công việc phụ')}</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '25%' }}>{t('issues.subtaskAssignee', 'Người thực hiện')}</th>
+                                <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '20%' }}>{t('issues.subtaskDeadline', 'Hạn chót')}</th>
                                 <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', width: '15%' }}>Trạng thái</th>
                               </tr>
                             </thead>
@@ -2009,11 +2026,11 @@ export default function Dashboard() {
                       {/* Comments inside Issue */}
                       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
                         <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '8px', color: '#475569' }}>
-                          Bình luận trao đổi ({selectedIssueDetail.comments?.length || 0})
+                          {t('issues.discussionComments', 'Bình luận trao đổi')} ({selectedIssueDetail.comments?.length || 0})
                         </label>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '150px', overflowY: 'auto', marginBottom: '12px' }}>
                           {selectedIssueDetail.comments?.length === 0 ? (
-                            <div style={{ color: 'var(--neutral-muted)', fontSize: '11px', fontStyle: 'italic', textAlign: 'center' }}>Chưa có trao đổi nào.</div>
+                            <div style={{ color: 'var(--neutral-muted)', fontSize: '11px', fontStyle: 'italic', textAlign: 'center' }}>{t('issues.noComments', 'Chưa có trao đổi nào.')}</div>
                           ) : (
                             selectedIssueDetail.comments.map(c => {
                               const cColor = users.find(u => u.id === c.user_id)?.color || '#3b82f6';
@@ -2037,26 +2054,26 @@ export default function Dashboard() {
                         <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '8px' }}>
                           <input 
                             type="text" 
-                            placeholder="Nhập câu trả lời hoặc thảo luận..." 
+                            placeholder={t('issues.commentPlaceholder', 'Nhập câu trả lời hoặc thảo luận...')} 
                             value={newCommentText} 
                             onChange={(e) => setNewCommentText(e.target.value)} 
                             style={{ flex: 1, padding: '6px 12px', borderRadius: '6px', border: '1.5px solid #cbd5e1', fontSize: '12.5px', outline: 'none' }}
                             required
                           />
-                          <button type="submit" className="btn btn-primary btn-sm">Gửi</button>
+                          <button type="submit" className="btn btn-primary btn-sm">{t('common.send', 'Gửi')}</button>
                         </form>
                       </div>
 
                       {/* Metadata */}
                       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
-                        <div>Độ ưu tiên: <strong>{selectedIssueDetail.issue.priority}</strong></div>
-                        <div>Loại issue: <strong>{selectedIssueDetail.issue.type}</strong></div>
-                        <div>Người báo cáo: <strong>{users.find(u => u.id === selectedIssueDetail.issue.reporter_id)?.name || 'N/A'}</strong></div>
-                        <div>Ngày tạo: <strong>{new Date(selectedIssueDetail.issue.created_at).toLocaleDateString('vi-VN')}</strong></div>
+                        <div>{t('issues.priority', 'Độ ưu tiên:')} <strong>{selectedIssueDetail.issue.priority}</strong></div>
+                        <div>{t('issues.type', 'Loại issue:')} <strong>{selectedIssueDetail.issue.type}</strong></div>
+                        <div>{t('issues.creator', 'Người báo cáo:')} <strong>{users.find(u => u.id === selectedIssueDetail.issue.reporter_id)?.name || 'N/A'}</strong></div>
+                        <div>{t('issues.createdDate', 'Ngày tạo:')} <strong>{new Date(selectedIssueDetail.issue.created_at).toLocaleDateString('vi-VN')}</strong></div>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>Vui lòng chọn vướng mắc để xem chi tiết.</div>
+                    <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>{t('issues.selectIssuePrompt', 'Vui lòng chọn vướng mắc để xem chi tiết.')}</div>
                   )
                 )}
 
@@ -2064,7 +2081,7 @@ export default function Dashboard() {
                 {activeDetailPopup === 'tasks' && (
                   (() => {
                     const task = myTasksSorted.find(t => t.id === selectedTaskIdForPopup);
-                    if (!task) return <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>Vui lòng chọn công việc để xem chi tiết.</div>;
+                    if (!task) return <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>{t('tasks.selectTaskPrompt', 'Vui lòng chọn công việc để xem chi tiết.')}</div>;
                     const taskProj = projects.find(p => p.id === task.project_id);
                     const taskSubtasks = (subtasks || []).filter(st => st.task_id === task.id);
                     
@@ -2112,13 +2129,13 @@ export default function Dashboard() {
                         </div>
 
                         <div>
-                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>Mô tả công việc</label>
+                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>{t('tasks.description', 'Mô tả công việc')}</label>
                           <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
                             {(() => {
                               try {
                                 const parsed = JSON.parse(task.description);
                                 if (parsed && typeof parsed === 'object' && 'text' in parsed) {
-                                  return parsed.text || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết công việc.</span>;
+                                  return parsed.text || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>{t('tasks.noDescription', 'Không có mô tả chi tiết công việc.')}</span>;
                                 }
                               } catch (e) {}
                               return task.description || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết công việc.</span>;
@@ -2129,7 +2146,7 @@ export default function Dashboard() {
                         {taskSubtasks.length > 0 && (
                           <div>
                             <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: '#475569' }}>
-                              Checklist công việc phụ ({taskSubtasks.filter(st => st.status === 'Done').length}/{taskSubtasks.length})
+                              {t('tasks.subtaskChecklist', 'Checklist công việc phụ')} ({taskSubtasks.filter(st => st.status === 'Done').length}/{taskSubtasks.length})
                             </label>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                               {taskSubtasks.map(st => (
@@ -2159,7 +2176,7 @@ export default function Dashboard() {
                 {activeDetailPopup === 'projects' && (
                   (() => {
                     const proj = myProjectsSorted.find(p => p.id === selectedProjectIdForPopup);
-                    if (!proj) return <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>Vui lòng chọn dự án để xem chi tiết.</div>;
+                    if (!proj) return <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>{t('projects.selectProjectPrompt', 'Vui lòng chọn dự án để xem chi tiết.')}</div>;
                     const members = projectMembers.filter(m => m.project_id === proj.id).map(m => {
                       const u = users.find(usr => usr.id === m.user_id);
                       return { name: u?.name || 'Unknown', role: m.project_role };
@@ -2174,19 +2191,19 @@ export default function Dashboard() {
                             </span>
                             <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: '6px 0 0 0' }}>{proj.name}</h2>
                           </div>
-                          <span className="badge badge-warning">{proj.status || 'Thực thi'}</span>
+                          <span className="badge badge-warning">{(proj.status === 'Thực thi' || proj.status === 'Ongoing') ? 'ONGOING' : (proj.status === 'Giám sát' || proj.status === 'Monitoring') ? 'MONITORING' : (proj.status === 'Kết thúc' || proj.status === 'Finished') ? 'FINISHED' : (proj.status ? proj.status.toUpperCase() : 'ONGOING')}</span>
                         </div>
 
                         <div>
-                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>Mô tả dự án</label>
+                          <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '4px', color: '#475569' }}>{t('projects.description', 'Mô tả dự án')}</label>
                           <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '13px', color: '#334155', minHeight: '60px', whiteSpace: 'pre-wrap' }}>
-                            {proj.description || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Không có mô tả chi tiết dự án.</span>}
+                            {proj.description || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>{t('projects.noDescription', 'Không có mô tả chi tiết dự án.')}</span>}
                           </div>
                         </div>
 
                         <div>
                           <label style={{ fontWeight: '700', fontSize: '12px', display: 'block', marginBottom: '6px', color: '#475569' }}>
-                            Thành viên tham gia ({members.length})
+                            {t('projects.joinedMembers', 'Thành viên tham gia')} ({members.length})
                           </label>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {members.map((m, idx) => (
@@ -2199,11 +2216,11 @@ export default function Dashboard() {
 
                         <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: '12px', color: 'var(--neutral-muted)' }}>
-                            Hạn kết thúc: <strong>{proj.end_date ? new Date(proj.end_date).toLocaleDateString('vi-VN') : 'Chưa định hạn'}</strong>
+                            {t('projects.endDate', 'Hạn kết thúc:')} <strong>{proj.end_date ? new Date(proj.end_date).toLocaleDateString('vi-VN') : t('projects.noEndDate', 'Chưa định hạn')}</strong>
                           </span>
                           <button className="btn btn-primary btn-sm" onClick={() => { setActiveDetailPopup(null); router.push(`/projects/${proj.id}`); }}>
                             <i className="fa-solid fa-arrow-up-right-from-square" style={{ marginRight: '6px' }}></i>
-                            Chuyển hướng đến chi tiết dự án
+                            {t('projects.goToDetail', 'Chuyển hướng đến chi tiết dự án')}
                           </button>
                         </div>
                       </div>
@@ -2228,7 +2245,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', display: 'block' }}>Báo cáo ngày:</span>
+                          <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', display: 'block' }}>{t('reports.reportDateLabel', 'Báo cáo ngày:')}</span>
                           <strong style={{ fontSize: '12px', color: '#334155' }}>
                             {new Date(selectedReportForPopup.created_at).toLocaleDateString('vi-VN')}
                           </strong>
@@ -2244,12 +2261,12 @@ export default function Dashboard() {
                           borderRadius: '12px', 
                           fontWeight: '700' 
                         }}>
-                          Trạng thái: {selectedReportForPopup.status === 'Approved' ? 'ĐÃ DUYỆT' : selectedReportForPopup.status === 'Rejected' ? 'TỪ CHỐI BÁO CÁO' : 'CHỜ PHÊ DUYỆT'}
+                          {t('reports.statusLabel', 'Trạng thái:')} {selectedReportForPopup.status === 'Approved' ? 'APPROVED' : selectedReportForPopup.status === 'Rejected' ? 'REJECTED' : 'PENDING'}
                         </span>
                       </div>
 
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontWeight: '700', fontSize: '12.5px', display: 'block', marginBottom: '6px', color: '#475569' }}>Nội dung báo cáo:</label>
+                        <label style={{ fontWeight: '700', fontSize: '12.5px', display: 'block', marginBottom: '6px', color: '#475569' }}>{t('reports.reportContentLabel', 'Nội dung báo cáo:')}</label>
                         <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.6', backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #cbd5e1', minHeight: '120px' }}>
                           {renderReportContentVisual(selectedReportForPopup.content, projects)}
                         </div>
@@ -2277,12 +2294,12 @@ export default function Dashboard() {
                           <>
                             <div>
                               <label style={{ fontWeight: '750', fontSize: '12.5px', display: 'block', marginBottom: '6px', color: '#475569' }}>
-                                Ý kiến nhận xét/phản hồi của quản lý (Comment):
+                                {t('reports.managerCommentLabel', 'Ý kiến nhận xét/phản hồi của quản lý (Comment):')}
                               </label>
                               <textarea 
                                 value={reportCommentText}
                                 onChange={(e) => setReportCommentText(e.target.value)}
-                                placeholder="Nhập nhận xét chi tiết của bạn tại đây trước khi duyệt hoặc từ chối báo cáo..."
+                                placeholder={t('reports.commentPlaceholder', 'Nhập nhận xét chi tiết của bạn tại đây trước khi duyệt hoặc từ chối báo cáo...')}
                                 rows="3"
                                 style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1.5px solid #cbd5e1', outline: 'none', fontSize: '13px', resize: 'vertical' }}
                               />
@@ -2312,7 +2329,7 @@ export default function Dashboard() {
                           selectedReportForPopup.comment && (
                             <div style={{ backgroundColor: '#f0fdf4', border: '1.5px dashed #b7ebc6', borderRadius: '6px', padding: '12px' }}>
                               <strong style={{ fontSize: '12.5px', color: '#1e4620', display: 'block', marginBottom: '4px' }}>
-                                Ý kiến phản hồi từ quản lý:
+                                {t('reports.managerFeedbackLabel', 'Ý kiến phản hồi từ quản lý:')}
                               </strong>
                               <p style={{ fontSize: '13px', color: '#2b5a2e', margin: 0, whiteSpace: 'pre-wrap' }}>
                                 {selectedReportForPopup.comment}
@@ -2323,7 +2340,7 @@ export default function Dashboard() {
                       </div>
                     </>
                   ) : (
-                    <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>Vui lòng chọn báo cáo để xem chi tiết.</div>
+                    <div style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px 0' }}>{t('reports.selectReportPrompt', 'Vui lòng chọn báo cáo để xem chi tiết.')}</div>
                   )
                 )}
 
@@ -2332,7 +2349,7 @@ export default function Dashboard() {
 
             {/* Modal Footer */}
             <div className="modal-footer" style={{ borderTop: '1.5px solid #e2e8f0', padding: '12px 24px', display: 'flex', justifyContent: 'flex-end', backgroundColor: '#f8fafc' }}>
-              <button className="btn btn-secondary" onClick={() => setActiveDetailPopup(null)}>Đóng</button>
+              <button className="btn btn-secondary" onClick={() => setActiveDetailPopup(null)}>{t('common.close', 'Đóng')}</button>
             </div>
           </div>
         </div>

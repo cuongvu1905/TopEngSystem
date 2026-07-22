@@ -1,36 +1,28 @@
-require('dotenv').config({ path: 'backend/.env' });
+require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
   try {
-    // Check columns of Project table
-    const columns = await prisma.$queryRaw`DESCRIBE Project`;
-    console.log("=== Project columns ===");
-    console.log(columns);
-
-    // Let's add missing columns if they don't exist
-    const columnNames = columns.map(c => c.Field.toLowerCase());
-    
-    if (!columnNames.includes('status')) {
-      console.log("Adding status column to Project table...");
-      await prisma.$executeRawUnsafe("ALTER TABLE Project ADD COLUMN status VARCHAR(50) NULL DEFAULT 'Thực thi'");
-    }
-    if (!columnNames.includes('start_date')) {
-      console.log("Adding start_date column to Project table...");
-      await prisma.$executeRawUnsafe("ALTER TABLE Project ADD COLUMN start_date VARCHAR(50) NULL");
-    }
-    if (!columnNames.includes('end_date')) {
-      console.log("Adding end_date column to Project table...");
-      await prisma.$executeRawUnsafe("ALTER TABLE Project ADD COLUMN end_date VARCHAR(50) NULL");
-    }
-
-    const updatedColumns = await prisma.$queryRaw`DESCRIBE Project`;
-    console.log("=== Updated Project columns ===");
-    console.log(updatedColumns);
-
+    const reports = await prisma.dailyreport.findMany({
+      include: {
+        user: true
+      }
+    });
+    console.log("=== DAILY REPORTS ===");
+    reports.forEach(r => {
+      console.log({
+        id: r.id,
+        user_id: r.user_id,
+        user_name: r.user?.full_name,
+        role: r.user?.role,
+        department_id: r.user?.department_id,
+        status: r.status,
+        created_at: r.created_at
+      });
+    });
   } catch (err) {
-    console.error("Migration failed:", err);
+    console.error(err);
   }
 }
 main().catch(console.error).finally(() => prisma.$disconnect());

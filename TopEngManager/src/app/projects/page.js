@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { useRouter } from 'next/navigation';
 import { ProjectModal, CustomerModal } from '@/components/Modals';
@@ -9,6 +10,7 @@ import { getSwal } from '@/utils/swal';
 
 export default function Projects() {
   const { currentUser, projects, tasks, projectMembers, users, reloadAll, hasPermission } = useApp();
+  const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const router = useRouter();
@@ -48,22 +50,22 @@ export default function Projects() {
     const Swal = await getSwal();
     
     Swal.fire({
-      title: 'Tham gia dự án mới',
+      title: t('project.joinNewProjectTitle', 'Tham gia dự án mới'),
       html: `
         <div style="text-align: left; padding: 10px 0;">
-          <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 13.5px;">Nhập mã dự án hoặc mã khóa (Key) <span style="color: red;">*</span></label>
-          <input type="text" id="join-project-id" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box;" placeholder="Ví dụ: proj-12345, RND, WEB...">
+          <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 13.5px;">${t('project.joinProjectCodeLabel', 'Nhập mã dự án hoặc mã khóa (Key)')} <span style="color: red;">*</span></label>
+          <input type="text" id="join-project-id" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box;" placeholder="${t('project.joinProjectCodePlaceholder', 'Ví dụ: proj-12345, RND, WEB...')}">
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Tìm kiếm',
-      cancelButtonText: 'Hủy',
+      confirmButtonText: t('project.searchBtn', 'Tìm kiếm'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
       confirmButtonColor: 'var(--primary-color)',
       focusConfirm: false,
       preConfirm: async () => {
         const projectIdInput = document.getElementById('join-project-id').value;
         if (!projectIdInput || !projectIdInput.trim()) {
-          Swal.showValidationMessage('Vui lòng nhập mã dự án.');
+          Swal.showValidationMessage(t('project.enterProjectCodeWarning', 'Vui lòng nhập mã dự án.'));
           return false;
         }
 
@@ -71,7 +73,7 @@ export default function Projects() {
           const project = await db.findProjectById(projectIdInput);
           return project;
         } catch (err) {
-          Swal.showValidationMessage(err.message || 'Không tìm thấy dự án nào khớp với mã đã nhập.');
+          Swal.showValidationMessage(err.message || t('project.projectNotFound', 'Không tìm thấy dự án nào khớp với mã đã nhập.'));
           return false;
         }
       }
@@ -84,7 +86,7 @@ export default function Projects() {
         const performJoin = async () => {
           try {
             Swal.fire({
-              title: 'Đang xử lý...',
+              title: t('project.joiningProject', 'Đang xử lý...'),
               allowOutsideClick: false,
               didOpen: () => {
                 Swal.showLoading();
@@ -123,30 +125,30 @@ export default function Projects() {
         if (showTermsPopup) {
           const showTermsDialog = (initialChecked = false) => {
             Swal.fire({
-              title: 'Điều khoản dự án',
+              title: t('project.projectTermsTitle', 'Điều khoản dự án'),
               html: `
                 <div style="text-align: left; padding: 10px; font-size: 14.5px; line-height: 1.6;">
-                  <div style="margin-bottom: 8px;"><strong>Tên dự án:</strong> ${project.name}</div>
-                  <div style="margin-bottom: 8px;"><strong>Mã khóa (Key):</strong> <span class="badge badge-info">${project.project_key}</span></div>
-                  <div style="margin-bottom: 8px;"><strong>Người tạo:</strong> ${project.creator || 'Hệ thống'}</div>
-                  <div style="margin-bottom: 8px;"><strong>Trạng thái:</strong> ${project.status}</div>
-                  <div style="margin-bottom: 16px;"><strong>Mô tả:</strong> ${project.description}</div>
+                  <div style="margin-bottom: 8px;"><strong>${t('project.projectNameLabel', 'Tên dự án:')}</strong> ${project.name}</div>
+                  <div style="margin-bottom: 8px;"><strong>${t('project.projectKeyLabel', 'Mã khóa (Key):')}</strong> <span class="badge badge-info">${project.project_key}</span></div>
+                  <div style="margin-bottom: 8px;"><strong>${t('project.projectCreatorLabel', 'Người tạo:')}</strong> ${project.creator || 'Hệ thống'}</div>
+                  <div style="margin-bottom: 8px;"><strong>${t('project.projectStatusLabel', 'Trạng thái:')}</strong> ${project.status}</div>
+                  <div style="margin-bottom: 16px;"><strong>${t('project.projectDescLabel', 'Mô tả:')}</strong> ${project.description}</div>
 
                   <div style="background-color: rgba(30, 64, 175, 0.05); border-left: 4px solid #1e40af; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
-                    <strong style="color: #1e40af;">Điều khoản tham gia dự án:</strong>
-                    <p style="margin-top: 6px; font-size: 13px;">Bằng cách tham gia dự án, bạn đồng ý tuân thủ các quy định bảo mật, hoàn thành các nhiệm vụ được giao đúng hạn và chia sẻ thông tin công việc một cách minh bạch với các thành viên khác.</p>
+                    <strong style="color: #1e40af;">${t('project.joinProjectTermsHeading', 'Điều khoản tham gia dự án:')}</strong>
+                    <p style="margin-top: 6px; font-size: 13px;">${t('project.joinProjectTermsText', 'Bằng cách tham gia dự án, bạn đồng ý tuân thủ các quy định bảo mật, hoàn thành các nhiệm vụ được giao đúng hạn và chia sẻ thông tin công việc một cách minh bạch với các thành viên khác.')}</p>
                   </div>
                   
                   <div style="display: flex; align-items: center; gap: 8px; margin-top: 15px; font-size: 13px; border-top: 1px solid var(--neutral-border); padding-top: 12px;">
                     <input type="checkbox" id="agree-terms-checkbox" style="width: 16px; height: 16px; cursor: pointer;" ${initialChecked ? 'checked' : ''} />
-                    <label for="agree-terms-checkbox" style="cursor: pointer; font-weight: 500; color: var(--foreground-color);">Tôi đồng ý với điều khoản bảo mật của dự án</label>
-                    <span id="view-terms-detail" style="color: #1e40af; text-decoration: underline; cursor: pointer; font-weight: 600; margin-left: 4px;">[Chi tiết]</span>
+                    <label for="agree-terms-checkbox" style="cursor: pointer; font-weight: 500; color: var(--foreground-color);">${t('project.agreePrivacyTermsCheckbox', 'Tôi đồng ý với điều khoản bảo mật của dự án')}</label>
+                    <span id="view-terms-detail" style="color: #1e40af; text-decoration: underline; cursor: pointer; font-weight: 600; margin-left: 4px;">${t('project.viewDetailsLink', '[Chi tiết]')}</span>
                   </div>
                 </div>
               `,
               showCancelButton: true,
-              confirmButtonText: 'Đồng ý',
-              cancelButtonText: 'Hủy',
+              confirmButtonText: t('common.confirm', 'Đồng ý'),
+              cancelButtonText: t('common.cancel', 'Hủy'),
               confirmButtonColor: 'var(--primary-color)',
               didOpen: () => {
                 const confirmBtn = Swal.getConfirmButton();
@@ -167,16 +169,13 @@ export default function Projects() {
                     const isCurrentlyChecked = checkbox ? checkbox.checked : false;
                     const InnerSwal = await getSwal();
                     InnerSwal.fire({
-                      title: 'Chi tiết điều khoản bảo mật',
+                      title: t('project.privacyTermsDetailTitle', 'Chi tiết điều khoản bảo mật'),
                       html: `
                         <div style="text-align: left; padding: 10px; font-size: 13.5px; line-height: 1.6;">
-                          <p><strong>1. Bảo mật thông tin:</strong> Thành viên cam kết không tiết lộ, chuyển nhượng hoặc sao chép bất kỳ tài liệu, mã nguồn hay thông tin mật nào của dự án ra bên ngoài.</p>
-                          <p style="margin-top: 8px;"><strong>2. Minh bạch công việc:</strong> Các hoạt động phát triển, tài liệu và tiến độ phải được cập nhật thường xuyên trên hệ thống.</p>
-                          <p style="margin-top: 8px;"><strong>3. Trách nhiệm cá nhân:</strong> Thành viên chịu hoàn toàn trách nhiệm đối với tài khoản của mình và các công việc được bàn giao.</p>
-                          <p style="margin-top: 8px;"><strong>4. Kỷ luật dự án:</strong> Hoàn thành nhiệm vụ đúng hạn và tuân thủ các quy chuẩn kỹ thuật đã thống nhất.</p>
+                          ${t('project.privacyTermsDetailContent', '1. ...')}
                         </div>
                       `,
-                      confirmButtonText: 'Đã hiểu',
+                      confirmButtonText: t('project.understoodBtn', 'Đã hiểu'),
                       confirmButtonColor: 'var(--primary-color)'
                     }).then(() => {
                       showTermsDialog(isCurrentlyChecked);
@@ -194,7 +193,7 @@ export default function Projects() {
           showTermsDialog();
         } else {
           Swal.fire({
-            title: 'Thông tin dự án',
+            title: t('project.projectTermsTitle', 'Điều khoản dự án'),
             html: `
               <div style="text-align: left; padding: 10px; font-size: 14.5px; line-height: 1.6;">
                 <div style="margin-bottom: 8px;"><strong>Tên dự án:</strong> ${project.name}</div>
@@ -275,8 +274,8 @@ export default function Projects() {
     <div className="scrollable-view">
       <div className="view-header">
         <div className="view-title-group">
-          <h2>Danh sách Dự án</h2>
-          <p>Quản lý quy trình và theo dõi tiến độ của tất cả các dự án trong doanh nghiệp.</p>
+          <h2>{t('projects.title', 'Danh sách Dự án')}</h2>
+          <p>{t('projects.subtitle', 'Quản lý quy trình và theo dõi tiến độ của tất cả các dự án trong doanh nghiệp.')}</p>
         </div>
         <div className="view-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -342,7 +341,7 @@ export default function Projects() {
               cursor: 'pointer'
             }}
           >
-            <i className="fa-solid fa-right-to-bracket"></i> Tham gia dự án
+            <i className="fa-solid fa-right-to-bracket"></i> {t('projects.joinProject', 'Tham gia dự án')}
           </button>
           <button 
             className="btn btn-secondary" 
@@ -361,11 +360,11 @@ export default function Projects() {
               cursor: 'pointer'
             }}
           >
-            <i className="fa-solid fa-user-tie"></i> Quản lý khách hàng
+            <i className="fa-solid fa-user-tie"></i> {t('projects.manageCustomers', 'Quản lý khách hàng')}
           </button>
           {showCreateBtn && (
             <button className="btn btn-primary" onClick={() => setIsModalOpen(true)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600' }}>
-              <i className="fa-solid fa-plus"></i> Tạo Dự Án
+              <i className="fa-solid fa-plus"></i> {t('projects.createProject', 'Tạo Dự Án')}
             </button>
           )}
         </div>
@@ -374,7 +373,7 @@ export default function Projects() {
       <div className="project-list-grid">
         {filteredByYearProjects.length === 0 ? (
           <div className="card" style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--neutral-muted)', fontSize: '14px' }}>
-            Không tìm thấy dự án nào trong năm đã chọn.
+            {t('projects.noProjectsFound', 'Không tìm thấy dự án nào trong năm đã chọn.')}
           </div>
         ) : (
           filteredByYearProjects.map(p => {
@@ -397,14 +396,14 @@ export default function Projects() {
             >
               <div className="project-card-header">
                 <div className="project-title">{p.name}</div>
-                <span className={`badge ${badgeClass}`}>{p.status}</span>
+                <span className={`badge ${badgeClass}`}>{(p.status === 'Thực thi' || p.status === 'Ongoing') ? 'ONGOING' : (p.status === 'Giám sát' || p.status === 'Monitoring') ? 'MONITORING' : (p.status === 'Kết thúc' || p.status === 'Finished') ? 'FINISHED' : (p.status ? p.status.toUpperCase() : 'ONGOING')}</span>
               </div>
               <div className="project-card-body">
                 <p className="project-desc">{p.description || 'Không có mô tả.'}</p>
                 
                 <div className="project-progress-container">
                   <div className="progress-bar-wrapper">
-                    <span>Tiến độ</span>
+                    <span>{t('project.progress', 'Tiến độ')}</span>
                     <span>{progress}%</span>
                   </div>
                   <div className="progress-bar-outer">

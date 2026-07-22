@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import Link from 'next/link';
 import { getSwal } from '@/utils/swal';
@@ -33,6 +34,7 @@ const isDescendant = (childId, parentId, depts) => {
 
 export default function HRManagement() {
   const { currentUser, users, projects, tasks, reloadAll, hasPermission } = useApp();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('users');
   const [roles, setRoles] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -302,14 +304,14 @@ export default function HRManagement() {
   const handleDeleteDept = async (dept) => {
     // Show SweetAlert confirmation
     const result = await Swal.fire({
-      title: 'Xác nhận xóa?',
-      text: `Bạn có chắc chắn muốn xóa phòng ban "${dept.name}"? Tất cả nhân viên trực thuộc phòng này sẽ được chuyển thành "Chưa phân phòng".`,
+      title: t('team.confirmDeleteDeptTitle', 'Xác nhận xóa?'),
+      text: t('team.confirmDeleteDeptText', 'Bạn có chắc chắn muốn xóa phòng ban "{name}"? Tất cả nhân viên trực thuộc phòng này sẽ được chuyển thành "Chưa phân phòng".').replace('{name}', dept.name),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Đồng ý xóa',
-      cancelButtonText: 'Hủy'
+      confirmButtonText: t('team.confirmDeleteUserBtn', 'Đồng ý xóa'),
+      cancelButtonText: t('common.cancel', 'Hủy')
     });
 
     if (result.isConfirmed) {
@@ -329,15 +331,15 @@ export default function HRManagement() {
         await loadSelectOptions();
 
         Swal.fire(
-          'Đã xóa!',
-          `Phòng ban "${dept.name}" đã được xóa thành công.`,
+          t('common.deleted', 'Đã xóa!'),
+          t('team.deleteDeptSuccess', 'Phòng ban "{name}" đã được xóa thành công.').replace('{name}', dept.name),
           'success'
         );
       } catch (err) {
         console.error(err);
         Swal.fire(
-          'Lỗi!',
-          err.message || 'Không thể xóa phòng ban này.',
+          t('common.error', 'Lỗi!'),
+          err.message || t('team.deleteDeptFailed', 'Không thể xóa phòng ban này.'),
           'error'
         );
       }
@@ -347,24 +349,24 @@ export default function HRManagement() {
   const handleResetUserPassword = async (userObj) => {
     const Swal = await getSwal();
     const result = await Swal.fire({
-      title: `Đặt lại mật khẩu cho ${userObj.name}`,
+      title: t('team.resetPasswordTitle', 'Đặt lại mật khẩu cho {name}').replace('{name}', userObj.name),
       input: 'password',
-      inputLabel: 'Nhập mật khẩu mới',
-      inputPlaceholder: 'Nhập mật khẩu mới cho nhân viên này...',
+      inputLabel: t('team.enterNewPassword', 'Nhập mật khẩu mới'),
+      inputPlaceholder: t('team.enterNewPasswordPlaceholder', 'Nhập mật khẩu mới cho nhân viên này...'),
       inputAttributes: {
         autocapitalize: 'off',
         autocorrect: 'off'
       },
       showCancelButton: true,
-      confirmButtonText: 'Đặt lại',
-      cancelButtonText: 'Hủy',
+      confirmButtonText: t('team.resetBtn', 'Đặt lại'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
       confirmButtonColor: 'var(--primary-color)',
       inputValidator: (value) => {
         if (!value) {
-          return 'Bạn cần nhập mật khẩu!';
+          return t('team.passwordRequired', 'Bạn cần nhập mật khẩu!');
         }
         if (value.length < 6) {
-          return 'Mật khẩu phải dài từ 6 ký tự trở lên!';
+          return t('team.passwordTooShort', 'Mật khẩu phải dài từ 6 ký tự trở lên!');
         }
       }
     });
@@ -373,7 +375,7 @@ export default function HRManagement() {
       const newPassword = result.value;
       try {
         Swal.fire({
-          title: 'Đang xử lý...',
+          title: t('common.processing', 'Đang thực hiện...'),
           allowOutsideClick: false,
           didOpen: () => {
             Swal.showLoading();
@@ -391,16 +393,16 @@ export default function HRManagement() {
 
         Swal.fire({
           icon: 'success',
-          title: 'Thành công',
-          text: `Đã đặt lại mật khẩu cho nhân viên ${userObj.name} thành công!`,
+          title: t('common.success', 'Thành công'),
+          text: t('team.resetPasswordSuccess', 'Đã đặt lại mật khẩu cho nhân viên {name} thành công!').replace('{name}', userObj.name),
           confirmButtonColor: 'var(--primary-color)'
         });
       } catch (err) {
         console.error(err);
         Swal.fire({
           icon: 'error',
-          title: 'Thất bại',
-          text: err.message || 'Không thể đặt lại mật khẩu.',
+          title: t('common.failed', 'Thất bại'),
+          text: err.message || t('team.resetPasswordFailed', 'Không thể đặt lại mật khẩu.'),
           confirmButtonColor: 'var(--primary-color)'
         });
       }
@@ -409,14 +411,14 @@ export default function HRManagement() {
 
   const handleDeleteUser = async (userObj) => {
     const result = await Swal.fire({
-      title: 'Xác nhận xóa tài khoản?',
-      text: `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của nhân viên "${userObj.name}" (${userObj.email})? Hành động này không thể hoàn tác.`,
+      title: t('team.confirmDeleteUserTitle', 'Xác nhận xóa tài khoản?'),
+      text: t('team.confirmDeleteUserText', 'Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của nhân viên "{name}" ({email})? Hành động này không thể hoàn tác.').replace('{name}', userObj.name).replace('{email}', userObj.email),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Đồng ý xóa',
-      cancelButtonText: 'Hủy'
+      confirmButtonText: t('team.confirmDeleteUserBtn', 'Đồng ý xóa'),
+      cancelButtonText: t('common.cancel', 'Hủy')
     });
 
     if (result.isConfirmed) {
@@ -434,15 +436,15 @@ export default function HRManagement() {
         await reloadAll();
 
         Swal.fire(
-          'Đã xóa!',
-          `Tài khoản của nhân viên "${userObj.name}" đã được xóa thành công.`,
+          t('common.deleted', 'Đã xóa!'),
+          t('team.deleteUserSuccess', 'Tài khoản của nhân viên "{name}" đã được xóa thành công.').replace('{name}', userObj.name),
           'success'
         );
       } catch (err) {
         console.error(err);
         Swal.fire(
-          'Lỗi!',
-          err.message || 'Không thể xóa tài khoản này.',
+          t('common.error', 'Lỗi!'),
+          err.message || t('team.deleteUserFailed', 'Không thể xóa tài khoản này.'),
           'error'
         );
       }
@@ -546,7 +548,7 @@ export default function HRManagement() {
                  fontSize: '14px' 
                }}
             ></i>
-            <span>{dept.name} <small className="text-muted" style={{ fontSize: '11px', marginLeft: '4px' }}>({dept.department_id})</small></span>
+            <span>{translateDepartmentName(dept.name, t)} <small className="text-muted" style={{ fontSize: '11px', marginLeft: '4px' }}>({dept.department_id})</small></span>
           </div>
           {children.length > 0 && (
             <span className="badge badge-secondary" style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '10px' }}>
@@ -584,7 +586,7 @@ export default function HRManagement() {
       : roles.map(r => ({ id: r.name, name: r.name }));
 
     const deptOptionsHtml = availableDepts.map(d => 
-      `<option value="${d.department_id}" ${d.department_id === memberObj.department_id ? 'selected' : ''}>${d.name} (${d.department_id})</option>`
+      `<option value="${d.department_id}" ${d.department_id === memberObj.department_id ? 'selected' : ''}>${translateDepartmentName(d.name, t)} (${d.department_id})</option>`
     ).join('\n');
 
     const roleOptionsHtml = availableRoles.map(r => 
@@ -594,39 +596,39 @@ export default function HRManagement() {
     const canEditEmployeeId = isAdmin || isHR;
 
     const { value: formValues } = await Swal.fire({
-      title: 'Thay đổi thông tin nhân viên',
+      title: t('team.editEmployeeInfo', 'Thay đổi thông tin nhân viên'),
       html: `
         <div style="text-align: left; padding: 10px;">
           <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Mã nhân viên <span style="color: red;">*</span></label>
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">${t('team.employeeId', 'Mã nhân viên')} <span style="color: red;">*</span></label>
             <input type="text" id="edit-employee-id" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px; ${!canEditEmployeeId ? 'background-color: #f1f5f9; cursor: not-allowed;' : ''}" value="${memberObj.employee_id || memberObj.id}" ${!canEditEmployeeId ? 'disabled readonly' : ''}>
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Họ và tên <span style="color: red;">*</span></label>
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">${t('team.fullName', 'Họ và tên')} <span style="color: red;">*</span></label>
             <input type="text" id="edit-fullname" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" value="${memberObj.name}">
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Email <span style="color: red;">*</span></label>
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">${t('team.email', 'Email')} <span style="color: red;">*</span></label>
             <input type="email" id="edit-email" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;" value="${memberObj.email}">
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Vai trò hệ thống <span style="color: red;">*</span></label>
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">${t('team.systemRole', 'Vai trò hệ thống')} <span style="color: red;">*</span></label>
             <select id="edit-role" class="swal2-select" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; height: 38px;">
               ${roleOptionsHtml}
             </select>
           </div>
           <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Phòng ban/Part <span style="color: red;">*</span></label>
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">${t('team.departmentPart', 'Phòng ban/Part')} <span style="color: red;">*</span></label>
             <select id="edit-dept" class="swal2-select" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; height: 38px;">
-              <option value="">-- Chưa phân phòng --</option>
+              <option value="">-- ${t('team.unassignedDept', 'Chưa phân phòng')} --</option>
               ${deptOptionsHtml}
             </select>
           </div>
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Lưu lại',
-      cancelButtonText: 'Hủy',
+      confirmButtonText: t('team.saveBtn', 'Lưu lại'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
       confirmButtonColor: 'var(--primary-color)',
       preConfirm: () => {
         const newEmployeeId = document.getElementById('edit-employee-id').value.trim();
@@ -636,7 +638,7 @@ export default function HRManagement() {
         const departmentId = document.getElementById('edit-dept').value;
 
         if (!newEmployeeId || !fullName || !email || !role) {
-          Swal.showValidationMessage('Vui lòng điền đầy đủ thông tin bắt buộc.');
+          Swal.showValidationMessage(t('team.requiredFieldsWarning', 'Vui lòng điền đầy đủ thông tin bắt buộc.'));
           return false;
         }
         return { newEmployeeId, fullName, email, role, departmentId };
@@ -646,7 +648,7 @@ export default function HRManagement() {
     if (formValues) {
       try {
         Swal.fire({
-          title: 'Đang lưu...',
+          title: t('common.saving', 'Đang lưu...'),
           allowOutsideClick: false,
           didOpen: () => {
             Swal.showLoading();
@@ -672,8 +674,8 @@ export default function HRManagement() {
 
         Swal.fire({
           icon: 'success',
-          title: 'Thành công',
-          text: 'Cập nhật thông tin nhân viên thành công!',
+          title: t('common.success', 'Thành công'),
+          text: t('team.updateEmployeeSuccess', 'Cập nhật thông tin nhân viên thành công!'),
           confirmButtonColor: 'var(--primary-color)'
         });
 
@@ -682,8 +684,8 @@ export default function HRManagement() {
         console.error(err);
         Swal.fire({
           icon: 'error',
-          title: 'Lỗi',
-          text: err.message || 'Không thể lưu thông tin nhân viên.',
+          title: t('common.error', 'Lỗi'),
+          text: err.message || t('team.updateEmployeeFailed', 'Không thể lưu thông tin nhân viên.'),
           confirmButtonColor: 'var(--primary-color)'
         });
       }
@@ -692,22 +694,22 @@ export default function HRManagement() {
 
   const handleTogglePartLeader = async (userObj, promote) => {
     const targetRole = promote ? 'Part Leader' : 'Nhân viên (Staff)';
-    const actionText = promote ? 'chỉ định làm Part Leader' : 'thu hồi quyền Part Leader';
+    const actionText = promote ? t('team.promoteAction', 'chỉ định làm Part Leader') : t('team.demoteAction', 'thu hồi quyền Part Leader');
     const result = await Swal.fire({
-      title: promote ? 'Chỉ định Part Leader?' : 'Thu hồi quyền Part Leader?',
-      text: `Bạn có chắc chắn muốn ${actionText} cho nhân viên "${userObj.name}"?`,
+      title: promote ? t('team.promotePartLeaderTitle', 'Chỉ định Part Leader?') : t('team.demotePartLeaderTitle', 'Thu hồi quyền Part Leader?'),
+      text: t('team.togglePartLeaderText', 'Bạn có chắc chắn muốn {action} cho nhân viên "{name}"?').replace('{action}', actionText).replace('{name}', userObj.name),
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: 'var(--primary-color)',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Đồng ý',
+      confirmButtonText: t('common.confirm', 'Đồng ý'),
       cancelButtonText: 'Hủy'
     });
 
     if (result.isConfirmed) {
       try {
         Swal.fire({
-          title: 'Đang thực hiện...',
+          title: t('common.processing', 'Đang thực hiện...'),
           allowOutsideClick: false,
           didOpen: () => {
             Swal.showLoading();
@@ -726,8 +728,8 @@ export default function HRManagement() {
 
         Swal.fire({
           icon: 'success',
-          title: 'Thành công',
-          text: `Đã ${actionText} thành công!`,
+          title: t('common.success', 'Thành công'),
+          text: t('team.togglePartLeaderSuccess', 'Đã {action} thành công!').replace('{action}', actionText),
           confirmButtonColor: 'var(--primary-color)'
         });
         
@@ -736,8 +738,8 @@ export default function HRManagement() {
         console.error(err);
         Swal.fire({
           icon: 'error',
-          title: 'Lỗi',
-          text: err.message || 'Không thể cập nhật phân quyền.',
+          title: t('common.error', 'Lỗi'),
+          text: err.message || t('team.togglePartLeaderFailed', 'Không thể cập nhật phân quyền.'),
           confirmButtonColor: 'var(--primary-color)'
         });
       }
@@ -777,7 +779,7 @@ export default function HRManagement() {
           "UPDATE",
           "User",
           targetUser.id,
-          `đã thêm nhân viên '${targetUser.name}' vào phòng ban/part '${currentSelectedDept.name}' (${currentSelectedDept.department_id})`
+          `đã thêm nhân viên '${targetUser.name}' vào phòng ban/part '${translateDepartmentName(currentSelectedDept.name, t)}' (${currentSelectedDept.department_id})`
         );
       });
 
@@ -864,18 +866,18 @@ export default function HRManagement() {
     <div className="scrollable-view">
       <div className="view-header" style={{ marginBottom: '12px' }}>
         <div className="view-title-group">
-          <h2>Quản trị Hệ thống & Nhân sự</h2>
-          <p>Cấp tài khoản mới, tra cứu thông tin dữ liệu chéo và quản trị ma trận phân quyền hệ thống.</p>
+          <h2>{t('team.title', 'Quản trị Hệ thống & Nhân sự')}</h2>
+          <p>{t('team.subtitle', 'Cấp tài khoản mới, tra cứu thông tin dữ liệu chéo và quản trị ma trận phân quyền hệ thống.')}</p>
         </div>
         <div className="view-actions">
           {activeTab === 'users' && hasPermission('create_employee_account') && (
             <button className="btn btn-primary" onClick={() => { setIsOpen(true); setErrorMsg(''); setSuccessMsg(''); }}>
-              <i className="fa-solid fa-user-plus"></i> Cấp tài khoản mới
+              <i className="fa-solid fa-user-plus"></i> {t('team.addUser', 'Cấp tài khoản mới')}
             </button>
           )}
           {activeTab === 'departments' && hasPermission('manage_departments') && (
             <button className="btn btn-primary" onClick={() => { handleOpenDeptModal(null); }}>
-              <i className="fa-solid fa-plus"></i> Thêm phòng ban mới
+              <i className="fa-solid fa-plus"></i> {t('team.addDept', 'Thêm phòng ban mới')}
             </button>
           )}
         </div>
@@ -885,17 +887,17 @@ export default function HRManagement() {
         <div className="project-tabs" style={{ marginTop: '16px', marginBottom: '16px' }}>
           {(hasPermission('view_hr_members') || isCurrentUserInRootDept) && (
             <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
-              <i className="fa-solid fa-users"></i> Nhân sự & Tài khoản
+              <i className="fa-solid fa-users"></i> {t('team.staffAndAccounts', 'Nhân sự & Tài khoản')}
             </button>
           )}
           {hasPermission('manage_role_permissions') && (
             <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
-              <i className="fa-solid fa-shield-halved"></i> Bảng Phân Quyền
+              <i className="fa-solid fa-shield-halved"></i> {t('team.permissionsTable', 'Bảng Phân Quyền')}
             </button>
           )}
           {(hasPermission('manage_departments') || isTeamLeader || isCurrentUserInRootDept) && (
             <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
-              Quản lý phòng ban
+              {t('team.tabDepartments', 'Quản lý phòng ban')}
             </button>
           )}
         </div>
@@ -904,13 +906,13 @@ export default function HRManagement() {
       {/* ================= TAB 1: USERS LIST ================= */}
       {activeTab === 'users' && (
         <div className="card" style={{ padding: '20px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>Danh sách nhân viên ({filteredUsers.length})</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>{t('team.staffList', 'Danh sách nhân viên')} ({filteredUsers.length})</h3>
           
           <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '200px' }}>
               <input 
                 type="text" 
-                placeholder="Tìm theo tên hoặc mã nhân viên..." 
+                placeholder={t('team.searchStaffPlaceholder', 'Tìm theo tên hoặc mã nhân viên...')} 
                 value={userSearchQuery}
                 onChange={(e) => setUserSearchQuery(e.target.value)}
                 style={{ 
@@ -937,9 +939,9 @@ export default function HRManagement() {
                   backgroundColor: '#fff'
                 }}
               >
-                <option value="all">Tất cả phòng ban</option>
+                <option value="all">{t('dept.allDepts', 'Tất cả phòng ban')}</option>
                 {departments.map(d => (
-                  <option value={d.department_id} key={d.department_id}>{d.name}</option>
+                  <option value={d.department_id} key={d.department_id}>{translateDepartmentName(d.name, t)}</option>
                 ))}
               </select>
             </div>
@@ -949,12 +951,12 @@ export default function HRManagement() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Họ và tên</th>
-                  <th>Mã nhân viên</th>
-                  <th>Địa chỉ Email</th>
-                  <th>Vai trò hệ thống</th>
-                  <th>Phòng ban</th>
-                  <th style={{ textAlign: 'center', width: '220px' }}>Thao tác</th>
+                  <th>{t('team.fullName', 'Họ và tên')}</th>
+                  <th>{t('team.employeeCode', 'Mã nhân viên')}</th>
+                  <th>{t('team.email', 'Địa chỉ Email')}</th>
+                  <th>{t('team.systemRole', 'Vai trò hệ thống')}</th>
+                  <th>{t('team.department', 'Phòng ban')}</th>
+                  <th style={{ textAlign: 'center', width: '220px' }}>{t('common.actions', 'Thao tác')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -972,7 +974,7 @@ export default function HRManagement() {
                         <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: u.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600' }}>
                           {u.name.split(" ").pop().charAt(0)}
                         </div>
-                        <span style={{ fontWeight: '500' }}>{u.name} {u.id === currentUser.id && <span className="text-muted" style={{ fontSize: '11px' }}>(Bạn)</span>}</span>
+                        <span style={{ fontWeight: '500' }}>{u.name} {u.id === currentUser.id && <span className="text-muted" style={{ fontSize: '11px' }}>{t('common.you', '(Bạn)')}</span>}</span>
                       </div>
                     </td>
                     <td>
@@ -980,10 +982,10 @@ export default function HRManagement() {
                     </td>
                     <td>{u.email}</td>
                     <td>
-                      <span className="badge badge-info">{u.system_role || 'Nhân viên'}</span>
+                      <span className="badge badge-info">{formatSystemRole(u.system_role, t)}</span>
                     </td>
                     <td>
-                      {u.department_name || 'Chưa phân phòng'}
+                      {translateDepartmentName(u.department_name, t)}
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -993,7 +995,7 @@ export default function HRManagement() {
                             style={{ padding: '4px 8px', fontSize: '12px' }}
                             onClick={() => handleEditMember(u)}
                           >
-                            <i className="fa-solid fa-user-pen"></i> Sửa
+                            <i className="fa-solid fa-user-pen"></i> Edit
                           </button>
                         )}
                         {canEditUser && (
@@ -1002,7 +1004,7 @@ export default function HRManagement() {
                             style={{ padding: '4px 8px', fontSize: '12px' }}
                             onClick={() => handleResetUserPassword(u)}
                           >
-                            <i className="fa-solid fa-key"></i> Đặt lại
+                            <i className="fa-solid fa-key"></i> Reset
                           </button>
                         )}
                         {canEditUser && u.id !== currentUser.id && (
@@ -1011,7 +1013,7 @@ export default function HRManagement() {
                             style={{ padding: '4px 8px', fontSize: '12px' }}
                             onClick={() => handleDeleteUser(u)}
                           >
-                            <i className="fa-solid fa-trash-can"></i> Xóa
+                            <i className="fa-solid fa-trash-can"></i> Delete
                           </button>
                         )}
                       </div>
@@ -1022,7 +1024,7 @@ export default function HRManagement() {
               {paginatedUsers.length === 0 && (
                   <tr>
                     <td colSpan="6" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
-                      Không tìm thấy nhân viên nào phù hợp.
+                      {t('team.noStaffFound', 'Không tìm thấy nhân viên nào phù hợp.')}
                     </td>
                   </tr>
                 )}
@@ -1038,7 +1040,7 @@ export default function HRManagement() {
                 onClick={() => setUserCurrentPage(prev => Math.max(prev - 1, 1))}
                 style={{ padding: '6px 12px' }}
               >
-                <i className="fa-solid fa-angle-left"></i> Trước
+                <i className="fa-solid fa-angle-left"></i> {t('common.previous', 'Trước')}
               </button>
               
               <span style={{ fontSize: '13px', color: 'var(--neutral-muted)' }}>
@@ -1051,7 +1053,7 @@ export default function HRManagement() {
                 onClick={() => setUserCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 style={{ padding: '6px 12px' }}
               >
-                Sau <i className="fa-solid fa-angle-right"></i>
+                {t('common.next', 'Sau')} <i className="fa-solid fa-angle-right"></i>
               </button>
             </div>
           )}
@@ -1064,7 +1066,7 @@ export default function HRManagement() {
           {/* Left panel: Treeview */}
           <div className="card" style={{ flex: '0 0 35%', padding: '20px', minHeight: '400px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: '600' }}>Cơ cấu tổ chức</h3>
+              <h3 style={{ fontSize: '15px', fontWeight: '600' }}>{t('team.orgStructure', 'Cơ cấu tổ chức')}</h3>
               {/* {(isAdmin || isHR) && (
                 <button className="btn btn-primary btn-sm" onClick={() => handleOpenDeptModal(null)}>
                   <i className="fa-solid fa-plus"></i> Thêm phòng
@@ -1078,7 +1080,7 @@ export default function HRManagement() {
                   : departments.filter(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
                 
                 if (visibleRootDepts.length === 0) {
-                  return <div className="text-muted" style={{ fontSize: '13px', textAlign: 'center', padding: '20px' }}>Chưa có phòng ban nào.</div>;
+                  return <div className="text-muted" style={{ fontSize: '13px', textAlign: 'center', padding: '20px' }}>{t('team.noDepartments', 'Chưa có phòng ban nào.')}</div>;
                 }
                 return visibleRootDepts.map(root => renderDeptNode(root));
               })()}
@@ -1093,7 +1095,7 @@ export default function HRManagement() {
                 return (
                   <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--neutral-muted)' }}>
                     <i className="fa-solid fa-folder-open" style={{ fontSize: '48px', marginBottom: '12px' }}></i>
-                    <p style={{ fontSize: '14px', fontWeight: '500' }}>Chọn một phòng ban/part từ sơ đồ bên trái để xem thông tin chi tiết.</p>
+                    <p style={{ fontSize: '14px', fontWeight: '500' }}>{t('team.selectDeptPrompt', 'Chọn một phòng ban/part từ sơ đồ bên trái để xem thông tin chi tiết.')}</p>
                   </div>
                 );
               }
@@ -1128,9 +1130,9 @@ export default function HRManagement() {
                           {currentSelectedDept.name}
                         </h2>
                         <div style={{ marginTop: '8px', fontSize: '13px', color: 'var(--neutral-muted)' }}>
-                          <span>Thuộc bộ phận: </span>
+                          <span>{t('team.belongsToDepartment', 'Thuộc bộ phận:')} </span>
                           <strong style={{ color: '#1e40af' }}>
-                            {parentDept ? `${parentDept.name} (${parentDept.department_id})` : 'Không (Là bộ phận gốc)'}
+                            {parentDept ? `${translateDepartmentName(parentDept.name, t)} (${parentDept.department_id})` : t('team.rootDept', 'Không (Là bộ phận gốc)')}
                           </strong>
                         </div>
                       </div>
@@ -1138,12 +1140,12 @@ export default function HRManagement() {
                       <div style={{ display: 'flex', gap: '8px' }}>
                         {canAddMember && (
                           <button className="btn btn-secondary btn-sm" onClick={() => handleAddDeptMember(currentSelectedDept)}>
-                            <i className="fa-solid fa-user-plus"></i> Thêm thành viên
+                            <i className="fa-solid fa-user-plus"></i> {t('team.addMember', 'Thêm thành viên')}
                           </button>
                         )}
                         {canEditDept && (
                           <button className="btn btn-secondary btn-sm" onClick={() => handleOpenDeptModal(currentSelectedDept)}>
-                            <i className="fa-solid fa-pen-to-square"></i> Sửa
+                            <i className="fa-solid fa-pen-to-square"></i> {t('common.edit', 'Sửa')}
                           </button>
                         )}
                         {canDeleteDept && (
@@ -1157,15 +1159,15 @@ export default function HRManagement() {
 
                   {/* Members Card */}
                   <div className="card" style={{ padding: '20px' }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>Thành viên của part này ({deptMembers.length})</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>{t('team.membersOfThisPart', 'Thành viên của part này')} ({deptMembers.length})</h3>
                     <div className="data-table-wrapper">
                       <table className="data-table">
                         <thead>
                           <tr>
-                            <th>Họ và tên</th>
+                            <th>{t('team.fullName', 'Họ và tên')}</th>
                             <th>Email</th>
-                            <th>Vai trò hệ thống</th>
-                            <th style={{ textAlign: 'center', width: '200px' }}>Thao tác</th>
+                            <th>{t('team.systemRole', 'Vai trò hệ thống')}</th>
+                            <th style={{ textAlign: 'center', width: '200px' }}>{t('common.actions', 'Thao tác')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1189,7 +1191,7 @@ export default function HRManagement() {
                                 <td>{member.email}</td>
                                 <td>
                                   <span className={`badge ${member.system_role === 'Team Leader' ? 'badge-danger' : member.system_role === 'Part Leader' ? 'badge-warning' : 'badge-info'}`}>
-                                    {member.system_role || 'Nhân viên'}
+                                    {formatSystemRole(member.system_role, t)}
                                   </span>
                                 </td>
                                 <td style={{ textAlign: 'center' }}>
@@ -1201,7 +1203,7 @@ export default function HRManagement() {
                                           style={{ padding: '4px 8px', fontSize: '11px' }}
                                           onClick={() => handleTogglePartLeader(member, true)}
                                         >
-                                          <i className="fa-solid fa-user-shield"></i> Chỉ định Part Leader
+                                          <i className="fa-solid fa-user-shield"></i> {t('team.assignPartLeader', 'Chỉ định Part Leader')}
                                         </button>
                                       )}
                                       {member.system_role === 'Part Leader' && (
@@ -1210,7 +1212,7 @@ export default function HRManagement() {
                                           style={{ padding: '4px 8px', fontSize: '11px' }}
                                           onClick={() => handleTogglePartLeader(member, false)}
                                         >
-                                          <i className="fa-solid fa-user-minus"></i> Thu hồi Part Leader
+                                          <i className="fa-solid fa-user-minus"></i> {t('team.revokePartLeader', 'Thu hồi Part Leader')}
                                         </button>
                                       )}
                                     </div>
@@ -1222,7 +1224,7 @@ export default function HRManagement() {
                           {deptMembers.length === 0 && (
                             <tr>
                               <td colSpan="4" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
-                                Không có thành viên nào trong phòng/part này.
+                                {t('team.noMembersInPart', 'Không có thành viên nào trong phòng/part này.')}
                               </td>
                             </tr>
                           )}
@@ -1248,13 +1250,13 @@ export default function HRManagement() {
           <div className="card" style={{ padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>Ma trận Phân quyền Chức năng</h3>
-                <p className="text-muted" style={{ fontSize: '12.5px', margin: 0 }}>Cấu hình bật/tắt quyền hạn chi tiết cho từng vai trò và thêm/bỏ vai trò mới để mở rộng người dùng.</p>
+                <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>{t('team.permMatrixTitle', 'Ma trận Phân quyền Chức năng')}</h3>
+                <p className="text-muted" style={{ fontSize: '12.5px', margin: 0 }}>{t('team.permMatrixSubtitle', 'Cấu hình bật/tắt quyền hạn chi tiết cho từng vai trò và thêm/bỏ vai trò mới để mở rộng người dùng.')}</p>
               </div>
               
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--neutral-muted)' }}>Lọc phân hệ:</span>
+                  <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--neutral-muted)' }}>{t('team.filterModuleLabel', 'Lọc phân hệ:')}</span>
                   <select 
                     value={selectedModuleFilter} 
                     onChange={(e) => setSelectedModuleFilter(e.target.value)} 
@@ -1268,9 +1270,9 @@ export default function HRManagement() {
                       color: '#334155'
                     }}
                   >
-                    <option value="all">Tất cả phân hệ</option>
+                    <option value="all">{t('team.allModules', 'Tất cả phân hệ')}</option>
                     {modules.map(mod => (
-                      <option key={mod} value={mod}>{mod}</option>
+                      <option key={mod} value={mod}>{translateModule(mod, t)}</option>
                     ))}
                   </select>
                 </div>
@@ -1313,14 +1315,14 @@ export default function HRManagement() {
             }} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input 
                 type="text" 
-                placeholder="Tên vai trò mới..." 
+                placeholder={t('team.newRolePlaceholder', 'Tên vai trò mới...')} 
                 value={newRoleName}
                 onChange={(e) => setNewRoleName(e.target.value)}
                 style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', width: '180px' }}
                 required
               />
               <button type="submit" className="btn btn-secondary btn-sm" style={{ padding: '7px 12px' }}>
-                <i className="fa-solid fa-plus"></i> Thêm Vai Trò
+                <i className="fa-solid fa-plus"></i> {t('team.addRole', 'Thêm Vai Trò')}
               </button>
             </form>
           </div>
@@ -1330,12 +1332,12 @@ export default function HRManagement() {
             <table className="data-table" style={{ fontSize: '12px' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
-                  <th style={{ minWidth: '150px' }}>Phân hệ</th>
-                  <th style={{ minWidth: '220px' }}>Quyền hạn / Chức năng</th>
+                  <th style={{ minWidth: '150px' }}>{t('team.moduleCol', 'Phân hệ')}</th>
+                  <th style={{ minWidth: '220px' }}>{t('team.permNameCol', 'Quyền hạn / Chức năng')}</th>
                   {localRoles.map(role => (
                     <th key={role.id} style={{ textAlign: 'center', minWidth: '110px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                        <span>{role.name}</span>
+                        <span>{formatSystemRole(role.name, t)}</span>
                         {!['Quản trị viên (Admin)', 'Nhân sự (HR)', 'Nhân viên (Staff)', 'Team Leader', 'Part Leader', 'Kinh doanh (Sales)', 'Ban điều hành (BOD)'].includes(role.name) && (
                           <button 
                             type="button" 
@@ -1395,9 +1397,9 @@ export default function HRManagement() {
               <tbody>
                 {filteredPermissions.map(perm => (
                   <tr key={perm.key}>
-                    <td style={{ fontWeight: '600', color: '#475569' }}>{perm.module}</td>
+                    <td style={{ fontWeight: '600', color: '#475569' }}>{translateModule(perm.module, t)}</td>
                     <td>
-                      <div style={{ fontWeight: '500' }}>{perm.name}</div>
+                      <div style={{ fontWeight: '500' }}>{translatePermissionName(perm.key, perm.name, t)}</div>
                       <code style={{ fontSize: '10px', color: 'var(--neutral-muted)' }}>{perm.key}</code>
                     </td>
                     {localRoles.map(role => {
@@ -1452,9 +1454,9 @@ export default function HRManagement() {
                     `đã cập nhật ma trận phân quyền hệ thống`
                   );
                   await reloadAll();
-                  Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã lưu cấu hình phân quyền hệ thống thành công!" });
+                  Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('team.savePermissionsSuccess', 'Đã lưu cấu hình phân quyền hệ thống thành công!') });
                 } catch (err) {
-                  Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu phân quyền: " + err.message });
+                  Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('team.savePermissionsFailed', 'Lỗi lưu phân quyền: ') + err.message });
                 } finally {
                   setSavingPermissions(false);
                 }
@@ -1465,7 +1467,7 @@ export default function HRManagement() {
               {savingPermissions ? (
                 <span><i className="fa-solid fa-spinner fa-spin"></i> Đang lưu...</span>
               ) : (
-                <span><i className="fa-solid fa-cloud-arrow-up"></i> Lưu cấu hình phân quyền</span>
+                <span><i className="fa-solid fa-cloud-arrow-up"></i> {t('team.savePermMatrix', 'Lưu cấu hình phân quyền')}</span>
               )}
             </button>
           </div>
@@ -1651,7 +1653,7 @@ export default function HRManagement() {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setIsOpen(false)}>Hủy</button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsOpen(false)}>{t('common.cancel', 'Hủy')}</button>
                   <button type="submit" className="btn btn-primary" disabled={loading}>
                     {loading ? 'Đang tạo...' : 'Cấp tài khoản'}
                   </button>
@@ -1668,7 +1670,7 @@ export default function HRManagement() {
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h3>{selectedDept ? 'Chỉnh sửa phòng ban' : 'Thêm phòng ban mới'}</h3>
+                <h3>{selectedDept ? t('team.editDept', 'Chỉnh sửa phòng ban') : t('team.addDeptModal', 'Thêm phòng ban mới')}</h3>
                 <button className="btn-close-modal" onClick={() => setIsDeptOpen(false)}><i className="fa-solid fa-xmark"></i></button>
               </div>
               <form onSubmit={handleDeptSubmit}>
@@ -1687,7 +1689,7 @@ export default function HRManagement() {
                   )}
 
                   <div className="form-group">
-                    <label>Mã phòng ban <span className="required">*</span></label>
+                    <label>{t('team.deptCode', 'Mã phòng ban')} <span className="required">*</span></label>
                     <input 
                       type="text" 
                       value={inputDeptId} 
@@ -1695,28 +1697,28 @@ export default function HRManagement() {
                       required 
                       placeholder="Ví dụ: Dev, HR, Sales, MKT..." 
                     />
-                    {selectedDept && <small className="text-muted" style={{ display: 'block', marginTop: '4px' }}>Thay đổi mã phòng ban sẽ tự động cập nhật cho tất cả nhân viên và phòng ban trực thuộc.</small>}
+                    {selectedDept && <small className="text-muted" style={{ display: 'block', marginTop: '4px' }}>{t('team.deptCodeDesc', 'Thay đổi mã phòng ban sẽ tự động cập nhật cho tất cả nhân viên và phòng ban trực thuộc.')}</small>}
                   </div>
                   
                   <div className="form-group">
-                    <label>Phòng ban cha (nếu có)</label>
+                    <label>{t('team.parentDeptLabel', 'Phòng ban cha (nếu có)')}</label>
                     <select
                       value={inputDeptParentId}
                       onChange={(e) => setInputDeptParentId(e.target.value)}
                       style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', backgroundColor: '#fff' }}
                     >
-                      <option value="">Không (Phòng ban gốc)</option>
+                      <option value="">{t('team.rootDeptSelect', 'Không (Phòng ban gốc)')}</option>
                       {departments
                         .filter(d => d.department_id !== inputDeptId)
                         .map(d => (
-                          <option value={d.department_id} key={d.department_id}>{d.name} ({d.department_id})</option>
+                          <option value={d.department_id} key={d.department_id}>{translateDepartmentName(d.name, t)} ({d.department_id})</option>
                         ))
                       }
                     </select>
                   </div>
                   
                   <div className="form-group">
-                    <label>Tên phòng ban <span className="required">*</span></label>
+                    <label>{t('team.deptNameLabel', 'Tên phòng ban')} <span className="required">*</span></label>
                     <input 
                       type="text" 
                       value={inputDeptName} 
@@ -1727,9 +1729,9 @@ export default function HRManagement() {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setIsDeptOpen(false)}>Hủy</button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsDeptOpen(false)}>{t('common.cancel', 'Hủy')}</button>
                   <button type="submit" className="btn btn-primary" disabled={deptLoading}>
-                    {deptLoading ? 'Đang lưu...' : 'Lưu lại'}
+                    {deptLoading ? t('common.saving', 'Đang lưu...') : t('common.save', 'Lưu lại')}
                   </button>
                 </div>
               </form>
@@ -1751,7 +1753,7 @@ export default function HRManagement() {
             <div className="modal-dialog" style={{ maxWidth: '650px', width: '100%' }}>
               <div className="modal-content">
                 <div className="modal-header">
-                  <h3>Thêm thành viên vào {currentSelectedDept.name}</h3>
+                  <h3>{t('team.addMemberTo', 'Thêm thành viên vào')} {translateDepartmentName(currentSelectedDept.name, t)}</h3>
                   <button className="btn-close-modal" onClick={() => setIsAddMemberOpen(false)}><i className="fa-solid fa-xmark"></i></button>
                 </div>
                 <div className="modal-body" style={{ padding: '20px' }}>
@@ -1760,7 +1762,7 @@ export default function HRManagement() {
                       <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', left: '10px', top: '11px', color: 'var(--neutral-muted)', fontSize: '13px' }}></i>
                       <input 
                         type="text" 
-                        placeholder="Tìm theo tên, email, mã nhân viên..." 
+                        placeholder={t('team.searchAddMemberPlaceholder', 'Tìm theo tên, email, mã nhân viên...')} 
                         value={addMemberSearch}
                         onChange={(e) => setAddMemberSearch(e.target.value)}
                         style={{ padding: '8px 12px 8px 30px', width: '100%', borderRadius: '6px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none' }}
@@ -1772,7 +1774,7 @@ export default function HRManagement() {
                         onChange={(e) => setAddMemberDeptFilter(e.target.value)}
                         style={{ padding: '8px 12px', width: '100%', borderRadius: '6px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', backgroundColor: '#fff' }}
                       >
-                        <option value="all">Tất cả phòng ban</option>
+                        <option value="all">{t('dept.allDepts', 'Tất cả phòng ban')}</option>
                         {departments.map(d => (
                           <option value={d.department_id} key={d.department_id}>{d.name}</option>
                         ))}
@@ -1793,9 +1795,9 @@ export default function HRManagement() {
                               style={{ transform: 'scale(1.15)', cursor: 'pointer' }}
                             />
                           </th>
-                          <th>Họ và tên</th>
-                          <th>Mã nhân viên / Email</th>
-                          <th>Phòng ban hiện tại</th>
+                          <th>{t('team.fullName', 'Họ và tên')}</th>
+                          <th>{t('team.employeeCodeOrEmail', 'Mã nhân viên / Email')}</th>
+                          <th>{t('team.currentDept', 'Phòng ban hiện tại')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1827,14 +1829,14 @@ export default function HRManagement() {
                                 <div style={{ fontWeight: '500' }}>{u.employee_id || 'N/A'}</div>
                                 <div style={{ fontSize: '11px', color: 'var(--neutral-muted)' }}>{u.email}</div>
                               </td>
-                              <td>{u.department_name || 'Chưa phân phòng'}</td>
+                              <td>{translateDepartmentName(u.department_name, t)}</td>
                             </tr>
                           );
                         })}
                         {eligibleUsers.length === 0 && (
                           <tr>
                             <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: 'var(--neutral-muted)' }}>
-                              Không tìm thấy nhân viên phù hợp.
+                              {t('team.noStaffFound', 'Không tìm thấy nhân viên phù hợp.')}
                             </td>
                           </tr>
                         )}
@@ -1843,14 +1845,14 @@ export default function HRManagement() {
                   </div>
                 </div>
                 <div className="modal-footer" style={{ padding: '16px 20px', borderTop: '1px solid var(--neutral-border)' }}>
-                  <button type="button" className="btn btn-secondary" onClick={() => setIsAddMemberOpen(false)}>Hủy</button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsAddMemberOpen(false)}>{t('common.cancel', 'Hủy')}</button>
                   <button 
                     type="button" 
                     className="btn btn-primary" 
                     disabled={addMemberLoading || addMemberSelectedIds.size === 0}
                     onClick={handleConfirmAddMembers}
                   >
-                    {addMemberLoading ? 'Đang lưu...' : `Thêm (${addMemberSelectedIds.size}) thành viên`}
+                    {addMemberLoading ? t('common.saving', 'Đang lưu...') : `${t('common.add', 'Thêm')} (${addMemberSelectedIds.size}) ${t('team.members', 'thành viên')}`}
                   </button>
                 </div>
               </div>
@@ -1861,3 +1863,80 @@ export default function HRManagement() {
     </div>
   );
 }
+const formatSystemRole = (role, t) => {
+  if (!role) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  if (role.includes('Admin') || role.includes('Quản trị viên')) return t('role.admin', 'QUẢN TRỊ VIÊN (ADMIN)');
+  if (role.includes('HR') || role.includes('Nhân sự')) return t('role.hr', 'NHÂN SỰ (HR)');
+  if (role.includes('Staff') || role.includes('Nhân viên')) return t('role.staff', 'NHÂN VIÊN (STAFF)');
+  if (role.includes('Team Leader')) return t('role.teamLeader', 'TEAM LEADER');
+  if (role.includes('Part Leader')) return t('role.partLeader', 'PART LEADER');
+  if (role.includes('Sales') || role.includes('Kinh doanh')) return t('role.sales', 'KINH DOANH (SALES)');
+  if (role.includes('BOD') || role.includes('Ban điều hành')) return t('role.bod', 'BAN ĐIỀU HÀNH (BOD)');
+  return role.toUpperCase();
+};
+
+const translateDepartmentName = (name, t) => {
+  if (!name || name === 'Chưa phân phòng') return t('dept.unassigned', 'Chưa phân phòng');
+  if (name.includes('Hành chính Nhân sự') || name === 'HR') return t('dept.hr', 'Phòng Hành chính Nhân sự (HR)');
+  if (name.includes('Phát triển Phần mềm') || name === 'R&D') return t('dept.rd', 'Phòng Phát triển Phần mềm (R&D)');
+  if (name.includes('Kinh doanh') || name === 'Sales') return t('dept.sales', 'Phòng Kinh doanh (Sales)');
+  if (name.includes('Kế toán Tài chính') || name.includes('Finance')) return t('dept.finance', 'Phòng Kế toán Tài chính');
+  if (name.includes('Truyền thông Marketing') || name.includes('Marketing')) return t('dept.marketing', 'Phòng Truyền thông Marketing');
+  if (name.includes('BOD TOPV') || name === 'BOD') return t('dept.bod', 'BOD TOPV');
+  if (name === 'Nhân sự 1') return t('dept.hr1', 'Nhân sự 1');
+  if (name === 'PC') return t('dept.pc', 'PC');
+  if (name === 'PC1') return t('dept.pc1', 'PC1');
+  if (name === 'PC2') return t('dept.pc2', 'PC2');
+  return name;
+};
+
+
+const translateModule = (mod, t) => {
+  if (!mod) return '';
+  if (mod === 'Dashboard') return t('module.dashboard', 'Dashboard');
+  if (mod === 'Dự án' || mod === 'Project Management' || mod === 'Projects') return t('module.projects', 'Dự án');
+  if (mod === 'Công việc' || mod === 'Tasks') return t('module.tasks', 'Công việc');
+  if (mod === 'Tài liệu' || mod === 'Documents') return t('module.documents', 'Tài liệu');
+  if (mod === 'Quản trị hệ thống' || mod === 'System Administration') return t('module.systemAdmin', 'Quản trị hệ thống');
+  if (mod === 'Báo cáo ngày' || mod === 'Daily Reports') return t('module.dailyReports', 'Báo cáo ngày');
+  if (mod === 'Kênh Chat' || mod === 'Internal Chat') return t('module.chat', 'Kênh Chat');
+  return mod;
+};
+
+const translatePermissionName = (permKey, permName, t) => {
+  const map = {
+    'view_dashboard': t('perm.viewDashboard', 'Xem Dashboard'),
+    'view_all_projects': t('perm.viewAllProjects', 'Xem toàn bộ dự án'),
+    'create_project': t('perm.createProject', 'Thêm dự án mới'),
+    'edit_project': t('perm.editProject', 'Chỉnh sửa dự án (Sửa/Xóa/Thay đổi plan)'),
+    'manage_project_members': t('perm.manageProjectMembers', 'Quản lý thành viên dự án'),
+    'create_task': t('perm.createTask', 'Giao việc mới (Tạo Task)'),
+    'edit_task': t('perm.editTask', 'Chỉnh sửa nội dung công việc'),
+    'delete_task': t('perm.deleteTask', 'Xóa công việc'),
+    'update_task_status': t('perm.updateTaskStatus', 'Cập nhật trạng thái việc (Task status)'),
+    'create_issue': t('perm.createIssue', 'Báo cáo lỗi/vấn đề mới (Issues)'),
+    'edit_issue': t('perm.editIssue', 'Cập nhật trạng thái Issue (Reporter/Tagged)'),
+    'view_documents': t('perm.viewDocuments', 'Xem tài liệu chung và tài liệu dự án'),
+    'upload_documents': t('perm.uploadDocuments', 'Tải lên/Cập nhật tài liệu mới'),
+    'upload_document': t('perm.uploadDocuments', 'Tải lên/Cập nhật tài liệu mới'),
+    'view_hr': t('perm.viewHr', 'Truy cập Quản trị nhân sự (Trang HR)'),
+    'view_hr_members': t('perm.viewHrMembers', 'Xem danh sách tài khoản & nhân sự'),
+    'manage_role_permissions': t('perm.manageRolePermissions', 'Quản lý ma trận phân quyền'),
+    'manage_departments': t('perm.manageDepartments', 'Quản lý danh mục phòng ban (Thêm/Sửa/Xóa)'),
+    'create_employee_account': t('perm.createEmployeeAccount', 'Cấp tài khoản nhân viên mới'),
+    'edit_employee_info': t('perm.editEmployeeInfo', 'Chỉnh sửa thông tin nhân viên & Phân vai trò'),
+    'view_activity_logs': t('perm.viewActivityLogs', 'Xem nhật ký hệ thống (Log)'),
+    'view_daily_reports': t('perm.viewDailyReports', 'Xem danh sách báo cáo ngày'),
+    'view_all_daily_reports': t('perm.viewDailyReports', 'Xem danh sách báo cáo ngày'),
+    'create_daily_report': t('perm.createDailyReport', 'Viết/gửi báo cáo ngày mới'),
+    'submit_daily_report': t('perm.createDailyReport', 'Viết/gửi báo cáo ngày mới'),
+    'approve_daily_report': t('perm.approveDailyReport', 'Phê duyệt/phản hồi báo cáo ngày'),
+    'chat_tag_all_global': t('perm.chatTagAllGlobal', 'Tự động tag @all phòng chat chung'),
+    'chat_tag_all_project': t('perm.chatTagAllProject', 'Tự động tag @all phòng chat dự án'),
+    'chat_confirm_send': t('perm.chatConfirmSend', 'Hỏi xác nhận trước khi gửi tin nhắn'),
+    'chat_access': t('perm.chatAccess', 'Truy cập Kênh Chat nội bộ')
+  };
+  return map[permKey] || permName;
+};
+
+
