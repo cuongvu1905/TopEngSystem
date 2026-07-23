@@ -81,6 +81,7 @@ function Chat() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatSearchQuery, setChatSearchQuery] = useState('');
+  const [showChatRooms, setShowChatRooms] = useState(false);
   const [typingUser, setTypingUser] = useState(null);
 
   // Mentions
@@ -354,9 +355,9 @@ function Chat() {
   };
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', padding: '24px', boxSizing: 'border-box', overflow: 'hidden' }}>
+    <div className="chat-page-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', padding: '24px', boxSizing: 'border-box', overflow: 'hidden' }}>
       <div className="chat-layout" style={{ height: '100%' }}>
-        <div className="chat-rooms-sidebar">
+        <div className={`chat-rooms-sidebar ${showChatRooms ? 'show' : ''}`}>
         <div className="chat-rooms-search">
           <input type="text" placeholder={t('chat.searchPlaceholder', 'Tìm kiếm phòng chat...')} />
         </div>
@@ -367,7 +368,7 @@ function Chat() {
               {allowedRooms
                 .filter(r => r.type === "global" || r.type === "project")
                 .map(r => (
-                  <div className={`chat-room-item ${r.id === activeChatRoomId ? 'active' : ''}`} onClick={() => setActiveChatRoomId(r.id)} key={r.id}>
+                  <div className={`chat-room-item ${r.id === activeChatRoomId ? 'active' : ''}`} onClick={() => { setActiveChatRoomId(r.id); setShowChatRooms(false); }} key={r.id}>
                     <span>{formatRoomName(r.name, t)}</span>
                   </div>
                 ))}
@@ -382,7 +383,7 @@ function Chat() {
               {allowedRooms
                 .filter(r => r.type === "direct")
                 .map(r => (
-                  <div className={`chat-room-item ${r.id === activeChatRoomId ? 'active' : ''}`} onClick={() => setActiveChatRoomId(r.id)} key={r.id}>
+                  <div className={`chat-room-item ${r.id === activeChatRoomId ? 'active' : ''}`} onClick={() => { setActiveChatRoomId(r.id); setShowChatRooms(false); }} key={r.id}>
                     <span>{formatRoomName(r.name, t)}</span>
                   </div>
                 ))}
@@ -394,10 +395,20 @@ function Chat() {
       <div className="chat-main-area">
         <div className="chat-area-header">
           <div className="chat-header-info">
-            <h3>{activeRoomObj ? formatRoomName(activeRoomObj.name, t) : t('chat.pleaseSelectRoom', 'Vui lòng chọn phòng chat')}</h3>
-            <p className="text-muted">
-              {formatRoomDesc(activeRoomObj, t)}
-            </p>
+            <button
+              type="button"
+              className="chat-rooms-toggle-btn"
+              aria-label={t('chat.toggleRoomsList', 'Danh sách phòng chat')}
+              onClick={() => setShowChatRooms(prev => !prev)}
+            >
+              <i className="fa-solid fa-bars"></i>
+            </button>
+            <div>
+              <h3>{activeRoomObj ? formatRoomName(activeRoomObj.name, t) : t('chat.pleaseSelectRoom', 'Vui lòng chọn phòng chat')}</h3>
+              <p className="text-muted">
+                {formatRoomDesc(activeRoomObj, t)}
+              </p>
+            </div>
           </div>
           <div className="chat-header-actions">
             <div className="chat-search-box">

@@ -21,7 +21,7 @@ const formatSystemRole = (role, t) => {
   return r.toUpperCase();
 };
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose }) {
   const pathname = usePathname();
   const { currentUser, reloadAll, hasPermission } = useApp();
   const { t } = useLanguage();
@@ -32,9 +32,10 @@ export default function Sidebar() {
 
   const isAdmin = currentUser.system_role.includes("Admin");
   const isHR = currentUser.system_role.includes("Nhân sự");
+  const handleNavigate = () => onClose && onClose();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'show' : ''}`}>
       <div className="sidebar-brand">
         <div className="brand-logo">
           <i className="fa-solid fa-cubes-stacked"></i>
@@ -44,40 +45,40 @@ export default function Sidebar() {
           <span>Manager</span>
         </div>
       </div>
-      
+
       <nav className="sidebar-menu">
-        <Link href="/dashboard" className={`menu-item ${pathname === '/dashboard' || pathname === '/' ? 'active' : ''}`}>
+        <Link href="/dashboard" onClick={handleNavigate} className={`menu-item ${pathname === '/dashboard' || pathname === '/' ? 'active' : ''}`}>
           <i className="fa-solid fa-chart-line"></i>
           <span>{t('sidebar.dashboard', 'Dashboard')}</span>
         </Link>
-        <Link href="/projects" className={`menu-item ${pathname.startsWith('/projects') ? 'active' : ''}`}>
+        <Link href="/projects" onClick={handleNavigate} className={`menu-item ${pathname.startsWith('/projects') ? 'active' : ''}`}>
           <i className="fa-solid fa-folder-open"></i>
           <span>{t('sidebar.projects', 'Dự án')}</span>
         </Link>
-        <Link href="/tasks" className={`menu-item ${pathname === '/tasks' ? 'active' : ''}`}>
+        <Link href="/tasks" onClick={handleNavigate} className={`menu-item ${pathname === '/tasks' ? 'active' : ''}`}>
           <i className="fa-solid fa-list-check"></i>
           <span>{t('sidebar.tasks', 'Công việc')}</span>
         </Link>
-        <Link href="/chat" className={`menu-item ${pathname === '/chat' ? 'active' : ''}`}>
+        <Link href="/chat" onClick={handleNavigate} className={`menu-item ${pathname === '/chat' ? 'active' : ''}`}>
           <i className="fa-solid fa-comments"></i>
           <span>{t('sidebar.chat', 'Trò chuyện')}</span>
         </Link>
-        <Link href="/documents" className={`menu-item ${pathname === '/documents' ? 'active' : ''}`}>
+        <Link href="/documents" onClick={handleNavigate} className={`menu-item ${pathname === '/documents' ? 'active' : ''}`}>
           <i className="fa-solid fa-file-lines"></i>
           <span>{t('sidebar.documents', 'Tài liệu')}</span>
         </Link>
-        <Link href="/daily-reports" className={`menu-item ${pathname === '/daily-reports' ? 'active' : ''}`}>
+        <Link href="/daily-reports" onClick={handleNavigate} className={`menu-item ${pathname === '/daily-reports' ? 'active' : ''}`}>
           <i className="fa-solid fa-file-invoice"></i>
           <span>{t('sidebar.dailyReports', 'Báo cáo ngày')}</span>
         </Link>
         {hasPermission('view_activity_logs') && (
-          <Link href="/activity-logs" className={`menu-item ${pathname === '/activity-logs' ? 'active' : ''}`}>
+          <Link href="/activity-logs" onClick={handleNavigate} className={`menu-item ${pathname === '/activity-logs' ? 'active' : ''}`}>
             <i className="fa-solid fa-clock-rotate-left"></i>
             <span>{t('sidebar.activityLogs', 'Lịch sử làm việc')}</span>
           </Link>
         )}
         {hasPermission('view_hr') && (
-          <Link href="/hr" className={`menu-item ${pathname === '/hr' ? 'active' : ''}`}>
+          <Link href="/hr" onClick={handleNavigate} className={`menu-item ${pathname === '/hr' ? 'active' : ''}`}>
             <i className="fa-solid fa-user-gear"></i>
             <span>{t('sidebar.teamManagement', currentUser.system_role === 'Team Leader' ? 'Quản lý Team' : 'Quản lý nhân sự')}</span>
           </Link>

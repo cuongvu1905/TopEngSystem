@@ -322,27 +322,58 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 150;
+  flex-shrink: 0;
+}
+
+/* Mobile sidebar backdrop */
+.sidebar-overlay {
+  display: none;
+}
+
+/* Inline mobile detail pane (shown under the active report card) - hidden outside mobile */
+.inline-mobile-detail-pane {
+  display: none;
 }
 .header-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  flex: 1;
 }
 .sidebar-toggle-btn {
   display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   background: none;
   border: none;
+  border-radius: 50%;
   font-size: 18px;
   color: var(--neutral-dark);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.sidebar-toggle-btn:hover {
+  background-color: var(--neutral-bg-hover);
 }
 #page-title {
   font-size: 18px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .header-right {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 /* Notification Bell Dropdown */
@@ -1145,10 +1176,41 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: space-between;
   background-color: var(--neutral-bg-card);
+  gap: 10px;
+}
+.chat-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.chat-header-info > div {
+  min-width: 0;
+  overflow: hidden;
+}
+.chat-rooms-toggle-btn {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--neutral-dark);
+  font-size: 16px;
+  cursor: pointer;
+}
+.chat-rooms-toggle-btn:hover {
+  background-color: var(--neutral-bg-hover);
 }
 .chat-header-info h3 {
   font-size: 14px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .chat-header-info p {
   font-size: 11px;
@@ -1901,20 +1963,75 @@ h1, h2, h3, h4, h5, h6 {
     flex-direction: column;
   }
   .sidebar {
-    width: 100%;
+    width: min(80%, 300px);
+    max-width: 300px;
     height: auto;
     position: fixed;
-    top: var(--header-height);
+    top: 0;
     left: -100%;
     bottom: 0;
+    z-index: 500;
+    box-shadow: var(--shadow-xl);
     transition: var(--transition-normal);
   }
   .sidebar.show {
     left: 0;
   }
   .sidebar-toggle-btn {
-    display: block;
+    display: flex;
   }
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    z-index: 400;
+  }
+
+  /* Header adjustments */
+  .app-header {
+    padding: 0 12px;
+  }
+  #page-title {
+    font-size: 16px;
+  }
+  .header-right {
+    gap: 6px;
+  }
+  .header-action-item.language-dropdown-wrapper {
+    margin-right: 0 !important;
+  }
+  .switcher-trigger span {
+    display: none;
+  }
+  .switcher-trigger {
+    padding: 6px 8px;
+  }
+  .switcher-trigger .sw-avatar,
+  .switcher-trigger > div {
+    margin-right: 0 !important;
+  }
+  .dropdown-menu {
+    max-width: calc(100vw - 24px);
+  }
+  .notification-menu,
+  .switcher-menu {
+    width: min(320px, calc(100vw - 24px));
+  }
+
+  /* Content spacing */
+  .scrollable-view {
+    padding: 14px;
+  }
+  .view-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .view-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
   .project-list-grid {
     grid-template-columns: 1fr;
   }
@@ -1923,6 +2040,60 @@ h1, h2, h3, h4, h5, h6 {
   }
   .dashboard-row-2 {
     grid-template-columns: 1fr;
+  }
+  .dashboard-widgets-grid-2x2 {
+    grid-template-columns: 1fr;
+  }
+  .widget-box {
+    height: 320px;
+  }
+  .report-card-row {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .report-card-meta-col {
+    width: 100% !important;
+  }
+  .report-content-textarea {
+    min-height: 200px !important;
+  }
+
+  /* Dashboard split-screen detail popup (Issues/Tasks/Projects/Reports) */
+  .detail-popup-dialog {
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+  }
+  .detail-popup-body {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+  }
+  .split-left-pane-25 {
+    width: 100% !important;
+    flex: none !important;
+    border-right: none !important;
+  }
+  .split-right-pane-50 {
+    display: none !important;
+  }
+  .inline-mobile-detail-pane {
+    display: block;
+    margin-top: -4px;
+    margin-bottom: 4px;
+    padding: 16px;
+    border: 1.5px solid var(--primary-color);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    background: var(--neutral-bg-main);
+  }
+  .report-card-item-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+  .report-card-item-row span:first-child {
+    max-width: 100% !important;
+    white-space: normal !important;
   }
   .kanban-board {
     grid-template-columns: 1fr;
@@ -1942,6 +2113,15 @@ h1, h2, h3, h4, h5, h6 {
     height: calc(100% - 52px);
     z-index: 10;
   }
+  .chat-rooms-toggle-btn {
+    display: inline-flex !important;
+  }
+  .chat-page-container {
+    padding: 12px !important;
+  }
+  .chat-search-box input {
+    width: 110px;
+  }
   .doc-layout {
     grid-template-columns: 1fr;
   }
@@ -1951,6 +2131,21 @@ h1, h2, h3, h4, h5, h6 {
   .modal-split-left {
     border-right: none;
     border-bottom: 1px solid var(--neutral-border);
+  }
+}
+
+@media (max-width: 480px) {
+  #page-title {
+    font-size: 14px;
+  }
+  .header-action-item.notification-dropdown-wrapper .icon-btn,
+  .sidebar-toggle-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  .scrollable-view {
+    padding: 10px;
   }
 }
 
@@ -2250,4 +2445,15 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(1) !important;
   cursor: pointer;
+}
+
+/* Prevent browser autofill from turning inputs light blue in Dark Mode */
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover, 
+[data-theme="dark"] input:-webkit-autofill:focus, 
+[data-theme="dark"] input:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: var(--neutral-dark) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: inset 0 0 20px 20px var(--neutral-bg-card) !important;
 }

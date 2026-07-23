@@ -174,7 +174,7 @@ const translateNotifContent = (title, content, t) => {
   return content;
 };
 
-export default function Header() {
+export default function Header({ onToggleSidebar }) {
   const { currentUser, logout, users, notifications, reloadAll } = useApp();
   const { currentLang, changeLanguage, languages, currentLanguageObj, t } = useLanguage();
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -538,6 +538,14 @@ export default function Header() {
     <>
       <header className="app-header">
         <div className="header-left">
+          <button
+            type="button"
+            className="sidebar-toggle-btn"
+            aria-label={t('header.toggleMenu', 'Mở/đóng menu')}
+            onClick={onToggleSidebar}
+          >
+            <i className="fa-solid fa-bars"></i>
+          </button>
           <h1 id="page-title">{pageTitle}</h1>
         </div>
         

@@ -375,12 +375,13 @@ export default function DailyReportsPage() {
           <form onSubmit={handleSubmitReport}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
               {reportCards.map((card, index) => (
-                <div 
-                  key={card.id} 
-                  style={{ 
-                    border: '1.5px solid var(--neutral-border)', 
-                    borderRadius: '4px', 
-                    padding: '20px', 
+                <div
+                  key={card.id}
+                  className="report-card-row"
+                  style={{
+                    border: '1.5px solid var(--neutral-border)',
+                    borderRadius: '4px',
+                    padding: '20px',
                     position: 'relative',
                     backgroundColor: 'var(--neutral-bg-card)',
                     display: 'flex',
@@ -411,33 +412,34 @@ export default function DailyReportsPage() {
                   )}
 
                   {/* Left Column: Content Textarea */}
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div className="report-card-content-col" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ display: 'block', fontSize: '14.5px', fontWeight: '600', color: 'var(--neutral-dark)' }}>
                       {t('reports.content', 'Nội dung')} <span style={{ color: 'red' }}>*</span>
                     </label>
                     <textarea
+                      className="report-content-textarea"
                       value={card.content}
                       onChange={(e) => updateCardField(card.id, 'content', e.target.value)}
                       required
                       placeholder={t('reports.placeholderContent', 'Nhập nội dung báo cáo trong khung giờ này...')}
                       rows="6"
-                      style={{ 
-                        width: '100%', 
-                        padding: '12px', 
-                        borderRadius: '4px', 
-                        border: '1px solid var(--neutral-border)', 
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '4px',
+                        border: '1px solid var(--neutral-border)',
                         backgroundColor: 'var(--neutral-bg-card)',
                         color: 'var(--neutral-dark)',
-                        outline: 'none', 
-                        resize: 'vertical', 
-                        fontSize: '14px', 
-                        lineHeight: '1.6' 
+                        outline: 'none',
+                        resize: 'vertical',
+                        fontSize: '14px',
+                        lineHeight: '1.6'
                       }}
                     />
                   </div>
 
                   {/* Right Column: Time, Project, File Attachment */}
-                  <div style={{ width: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="report-card-meta-col" style={{ width: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     
                     {/* Time fields */}
                     <div>

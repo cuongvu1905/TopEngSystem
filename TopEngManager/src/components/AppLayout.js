@@ -12,10 +12,16 @@ export default function AppLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Auto-close the mobile drawer whenever the route changes
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
 
   const isPublicRoute = pathname && pathname.startsWith('/public-projects/');
 
@@ -74,9 +80,12 @@ export default function AppLayout({ children }) {
 
   return (
     <div className="app-container">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      {isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />
+      )}
       <div className="main-wrapper">
-        <Header />
+        <Header onToggleSidebar={() => setIsSidebarOpen(prev => !prev)} />
         <main className="content-container">
           {children}
         </main>

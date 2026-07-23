@@ -1596,7 +1596,7 @@ export default function HRManagement() {
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h3>Cấp tài khoản nhân viên mới</h3>
+                <h3>{t('hr.createAccountTitle', 'Cấp tài khoản nhân viên mới')}</h3>
                 <button className="btn-close-modal" onClick={() => setIsOpen(false)}><i className="fa-solid fa-xmark"></i></button>
               </div>
               <form onSubmit={handleSubmit}>
@@ -1615,38 +1615,38 @@ export default function HRManagement() {
                   )}
 
                   <div className="form-group">
-                    <label>Mã nhân viên <span className="required">*</span></label>
-                    <input type="text" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required placeholder="Ví dụ: NV001, NV002, admin..." />
+                    <label>{t('hr.employeeId', 'Mã nhân viên')} <span className="required">*</span></label>
+                    <input type="text" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} required placeholder={t('hr.employeeIdPlaceholder', 'Ví dụ: NV001, NV002, admin...')} />
                   </div>
 
                   <div className="form-group">
-                    <label>Họ và tên nhân viên <span className="required">*</span></label>
-                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Ví dụ: Nguyễn Văn A" />
+                    <label>{t('hr.employeeFullName', 'Họ và tên nhân viên')} <span className="required">*</span></label>
+                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder={t('hr.employeeFullNamePlaceholder', 'Ví dụ: Nguyễn Văn A')} />
                   </div>
                   
                   <div className="form-group">
-                    <label>Email công việc <span className="required">*</span></label>
+                    <label>{t('hr.workEmail', 'Email công việc')} <span className="required">*</span></label>
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="email@company.com" />
                   </div>
 
                   <div className="form-group">
-                    <label>Mật khẩu khởi tạo <span className="required">*</span></label>
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Nhập mật khẩu..." />
+                    <label>{t('hr.initialPassword', 'Mật khẩu khởi tạo')} <span className="required">*</span></label>
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder={t('hr.initialPasswordPlaceholder', 'Nhập mật khẩu...')} />
                   </div>
 
                   <div className="form-group">
-                    <label>Vai trò chức vụ hệ thống <span className="required">*</span></label>
+                    <label>{t('hr.systemRole', 'Vai trò chức vụ hệ thống')} <span className="required">*</span></label>
                     <select value={roleId} onChange={(e) => setRoleId(e.target.value)} style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} required>
                       {roles.map(r => (
-                        <option value={r.id} key={r.id}>{r.name}</option>
+                        <option value={r.id} key={r.id}>{translateSystemRoleName(r.name, t)}</option>
                       ))}
                     </select>
                   </div>
 
                   <div className="form-group">
-                    <label>Phòng ban trực thuộc <span className="required">*</span></label>
+                    <label>{t('hr.department', 'Phòng ban trực thuộc')} <span className="required">*</span></label>
                     <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} required>
-                      <option value="">-- Chọn phòng ban --</option>
+                      <option value="">{t('hr.selectDepartment', '-- Chọn phòng ban --')}</option>
                       {departments.map(d => (
                         <option value={d.department_id} key={d.department_id}>{d.name}</option>
                       ))}
@@ -1656,7 +1656,7 @@ export default function HRManagement() {
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setIsOpen(false)}>{t('common.cancel', 'Hủy')}</button>
                   <button type="submit" className="btn btn-primary" disabled={loading}>
-                    {loading ? 'Đang tạo...' : 'Cấp tài khoản'}
+                    {loading ? t('hr.creating', 'Đang tạo...') : t('hr.issueAccountBtn', 'Cấp tài khoản')}
                   </button>
                 </div>
               </form>
@@ -1874,6 +1874,20 @@ const formatSystemRole = (role, t) => {
   if (role.includes('Sales') || role.includes('Kinh doanh')) return t('role.sales', 'KINH DOANH (SALES)');
   if (role.includes('BOD') || role.includes('Ban điều hành')) return t('role.bod', 'BAN ĐIỀU HÀNH (BOD)');
   return role.toUpperCase();
+};
+
+const translateSystemRoleName = (role, t) => {
+  if (!role) return '';
+  const str = String(role);
+  if (str.includes('Admin') || str.includes('Quản trị viên')) return t('role.adminShort', 'Quản trị viên (Admin)');
+  if (str.includes('HR') || str.includes('Nhân sự')) return t('role.hrShort', 'Nhân sự (HR)');
+  if (str.includes('Staff') || str.includes('Nhân viên')) return t('role.staffShort', 'Nhân viên (Staff)');
+  if (str.includes('Team Leader')) return t('role.teamLeaderShort', 'Team Leader');
+  if (str.includes('Part Leader')) return t('role.partLeaderShort', 'Part Leader');
+  if (str.includes('Sales') || str.includes('Kinh doanh')) return t('role.salesShort', 'Kinh doanh (Sales)');
+  if (str.includes('BOD') || str.includes('Ban điều hành')) return t('role.bodShort', 'Ban điều hành (BOD)');
+  if (str.toLowerCase().includes('intern') || str.includes('thực tập')) return t('role.internShort', 'Thực tập sinh (Intern)');
+  return role;
 };
 
 const translateDepartmentName = (name, t) => {
