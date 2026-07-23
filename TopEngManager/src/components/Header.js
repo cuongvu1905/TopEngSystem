@@ -245,7 +245,7 @@ export default function Header() {
   const handleShowTeamTree = async () => {
     const Swal = await getSwal();
     Swal.fire({
-      title: 'Đang tải sơ đồ nhóm...',
+      title: t('team.loadingDiagram', 'Đang tải sơ đồ nhóm...'),
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -271,8 +271,8 @@ export default function Header() {
       if (!teamDept) {
         Swal.fire({
           icon: 'info',
-          title: 'Thông báo',
-          text: 'Tài khoản của bạn chưa được phân nhóm hoặc team không tồn tại.',
+          title: t('common.notice', 'Thông báo'),
+          text: t('team.noTeamAssigned', 'Tài khoản của bạn chưa được phân nhóm hoặc team không tồn tại.'),
           confirmButtonColor: 'var(--primary-color)'
         });
         return;
@@ -283,8 +283,8 @@ export default function Header() {
 
       let treeHtml = `
         <div style="text-align: left; padding: 10px; font-size: 13.5px; line-height: 1.6;">
-          <div style="font-weight: 700; font-size: 15px; color: #1e40af; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-sitemap"></i> Sơ đồ nhóm: ${teamDept.name} (${teamDept.department_id})
+          <div style="font-weight: 700; font-size: 15px; color: var(--primary-color); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-sitemap"></i> ${t('team.groupDiagram', 'Sơ đồ nhóm:')} ${translateDepartmentName(teamDept.name, t)} (${teamDept.department_id})
           </div>
           <div style="border-left: 2px dashed #cbd5e1; margin-left: 8px; padding-left: 12px;">
       `;
@@ -294,13 +294,13 @@ export default function Header() {
             <div style="margin-bottom: 12px;">
               <div onclick="const target = document.getElementById('team-root-children'); const isHidden = target.style.display === 'none'; target.style.display = isHidden ? 'block' : 'none'; this.querySelector('.chevron-icon').className = isHidden ? 'fa-solid fa-chevron-down chevron-icon' : 'fa-solid fa-chevron-right chevron-icon'; this.querySelector('.folder-icon').className = isHidden ? 'fa-solid fa-folder-open folder-icon' : 'fa-solid fa-folder folder-icon';" style="cursor: pointer; font-weight: 600; color: var(--foreground-color); display: flex; align-items: center; gap: 6px; user-select: none;">
                 <i class="fa-solid fa-chevron-down chevron-icon" style="font-size: 10px; color: var(--neutral-muted); transition: transform 0.2s; width: 12px;"></i>
-                <i class="fa-solid fa-folder-open folder-icon" style="color: #1e40af; width: 16px;"></i>
-                <span>${teamDept.name} (Root)</span>
+                <i class="fa-solid fa-folder-open folder-icon" style="color: var(--primary-color); width: 16px;"></i>
+                <span>${translateDepartmentName(teamDept.name, t)} (Root)</span>
               </div>
               <div id="team-root-children" style="margin-left: 32px; margin-top: 6px; display: block;">
       `;
       if (teamDeptUsers.length === 0) {
-        treeHtml += `  <div style="color: var(--neutral-muted); font-style: italic; font-size: 12px;">Chưa có thành viên</div>`;
+        treeHtml += `  <div style="color: var(--neutral-muted); font-style: italic; font-size: 12px;">${t('team.noMembers', 'Chưa có thành viên')}</div>`;
       } else {
         teamDeptUsers.forEach(u => {
           treeHtml += `
@@ -324,12 +324,12 @@ export default function Header() {
               <div onclick="const target = document.getElementById('team-child-${index}'); const isHidden = target.style.display === 'none'; target.style.display = isHidden ? 'block' : 'none'; this.querySelector('.chevron-icon').className = isHidden ? 'fa-solid fa-chevron-down chevron-icon' : 'fa-solid fa-chevron-right chevron-icon'; this.querySelector('.folder-icon').className = isHidden ? 'fa-solid fa-folder-open folder-icon' : 'fa-solid fa-folder folder-icon';" style="cursor: pointer; font-weight: 600; color: var(--foreground-color); display: flex; align-items: center; gap: 6px; user-select: none;">
                 <i class="fa-solid fa-chevron-down chevron-icon" style="font-size: 10px; color: var(--neutral-muted); transition: transform 0.2s; width: 12px;"></i>
                 <i class="fa-solid fa-folder-open folder-icon" style="color: #eab308; width: 16px;"></i>
-                <span>${child.name} (${child.department_id})</span>
+                <span>${translateDepartmentName(child.name, t)} (${child.department_id})</span>
               </div>
               <div id="team-child-${index}" style="margin-left: 32px; margin-top: 6px; display: block;">
         `;
         if (childUsers.length === 0) {
-          treeHtml += `  <div style="color: var(--neutral-muted); font-style: italic; font-size: 12px;">Chưa có thành viên</div>`;
+          treeHtml += `  <div style="color: var(--neutral-muted); font-style: italic; font-size: 12px;">${t('team.noMembers', 'Chưa có thành viên')}</div>`;
         } else {
           childUsers.forEach(u => {
             treeHtml += `
@@ -352,9 +352,9 @@ export default function Header() {
       `;
 
       Swal.fire({
-        title: 'Cơ cấu Team',
+        title: t('team.orgStructure', 'Cơ cấu Team'),
         html: treeHtml,
-        confirmButtonText: t('header.close', 'Đóng'),
+        confirmButtonText: t('common.close', 'Đóng'),
         confirmButtonColor: 'var(--primary-color)'
       });
 
@@ -362,8 +362,8 @@ export default function Header() {
       console.error(err);
       Swal.fire({
         icon: 'error',
-        title: 'Lỗi',
-        text: 'Không thể tải cơ cấu nhóm.',
+        title: t('common.error', 'Lỗi'),
+        text: t('team.loadDiagramFailed', 'Không thể tải cơ cấu nhóm.'),
         confirmButtonColor: 'var(--primary-color)'
       });
     }

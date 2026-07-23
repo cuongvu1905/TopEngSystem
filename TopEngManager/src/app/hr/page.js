@@ -1267,7 +1267,8 @@ export default function HRManagement() {
                       outline: 'none', 
                       fontSize: '13px', 
                       fontWeight: '500',
-                      color: '#334155'
+                      color: 'var(--neutral-dark)',
+                      backgroundColor: 'var(--neutral-bg-card)'
                     }}
                   >
                     <option value="all">{t('team.allModules', 'Tất cả phân hệ')}</option>
@@ -1318,7 +1319,7 @@ export default function HRManagement() {
                 placeholder={t('team.newRolePlaceholder', 'Tên vai trò mới...')} 
                 value={newRoleName}
                 onChange={(e) => setNewRoleName(e.target.value)}
-                style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', width: '180px' }}
+                style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13px', outline: 'none', width: '180px' }}
                 required
               />
               <button type="submit" className="btn btn-secondary btn-sm" style={{ padding: '7px 12px' }}>
@@ -1331,7 +1332,7 @@ export default function HRManagement() {
           <div className="data-table-wrapper" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             <table className="data-table" style={{ fontSize: '12px' }}>
               <thead>
-                <tr style={{ backgroundColor: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
+                <tr style={{ backgroundColor: 'var(--neutral-bg-hover)', color: 'var(--neutral-dark)', position: 'sticky', top: 0, zIndex: 10 }}>
                   <th style={{ minWidth: '150px' }}>{t('team.moduleCol', 'Phân hệ')}</th>
                   <th style={{ minWidth: '220px' }}>{t('team.permNameCol', 'Quyền hạn / Chức năng')}</th>
                   {localRoles.map(role => (
@@ -1397,9 +1398,9 @@ export default function HRManagement() {
               <tbody>
                 {filteredPermissions.map(perm => (
                   <tr key={perm.key}>
-                    <td style={{ fontWeight: '600', color: '#475569' }}>{translateModule(perm.module, t)}</td>
+                    <td style={{ fontWeight: '600', color: 'var(--neutral-dark)' }}>{translateModule(perm.module, t)}</td>
                     <td>
-                      <div style={{ fontWeight: '500' }}>{translatePermissionName(perm.key, perm.name, t)}</div>
+                      <div style={{ fontWeight: '500', color: 'var(--neutral-dark)' }}>{translatePermissionName(perm.key, perm.name, t)}</div>
                       <code style={{ fontSize: '10px', color: 'var(--neutral-muted)' }}>{perm.key}</code>
                     </td>
                     {localRoles.map(role => {

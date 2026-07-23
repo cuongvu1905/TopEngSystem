@@ -1225,18 +1225,18 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
   };
 
   return (
-    <ModalWrapperLg isOpen={isOpen} onClose={onClose} style={{ maxWidth: '1000px', width: '95%' }}>
-      <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '520px', maxHeight: '90vh' }}>
+    <ModalWrapperLg isOpen={isOpen} onClose={onClose} style={{ width: '75vw', maxWidth: '75vw' }}>
+      <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '75vh', maxHeight: '75vh' }}>
         <div className="modal-header" style={{ borderBottom: '1px solid var(--neutral-border)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
             <i className="fa-solid fa-user-tie" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i> {t('customer.manageCustomers', 'Quản lý khách hàng')}
           </h3>
           <button className="btn-close-modal" onClick={onClose} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
         </div>
         <div className="modal-body" style={{ display: 'flex', flex: 1, padding: 0, overflow: 'hidden' }}>
           {/* Left panel - Customer List */}
-          <div style={{ width: '240px', borderRight: '1px solid var(--neutral-border)', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc', height: '100%' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: '#475569', backgroundColor: '#f1f5f9' }}>
+          <div style={{ width: '280px', borderRight: '1px solid var(--neutral-border)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--neutral-bg-card)', height: '100%' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', backgroundColor: 'var(--neutral-bg-hover)' }}>
               {t('customer.customerList', 'Danh sách khách hàng')}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
@@ -1251,8 +1251,8 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                   textAlign: 'left',
                   fontSize: '13px',
                   fontWeight: '600',
-                  color: activeCustomerId === 'new' ? 'var(--primary-color)' : '#475569',
-                  backgroundColor: activeCustomerId === 'new' ? '#eff6ff' : 'transparent',
+                  color: activeCustomerId === 'new' ? 'var(--primary-color)' : 'var(--neutral-dark)',
+                  backgroundColor: activeCustomerId === 'new' ? 'var(--primary-light)' : 'transparent',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1264,7 +1264,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                 <i className="fa-solid fa-plus-circle" style={{ fontSize: '14px' }}></i> {t('customer.addCustomer', 'Thêm khách hàng')}
               </button>
               
-              <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '8px 0' }} />
+              <div style={{ height: '1px', backgroundColor: 'var(--neutral-border)', margin: '8px 0' }} />
               
               {customers.length === 0 ? (
                 <div style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: 'var(--neutral-muted)' }}>
@@ -1284,8 +1284,8 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                       textAlign: 'left',
                       fontSize: '13px',
                       fontWeight: activeCustomerId === c.id.toString() ? '600' : '500',
-                      color: activeCustomerId === c.id.toString() ? 'var(--primary-color)' : '#334155',
-                      backgroundColor: activeCustomerId === c.id.toString() ? '#eff6ff' : 'transparent',
+                      color: activeCustomerId === c.id.toString() ? 'var(--primary-color)' : 'var(--neutral-dark)',
+                      backgroundColor: activeCustomerId === c.id.toString() ? 'var(--primary-light)' : 'transparent',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -1296,7 +1296,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                       wordBreak: 'break-word'
                     }}
                   >
-                    <i className="fa-solid fa-user-tie" style={{ fontSize: '13px', opacity: 0.7 }}></i>
+                    <i className="fa-solid fa-user-tie" style={{ fontSize: '13px', color: activeCustomerId === c.id.toString() ? 'var(--primary-color)' : 'var(--neutral-dark)', opacity: 0.9 }}></i>
                     {c.customer_name}
                   </button>
                 ))
@@ -1305,8 +1305,8 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
           </div>
 
           {/* Right panel - Customer Form */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#fff', overflowY: 'auto', padding: '24px' }}>
-            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: '#1e293b', borderBottom: '2px solid #3b82f6', paddingBottom: '8px', display: 'inline-block', width: 'fit-content' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--neutral-bg-card)', overflowY: 'auto', padding: '24px' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: 'var(--neutral-dark)', borderBottom: '2px solid var(--primary-color)', paddingBottom: '8px', display: 'inline-block', width: 'fit-content' }}>
               {activeCustomerId === 'new' ? t('customer.addCustomer', 'Thêm khách hàng') : custName}
             </h4>
             
@@ -1323,85 +1323,85 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
             )}
 
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #cbd5e1', marginBottom: '20px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--neutral-border)', marginBottom: '20px' }}>
                 <tbody>
                   <tr>
-                    <td style={{ width: '30%', backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
+                    <td style={{ width: '30%', backgroundColor: 'var(--neutral-bg-hover)', padding: '12px', border: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)' }}>
                       {t('customer.customerName', 'Tên Khách Hàng')} <span className="required" style={{ color: '#ef4444' }}>*</span>
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--neutral-border)' }}>
                       {isEditing ? (
                         <input 
                           type="text" 
                           value={custName} 
                           onChange={(e) => setCustName(e.target.value)} 
-                          style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                          style={{ width: '100%', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
                           placeholder={t('customer.enterCustomerName', 'Nhập tên khách hàng...')}
                           required
                         />
                       ) : (
-                        <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                        <div style={{ padding: '6px 10px', fontSize: '13.5px', color: 'var(--neutral-dark)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
                           {custName}
                         </div>
                       )}
                     </td>
                   </tr>
                   <tr>
-                    <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
+                    <td style={{ backgroundColor: 'var(--neutral-bg-hover)', padding: '12px', border: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)' }}>
                       {t('customer.customerId', 'Mã Khách Hàng')} <span className="required" style={{ color: '#ef4444' }}>*</span>
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--neutral-border)' }}>
                       {isEditing && activeCustomerId === 'new' ? (
                         <input 
                           type="text" 
                           value={custCode} 
                           onChange={(e) => setCustCode(e.target.value)} 
-                          style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                          style={{ width: '100%', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
                           placeholder={t('customer.enterCustomerId', 'Nhập mã khách hàng...')}
                           required
                         />
                       ) : (
-                        <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                        <div style={{ padding: '6px 10px', fontSize: '13.5px', color: 'var(--neutral-dark)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
                           {custCode}
                         </div>
                       )}
                     </td>
                   </tr>
                   <tr>
-                    <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
+                    <td style={{ backgroundColor: 'var(--neutral-bg-hover)', padding: '12px', border: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)' }}>
                       {t('customer.address', 'Địa chỉ')}
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--neutral-border)' }}>
                       {isEditing ? (
                         <input 
                           type="text" 
                           value={address} 
                           onChange={(e) => setAddress(e.target.value)} 
-                          style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                          style={{ width: '100%', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
                           placeholder={t('customer.enterAddress', 'Nhập địa chỉ...')}
                         />
                       ) : (
-                        <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                        <div style={{ padding: '6px 10px', fontSize: '13.5px', color: 'var(--neutral-dark)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
                           {address || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>{t('customer.noInfo', 'Chưa có thông tin')}</span>}
                         </div>
                       )}
                     </td>
                   </tr>
                   <tr>
-                    <td style={{ backgroundColor: '#f8fafc', padding: '12px', border: '1px solid #cbd5e1', fontWeight: '600', fontSize: '13px', color: '#475569' }}>
+                    <td style={{ backgroundColor: 'var(--neutral-bg-hover)', padding: '12px', border: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)' }}>
                       {t('customer.taxCode', 'Mã số thuế')}
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid #cbd5e1' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--neutral-border)' }}>
                       {isEditing ? (
                         <input 
                           type="text" 
                           value={taxCode} 
                           onChange={(e) => setTaxCode(e.target.value)} 
-                          style={{ width: '100%', border: '1px solid #cbd5e1', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
+                          style={{ width: '100%', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', padding: '6px 10px', borderRadius: '4px', fontSize: '13.5px', outline: 'none' }}
                           placeholder={t('customer.enterTaxCode', 'Nhập mã số thuế...')}
                         />
                       ) : (
-                        <div style={{ padding: '6px 10px', fontSize: '13.5px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                        <div style={{ padding: '6px 10px', fontSize: '13.5px', color: 'var(--neutral-dark)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
                           {taxCode || <span style={{ color: 'var(--neutral-muted)', fontStyle: 'italic' }}>Chưa có thông tin</span>}
                         </div>
                       )}
@@ -1410,7 +1410,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                 </tbody>
               </table>
 
-              <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #cbd5e1', paddingTop: '16px' }}>
+              <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--neutral-border)', paddingTop: '16px' }}>
                 {isEditing ? (
                   <>
                     <button 

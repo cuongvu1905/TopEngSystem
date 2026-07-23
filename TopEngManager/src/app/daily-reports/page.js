@@ -919,7 +919,7 @@ export default function DailyReportsPage() {
                               {report.user_name.split(' ').pop().charAt(0)}
                             </div>
                             <div>
-                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: '#1e293b', margin: 0 }}>{report.user_name}</h4>
+                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--neutral-dark)', margin: 0 }}>{report.user_name}</h4>
                               <span style={{ fontSize: '9px', color: 'var(--neutral-muted)', display: 'block', marginTop: '-2px' }}>{report.user_role}</span>
                             </div>
                           </div>

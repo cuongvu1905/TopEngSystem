@@ -989,7 +989,7 @@ export default function Dashboard() {
           {selectedCheckerDay ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: '750', color: '#1e293b' }}>
+                <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: '750', color: 'var(--neutral-dark)' }}>
                   {t('report.missingReportsListHeader', 'Danh sách chưa báo cáo ngày {date}:').replace('{date}', selectedCheckerDay.toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US'))}
                 </h4>
                 {selectedMissingUsers.length > 0 && (
@@ -1017,11 +1017,11 @@ export default function Dashboard() {
                 )}
               </div>
               {missingForSelectedDay.length > 0 ? (
-                <div style={{ border: '2px solid #cbd5e1', borderRadius: '6px', overflow: 'hidden' }}>
+                <div style={{ border: '2px solid var(--neutral-border)', borderRadius: '6px', overflow: 'hidden' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
                     <thead>
-                      <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #cbd5e1' }}>
-                        <th style={{ padding: '8px 12px', width: '40px', textAlign: 'center', borderRight: '1px solid #cbd5e1' }}>
+                      <tr style={{ backgroundColor: 'var(--neutral-bg-hover)', borderBottom: '2px solid var(--neutral-border)' }}>
+                        <th style={{ padding: '8px 12px', width: '40px', textAlign: 'center', borderRight: '1px solid var(--neutral-border)' }}>
                           <input 
                             type="checkbox" 
                             checked={missingForSelectedDay.length > 0 && selectedMissingUsers.length === missingForSelectedDay.length}
@@ -1029,15 +1029,15 @@ export default function Dashboard() {
                             style={{ cursor: 'pointer' }}
                           />
                         </th>
-                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569', borderRight: '1px solid #cbd5e1' }}>{t('report.employeeIdCol', 'Mã NV')}</th>
-                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569', borderRight: '1px solid #cbd5e1' }}>{t('team.fullName', 'Họ và tên')}</th>
-                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>{t('team.departmentPart', 'Bộ phận')}</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: 'var(--neutral-dark)', borderRight: '1px solid var(--neutral-border)' }}>{t('report.employeeIdCol', 'Mã NV')}</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: 'var(--neutral-dark)', borderRight: '1px solid var(--neutral-border)' }}>{t('team.fullName', 'Họ và tên')}</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: '700', color: 'var(--neutral-dark)' }}>{t('team.departmentPart', 'Bộ phận')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {missingForSelectedDay.map(u => (
-                        <tr key={u.id} style={{ borderBottom: '1px solid #cbd5e1' }}>
-                          <td style={{ padding: '8px 12px', textAlign: 'center', borderRight: '1px solid #cbd5e1' }}>
+                        <tr key={u.id} style={{ borderBottom: '1px solid var(--neutral-border)' }}>
+                          <td style={{ padding: '8px 12px', textAlign: 'center', borderRight: '1px solid var(--neutral-border)' }}>
                             <input 
                               type="checkbox"
                               checked={selectedMissingUsers.includes(u.id)}
@@ -1045,9 +1045,9 @@ export default function Dashboard() {
                               style={{ cursor: 'pointer' }}
                             />
                           </td>
-                          <td style={{ padding: '8px 12px', fontWeight: '600', color: '#334155', borderRight: '1px solid #cbd5e1' }}>{u.employee_id || u.id}</td>
-                          <td style={{ padding: '8px 12px', fontWeight: '500', color: '#0f172a', borderRight: '1px solid #cbd5e1' }}>{u.name}</td>
-                          <td style={{ padding: '8px 12px', color: '#475569' }}>{translateDepartmentName(u.department_name, t)}</td>
+                          <td style={{ padding: '8px 12px', fontWeight: '600', color: 'var(--neutral-dark)', borderRight: '1px solid var(--neutral-border)' }}>{u.employee_id || u.id}</td>
+                          <td style={{ padding: '8px 12px', fontWeight: '500', color: 'var(--neutral-dark)', borderRight: '1px solid var(--neutral-border)' }}>{u.name}</td>
+                          <td style={{ padding: '8px 12px', color: 'var(--neutral-dark)' }}>{translateDepartmentName(u.department_name, t)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1060,7 +1060,7 @@ export default function Dashboard() {
               )}
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '24px', backgroundColor: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', fontSize: '13px' }}>
+            <div style={{ textAlign: 'center', padding: '24px', backgroundColor: 'var(--neutral-bg-card)', border: '2px dashed var(--neutral-border)', borderRadius: '8px', color: 'var(--neutral-muted)', fontSize: '13px' }}>
               {t('report.calendarInstruction', 'Chọn một ngày màu đỏ trên lịch để xem danh sách nhân viên chưa nộp báo cáo.')}
             </div>
           )}

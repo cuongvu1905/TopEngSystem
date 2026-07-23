@@ -1534,8 +1534,8 @@ export default function ProjectDetail({ params }) {
     if (!userId || !role) {
       Swal.fire({
         icon: 'warning',
-        title: 'Thông báo',
-        text: 'Vui lòng tìm và chọn một nhân viên để thêm.',
+        title: t('common.notice', 'Thông báo'),
+        text: t('project.selectMemberToAddPrompt', 'Vui lòng tìm và chọn một nhân viên để thêm.'),
         confirmButtonColor: 'var(--primary-color)'
       });
       return;
@@ -1559,8 +1559,8 @@ export default function ProjectDetail({ params }) {
     
     Swal.fire({
       icon: 'success',
-      title: 'Thành công',
-      text: isPublic ? 'Đã gửi lời mời tham gia dự án (đang chờ xác nhận điều khoản)!' : 'Đã thêm thành viên thành công!',
+      title: t('common.success', 'Thành công'),
+      text: isPublic ? t('project.inviteSentPendingAgreement', 'Đã gửi lời mời tham gia dự án (đang chờ xác nhận điều khoản)!') : t('project.memberAddedSuccess', 'Đã thêm thành viên thành công!'),
       confirmButtonColor: 'var(--primary-color)'
     });
 
@@ -2558,7 +2558,7 @@ export default function ProjectDetail({ params }) {
                             {report.user_name.split(' ').pop().charAt(0)}
                           </div>
                           <div>
-                            <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: 0 }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--neutral-dark)', margin: 0 }}>
                               {report.user_name}
                             </h4>
                             <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', fontWeight: '500' }}>
