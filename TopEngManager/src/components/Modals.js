@@ -50,13 +50,13 @@ const ModalWrapper = ({ isOpen, children, onClose, style }) => {
   );
 };
 
-const ModalWrapperLg = ({ isOpen, children, onClose, style }) => {
+const ModalWrapperLg = ({ isOpen, children, onClose, style, className }) => {
   if (!isOpen) return null;
   return (
     <div className="modal show" style={{ display: 'flex' }} onClick={(e) => {
       if (e.target === e.currentTarget) onClose();
     }}>
-      <div className="modal-dialog modal-lg" style={style} onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-dialog modal-lg ${className || ''}`} style={style} onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -251,7 +251,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
               <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--neutral-border)', width: '100%', outline: 'none' }}>
                 <option value="">{t('project.selectCustomerDefault', '-- Chọn khách hàng --')}</option>
                 {customers.map(c => (
-                  <option key={c.customer_id} value={c.customer_id}>{c.customer_name}</option>
+                  <option key={c.customer_id} value={c.customer_id} title={c.customer_name}>
+                    {c.customer_name && c.customer_name.length > 60 ? `${c.customer_name.slice(0, 60)}...` : c.customer_name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -1091,7 +1093,9 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
   const { t } = useLanguage();
   const [customers, setCustomers] = useState([]);
   const [activeCustomerId, setActiveCustomerId] = useState('new');
-  
+  // Mobile-only: whether the customer form is expanded below the list
+  const [mobileFormOpen, setMobileFormOpen] = useState(false);
+
   const [custName, setCustName] = useState('');
   const [custCode, setCustCode] = useState('');
   const [address, setAddress] = useState('');
@@ -1115,6 +1119,7 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
     if (isOpen) {
       loadCustomers();
       setActiveCustomerId('new');
+      setMobileFormOpen(false);
       setCustName('');
       setCustCode('');
       setAddress('');
@@ -1224,88 +1229,8 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
     }
   };
 
-  return (
-    <ModalWrapperLg isOpen={isOpen} onClose={onClose} style={{ width: '75vw', maxWidth: '75vw' }}>
-      <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '75vh', maxHeight: '75vh' }}>
-        <div className="modal-header" style={{ borderBottom: '1px solid var(--neutral-border)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
-            <i className="fa-solid fa-user-tie" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i> {t('customer.manageCustomers', 'Quản lý khách hàng')}
-          </h3>
-          <button className="btn-close-modal" onClick={onClose} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
-        </div>
-        <div className="modal-body" style={{ display: 'flex', flex: 1, padding: 0, overflow: 'hidden' }}>
-          {/* Left panel - Customer List */}
-          <div style={{ width: '280px', borderRight: '1px solid var(--neutral-border)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--neutral-bg-card)', height: '100%' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', backgroundColor: 'var(--neutral-bg-hover)' }}>
-              {t('customer.customerList', 'Danh sách khách hàng')}
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-              <button 
-                type="button"
-                onClick={() => setActiveCustomerId('new')}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  textAlign: 'left',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  color: activeCustomerId === 'new' ? 'var(--primary-color)' : 'var(--neutral-dark)',
-                  backgroundColor: activeCustomerId === 'new' ? 'var(--primary-light)' : 'transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '6px',
-                  transition: 'all 0.15s'
-                }}
-              >
-                <i className="fa-solid fa-plus-circle" style={{ fontSize: '14px' }}></i> {t('customer.addCustomer', 'Thêm khách hàng')}
-              </button>
-              
-              <div style={{ height: '1px', backgroundColor: 'var(--neutral-border)', margin: '8px 0' }} />
-              
-              {customers.length === 0 ? (
-                <div style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: 'var(--neutral-muted)' }}>
-                  {t('customer.noCustomers', 'Chưa có khách hàng nào')}
-                </div>
-              ) : (
-                customers.map(c => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setActiveCustomerId(c.id.toString())}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      textAlign: 'left',
-                      fontSize: '13px',
-                      fontWeight: activeCustomerId === c.id.toString() ? '600' : '500',
-                      color: activeCustomerId === c.id.toString() ? 'var(--primary-color)' : 'var(--neutral-dark)',
-                      backgroundColor: activeCustomerId === c.id.toString() ? 'var(--primary-light)' : 'transparent',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginBottom: '4px',
-                      transition: 'all 0.15s',
-                      whiteSpace: 'normal',
-                      wordBreak: 'break-word'
-                    }}
-                  >
-                    <i className="fa-solid fa-user-tie" style={{ fontSize: '13px', color: activeCustomerId === c.id.toString() ? 'var(--primary-color)' : 'var(--neutral-dark)', opacity: 0.9 }}></i>
-                    {c.customer_name}
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Right panel - Customer Form */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--neutral-bg-card)', overflowY: 'auto', padding: '24px' }}>
+  const renderCustomerFormContent = () => (
+    <>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: 'var(--neutral-dark)', borderBottom: '2px solid var(--primary-color)', paddingBottom: '8px', display: 'inline-block', width: 'fit-content' }}>
               {activeCustomerId === 'new' ? t('customer.addCustomer', 'Thêm khách hàng') : custName}
             </h4>
@@ -1440,6 +1365,113 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
                 )}
               </div>
             </form>
+    </>
+  );
+
+  return (
+    <ModalWrapperLg isOpen={isOpen} onClose={onClose} className="customer-mgmt-dialog" style={{ width: '75vw', maxWidth: '75vw' }}>
+      <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '75vh', maxHeight: '75vh' }}>
+        <div className="modal-header" style={{ borderBottom: '1px solid var(--neutral-border)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
+            <i className="fa-solid fa-user-tie" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i> {t('customer.manageCustomers', 'Quản lý khách hàng')}
+          </h3>
+          <button className="btn-close-modal" onClick={onClose} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
+        </div>
+        <div className="modal-body customer-mgmt-body" style={{ display: 'flex', flex: 1, padding: 0, overflow: 'hidden' }}>
+          {/* Left panel - Customer List */}
+          <div className="customer-mgmt-list-panel" style={{ width: '280px', borderRight: '1px solid var(--neutral-border)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--neutral-bg-card)', height: '100%' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--neutral-border)', fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', backgroundColor: 'var(--neutral-bg-hover)' }}>
+              {t('customer.customerList', 'Danh sách khách hàng')}
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeCustomerId === 'new' && mobileFormOpen) {
+                    setMobileFormOpen(false);
+                  } else {
+                    setActiveCustomerId('new');
+                    setMobileFormOpen(true);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  textAlign: 'left',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: activeCustomerId === 'new' ? 'var(--primary-color)' : 'var(--neutral-dark)',
+                  backgroundColor: activeCustomerId === 'new' ? 'var(--primary-light)' : 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '6px',
+                  transition: 'all 0.15s'
+                }}
+              >
+                <i className="fa-solid fa-plus-circle" style={{ fontSize: '14px' }}></i> {t('customer.addCustomer', 'Thêm khách hàng')}
+              </button>
+
+              {mobileFormOpen && (
+                <div className="inline-mobile-customer-form">
+                  {renderCustomerFormContent()}
+                </div>
+              )}
+
+              <div style={{ height: '1px', backgroundColor: 'var(--neutral-border)', margin: '8px 0' }} />
+
+              {customers.length === 0 ? (
+                <div style={{ padding: '12px', textAlign: 'center', fontSize: '12px', color: 'var(--neutral-muted)' }}>
+                  {t('customer.noCustomers', 'Chưa có khách hàng nào')}
+                </div>
+              ) : (
+                customers.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      const idStr = c.id.toString();
+                      if (activeCustomerId === idStr && mobileFormOpen) {
+                        setMobileFormOpen(false);
+                      } else {
+                        setActiveCustomerId(idStr);
+                        setMobileFormOpen(true);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      textAlign: 'left',
+                      fontSize: '13px',
+                      fontWeight: activeCustomerId === c.id.toString() ? '600' : '500',
+                      color: activeCustomerId === c.id.toString() ? 'var(--primary-color)' : 'var(--neutral-dark)',
+                      backgroundColor: activeCustomerId === c.id.toString() ? 'var(--primary-light)' : 'transparent',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '4px',
+                      transition: 'all 0.15s',
+                      whiteSpace: 'normal',
+                      wordBreak: 'break-word'
+                    }}
+                  >
+                    <i className="fa-solid fa-user-tie" style={{ fontSize: '13px', color: activeCustomerId === c.id.toString() ? 'var(--primary-color)' : 'var(--neutral-dark)', opacity: 0.9 }}></i>
+                    {c.customer_name}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Right panel - Customer Form */}
+          <div className="customer-mgmt-form-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--neutral-bg-card)', overflowY: 'auto', padding: '24px' }}>
+            {renderCustomerFormContent()}
           </div>
         </div>
       </div>

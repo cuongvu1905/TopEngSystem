@@ -326,10 +326,10 @@ export default function DailyReportsPage() {
             type="button" 
             className="btn btn-secondary" 
             onClick={() => setIsHistoryOpen(true)}
-            style={{ 
-              backgroundColor: '#fff', 
-              color: '#334155', 
-              border: '1px solid #cbd5e1', 
+            style={{
+              backgroundColor: 'var(--neutral-bg-card)',
+              color: 'var(--neutral-dark)',
+              border: '1px solid var(--neutral-border)',
               padding: '10px 18px', 
               borderRadius: '6px', 
               fontSize: '13.5px', 

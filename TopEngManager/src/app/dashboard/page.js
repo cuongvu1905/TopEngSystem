@@ -835,32 +835,32 @@ export default function Dashboard() {
               onClick={prevMonth}
               style={{
                 padding: '6px 12px',
-                border: '1.5px solid #cbd5e1',
+                border: '1.5px solid var(--neutral-border)',
                 borderRadius: '6px',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--neutral-bg-card)',
                 cursor: 'pointer',
                 fontWeight: '600',
                 fontSize: '14px',
-                color: '#334155'
+                color: 'var(--neutral-dark)'
               }}
             >
               &laquo;
             </button>
-            <span style={{ fontSize: '16px', fontWeight: '750', color: '#1e293b' }}>
+            <span style={{ fontSize: '16px', fontWeight: '750', color: 'var(--neutral-dark)' }}>
               {t('calendar.monthHeader', 'Tháng {month} {year}').replace('{month}', checkerDate.getMonth() + 1).replace('{year}', checkerDate.getFullYear())}
             </span>
-            <button 
+            <button
               type="button"
               onClick={nextMonth}
               style={{
                 padding: '6px 12px',
-                border: '1.5px solid #cbd5e1',
+                border: '1.5px solid var(--neutral-border)',
                 borderRadius: '6px',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--neutral-bg-card)',
                 cursor: 'pointer',
                 fontWeight: '600',
                 fontSize: '14px',
-                color: '#334155'
+                color: 'var(--neutral-dark)'
               }}
             >
               &raquo;
@@ -871,9 +871,9 @@ export default function Dashboard() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(7, 1fr)',
-            borderTop: '4px solid #94a3b8',
-            borderLeft: '4px solid #94a3b8',
-            borderRight: '4px solid #94a3b8',
+            borderTop: '4px solid var(--neutral-border)',
+            borderLeft: '4px solid var(--neutral-border)',
+            borderRight: '4px solid var(--neutral-border)',
             borderRadius: '8px 8px 0 0',
             overflow: 'hidden',
             flexShrink: 0
@@ -881,12 +881,12 @@ export default function Dashboard() {
             {[t('calendar.mon', 'Thứ 2'), t('calendar.tue', 'Thứ 3'), t('calendar.wed', 'Thứ 4'), t('calendar.thu', 'Thứ 5'), t('calendar.fri', 'Thứ 6'), t('calendar.sat', 'Thứ 7'), t('calendar.sun', 'CN')].map((w, idx) => (
               <div key={idx} style={{
                 padding: '10px 4px',
-                backgroundColor: '#f1f5f9',
+                backgroundColor: 'var(--neutral-bg-hover)',
                 textAlign: 'center',
                 fontWeight: '700',
                 fontSize: '12.5px',
-                color: '#475569',
-                borderRight: idx === 6 ? 'none' : '4px solid #94a3b8'
+                color: 'var(--neutral-muted)',
+                borderRight: idx === 6 ? 'none' : '4px solid var(--neutral-border)'
               }}>
                 {w}
               </div>
@@ -897,12 +897,12 @@ export default function Dashboard() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(7, 1fr)',
-            borderBottom: '4px solid #94a3b8',
-            borderLeft: '4px solid #94a3b8',
-            borderRight: '4px solid #94a3b8',
+            borderBottom: '4px solid var(--neutral-border)',
+            borderLeft: '4px solid var(--neutral-border)',
+            borderRight: '4px solid var(--neutral-border)',
             borderRadius: '0 0 8px 8px',
             overflow: 'hidden',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'var(--neutral-bg-card)',
             flexShrink: 0
           }}>
             {days.map((d, idx) => {
@@ -910,9 +910,9 @@ export default function Dashboard() {
                 return (
                   <div key={`empty-${idx}`} style={{
                     aspectRatio: '1',
-                    backgroundColor: '#f8fafc',
-                    borderBottom: idx + 7 < days.length ? '4px solid #cbd5e1' : 'none',
-                    borderRight: (idx + 1) % 7 === 0 ? 'none' : '4px solid #cbd5e1'
+                    backgroundColor: 'var(--neutral-bg-hover)',
+                    borderBottom: idx + 7 < days.length ? '4px solid var(--neutral-border)' : 'none',
+                    borderRight: (idx + 1) % 7 === 0 ? 'none' : '4px solid var(--neutral-border)'
                   }} />
                 );
               }
@@ -925,9 +925,9 @@ export default function Dashboard() {
               const hasMissing = missing.length > 0;
 
               let bgColor = 'transparent';
-              let textColor = '#1e293b';
+              let textColor = 'var(--neutral-dark)';
               let cursorStyle = 'default';
-              
+
               if (!isSunday && !isFuture) {
                 cursorStyle = 'pointer';
                 if (hasMissing) {
@@ -938,8 +938,8 @@ export default function Dashboard() {
                   textColor = '#ffffff';
                 }
               } else if (isSunday) {
-                bgColor = '#f1f5f9';
-                textColor = '#94a3b8';
+                bgColor = 'var(--neutral-bg-hover)';
+                textColor = 'var(--neutral-muted)';
               }
 
               const isSelected = selectedCheckerDay && formatDateString(selectedCheckerDay) === dateStr;
@@ -957,9 +957,9 @@ export default function Dashboard() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    borderBottom: idx + 7 < days.length ? '4px solid #cbd5e1' : 'none',
-                    borderRight: (idx + 1) % 7 === 0 ? 'none' : '4px solid #cbd5e1',
-                    backgroundColor: '#ffffff',
+                    borderBottom: idx + 7 < days.length ? '4px solid var(--neutral-border)' : 'none',
+                    borderRight: (idx + 1) % 7 === 0 ? 'none' : '4px solid var(--neutral-border)',
+                    backgroundColor: 'var(--neutral-bg-card)',
                     cursor: cursorStyle,
                     transition: 'all 0.2s',
                     padding: '4px',
@@ -1058,7 +1058,7 @@ export default function Dashboard() {
                   </table>
                 </div>
               ) : (
-                <div style={{ padding: '16px', backgroundColor: '#f0fdf4', border: '2px solid #b7ebc6', borderRadius: '6px', color: '#15803d', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ padding: '16px', backgroundColor: 'var(--success-light)', border: '2px solid var(--success-color)', borderRadius: '6px', color: 'var(--success-color)', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <i className="fa-solid fa-circle-check"></i> {t('report.allReportsSubmitted', 'Đầy đủ báo cáo.')}
                 </div>
               )}
@@ -2219,7 +2219,7 @@ export default function Dashboard() {
             style={{
               width: activeDetailPopup === 'reports' ? '100vw' : '75vw',
               height: activeDetailPopup === 'reports' ? '100vh' : '75vh',
-              backgroundColor: '#ffffff', 
+              backgroundColor: 'var(--neutral-bg-main)',
               border: activeDetailPopup === 'reports' ? 'none' : '1.5px solid #cbd5e1', 
               borderRadius: activeDetailPopup === 'reports' ? '0px' : '12px', 
               display: 'flex', 
@@ -2356,7 +2356,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Items List (Scrollable) */}
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                <div className={`report-items-list ${isCheckingStatusMode ? 'checker-mode-active' : ''}`} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                   {getFilteredItems().length === 0 ? (
                     <div style={{ color: 'var(--neutral-muted)', fontSize: '12.5px', textAlign: 'center', padding: '24px 0' }}>{t('common.noDataFound', 'Không tìm thấy dữ liệu.')}</div>
                   ) : (
@@ -2444,6 +2444,12 @@ export default function Dashboard() {
                     })
                   )}
                 </div>
+
+                {isCheckingStatusMode && activeDetailPopup === 'reports' && (
+                  <div className="inline-mobile-checker-pane">
+                    {renderCalendarChecker()}
+                  </div>
+                )}
               </div>
 
               {/* Right Pane: Content (50vw width) */}

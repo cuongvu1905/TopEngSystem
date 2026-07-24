@@ -563,13 +563,13 @@ export default function Header({ onToggleSidebar }) {
                 width: '36px',
                 height: '36px',
                 borderRadius: '50%', 
-                border: '1px solid var(--neutral-border)', 
-                backgroundColor: '#fff', 
-                cursor: 'pointer', 
-                fontSize: '11px', 
+                border: '1px solid var(--neutral-border)',
+                backgroundColor: 'var(--neutral-bg-card)',
+                cursor: 'pointer',
+                fontSize: '11px',
                 fontWeight: '700',
-                color: '#1e293b',
-                padding: 0 
+                color: 'var(--neutral-dark)',
+                padding: 0
               }}
               title={currentLanguageObj.name}
             >
@@ -585,12 +585,12 @@ export default function Header({ onToggleSidebar }) {
                 padding: '6px',
                 borderRadius: '8px',
                 boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--neutral-bg-card)',
                 zIndex: 1000,
                 display: isLangOpen ? 'block' : 'none'
               }}
             >
-              <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', padding: '6px 10px', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--neutral-muted)', padding: '6px 10px', textTransform: 'uppercase' }}>
                 {t('header.language', 'Ngôn ngữ')}
               </div>
               {languages.map(lang => (
@@ -608,8 +608,8 @@ export default function Header({ onToggleSidebar }) {
                     padding: '8px 12px',
                     border: 'none',
                     borderRadius: '6px',
-                    backgroundColor: currentLang === lang.code ? '#eff6ff' : 'transparent',
-                    color: currentLang === lang.code ? 'var(--primary-color)' : '#334155',
+                    backgroundColor: currentLang === lang.code ? 'var(--primary-light)' : 'transparent',
+                    color: currentLang === lang.code ? 'var(--primary-color)' : 'var(--neutral-dark)',
                     fontWeight: currentLang === lang.code ? '700' : '500',
                     fontSize: '13px',
                     cursor: 'pointer',

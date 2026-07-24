@@ -288,12 +288,12 @@ export default function Projects() {
               style={{
                 padding: '8px 12px',
                 borderRadius: '6px',
-                border: '1px solid #cbd5e1',
+                border: '1px solid var(--neutral-border)',
                 fontSize: '13px',
                 fontWeight: '600',
                 outline: 'none',
-                backgroundColor: '#fff',
-                color: '#334155',
+                backgroundColor: 'var(--neutral-bg-card)',
+                color: 'var(--neutral-dark)',
                 width: '100px',
                 textAlign: 'center'
               }}
@@ -308,12 +308,12 @@ export default function Projects() {
               style={{
                 padding: '8px 12px',
                 borderRadius: '6px',
-                border: '1px solid #cbd5e1',
+                border: '1px solid var(--neutral-border)',
                 fontSize: '13px',
                 fontWeight: '600',
                 outline: 'none',
-                backgroundColor: '#fff',
-                color: '#334155',
+                backgroundColor: 'var(--neutral-bg-card)',
+                color: 'var(--neutral-dark)',
                 width: '100px',
                 textAlign: 'center'
               }}

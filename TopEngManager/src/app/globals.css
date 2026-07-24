@@ -336,6 +336,16 @@ h1, h2, h3, h4, h5, h6 {
 .inline-mobile-detail-pane {
   display: none;
 }
+
+/* Inline mobile customer form (shown below "+ Add Customer") - hidden outside mobile */
+.inline-mobile-customer-form {
+  display: none;
+}
+
+/* Inline mobile "Check Report Status" calendar pane - hidden outside mobile */
+.inline-mobile-checker-pane {
+  display: none;
+}
 .header-left {
   display: flex;
   align-items: center;
@@ -1683,6 +1693,14 @@ h1, h2, h3, h4, h5, h6 {
   gap: 16px;
 }
 
+/* Create Issue modal body: fields left, subtasks table right (stacked on mobile) */
+.create-issue-modal-body {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 24px;
+  padding: 20px;
+}
+
 .modal-footer {
   padding: 14px 20px;
   border-top: 1px solid var(--neutral-border);
@@ -2086,6 +2104,52 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 0 0 8px 8px;
     background: var(--neutral-bg-main);
   }
+  .report-items-list.checker-mode-active {
+    flex: none;
+    flex-shrink: 0;
+    max-height: 220px;
+    min-height: 0;
+  }
+  .inline-mobile-checker-pane {
+    display: block;
+    flex-shrink: 0;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1.5px solid var(--neutral-border);
+  }
+
+  /* Customer Management modal */
+  .customer-mgmt-dialog {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+  }
+  .customer-mgmt-dialog .modal-content {
+    height: 100% !important;
+    max-height: 100% !important;
+  }
+  .customer-mgmt-body {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+  }
+  .customer-mgmt-list-panel {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--neutral-border);
+  }
+  .customer-mgmt-form-panel {
+    display: none !important;
+  }
+  .inline-mobile-customer-form {
+    display: block;
+    margin-bottom: 10px;
+    padding: 12px;
+    border: 1.5px solid var(--primary-color);
+    border-radius: 8px;
+    background: var(--neutral-bg-main);
+  }
   .report-card-item-row {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -2096,7 +2160,106 @@ h1, h2, h3, h4, h5, h6 {
     white-space: normal !important;
   }
   .kanban-board {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+  }
+  .project-tabs {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .tab-btn {
+    padding: 6px 8px;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+  .tab-btn i {
+    font-size: 11px;
+  }
+  .issue-filters-row {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .issue-filter-group {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    width: 100%;
+  }
+  .issue-filter-group select {
+    width: 100%;
+  }
+
+  /* Create Issue modal: full-comfort sizing + stack task table below Involved Members */
+  .create-issue-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+  }
+  .create-issue-modal-body {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .create-issue-modal-body > div {
+    flex-shrink: 0;
+  }
+  .create-issue-table-col {
+    overflow-x: auto;
+    min-height: 0;
+  }
+  .create-issue-table-col table {
+    min-width: 500px;
+  }
+  .create-issue-modal-body .project-members-selector-list {
+    max-height: 140px !important;
+  }
+
+  /* Issue Detail modal: stack right (Status) panel below the left content */
+  .issue-detail-modal-body {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 16px !important;
+  }
+  .issue-detail-right-col {
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-top: 1.5px solid var(--neutral-border);
+    padding-top: 16px;
+    margin-top: 4px;
+  }
+
+  /* Subtasks & Action Plan table -> stacked cards */
+  .mobile-stack-table thead {
+    display: none;
+  }
+  .mobile-stack-table, .mobile-stack-table tbody, .mobile-stack-table tr, .mobile-stack-table td {
+    display: block;
+    width: 100% !important;
+  }
+  .mobile-stack-table tr {
+    margin-bottom: 12px;
+    border: 1.5px solid var(--neutral-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .mobile-stack-table tr:last-child {
+    margin-bottom: 0;
+  }
+  .mobile-stack-table td {
+    border: none !important;
+    border-bottom: 1px solid var(--neutral-border) !important;
+  }
+  .mobile-stack-table td:last-child {
+    border-bottom: none !important;
+  }
+  .mobile-stack-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--neutral-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 4px;
   }
   .chat-layout {
     grid-template-columns: 1fr;

@@ -936,7 +936,7 @@ export default function HRManagement() {
                   border: '1px solid var(--neutral-border)', 
                   fontSize: '13px',
                   outline: 'none',
-                  backgroundColor: '#fff'
+                  backgroundColor: 'var(--neutral-bg-card)'
                 }}
               >
                 <option value="all">{t('dept.allDepts', 'Tất cả phòng ban')}</option>
@@ -1706,7 +1706,7 @@ export default function HRManagement() {
                     <select
                       value={inputDeptParentId}
                       onChange={(e) => setInputDeptParentId(e.target.value)}
-                      style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', backgroundColor: '#fff' }}
+                      style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', backgroundColor: 'var(--neutral-bg-card)' }}
                     >
                       <option value="">{t('team.rootDeptSelect', 'Không (Phòng ban gốc)')}</option>
                       {departments
@@ -1773,7 +1773,7 @@ export default function HRManagement() {
                       <select
                         value={addMemberDeptFilter}
                         onChange={(e) => setAddMemberDeptFilter(e.target.value)}
-                        style={{ padding: '8px 12px', width: '100%', borderRadius: '6px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', backgroundColor: '#fff' }}
+                        style={{ padding: '8px 12px', width: '100%', borderRadius: '6px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', backgroundColor: 'var(--neutral-bg-card)' }}
                       >
                         <option value="all">{t('dept.allDepts', 'Tất cả phòng ban')}</option>
                         {departments.map(d => (

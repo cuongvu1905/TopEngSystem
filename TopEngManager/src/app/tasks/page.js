@@ -45,6 +45,17 @@ const parseTaskDescription = (desc) => {
   };
 };
 
+const formatPriorityLabel = (priority, translateFn) => {
+  if (!priority) return '';
+  const p = String(priority).trim().toUpperCase();
+  const tFn = typeof translateFn === 'function' ? translateFn : (key, fallback) => fallback;
+  if (p === 'KHẨN CẤP' || p === 'CRITICAL') return tFn('tasks.priorityCritical', 'Khẩn cấp');
+  if (p === 'CAO' || p === 'HIGH') return tFn('tasks.priorityHigh', 'Cao');
+  if (p === 'TRUNG BÌNH' || p === 'MEDIUM') return tFn('tasks.priorityMedium', 'Trung bình');
+  if (p === 'THẤP' || p === 'LOW') return tFn('tasks.priorityLow', 'Thấp');
+  return priority;
+};
+
 export default function Tasks() {
   const { currentUser, projects, tasks, projectMembers, users, reloadAll } = useApp();
   const { t } = useLanguage();
@@ -209,29 +220,30 @@ export default function Tasks() {
                   onDragOver={handleDragOver} 
                   onDrop={(e) => handleDrop(e, col.id)}
                 >
-                  {colTasks.map(t => {
-                    const parsedTask = parseTaskDescription(t.description);
-                    const isOverdue = t.due_date && !isNaN(new Date(t.due_date).getTime()) && new Date(t.due_date) < new Date() && t.status !== "Done";
+                  {colTasks.map(taskItem => {
+                    const parsedTask = parseTaskDescription(taskItem.description);
+                    const isOverdue = taskItem.due_date && !isNaN(new Date(taskItem.due_date).getTime()) && new Date(taskItem.due_date) < new Date() && taskItem.status !== "Done";
                     let pClass = "badge-info";
-                    if (t.priority === "Cao") pClass = "badge-danger";
-                    else if (t.priority === "Trung bình") pClass = "badge-warning";
+                    const pUpper = String(taskItem.priority || '').trim().toUpperCase();
+                    if (pUpper === "CAO" || pUpper === "HIGH" || pUpper === "CRITICAL" || pUpper === "KHẨN CẤP") pClass = "badge-danger";
+                    else if (pUpper === "TRUNG BÌNH" || pUpper === "MEDIUM") pClass = "badge-warning";
                     else pClass = "badge-success";
 
                     let currentAssigneeIds = Array.isArray(parsedTask.assigneeIds) ? parsedTask.assigneeIds : [];
-                    if (currentAssigneeIds.length === 0 && t.assignee_id) {
-                      currentAssigneeIds = [t.assignee_id];
+                    if (currentAssigneeIds.length === 0 && taskItem.assignee_id) {
+                      currentAssigneeIds = [taskItem.assignee_id];
                     }
 
                     return (
                       <div 
                         className="task-card" 
                         draggable 
-                        onDragStart={() => setDraggedTaskId(t.id)} 
-                        onClick={() => openTaskDetail(t.id)}
-                        key={t.id}
+                        onDragStart={() => setDraggedTaskId(taskItem.id)} 
+                        onClick={() => openTaskDetail(taskItem.id)}
+                        key={taskItem.id}
                       >
                         <div className="task-card-header">
-                          <span className={`badge ${pClass}`}>{(t.priority === 'Cao' || t.priority === 'High' || t.priority === 'HIGH') ? 'HIGH' : (t.priority === 'Trung bình' || t.priority === 'Medium' || t.priority === 'MEDIUM') ? 'MEDIUM' : (t.priority === 'Thấp' || t.priority === 'Low' || t.priority === 'LOW') ? 'LOW' : (t.priority === 'Khẩn cấp' || t.priority === 'Critical' || t.priority === 'CRITICAL') ? 'CRITICAL' : (t.priority ? t.priority.toUpperCase() : 'MEDIUM')}</span>
+                          <span className={`badge ${pClass}`}>{formatPriorityLabel(taskItem.priority, t)}</span>
                           <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                             {currentAssigneeIds.length > 0 ? (
                               currentAssigneeIds.map((id, idx) => {
@@ -263,11 +275,11 @@ export default function Tasks() {
                             )}
                           </div>
                         </div>
-                        <div className="task-card-title">{t.title}</div>
+                        <div className="task-card-title">{taskItem.title}</div>
                         <p className="task-card-desc">{parsedTask.text || 'Không có mô tả.'}</p>
                         <div className="task-card-meta">
                           <span className={`task-card-due ${isOverdue ? 'overdue' : ''}`}>
-                            <i className="fa-regular fa-clock"></i> {formatDate(t.due_date, 'Không hạn')}
+                            <i className="fa-regular fa-clock"></i> {formatDate(taskItem.due_date, 'Không hạn')}
                           </span>
                         </div>
                       </div>
@@ -292,31 +304,32 @@ export default function Tasks() {
               </tr>
             </thead>
             <tbody>
-              {filteredTasks.map(t => {
-                const u = users.find(usr => usr.id === t.assignee_id);
-                const isOverdue = new Date(t.due_date) < new Date() && t.status !== "Done";
+              {filteredTasks.map(taskItem => {
+                const u = users.find(usr => usr.id === taskItem.assignee_id);
+                const isOverdue = new Date(taskItem.due_date) < new Date() && taskItem.status !== "Done";
                 let pClass = "badge-info";
-                if (t.priority === "Cao") pClass = "badge-danger";
-                else if (t.priority === "Trung bình") pClass = "badge-warning";
+                const pUpper = String(taskItem.priority || '').trim().toUpperCase();
+                if (pUpper === "CAO" || pUpper === "HIGH" || pUpper === "CRITICAL" || pUpper === "KHẨN CẤP") pClass = "badge-danger";
+                else if (pUpper === "TRUNG BÌNH" || pUpper === "MEDIUM") pClass = "badge-warning";
                 else pClass = "badge-success";
 
                 let statusBadgeClass = "badge-info";
-                if (t.status === "Todo") statusBadgeClass = "badge-danger";
-                else if (t.status === "InProgress") statusBadgeClass = "badge-warning";
-                else if (t.status === "Review") statusBadgeClass = "badge-info";
-                else if (t.status === "Done") statusBadgeClass = "badge-success";
+                if (taskItem.status === "Todo") statusBadgeClass = "badge-danger";
+                else if (taskItem.status === "InProgress") statusBadgeClass = "badge-warning";
+                else if (taskItem.status === "Review") statusBadgeClass = "badge-info";
+                else if (taskItem.status === "Done") statusBadgeClass = "badge-success";
 
                 return (
-                  <tr key={t.id}>
-                    <td><a href="#" onClick={(e) => { e.preventDefault(); openTaskDetail(t.id); }} style={{ color: 'var(--neutral-dark)', fontWeight: '500' }}>{t.title}</a></td>
-                    <td><span className={`badge ${pClass}`}>{(t.priority === 'Cao' || t.priority === 'High' || t.priority === 'HIGH') ? 'HIGH' : (t.priority === 'Trung bình' || t.priority === 'Medium' || t.priority === 'MEDIUM') ? 'MEDIUM' : (t.priority === 'Thấp' || t.priority === 'Low' || t.priority === 'LOW') ? 'LOW' : (t.priority === 'Khẩn cấp' || t.priority === 'Critical' || t.priority === 'CRITICAL') ? 'CRITICAL' : (t.priority ? t.priority.toUpperCase() : 'MEDIUM')}</span></td>
-                    <td style={{ color: isOverdue ? 'var(--danger-color)' : 'inherit', fontWeight: isOverdue ? '600' : 'normal' }}>{formatDate(t.due_date, 'N/A')}</td>
+                  <tr key={taskItem.id}>
+                    <td><a href="#" onClick={(e) => { e.preventDefault(); openTaskDetail(taskItem.id); }} style={{ color: 'var(--neutral-dark)', fontWeight: '500' }}>{taskItem.title}</a></td>
+                    <td><span className={`badge ${pClass}`}>{formatPriorityLabel(taskItem.priority, t)}</span></td>
+                    <td style={{ color: isOverdue ? 'var(--danger-color)' : 'inherit', fontWeight: isOverdue ? '600' : 'normal' }}>{formatDate(taskItem.due_date, 'N/A')}</td>
                     <td>
                       {(() => {
-                        const parsed = parseTaskDescription(t.description);
+                        const parsed = parseTaskDescription(taskItem.description);
                         let currentAssigneeIds = Array.isArray(parsed.assigneeIds) ? parsed.assigneeIds : [];
-                        if (currentAssigneeIds.length === 0 && t.assignee_id) {
-                          currentAssigneeIds = [t.assignee_id];
+                        if (currentAssigneeIds.length === 0 && taskItem.assignee_id) {
+                          currentAssigneeIds = [taskItem.assignee_id];
                         }
                         
                         if (currentAssigneeIds.length > 0) {

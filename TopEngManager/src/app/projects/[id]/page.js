@@ -169,6 +169,28 @@ const translateDepartmentName = (name, t) => {
   return n;
 };
 
+const formatPriorityLabel = (priority, translateFn) => {
+  if (!priority) return '';
+  const p = String(priority).trim().toUpperCase();
+  const tFn = typeof translateFn === 'function' ? translateFn : (key, fallback) => fallback;
+  if (p === 'KHẨN CẤP' || p === 'CRITICAL') return tFn('tasks.priorityCritical', 'Khẩn cấp');
+  if (p === 'CAO' || p === 'HIGH') return tFn('tasks.priorityHigh', 'Cao');
+  if (p === 'TRUNG BÌNH' || p === 'MEDIUM') return tFn('tasks.priorityMedium', 'Trung bình');
+  if (p === 'THẤP' || p === 'LOW') return tFn('tasks.priorityLow', 'Thấp');
+  return priority;
+};
+
+const formatTaskStatus = (status, translateFn) => {
+  if (!status) return '';
+  const s = String(status).trim().toLowerCase();
+  const tFn = typeof translateFn === 'function' ? translateFn : (key, fallback) => fallback;
+  if (s === 'todo' || s === 'cần làm') return tFn('common.status.todo', 'Todo');
+  if (s === 'inprogress' || s === 'in_progress' || s === 'đang thực hiện') return tFn('common.status.inProgress', 'In Progress');
+  if (s === 'review' || s === 'xem xét') return tFn('common.status.review', 'In Review');
+  if (s === 'done' || s === 'hoàn thành') return tFn('common.status.done', 'Done');
+  return status;
+};
+
 export default function ProjectDetail({ params }) {
   const { id: projectId } = use(params);
   const searchParams = useSearchParams();
@@ -1930,29 +1952,30 @@ export default function ProjectDetail({ params }) {
                       onDragOver={handleDragOver} 
                       onDrop={(e) => handleDrop(e, col.id)}
                     >
-                      {colTasks.map(t => {
-                        const parsedTask = parseTaskDescription(t.description);
-                        const isOverdue = new Date(t.due_date) < new Date() && t.status !== "Done";
+                      {colTasks.map(taskItem => {
+                        const parsedTask = parseTaskDescription(taskItem.description);
+                        const isOverdue = new Date(taskItem.due_date) < new Date() && taskItem.status !== "Done";
                         let pClass = "badge-info";
-                        if (t.priority === "Cao") pClass = "badge-danger";
-                        else if (t.priority === "Trung bình") pClass = "badge-warning";
+                        const pUpper = String(taskItem.priority || '').trim().toUpperCase();
+                        if (pUpper === "CAO" || pUpper === "HIGH" || pUpper === "CRITICAL" || pUpper === "KHẨN CẤP") pClass = "badge-danger";
+                        else if (pUpper === "TRUNG BÌNH" || pUpper === "MEDIUM") pClass = "badge-warning";
                         else pClass = "badge-success";
 
                         let currentAssigneeIds = parsedTask.assigneeIds;
-                        if (currentAssigneeIds.length === 0 && t.assignee_id) {
-                          currentAssigneeIds = [t.assignee_id];
+                        if (currentAssigneeIds.length === 0 && taskItem.assignee_id) {
+                          currentAssigneeIds = [taskItem.assignee_id];
                         }
 
                         return (
                           <div 
                             className="task-card" 
                             draggable 
-                            onDragStart={() => setDraggedTaskId(t.id)} 
-                            onClick={() => openTaskDetail(t.id)}
-                            key={t.id}
+                            onDragStart={() => setDraggedTaskId(taskItem.id)} 
+                            onClick={() => openTaskDetail(taskItem.id)}
+                            key={taskItem.id}
                           >
                             <div className="task-card-header">
-                              <span className={`badge ${pClass}`}>{t.priority}</span>
+                              <span className={`badge ${pClass}`}>{formatPriorityLabel(taskItem.priority, t)}</span>
                               <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                                 {currentAssigneeIds.length > 0 ? (
                                   currentAssigneeIds.map((id, idx) => {
@@ -1984,11 +2007,11 @@ export default function ProjectDetail({ params }) {
                                 )}
                               </div>
                             </div>
-                            <div className="task-card-title">{t.title}</div>
+                            <div className="task-card-title">{taskItem.title}</div>
                             <p className="task-card-desc">{parsedTask.text || 'Không có mô tả.'}</p>
                             <div className="task-card-meta">
                               <span className={`task-card-due ${isOverdue ? 'overdue' : ''}`}>
-                                <i className="fa-regular fa-clock"></i> {t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}
+                                <i className="fa-regular fa-clock"></i> {taskItem.due_date ? new Date(taskItem.due_date).toLocaleDateString('vi-VN') : 'Không hạn'}
                               </span>
                             </div>
                           </div>
@@ -2015,18 +2038,19 @@ export default function ProjectDetail({ params }) {
               ) : (
                 pTasks
                   .sort((a,b) => new Date(a.due_date || '2030-01-01') - new Date(b.due_date || '2030-01-01'))
-                  .map(t => {
+                  .map(taskItem => {
                     let left = 25, width = 40;
-                    if (t.priority === "Cao") { left = 10; width = 25; }
-                    else if (t.priority === "Thấp") { left = 45; width = 30; }
-                    if (t.status === "Done") { left = 5; width = 90; }
+                    const pUpper = String(taskItem.priority || '').trim().toUpperCase();
+                    if (pUpper === "CAO" || pUpper === "HIGH" || pUpper === "CRITICAL" || pUpper === "KHẨN CẤP") { left = 10; width = 25; }
+                    else if (pUpper === "THẤP" || pUpper === "LOW") { left = 45; width = 30; }
+                    if (taskItem.status === "Done" || taskItem.status === "Hoàn thành") { left = 5; width = 90; }
 
                     return (
-                      <div className="gantt-row" key={t.id}>
-                        <div className="gantt-task-name" onClick={() => openTaskDetail(t.id)} style={{ cursor: 'pointer' }}>{t.title}</div>
+                      <div className="gantt-row" key={taskItem.id}>
+                        <div className="gantt-task-name" onClick={() => openTaskDetail(taskItem.id)} style={{ cursor: 'pointer' }}>{taskItem.title}</div>
                         <div className="gantt-timeline-container">
-                          <div className={`gantt-bar ${t.status.toLowerCase()}`} style={{ left: `${left}%`, width: `${width}%` }}>
-                            <span>Hạn: {t.due_date ? new Date(t.due_date).toLocaleDateString('vi-VN') : 'Không có'} ({t.status})</span>
+                          <div className={`gantt-bar ${(taskItem.status || '').toLowerCase()}`} style={{ left: `${left}%`, width: `${width}%` }}>
+                            <span>{t('project.dueLabel', 'Hạn:')} {taskItem.due_date ? new Date(taskItem.due_date).toLocaleDateString(t('common.locale', 'vi-VN')) : t('project.noDueDate', 'Không có')} ({formatTaskStatus(taskItem.status, t)})</span>
                           </div>
                         </div>
                       </div>
@@ -2069,24 +2093,24 @@ export default function ProjectDetail({ params }) {
 
             {/* JIRA Filters Row */}
             <div className="doc-filters" style={{ marginBottom: '20px', padding: '12px', borderRadius: '6px', backgroundColor: 'var(--neutral-bg-card)', border: '1px solid var(--neutral-border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
+              <div className="issue-filters-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: '200px' }}>
                   <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--neutral-muted)' }}></i>
-                  <input 
-                    type="text" 
-                    placeholder={t('project.searchIssuePlaceholder', 'Tìm kiếm theo tiêu đề/mô tả...')} 
-                    value={issueSearchQuery} 
-                    onChange={(e) => setIssueSearchQuery(e.target.value)} 
+                  <input
+                    type="text"
+                    placeholder={t('project.searchIssuePlaceholder', 'Tìm kiếm theo tiêu đề/mô tả...')}
+                    value={issueSearchQuery}
+                    onChange={(e) => setIssueSearchQuery(e.target.value)}
                     className="doc-select-filter"
                     style={{ width: '100%', padding: '6px 10px', height: 'auto' }}
                   />
                 </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+
+                <div className="issue-filter-group" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <label style={{ fontSize: '12.5px', fontWeight: '500' }}>{t('project.assigneeLabel', 'Giao cho:')}</label>
-                  <select 
-                    value={issueFilterAssignee} 
-                    onChange={(e) => setIssueFilterAssignee(e.target.value)} 
+                  <select
+                    value={issueFilterAssignee}
+                    onChange={(e) => setIssueFilterAssignee(e.target.value)}
                     className="doc-select-filter"
                     style={{ minWidth: '140px' }}
                   >
@@ -2098,11 +2122,11 @@ export default function ProjectDetail({ params }) {
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="issue-filter-group" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <label style={{ fontSize: '12.5px', fontWeight: '500' }}>{t('project.priorityLabel', 'Độ ưu tiên:')}</label>
-                  <select 
-                    value={issueFilterPriority} 
-                    onChange={(e) => setIssueFilterPriority(e.target.value)} 
+                  <select
+                    value={issueFilterPriority}
+                    onChange={(e) => setIssueFilterPriority(e.target.value)}
                     className="doc-select-filter"
                   >
                     <option value="">{t('project.filterAll', '-- Tất cả --')}</option>
@@ -2113,11 +2137,11 @@ export default function ProjectDetail({ params }) {
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="issue-filter-group" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <label style={{ fontSize: '12.5px', fontWeight: '500' }}>{t('project.typeLabel', 'Loại:')}</label>
-                  <select 
-                    value={issueFilterType} 
-                    onChange={(e) => setIssueFilterType(e.target.value)} 
+                  <select
+                    value={issueFilterType}
+                    onChange={(e) => setIssueFilterType(e.target.value)}
                     className="doc-select-filter"
                   >
                     <option value="">{t('project.filterAll', '-- Tất cả --')}</option>
@@ -2205,7 +2229,7 @@ export default function ProjectDetail({ params }) {
                                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                                   <i className={`fa-solid ${typeIcon}`} style={{ color: typeColor, fontSize: '12px' }} title={iss.type}></i>
                                   <span style={{ fontSize: '10px', fontWeight: '700', color: '#fff', backgroundColor: priorityColor, padding: '1px 5px', borderRadius: '3px' }}>
-                                    {iss.priority}
+                                    {formatPriorityLabel(iss.priority, t)}
                                   </span>
                                 </div>
                               </div>
@@ -2955,8 +2979,8 @@ export default function ProjectDetail({ params }) {
       {/* Issues Creation Modal */}
       {isIssueModalOpen && (
         <div className="modal show" style={{ display: 'flex' }}>
-          <div className="modal-dialog" style={{ maxWidth: '950px', width: '95%' }}>
-            <div className="modal-content">
+          <div className="modal-dialog create-issue-dialog" style={{ width: '75vw', maxWidth: '75vw', height: '75vh', maxHeight: '75vh' }}>
+            <div className="modal-content" style={{ height: '100%' }}>
               <div className="modal-header">
                 <h3>{t('issues.createIssueTitle', 'Báo cáo vấn đề mới (Tạo Issue)')}</h3>
                 <button className="btn-close-modal" onClick={() => setIsIssueModalOpen(false)}><i className="fa-solid fa-xmark"></i></button>
@@ -3042,7 +3066,7 @@ export default function ProjectDetail({ params }) {
                   Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi tạo issue: " + err.message });
                 }
               }}>
-                <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px', padding: '20px' }}>
+                <div className="modal-body create-issue-modal-body">
                   {/* Left Column: Fields */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div className="form-group">
@@ -3110,7 +3134,7 @@ export default function ProjectDetail({ params }) {
                           style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', fontSize: '12px', outline: 'none' }}
                         />
                       </div>
-                      <div className="project-members-selector-list" style={{ maxHeight: '130px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: 'var(--neutral-bg-card)' }}>
+                      <div className="project-members-selector-list" style={{ maxHeight: '260px', overflowY: 'auto', border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: 'var(--neutral-bg-card)' }}>
                         {filteredCreateAssignees.length === 0 ? (
                           <div style={{ padding: '8px', color: 'var(--neutral-muted)', fontSize: '12px', textAlign: 'center' }}>{t('issues.noMembersFound', 'Không tìm thấy nhân viên phù hợp')}</div>
                         ) : (
@@ -3144,7 +3168,7 @@ export default function ProjectDetail({ params }) {
                   </div>
 
                   {/* Right Column: Grid Table */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div className="create-issue-table-col" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <label style={{ fontWeight: '600', fontSize: '13.5px', color: 'var(--neutral-muted)' }}>{t('issues.tasksTableTitle', 'Bảng chi tiết công việc')}</label>
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--neutral-border)', fontSize: '13px' }}>
                       <thead>
@@ -3256,7 +3280,7 @@ export default function ProjectDetail({ params }) {
                 </div>
                 <button className="btn-close-modal" onClick={handleCloseIssueDetail} style={{ fontSize: '24px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
               </div>
-              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '30px', flex: 1, maxHeight: 'none', overflowY: 'auto', padding: '24px 32px' }}>
+              <div className="modal-body issue-detail-modal-body" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '30px', flex: 1, maxHeight: 'none', overflowY: 'auto', padding: '24px 32px' }}>
                 
                 {isLockedByOther && (
                   <div style={{
@@ -3324,7 +3348,7 @@ export default function ProjectDetail({ params }) {
                   {/* Grid Table in Details Modal */}
                   <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '16px' }}>
                     <label style={{ fontWeight: '600', fontSize: '13.5px', display: 'block', marginBottom: '10px', color: 'var(--neutral-dark)' }}>{t('issues.tasksTableTitle', 'Bảng chi tiết công việc')}</label>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--neutral-border)', fontSize: '13px', marginBottom: '10px', color: 'var(--neutral-dark)' }}>
+                    <table className="mobile-stack-table" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--neutral-border)', fontSize: '13px', marginBottom: '10px', color: 'var(--neutral-dark)' }}>
                       <thead>
                         <tr style={{ backgroundColor: '#135274', color: '#ffffff' }}>
                           <th style={{ padding: '10px', border: '1px solid var(--neutral-border)', textAlign: 'center', width: '35%', fontWeight: '700' }}>{t('issues.taskNameColumn', 'Tên công việc')}</th>
@@ -3337,7 +3361,7 @@ export default function ProjectDetail({ params }) {
                       <tbody>
                         {projectTasks.map(row => (
                           <tr key={row.id}>
-                            <td style={{ padding: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)' }}>
+                            <td data-label={t('issues.taskNameColumn', 'Tên công việc')} style={{ padding: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <input
                                   type="text"
@@ -3366,7 +3390,7 @@ export default function ProjectDetail({ params }) {
                                 </button>
                               </div>
                             </td>
-                            <td style={{ padding: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)' }}>
+                            <td data-label={t('issues.deadlineColumn', 'Deadline')} style={{ padding: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)' }}>
                               <input
                                 type="date"
                                 value={formatDateForInput(row.deadline) || ''}
@@ -3375,7 +3399,7 @@ export default function ProjectDetail({ params }) {
                                 style={{ width: '100%', border: '1px solid var(--neutral-border)', padding: '6px', borderRadius: '4px', outline: 'none', fontSize: '12.5px' }}
                               />
                             </td>
-                            <td style={{ padding: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', position: 'relative', verticalAlign: 'top' }}>
+                            <td data-label={t('issues.assignedColumn', 'Người được giao')} style={{ padding: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', position: 'relative', verticalAlign: 'top' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 {(() => {
                                   const assignedNames = row.assignee ? row.assignee.split('@').map(s => s.trim()).filter(Boolean) : [];
@@ -3537,7 +3561,7 @@ export default function ProjectDetail({ params }) {
                                 )}
                               </div>
                             </td>
-                            <td style={{ padding: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', verticalAlign: 'top' }}>
+                            <td data-label={t('issues.executorColumn', 'Người thực hiện')} style={{ padding: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', verticalAlign: 'top' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 {(() => {
                                   const executors = row.solutions
@@ -3570,13 +3594,13 @@ export default function ProjectDetail({ params }) {
                                 })()}
                               </div>
                             </td>
-                            <td style={{ padding: '6px', border: '1px solid var(--neutral-border)', textAlign: 'center', verticalAlign: 'middle' }}>
-                              <span style={{ 
+                            <td data-label={t('issues.statusColumn', 'Trạng thái')} style={{ padding: '6px', border: '1px solid var(--neutral-border)', textAlign: 'center', verticalAlign: 'middle' }}>
+                              <span style={{
                                 display: 'inline-block',
-                                padding: '4px 8px', 
-                                borderRadius: '4px', 
-                                fontSize: '12px', 
-                                fontWeight: '600', 
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: '600',
                                 backgroundColor: row.status === 'Hoàn thành' ? '#e2fbe8' : row.status === 'Đang thực hiện' ? '#fff3cd' : '#f1f5f9',
                                 color: row.status === 'Hoàn thành' ? '#0f5132' : row.status === 'Đang thực hiện' ? '#664d03' : '#475569'
                               }}>
@@ -3691,7 +3715,7 @@ export default function ProjectDetail({ params }) {
                 </div>
 
                 {/* Right Column: Inline properties update controls */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderLeft: '1px solid var(--neutral-border)', paddingLeft: '20px' }}>
+                <div className="issue-detail-right-col" style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderLeft: '1px solid var(--neutral-border)', paddingLeft: '20px' }}>
                   <div className="form-group">
                     <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--neutral-muted)', display: 'block', marginBottom: '6px' }}>{t('common.status', 'Trạng thái')}</label>
                     <span style={{
