@@ -803,7 +803,8 @@ export const translations = {
     "documents.addRow": "Thêm hàng",
     "documents.alignLeft": "Căn trái",
     "documents.alignCenter": "Căn giữa",
-    "documents.alignRight": "Căn phải"
+    "documents.alignRight": "Căn phải",
+    "documents.renameFolderTitle": "Đổi tên thư mục"
   },
   "en": {
     "common.notice": "Notice",
@@ -1601,7 +1602,8 @@ export const translations = {
     "documents.addRow": "Add row",
     "documents.alignLeft": "Align left",
     "documents.alignCenter": "Align center",
-    "documents.alignRight": "Align right"
+    "documents.alignRight": "Align right",
+    "documents.renameFolderTitle": "Rename folder"
   },
   "ko": {
     "common.notice": "알림",
@@ -2397,7 +2399,8 @@ export const translations = {
     "documents.addRow": "행 추가",
     "documents.alignLeft": "왼쪽 정렬",
     "documents.alignCenter": "가운데 정렬",
-    "documents.alignRight": "오른쪽 정렬"
+    "documents.alignRight": "오른쪽 정렬",
+    "documents.renameFolderTitle": "폴더 이름 변경"
   },
   "zh": {
     "common.notice": "通知",
@@ -3193,7 +3196,8 @@ export const translations = {
     "documents.addRow": "添加行",
     "documents.alignLeft": "左对齐",
     "documents.alignCenter": "居中对齐",
-    "documents.alignRight": "右对齐"
+    "documents.alignRight": "右对齐",
+    "documents.renameFolderTitle": "重命名文件夹"
   },
   "ja": {
     "common.notice": "通知",
@@ -3989,6 +3993,7 @@ export const translations = {
     "documents.addRow": "行を追加",
     "documents.alignLeft": "左揃え",
     "documents.alignCenter": "中央揃え",
-    "documents.alignRight": "右揃え"
+    "documents.alignRight": "右揃え",
+    "documents.renameFolderTitle": "フォルダ名を変更"
   }
 };

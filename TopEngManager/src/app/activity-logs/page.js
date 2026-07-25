@@ -327,6 +327,13 @@ function translateLogDescription(desc, currentLang) {
       ja: "フォルダ '$1' を削除しました"
     },
     {
+      regex: /đã đổi tên thư mục '(.*?)' thành '(.*?)'/g,
+      en: "renamed folder '$1' to '$2'",
+      ko: "폴더 이름을 '$1'에서 '$2'(으)로 변경했습니다",
+      zh: "将文件夹 '$1' 重命名为 '$2'",
+      ja: "フォルダ名を '$1' から '$2' に変更しました"
+    },
+    {
       regex: /đã tải lên tài liệu '(.*?)' vào '(.*?)'/g,
       en: "uploaded document '$1' into '$2'",
       ko: "'$2'에 문서 '$1'을(를) 업로드했습니다",

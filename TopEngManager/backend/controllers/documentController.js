@@ -85,6 +85,22 @@ exports.createDocumentFolder = async (req, res, next) => {
   }
 };
 
+exports.renameDocumentFolder = async (req, res, next) => {
+  try {
+    const { folderId, name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Tên thư mục không được để trống' });
+    }
+    const folder = await prisma.documentfolder.update({
+      where: { folder_id: folderId },
+      data: { name: name.trim() }
+    });
+    res.json(folder);
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.deleteDocumentFolder = async (req, res, next) => {
   try {
     const { folderId } = req.body;

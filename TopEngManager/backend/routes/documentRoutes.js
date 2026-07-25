@@ -37,6 +37,7 @@ const upload = multer({
 
 router.post('/getDocumentFolders', documentController.getDocumentFolders);
 router.post('/createDocumentFolder', documentController.createDocumentFolder);
+router.post('/renameDocumentFolder', documentController.renameDocumentFolder);
 router.post('/deleteDocumentFolder', documentController.deleteDocumentFolder);
 router.post('/getDocuments', documentController.getDocuments);
 router.post('/deleteDocument', documentController.deleteDocument);

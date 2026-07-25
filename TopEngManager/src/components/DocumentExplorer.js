@@ -122,6 +122,32 @@ export default function DocumentExplorer({ projectId = null }) {
     }
   };
 
+  const handleRenameFolder = async (folder, e) => {
+    e.stopPropagation();
+    e.currentTarget.blur();
+    const Swal = await getSwal();
+    const { value: name } = await Swal.fire({
+      title: t('documents.renameFolderTitle', 'Đổi tên thư mục'),
+      input: 'text',
+      inputValue: folder.name,
+      inputPlaceholder: t('documents.folderNamePlaceholder', 'Nhập tên thư mục...'),
+      showCancelButton: true,
+      confirmButtonText: t('common.save', 'Lưu thay đổi'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--primary-color)',
+      inputValidator: (value) => (!value || !value.trim()) ? t('documents.folderNameRequired', 'Vui lòng nhập tên thư mục') : undefined
+    });
+    if (!name || name.trim() === folder.name) return;
+    try {
+      const oldName = folder.name;
+      await db.renameDocumentFolder(folder.folder_id, name.trim());
+      await loadFolders();
+      await db.logActivity(currentUser.id, 'RENAME_FOLDER', 'Document', folder.folder_id, `đã đổi tên thư mục '${oldName}' thành '${name.trim()}'`, { project_id: projectId });
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
   const canManageFolder = (folder) => isAdmin || folder.created_by === currentUser?.id;
   const canManageDoc = (doc) => isAdmin || doc.uploaded_by === currentUser?.id;
 
@@ -248,6 +274,15 @@ export default function DocumentExplorer({ projectId = null }) {
             >
               <i className="fa-solid fa-plus"></i>
             </button>
+            {canManageFolder(folder) && (
+              <button
+                type="button"
+                title={t('common.edit', 'Sửa')}
+                onClick={(e) => handleRenameFolder(folder, e)}
+              >
+                <i className="fa-solid fa-pen"></i>
+              </button>
+            )}
             {canManageFolder(folder) && (
               <button
                 type="button"
