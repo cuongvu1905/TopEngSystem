@@ -19,7 +19,9 @@ const callApi = async (action, payload = {}) => {
   if (!res.ok) {
     // Expected business errors (e.g. wrong credentials) are not unexpected
     // exceptions, so don't surface them as console errors / dev overlays.
-    throw new Error(data.error || 'MySQL API error');
+    const err = new Error(data.error || 'MySQL API error');
+    Object.assign(err, data);
+    throw err;
   }
   return data;
 };
@@ -126,16 +128,72 @@ export const MySQLAdapter = {
     return await callApi('getMessages', { roomId });
   },
 
-  getDocumentCategories: async function() {
-    return await callApi('getDocumentCategories');
+  getDocumentFolders: async function(projectId = null) {
+    return await callApi('getDocumentFolders', { projectId });
   },
 
-  getDocuments: async function() {
-    return await callApi('getDocuments');
+  createDocumentFolder: async function({ name, parentFolderId, projectId, createdBy }) {
+    return await callApi('createDocumentFolder', { name, parentFolderId, projectId, createdBy });
   },
 
-  getDocumentVersions: async function() {
-    return await callApi('getDocumentVersions');
+  deleteDocumentFolder: async function(folderId) {
+    return await callApi('deleteDocumentFolder', { folderId });
+  },
+
+  getDocuments: async function({ projectId = null, folderId = null, searchQuery = '' } = {}) {
+    return await callApi('getDocuments', { projectId, folderId, searchQuery });
+  },
+
+  deleteDocument: async function(documentId) {
+    return await callApi('deleteDocument', { documentId });
+  },
+
+  getDocumentDownloadUrl: function(documentId) {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5000/api';
+    return `${backendUrl}/downloadDocument/${documentId}`;
+  },
+
+  getDocumentPreviewUrl: function(documentId) {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5000/api';
+    return `${backendUrl}/downloadDocument/${documentId}?inline=1`;
+  },
+
+  uploadDocuments: async function(files, { folderId, projectId, uploadedBy }) {
+    const formData = new FormData();
+    for (const file of files) {
+      formData.append('files', file);
+    }
+    if (folderId) formData.append('folderId', folderId);
+    if (projectId) formData.append('projectId', projectId);
+    if (uploadedBy) formData.append('uploadedBy', uploadedBy);
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5000/api';
+    const res = await fetch(`${backendUrl}/uploadDocument`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload error');
+    return data;
+  },
+
+  getDocumentContent: async function(documentId) {
+    return await callApi('getDocumentContent', { documentId });
+  },
+
+  createTextDocument: async function({ name, folderId, projectId, createdBy, content }) {
+    return await callApi('createTextDocument', { name, folderId, projectId, createdBy, content });
+  },
+
+  updateTextDocument: async function({ documentId, content, updatedBy }) {
+    return await callApi('updateTextDocument', { documentId, content, updatedBy });
+  },
+
+  lockDocument: async function(documentId, userId) {
+    return await callApi('lockDocument', { documentId, userId });
+  },
+
+  unlockDocument: async function(documentId, userId) {
+    return await callApi('unlockDocument', { documentId, userId });
   },
 
   getActivityLogs: async function() {
@@ -176,10 +234,6 @@ export const MySQLAdapter = {
 
   addMessageReaction: async function(messageId, emoji, userId) {
     return true;
-  },
-
-  saveDocument: async function(doc, version) {
-    return await callApi('saveDocument', { doc, version });
   },
 
   logActivity: async function(userId, actionType, entityType, entityId, description, metadata = {}) {

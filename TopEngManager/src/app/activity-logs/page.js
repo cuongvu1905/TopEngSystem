@@ -311,6 +311,55 @@ function translateLogDescription(desc, currentLang) {
       ko: "비밀번호 5회 오류로 인해 계정이 임시 잠금 처리되었습니다",
       zh: "因连续 5 次输入错误密码，账号已被临时锁定",
       ja: "パスワードを5回連続で間違えたため、アカウントが一時的にロックされました"
+    },
+    {
+      regex: /đã tạo thư mục '(.*?)' trong '(.*?)'/g,
+      en: "created folder '$1' in '$2'",
+      ko: "'$2'에 폴더 '$1'을(를) 생성했습니다",
+      zh: "在 '$2' 中创建了文件夹 '$1'",
+      ja: "'$2' にフォルダ '$1' を作成しました"
+    },
+    {
+      regex: /đã xóa thư mục '(.*?)'/g,
+      en: "deleted folder '$1'",
+      ko: "폴더 '$1'을(를) 삭제했습니다",
+      zh: "删除了文件夹 '$1'",
+      ja: "フォルダ '$1' を削除しました"
+    },
+    {
+      regex: /đã tải lên tài liệu '(.*?)' vào '(.*?)'/g,
+      en: "uploaded document '$1' into '$2'",
+      ko: "'$2'에 문서 '$1'을(를) 업로드했습니다",
+      zh: "将文档 '$1' 上传到了 '$2'",
+      ja: "'$2' にドキュメント '$1' をアップロードしました"
+    },
+    {
+      regex: /đã xóa tài liệu '(.*?)' khỏi '(.*?)'/g,
+      en: "deleted document '$1' from '$2'",
+      ko: "'$2'에서 문서 '$1'을(를) 삭제했습니다",
+      zh: "从 '$2' 中删除了文档 '$1'",
+      ja: "'$2' からドキュメント '$1' を削除しました"
+    },
+    {
+      regex: /đã tải về tài liệu '(.*?)' từ '(.*?)'/g,
+      en: "downloaded document '$1' from '$2'",
+      ko: "'$2'에서 문서 '$1'을(를) 다운로드했습니다",
+      zh: "从 '$2' 下载了文档 '$1'",
+      ja: "'$2' からドキュメント '$1' をダウンロードしました"
+    },
+    {
+      regex: /đã tạo tài liệu văn bản '(.*?)' trong '(.*?)'/g,
+      en: "created text document '$1' in '$2'",
+      ko: "'$2'에 텍스트 문서 '$1'을(를) 생성했습니다",
+      zh: "在 '$2' 中创建了文本文档 '$1'",
+      ja: "'$2' にテキストドキュメント '$1' を作成しました"
+    },
+    {
+      regex: /đã chỉnh sửa tài liệu văn bản '(.*?)'/g,
+      en: "edited text document '$1'",
+      ko: "텍스트 문서 '$1'을(를) 수정했습니다",
+      zh: "编辑了文本文档 '$1'",
+      ja: "テキストドキュメント '$1' を編集しました"
     }
   ];
 
@@ -326,7 +375,7 @@ function translateLogDescription(desc, currentLang) {
 }
 
 export default function ActivityLogs() {
-  const { currentUser, activityLogs, users, projects, tasks, documents, projectMembers } = useApp();
+  const { currentUser, activityLogs, users, projects, tasks, projectMembers } = useApp();
   const { t, currentLang } = useLanguage();
   
   const [logUserFilter, setLogUserFilter] = useState('all');
@@ -367,9 +416,6 @@ export default function ActivityLogs() {
     } else if (l.entity_type === 'Task') {
       const tItem = tasks.find(item => item.id === l.entity_id);
       if (tItem) projId = tItem.project_id;
-    } else if (l.entity_type === 'Document') {
-      const d = documents.find(item => item.id === l.entity_id);
-      if (d) projId = d.project_id;
     }
     
     const proj = projects.find(p => p.id === projId);

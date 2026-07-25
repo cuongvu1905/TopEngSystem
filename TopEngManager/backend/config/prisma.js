@@ -20,4 +20,81 @@ const prisma = new PrismaClient();
   }
 })();
 
+// Self-healing table creation for the Document Repository feature
+(async () => {
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'documentfolder'`;
+    if (tables.length === 0) {
+      console.log('Creating documentfolder / document tables...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`documentfolder\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`folder_id\` VARCHAR(50) NOT NULL UNIQUE,
+          \`name\` VARCHAR(255) NOT NULL,
+          \`parent_folder_id\` VARCHAR(50) DEFAULT NULL,
+          \`project_id\` VARCHAR(36) DEFAULT NULL,
+          \`created_by\` VARCHAR(36) DEFAULT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT \`fk_folder_parent\` FOREIGN KEY (\`parent_folder_id\`) REFERENCES \`documentfolder\` (\`folder_id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_folder_project\` FOREIGN KEY (\`project_id\`) REFERENCES \`project\` (\`project_id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_folder_creator\` FOREIGN KEY (\`created_by\`) REFERENCES \`user\` (\`user_id\`) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`document\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`document_id\` VARCHAR(50) NOT NULL UNIQUE,
+          \`folder_id\` VARCHAR(50) DEFAULT NULL,
+          \`project_id\` VARCHAR(36) DEFAULT NULL,
+          \`original_name\` VARCHAR(255) NOT NULL,
+          \`stored_name\` VARCHAR(255) NOT NULL,
+          \`file_path\` VARCHAR(500) NOT NULL,
+          \`file_size\` INT DEFAULT NULL,
+          \`file_ext\` VARCHAR(20) DEFAULT NULL,
+          \`uploaded_by\` VARCHAR(36) DEFAULT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`doc_type\` VARCHAR(20) NOT NULL DEFAULT 'upload',
+          \`updated_at\` TIMESTAMP NULL DEFAULT NULL,
+          CONSTRAINT \`fk_document_folder\` FOREIGN KEY (\`folder_id\`) REFERENCES \`documentfolder\` (\`folder_id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_document_project\` FOREIGN KEY (\`project_id\`) REFERENCES \`project\` (\`project_id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_document_uploader\` FOREIGN KEY (\`uploaded_by\`) REFERENCES \`user\` (\`user_id\`) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('documentfolder / document tables created successfully.');
+    } else {
+      // Widen folder_id/document_id columns if they were created by an older version of this app
+      const folderCols = await prisma.$queryRaw`SHOW COLUMNS FROM \`documentfolder\` WHERE Field = 'folder_id'`;
+      if (folderCols[0] && folderCols[0].Type === 'varchar(36)') {
+        console.log('Widening documentfolder/document id columns to varchar(50)...');
+        await prisma.$executeRawUnsafe('ALTER TABLE `document` DROP FOREIGN KEY `fk_document_folder`;');
+        await prisma.$executeRawUnsafe('ALTER TABLE `documentfolder` DROP FOREIGN KEY `fk_folder_parent`;');
+        await prisma.$executeRawUnsafe('ALTER TABLE `documentfolder` MODIFY `folder_id` VARCHAR(50) NOT NULL;');
+        await prisma.$executeRawUnsafe('ALTER TABLE `documentfolder` MODIFY `parent_folder_id` VARCHAR(50) DEFAULT NULL;');
+        await prisma.$executeRawUnsafe('ALTER TABLE `document` MODIFY `document_id` VARCHAR(50) NOT NULL;');
+        await prisma.$executeRawUnsafe('ALTER TABLE `document` MODIFY `folder_id` VARCHAR(50) DEFAULT NULL;');
+        await prisma.$executeRawUnsafe('ALTER TABLE `documentfolder` ADD CONSTRAINT `fk_folder_parent` FOREIGN KEY (`parent_folder_id`) REFERENCES `documentfolder` (`folder_id`) ON DELETE CASCADE;');
+        await prisma.$executeRawUnsafe('ALTER TABLE `document` ADD CONSTRAINT `fk_document_folder` FOREIGN KEY (`folder_id`) REFERENCES `documentfolder` (`folder_id`) ON DELETE CASCADE;');
+        console.log('documentfolder/document id columns widened successfully.');
+      }
+    }
+  } catch (err) {
+    console.error('Error during document tables migration check:', err);
+  }
+})();
+
+// Self-healing column addition for the in-browser Text Document feature
+(async () => {
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`document\` LIKE 'doc_type'`;
+    if (columns.length === 0) {
+      console.log('Adding doc_type/updated_at columns to document table...');
+      await prisma.$executeRawUnsafe("ALTER TABLE `document` ADD COLUMN `doc_type` VARCHAR(20) NOT NULL DEFAULT 'upload';");
+      await prisma.$executeRawUnsafe('ALTER TABLE `document` ADD COLUMN `updated_at` TIMESTAMP NULL DEFAULT NULL;');
+      console.log('doc_type/updated_at columns added successfully.');
+    }
+  } catch (err) {
+    console.error('Error during text document columns migration check:', err);
+  }
+})();
+
 module.exports = prisma;

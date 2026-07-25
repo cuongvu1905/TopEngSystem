@@ -16,7 +16,7 @@ export default function RootLayout({ children }) {
           (function() {
             try {
               var theme = localStorage.getItem('theme');
-              if (theme === 'dark') {
+              if (theme !== 'light') {
                 document.documentElement.setAttribute('data-theme', 'dark');
               }
             } catch (e) {}

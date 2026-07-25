@@ -25,9 +25,6 @@ export const AppContextProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [subtasks, setSubtasks] = useState([]);
-  const [documents, setDocuments] = useState([]);
-  const [documentVersions, setDocumentVersions] = useState([]);
-  const [documentCategories, setDocumentCategories] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [activityLogs, setActivityLogs] = useState([]);
   const [chatRooms, setChatRooms] = useState([]);
@@ -91,9 +88,6 @@ export const AppContextProvider = ({ children }) => {
         projs,
         tks,
         subs,
-        docs,
-        vers,
-        cats,
         pm,
         crm,
         rooms,
@@ -105,9 +99,6 @@ export const AppContextProvider = ({ children }) => {
         db.getProjects().catch(() => []),
         db.getTasks().catch(() => []),
         db.getSubtasks().catch(() => []),
-        db.getDocuments().catch(() => []),
-        db.getDocumentVersions().catch(() => []),
-        db.getDocumentCategories().catch(() => []),
         db.getProjectMembers().catch(() => []),
         db.getChatRoomMembers().catch(() => []),
         db.getChatRooms().catch(() => []),
@@ -120,9 +111,6 @@ export const AppContextProvider = ({ children }) => {
       setProjects(projs);
       setTasks(tks);
       setSubtasks(subs);
-      setDocuments(docs);
-      setDocumentVersions(vers);
-      setDocumentCategories(cats);
       setProjectMembers(pm);
       setChatRoomMembers(crm);
       setChatRooms(rooms);
@@ -150,7 +138,6 @@ export const AppContextProvider = ({ children }) => {
           setProjects([]);
           setTasks([]);
           setSubtasks([]);
-          setDocuments([]);
           setNotifications([]);
           setActivityLogs([]);
           setIsLoading(false);
@@ -253,7 +240,6 @@ export const AppContextProvider = ({ children }) => {
     setProjects([]);
     setTasks([]);
     setSubtasks([]);
-    setDocuments([]);
     setNotifications([]);
     setActivityLogs([]);
   };
@@ -272,9 +258,6 @@ export const AppContextProvider = ({ children }) => {
     projects,
     tasks,
     subtasks,
-    documents,
-    documentVersions,
-    documentCategories,
     notifications,
     activityLogs,
     chatRooms,

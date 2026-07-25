@@ -180,17 +180,18 @@ export default function Header({ onToggleSidebar }) {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') {
-        setIsDarkMode(true);
-        document.documentElement.setAttribute('data-theme', 'dark');
-      } else {
+      if (savedTheme === 'light') {
         setIsDarkMode(false);
         document.documentElement.removeAttribute('data-theme');
+      } else {
+        // Defaults to dark mode on a user's first-ever visit (no saved preference yet).
+        setIsDarkMode(true);
+        document.documentElement.setAttribute('data-theme', 'dark');
       }
     } catch (e) {}
   }, []);

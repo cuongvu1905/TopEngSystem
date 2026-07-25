@@ -5,7 +5,8 @@ import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { StreamChatAdapter } from '@/utils/streamChatClient';
-import { ProjectModal, TaskModal, DocumentModal } from '@/components/Modals';
+import { ProjectModal, TaskModal } from '@/components/Modals';
+import DocumentExplorer from '@/components/DocumentExplorer';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getSwal } from '@/utils/swal';
@@ -197,7 +198,7 @@ export default function ProjectDetail({ params }) {
   const router = useRouter();
   const queryIssueId = searchParams.get('issueId');
   const queryTaskId = searchParams.get('taskId');
-  const { currentUser, projects, tasks, documents, documentVersions, documentCategories, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
+  const { currentUser, projects, tasks, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
   const { t } = useLanguage();
 
    const [activeSubTab, setActiveSubTab] = useState('kanban');
@@ -310,8 +311,6 @@ export default function ProjectDetail({ params }) {
   const [isProjModalOpen, setIsProjModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(null);
-  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
-  const [activeDocId, setActiveDocId] = useState(null);
 
   const [draggedTaskId, setDraggedTaskId] = useState(null);
 
@@ -1730,22 +1729,9 @@ export default function ProjectDetail({ params }) {
     }
   };
 
-  const handleDownloadDoc = (att) => {
-    Swal.fire({ 
-      icon: 'info', 
-      title: 'Đang tải file', 
-      html: `Đang tải file: <code>${att.file_url}</code><br>Dung lượng: <b>${att.file_size || 'N/A'}</b>` 
-    });
-  };
-
   const openTaskDetail = (taskId) => {
     setActiveTaskId(taskId);
     setIsTaskModalOpen(true);
-  };
-
-  const openDocVersion = (docId) => {
-    setActiveDocId(docId);
-    setIsDocModalOpen(true);
   };
 
   const getPerformerForTask = (row) => {
@@ -2417,51 +2403,7 @@ export default function ProjectDetail({ params }) {
 
         {/* ================= TABS: DOCUMENTS ================= */}
         {activeSubTab === 'documents' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600 }}>{t('project.projectDocuments', 'Tài liệu dự án')}</h3>
-              <button className="btn btn-primary btn-sm" onClick={() => { setActiveDocId(null); setIsDocModalOpen(true); }}>
-                <i className="fa-solid fa-upload"></i> {t('common.upload', 'Tải lên')}
-              </button>
-            </div>
-            
-            <div className="doc-main-panel" style={{ gap: '12px' }}>
-              {documents.filter(d => d.project_id === projectId).length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--neutral-muted)' }}>{t('project.noDocumentsYet', 'Chưa có tài liệu dự án nào.')}</div>
-              ) : (
-                documents
-                  .filter(d => d.project_id === projectId)
-                  .map(d => {
-                    const u = users.find(usr => usr.id === d.uploaded_by);
-                    const docVers = documentVersions.filter(v => v.document_id === d.id);
-                    docVers.sort((a,b) => b.version_number - a.version_number);
-                    const latest = docVers[0] || { version_number: 1, file_url: 'N/A', file_size: '0 KB' };
-                    const date = new Date(d.created_at);
-                    const dateStr = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
-
-                    return (
-                      <div className="document-item-card" key={d.id}>
-                        <div className="doc-card-left">
-                          <div className="doc-icon-box"><i className="fa-solid fa-file-pdf"></i></div>
-                          <div className="doc-info-box">
-                            <h3>{d.title}</h3>
-                            <p>{t('project.uploadedBy', 'Tải lên bởi')}: <strong>{u ? u.name : 'N/A'}</strong> | {t('common.date', 'Ngày')}: {dateStr} | {t('project.phase', 'Giai đoạn')}: <strong>{d.project_phase || t('project.phaseGeneral', 'Chung')}</strong></p>
-                            <div className="version-badge-container">
-                              <span className="version-pill">{t('project.version', 'Phiên bản')} v{latest.version_number}</span>
-                              <span className="text-muted">{latest.file_url} ({latest.file_size})</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="doc-card-right">
-                          <button className="btn btn-secondary btn-sm" onClick={() => handleDownloadDoc(latest)}><i className="fa-solid fa-download"></i> {t('common.download', 'Tải về')}</button>
-                          <button className="btn btn-secondary btn-sm" onClick={() => openDocVersion(d.id)}><i className="fa-solid fa-code-fork"></i> {t('project.newVersion', 'Bản mới')}</button>
-                        </div>
-                      </div>
-                    );
-                  })
-              )}
-            </div>
-          </div>
+          <DocumentExplorer projectId={projectId} />
         )}
 
         {/* ================= TABS: CHAT ================= */}
@@ -3269,7 +3211,7 @@ export default function ProjectDetail({ params }) {
       {/* JIRA Issue Detail Modal */}
       {isDetailModalOpen && activeIssueDetail && (
         <div className="modal show" style={{ display: 'flex' }}>
-          <div className="modal-dialog" style={{ maxWidth: 'none', width: '100vw', height: '100vh', maxHeight: '100vh', margin: 0, borderRadius: 0 }}>
+          <div className="modal-dialog issue-detail-dialog" style={{ maxWidth: 'none', margin: 0, borderRadius: 0 }}>
             <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div className="modal-header" style={{ padding: '16px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -4089,56 +4031,46 @@ export default function ProjectDetail({ params }) {
         onSaved={reloadAll} 
       />
 
-      <DocumentModal 
-        isOpen={isDocModalOpen} 
-        onClose={() => setIsDocModalOpen(false)} 
-        docId={activeDocId} 
-        projId={projectId} 
-        currentUser={currentUser} 
-        currentCategoryId="cat-lifecycle" 
-        onSaved={reloadAll} 
-      />
-
       {/* JIRA Detailed Report Popup */}
       {isReportPopupOpen && (
         <div className="modal show" style={{ display: 'flex', zIndex: 320 }}>
           <div className="modal-dialog" style={{ maxWidth: '600px', width: '90vw', margin: 'auto', borderRadius: '8px' }}>
             <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', padding: '24px', gap: '16px' }}>
               <div className="modal-header" style={{ padding: '0 0 12px 0', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#1e293b' }}>
-                  Báo cáo chi tiết
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
+                  {t('issues.detailedReport', 'Báo cáo chi tiết')}
                 </h3>
                 <button className="btn-close-modal" onClick={() => setIsReportPopupOpen(false)} style={{ fontSize: '20px', cursor: 'pointer' }}><i className="fa-solid fa-xmark"></i></button>
               </div>
               <div className="modal-body" style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-muted)' }}>Nguyên nhân</label>
+                  <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-muted)' }}>{t('issues.cause', 'Nguyên nhân')}</label>
                   <textarea
                     value={tempNguyenNhan}
                     onChange={(e) => setTempNguyenNhan(e.target.value)}
-                    placeholder="Nhập nguyên nhân..."
+                    placeholder={t('issues.causePlaceholder', 'Nhập nguyên nhân...')}
                     rows="3"
-                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)' }}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-muted)' }}>Hướng giải quyết</label>
+                  <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-muted)' }}>{t('issues.solution', 'Hướng giải quyết')}</label>
                   <textarea
                     value={tempHuongGiaiQuyet}
                     onChange={(e) => setTempHuongGiaiQuyet(e.target.value)}
-                    placeholder="Nhập hướng giải quyết..."
+                    placeholder={t('issues.solutionPlaceholder', 'Nhập hướng giải quyết...')}
                     rows="3"
-                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)' }}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-muted)' }}>Kết quả</label>
+                  <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-muted)' }}>{t('issues.result', 'Kết quả')}</label>
                   <textarea
                     value={tempKetQua}
                     onChange={(e) => setTempKetQua(e.target.value)}
-                    placeholder="Nhập kết quả..."
+                    placeholder={t('issues.resultPlaceholder', 'Nhập kết quả...')}
                     rows="3"
-                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', fontSize: '13.5px', resize: 'vertical', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)' }}
                   />
                 </div>
               </div>
@@ -4149,9 +4081,9 @@ export default function ProjectDetail({ params }) {
                   onClick={() => setIsReportPopupOpen(false)}
                   style={{ padding: '8px 16px', fontSize: '13px' }}
                 >
-                  Hủy
+                  {t('common.cancel', 'Hủy')}
                 </button>
-                
+
                 <button
                   type="button"
                   className="btn btn-primary"
@@ -4169,7 +4101,7 @@ export default function ProjectDetail({ params }) {
                   }}
                   style={{ padding: '8px 24px', fontSize: '13px' }}
                 >
-                  Lưu
+                  {t('issues.saveReport', 'Lưu')}
                 </button>
 
                 {activeIssueDetail && activeIssueDetail.status !== 'DONE' && (
@@ -4205,9 +4137,9 @@ export default function ProjectDetail({ params }) {
                         loadIssues();
                         setIsReportPopupOpen(false);
                         setIsDetailModalOpen(false);
-                        Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã kết thúc issue thành công!" });
+                        Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('issues.closeIssueSuccess', 'Đã kết thúc issue thành công!') });
                       } catch (err) {
-                        Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi kết thúc issue: " + err.message });
+                        Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('issues.closeIssueFailedPrefix', 'Lỗi kết thúc issue: ') + err.message });
                       }
                     }}
                     style={{ 
@@ -4222,7 +4154,7 @@ export default function ProjectDetail({ params }) {
                       fontWeight: '600'
                     }}
                   >
-                    Đóng Issue
+                    {t('issues.closeIssue', 'Đóng Issue')}
                   </button>
                 )}
               </div>

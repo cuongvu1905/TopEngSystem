@@ -72,6 +72,48 @@ model dailyreport {
   @@index([project_id], map: "fk_report_project")
 }
 
+model documentfolder {
+  id               Int              @id @default(autoincrement())
+  folder_id        String           @unique(map: "folder_id") @db.VarChar(50)
+  name             String           @db.VarChar(255)
+  parent_folder_id String?          @db.VarChar(50)
+  project_id       String?          @db.VarChar(36)
+  created_by       String?          @db.VarChar(36)
+  created_at       DateTime         @default(now()) @db.Timestamp(0)
+  parent           documentfolder?  @relation("FolderHierarchy", fields: [parent_folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_parent")
+  children         documentfolder[] @relation("FolderHierarchy")
+  project          project?         @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_project")
+  user             user?            @relation(fields: [created_by], references: [user_id], onUpdate: Restrict, map: "fk_folder_creator")
+  document         document[]
+
+  @@index([parent_folder_id], map: "fk_folder_parent")
+  @@index([project_id], map: "fk_folder_project")
+  @@index([created_by], map: "fk_folder_creator")
+}
+
+model document {
+  id             Int             @id @default(autoincrement())
+  document_id    String          @unique(map: "document_id") @db.VarChar(50)
+  folder_id      String?         @db.VarChar(50)
+  project_id     String?         @db.VarChar(36)
+  original_name  String          @db.VarChar(255)
+  stored_name    String          @db.VarChar(255)
+  file_path      String          @db.VarChar(500)
+  file_size      Int?
+  file_ext       String?         @db.VarChar(20)
+  uploaded_by    String?         @db.VarChar(36)
+  created_at     DateTime        @default(now()) @db.Timestamp(0)
+  doc_type       String          @default("upload") @db.VarChar(20)
+  updated_at     DateTime?       @db.Timestamp(0)
+  documentfolder documentfolder? @relation(fields: [folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_document_folder")
+  project        project?        @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_document_project")
+  user           user?           @relation(fields: [uploaded_by], references: [user_id], onUpdate: Restrict, map: "fk_document_uploader")
+
+  @@index([folder_id], map: "fk_document_folder")
+  @@index([project_id], map: "fk_document_project")
+  @@index([uploaded_by], map: "fk_document_uploader")
+}
+
 model department {
   id            Int          @id @default(autoincrement())
   department_id String       @unique(map: "department_id") @db.VarChar(36)
@@ -182,6 +224,8 @@ model project {
   customer            customer?       @relation(fields: [customer_id], references: [customer_id], onUpdate: Restrict, map: "fk_project_customer")
   projectmember       projectmember[]
   task                task[]
+  documentfolder      documentfolder[]
+  document            document[]
 
   @@index([create_by], map: "fk_project_creator")
   @@index([customer_id], map: "fk_project_customer")
@@ -257,6 +301,8 @@ model user {
   project                       project[]
   projectmember                 projectmember[]
   task                          task[]
+  documentfolder                documentfolder[]
+  document                      document[]
   department                    department?      @relation(fields: [department_id], references: [department_id], onUpdate: Restrict, map: "fk_user_department")
   position                      position?        @relation(fields: [position_id], references: [position_id], onUpdate: Restrict, map: "fk_user_position")
 
