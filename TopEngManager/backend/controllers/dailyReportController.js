@@ -18,6 +18,52 @@ function hasPermission(userRole, permissionKey) {
   return userRole.includes("Admin") || userRole.includes("HR") || userRole.includes("BOD") || userRole.includes("Leader");
 }
 
+// Walks the department tree to check if `descendantId` sits anywhere below `ancestorId`.
+async function isDeptDescendant(descendantId, ancestorId) {
+  if (!descendantId || !ancestorId) return false;
+  let current = await prisma.department.findUnique({ where: { department_id: descendantId }, select: { parent_id: true } });
+  while (current && current.parent_id) {
+    if (current.parent_id === ancestorId) return true;
+    current = await prisma.department.findUnique({ where: { department_id: current.parent_id }, select: { parent_id: true } });
+  }
+  return false;
+}
+
+// Checks whether `approverRole`/`approverId` may approve/reject a report owned by `ownerUser`
+// ({ role, department_id }). Mirrors the visibility scoping in getDailyReports but also
+// restricts by the owner's role/department, which getDailyReports does not need to do.
+async function isApprovalAllowed(approverRole, approverId, ownerUser) {
+  if (!ownerUser) return false;
+  const role = approverRole || '';
+
+  if (role.includes('Admin') || role.includes('Owner') || role.includes('Nhân sự') || role.includes('HR')) {
+    return true;
+  }
+
+  if (role.includes('Ban điều hành') || role.includes('BOD')) {
+    return ownerUser.role === 'Team Leader';
+  }
+
+  if (role === 'Team Leader') {
+    if (!approverId) return false;
+    const approver = await prisma.user.findUnique({ where: { user_id: approverId }, select: { department_id: true } });
+    if (!approver || !approver.department_id) return false;
+    const inScope = ownerUser.department_id === approver.department_id || await isDeptDescendant(ownerUser.department_id, approver.department_id);
+    if (!inScope) return false;
+    if (hasPermission(role, 'approve_daily_report_full_team')) return true;
+    return ownerUser.role === 'Part Leader';
+  }
+
+  if (role === 'Part Leader') {
+    if (!approverId) return false;
+    const approver = await prisma.user.findUnique({ where: { user_id: approverId }, select: { department_id: true } });
+    return !!approver && !!approver.department_id && ownerUser.department_id === approver.department_id;
+  }
+
+  // Any other role holding approve_daily_report (Sales, custom roles, etc.) stays unrestricted.
+  return true;
+}
+
 exports.getDailyReports = async (req, res, next) => {
   try {
     const { userId, userRole } = req.body;
@@ -288,7 +334,7 @@ exports.createDailyReport = async (req, res, next) => {
 
 exports.updateDailyReportStatus = async (req, res, next) => {
   try {
-    const { reportId, status, comment, userRole } = req.body;
+    const { reportId, status, comment, userRole, userId } = req.body;
 
     if (userRole && !hasPermission(userRole, 'approve_daily_report')) {
       return res.status(403).json({ error: 'Bạn không có quyền phê duyệt báo cáo ngày.' });
@@ -299,11 +345,16 @@ exports.updateDailyReportStatus = async (req, res, next) => {
     }
 
     const existingReport = await prisma.dailyreport.findUnique({
-      where: { id: parseInt(reportId) }
+      where: { id: parseInt(reportId) },
+      include: { user: { select: { role: true, department_id: true } } }
     });
 
     if (!existingReport) {
       return res.status(404).json({ error: 'Không tìm thấy báo cáo' });
+    }
+
+    if (userRole && !(await isApprovalAllowed(userRole, userId, existingReport.user))) {
+      return res.status(403).json({ error: 'Bạn không có quyền phê duyệt báo cáo ngày của nhân viên này.' });
     }
 
     if (existingReport.status === 'Approved' || existingReport.status === 'Rejected') {

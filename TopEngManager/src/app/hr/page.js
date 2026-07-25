@@ -890,7 +890,7 @@ export default function HRManagement() {
               <i className="fa-solid fa-users"></i> {t('team.staffAndAccounts', 'Nhân sự & Tài khoản')}
             </button>
           )}
-          {hasPermission('manage_role_permissions') && (
+          {isAdmin && (
             <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
               <i className="fa-solid fa-shield-halved"></i> {t('team.permissionsTable', 'Bảng Phân Quyền')}
             </button>
@@ -1946,6 +1946,7 @@ const translatePermissionName = (permKey, permName, t) => {
     'create_daily_report': t('perm.createDailyReport', 'Viết/gửi báo cáo ngày mới'),
     'submit_daily_report': t('perm.createDailyReport', 'Viết/gửi báo cáo ngày mới'),
     'approve_daily_report': t('perm.approveDailyReport', 'Phê duyệt/phản hồi báo cáo ngày'),
+    'approve_daily_report_full_team': t('perm.approveDailyReportFullTeam', 'Phê duyệt báo cáo ngày của toàn bộ nhân viên trong Team (bao gồm Part Leader & Staff)'),
     'chat_tag_all_global': t('perm.chatTagAllGlobal', 'Tự động tag @all phòng chat chung'),
     'chat_tag_all_project': t('perm.chatTagAllProject', 'Tự động tag @all phòng chat dự án'),
     'chat_confirm_send': t('perm.chatConfirmSend', 'Hỏi xác nhận trước khi gửi tin nhắn'),

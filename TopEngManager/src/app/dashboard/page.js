@@ -277,6 +277,10 @@ export default function Dashboard() {
   const [popupFilter1, setPopupFilter1] = useState(''); // Priority or Status or Project
   const [popupFilter2, setPopupFilter2] = useState(''); // Type or Status
 
+  // Team Leader-only scope filters: 'partLeadersOnly' (default) | 'fullTeam' | a Part's department_id
+  const [reportListScope, setReportListScope] = useState('partLeadersOnly');
+  const [checkerScope, setCheckerScope] = useState('partLeadersOnly');
+
   // Selected item states inside the active split-screen popup
   const [selectedIssueIdForPopup, setSelectedIssueIdForPopup] = useState(null);
   const [selectedTaskIdForPopup, setSelectedTaskIdForPopup] = useState(null);
@@ -433,11 +437,24 @@ export default function Dashboard() {
     .filter(issue => visibleProjectIds.has(issue.project_id) && isMentionedInIssue(issue, currentUser, users) && issue.status !== 'DONE')
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+  // Team Leader-only scope filter for the reports list: default shows Part Leaders only,
+  // widen to the full team, or narrow to a single Part, via reportListScope/checkerScope.
+  const matchesReportScope = (report, scope) => {
+    if (!scope || scope === 'fullTeam') return true;
+    if (scope === 'partLeadersOnly') return report.user_role === 'Part Leader';
+    const owner = users.find(u => u.id === report.user_id);
+    return owner?.department_id === scope;
+  };
+
   // 4. Resolve Daily Reports (Role-filtered)
   const getFilteredReports = () => {
     // The backend API `getDailyReports` already returns exactly the reports the user is allowed to see.
     // On the dashboard, we only show reports that are in "Chờ duyệt" (Pending) status.
-    return allReports.filter(r => r.status !== 'Approved' && r.status !== 'Rejected');
+    let list = allReports.filter(r => r.status !== 'Approved' && r.status !== 'Rejected');
+    if (currentUser?.system_role === 'Team Leader') {
+      list = list.filter(r => matchesReportScope(r, reportListScope));
+    }
+    return list;
   };
 
   const reportsFiltered = getFilteredReports();
@@ -455,6 +472,8 @@ export default function Dashboard() {
     setPopupSearch('');
     setPopupFilter1('');
     setPopupFilter2('');
+    setReportListScope('partLeadersOnly');
+    setCheckerScope('partLeadersOnly');
 
     if (type === 'issues') {
       const first = myIssuesSorted[0]?.id || null;
@@ -519,7 +538,7 @@ export default function Dashboard() {
 
     try {
       setSubmittingReview(true);
-      await db.updateDailyReportStatus(selectedReportForPopup.id, status, reportCommentText, currentUser.system_role);
+      await db.updateDailyReportStatus(selectedReportForPopup.id, status, reportCommentText, currentUser.system_role, currentUser.id);
       Swal.fire({ icon: 'success', title: 'Thành công', text: `Đã ${status === 'Approved' ? 'Duyệt' : 'Từ chối'} báo cáo thành công!` });
       
       // Reload reports and find the updated report
@@ -571,7 +590,8 @@ export default function Dashboard() {
         const matchSearch = item.content.toLowerCase().includes(q) || item.user_name.toLowerCase().includes(q);
         const matchProject = !popupFilter1 || item.project_id === popupFilter1;
         const matchStatus = !popupFilter2 || item.status === popupFilter2;
-        return matchSearch && matchProject && matchStatus;
+        const matchScope = currentUser?.system_role !== 'Team Leader' || matchesReportScope(item, reportListScope);
+        return matchSearch && matchProject && matchStatus && matchScope;
       });
     }
     return [];
@@ -580,12 +600,49 @@ export default function Dashboard() {
   // Split-pane report review permission check
   const myPMProjects = projectMembers.filter(m => m.user_id === currentUser.id && m.project_role === 'PM').map(m => m.project_id);
   const isPM = myPMProjects.length > 0;
-  
+
+  // Walks the department tree to check if `childId` sits anywhere below `parentId`.
+  const isDescendant = (childId, parentId) => {
+    if (!childId || !parentId) return false;
+    let curr = departments.find(d => d.department_id === childId);
+    while (curr && curr.parent_id) {
+      if (curr.parent_id === parentId) return true;
+      curr = departments.find(d => d.department_id === curr.parent_id);
+    }
+    return false;
+  };
+
+  // Mirrors the backend's isApprovalAllowed so Approve/Reject buttons only render
+  // when the server would actually accept the action.
+  const canApproveReportTarget = (rep) => {
+    if (!rep) return false;
+    const owner = users.find(u => u.id === rep.user_id);
+    const ownerRole = owner?.system_role || rep.user_role;
+    const role = currentUser.system_role || '';
+
+    if (role.includes('Admin') || role.includes('Nhân sự') || role.includes('HR')) return true;
+    if (role.includes('Ban điều hành') || role.includes('BOD')) return ownerRole === 'Team Leader';
+
+    if (role === 'Team Leader') {
+      const ownerDeptId = owner?.department_id;
+      const inScope = ownerDeptId === currentUser.department_id || isDescendant(ownerDeptId, currentUser.department_id);
+      if (!inScope) return false;
+      if (hasPermission('approve_daily_report_full_team')) return true;
+      return ownerRole === 'Part Leader';
+    }
+
+    if (role === 'Part Leader') {
+      return owner?.department_id === currentUser.department_id;
+    }
+
+    return true;
+  };
+
   const getCanReviewReport = (rep) => {
     if (!rep) return false;
     const isPending = rep.status !== 'Approved' && rep.status !== 'Rejected';
-    return isPending && (currentUser.id !== rep.user_id) && 
-      hasPermission('approve_daily_report');
+    return isPending && (currentUser.id !== rep.user_id) &&
+      hasPermission('approve_daily_report') && canApproveReportTarget(rep);
   };
 
   // Helper to format date string to YYYY-MM-DD
@@ -658,21 +715,19 @@ export default function Dashboard() {
       );
     }
 
-    const isDescendant = (childId, parentId) => {
-      if (!childId || !parentId) return false;
-      let curr = departments.find(d => d.department_id === childId);
-      while (curr && curr.parent_id) {
-        if (curr.parent_id === parentId) return true;
-        curr = departments.find(d => d.department_id === curr.parent_id);
-      }
-      return false;
-    };
-
     if (isTL || isPL || isRootDeptMember || hasPermission?.('view_daily_reports')) {
-      return users.filter(u => {
-        return u.department_id === currentUser.department_id || 
+      let scoped = users.filter(u => {
+        return u.department_id === currentUser.department_id ||
           isDescendant(u.department_id, currentUser.department_id);
       });
+      if (isTL) {
+        if (checkerScope === 'partLeadersOnly') {
+          scoped = scoped.filter(u => u.system_role === 'Part Leader');
+        } else if (checkerScope && checkerScope !== 'fullTeam') {
+          scoped = scoped.filter(u => u.department_id === checkerScope);
+        }
+      }
+      return scoped;
     }
     return [];
   };
@@ -758,7 +813,8 @@ export default function Dashboard() {
                     reportId: createData.report.id,
                     status: 'Approved',
                     comment: 'Phê duyệt tự động khi miễn báo cáo',
-                    userRole: currentUser.system_role
+                    userRole: currentUser.system_role,
+                    userId: currentUser.id
                   }
                 })
               });
@@ -825,7 +881,22 @@ export default function Dashboard() {
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflowY: 'auto' }}>
-        
+
+        {currentUser.system_role === 'Team Leader' && (
+          <div style={{ maxWidth: '400px', width: '100%', margin: '0 auto' }}>
+            <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--neutral-muted)', display: 'block', marginBottom: '6px' }}>
+              {t('report.checkerScopeLabel', 'Phạm vi kiểm tra:')}
+            </label>
+            <select value={checkerScope} onChange={(e) => setCheckerScope(e.target.value)} className="rectangular-filter-select" style={{ width: '100%' }}>
+              <option value="partLeadersOnly">{t('report.checkerScopePartLeadersOnly', 'Chỉ Part Leader')}</option>
+              <option value="fullTeam">{t('report.checkerScopeFullTeam', 'Toàn Team')}</option>
+              {departments.filter(d => d.parent_id === currentUser.department_id).map(part => (
+                <option key={part.department_id} value={part.department_id}>{part.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Calendar Wrapper (Centered, Max Width 400px to keep cells compact) */}
         <div style={{ maxWidth: '400px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           {/* Calendar Header with Navigation */}
@@ -2249,7 +2320,7 @@ export default function Dashboard() {
               <div className="split-left-pane-25" style={{ padding: '16px', borderRight: '1.5px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 
                 {/* Daily reports checker activation button */}
-                {activeDetailPopup === 'reports' && (currentUser?.system_role === 'Team Leader' || currentUser?.system_role?.includes('Admin') || currentUser?.system_role?.includes('BOD') || currentUser?.system_role?.includes('HR') || currentUser?.system_role?.includes('Nhân sự') || currentUser?.system_role?.includes('Ban điều hành')) && (
+                {activeDetailPopup === 'reports' && (currentUser?.system_role === 'Team Leader' || currentUser?.system_role === 'Part Leader' || currentUser?.system_role?.includes('Admin') || currentUser?.system_role?.includes('BOD') || currentUser?.system_role?.includes('HR') || currentUser?.system_role?.includes('Nhân sự') || currentUser?.system_role?.includes('Ban điều hành')) && (
                   <button 
                     type="button"
                     className="btn"
@@ -2351,6 +2422,15 @@ export default function Dashboard() {
                         <option value="Approved">APPROVED</option>
                         <option value="Rejected">REJECTED</option>
                       </select>
+                      {currentUser?.system_role === 'Team Leader' && (
+                        <select value={reportListScope} onChange={(e) => setReportListScope(e.target.value)} className="rectangular-filter-select">
+                          <option value="partLeadersOnly">{t('reports.listScopePartLeadersOnly', 'Chỉ Part Leader')}</option>
+                          <option value="fullTeam">{t('reports.listScopeFullTeam', 'Toàn Team')}</option>
+                          {departments.filter(d => d.parent_id === currentUser.department_id).map(part => (
+                            <option key={part.department_id} value={part.department_id}>{part.name}</option>
+                          ))}
+                        </select>
+                      )}
                     </>
                   )}
                 </div>

@@ -150,6 +150,11 @@
       "module": "Báo cáo ngày"
     },
     {
+      "key": "approve_daily_report_full_team",
+      "name": "Phê duyệt báo cáo ngày của toàn bộ nhân viên trong Team (bao gồm Part Leader & Staff)",
+      "module": "Báo cáo ngày"
+    },
+    {
       "key": "chat_tag_all_global",
       "name": "Tự động tag @all phòng chat chung",
       "module": "Kênh Chat"
@@ -257,7 +262,8 @@
       "upload_documents",
       "create_daily_report",
       "chat_tag_all_project",
-      "view_daily_reports"
+      "view_daily_reports",
+      "approve_daily_report"
     ],
     "Nhân viên (Staff)": [
       "view_dashboard",
