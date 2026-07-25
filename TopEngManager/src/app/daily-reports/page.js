@@ -233,8 +233,12 @@ export default function DailyReportsPage() {
   const handleSubmitReport = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
-    if (reportCards.some(c => !c.content.trim() || !c.projectId)) {
+    if (reportCards.some(c => !c.content.trim())) {
       Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('report.incompleteCardsWarning', 'Vui lòng điền đầy đủ nội dung và chọn dự án cho tất cả các thẻ báo cáo!') });
+      return;
+    }
+    if (reportCards.some(c => !c.projectId)) {
+      Swal.fire({ icon: 'warning', title: t('report.projectNotSelectedTitle', 'Chưa chọn dự án'), text: t('report.projectNotSelectedText', 'Vui lòng chọn dự án cho tất cả các thẻ báo cáo trước khi gửi.') });
       return;
     }
 
@@ -651,7 +655,7 @@ export default function DailyReportsPage() {
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={isSubmitting || reportCards.some(c => !c.content.trim() || !c.projectId)}
+                disabled={isSubmitting || reportCards.some(c => !c.content.trim())}
                 style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontWeight: '700' }}
               >
                 <i className="fa-solid fa-paper-plane"></i>
