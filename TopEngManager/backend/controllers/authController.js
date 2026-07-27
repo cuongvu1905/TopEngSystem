@@ -217,7 +217,8 @@ exports.getUsers = async (req, res, next) => {
     const requesterIsAdmin = await isRequesterAdmin(requesterId);
     const dbUsers = await prisma.user.findMany({
       include: {
-        department: true
+        department: true,
+        partleadership: true
       }
     });
     const users = dbUsers.map(u => {
@@ -232,7 +233,7 @@ exports.getUsers = async (req, res, next) => {
         system_role: u.role,
         department_id: deptIsMasked ? null : u.department_id,
         department_name: deptIsMasked ? null : (u.department ? u.department.name : 'Chưa phân phòng'),
-        additional_part_leader_of: u.additional_part_leader_of,
+        additional_part_leader_of: u.partleadership.map(pl => pl.department_id),
         color: '#1E40AF',
         create_at: u.create_at
       };
@@ -534,11 +535,14 @@ exports.updateUserRoleAndDept = async (req, res, next) => {
 
 // Lets a Team Leader additionally be designated as the Part Leader of exactly one
 // Part (child department) inside their own Team, without losing their primary role.
-exports.setAdditionalPartLeadership = async (req, res, next) => {
+// Grants a Team Leader Part-Leader-equivalent standing over an additional Part
+// (a child department) inside their own Team, in addition to their primary role.
+// A Team Leader may hold any number of these simultaneously.
+exports.addPartLeadership = async (req, res, next) => {
   try {
     const { userId, departmentId } = req.body;
-    if (!userId) {
-      return res.status(400).json({ error: 'Thiếu mã nhân viên.' });
+    if (!userId || !departmentId) {
+      return res.status(400).json({ error: 'Thiếu mã nhân viên hoặc mã bộ phận.' });
     }
 
     const targetUser = await prisma.user.findUnique({ where: { user_id: userId } });
@@ -546,19 +550,35 @@ exports.setAdditionalPartLeadership = async (req, res, next) => {
       return res.status(404).json({ error: 'Không tìm thấy nhân viên.' });
     }
 
-    if (departmentId) {
-      const targetDept = await prisma.department.findUnique({ where: { department_id: departmentId } });
-      if (!targetDept || targetDept.parent_id !== targetUser.department_id) {
-        return res.status(400).json({ error: 'Chỉ có thể chỉ định phụ trách một bộ phận con nằm trong Team của chính nhân viên đó.' });
-      }
+    const targetDept = await prisma.department.findUnique({ where: { department_id: departmentId } });
+    if (!targetDept || targetDept.parent_id !== targetUser.department_id) {
+      return res.status(400).json({ error: 'Chỉ có thể chỉ định phụ trách một bộ phận con nằm trong Team của chính nhân viên đó.' });
     }
 
-    const updated = await prisma.user.update({
-      where: { user_id: userId },
-      data: { additional_part_leader_of: departmentId || null }
+    await prisma.partleadership.upsert({
+      where: { user_id_department_id: { user_id: userId, department_id: departmentId } },
+      create: { user_id: userId, department_id: departmentId },
+      update: {}
     });
 
-    res.json({ success: true, additional_part_leader_of: updated.additional_part_leader_of });
+    const list = await prisma.partleadership.findMany({ where: { user_id: userId } });
+    res.json({ success: true, additional_part_leader_of: list.map(pl => pl.department_id) });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.removePartLeadership = async (req, res, next) => {
+  try {
+    const { userId, departmentId } = req.body;
+    if (!userId || !departmentId) {
+      return res.status(400).json({ error: 'Thiếu mã nhân viên hoặc mã bộ phận.' });
+    }
+
+    await prisma.partleadership.deleteMany({ where: { user_id: userId, department_id: departmentId } });
+
+    const list = await prisma.partleadership.findMany({ where: { user_id: userId } });
+    res.json({ success: true, additional_part_leader_of: list.map(pl => pl.department_id) });
   } catch (err) {
     next(err);
   }

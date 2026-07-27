@@ -123,6 +123,7 @@ model department {
   parent        department?  @relation("DepartmentHierarchy", fields: [parent_id], references: [department_id], onDelete: Restrict, onUpdate: Restrict, map: "fk_department_parent")
   children      department[] @relation("DepartmentHierarchy")
   user          user[]
+  partleadership partleadership[]
 
   @@index([parent_id], map: "fk_department_parent")
 }
@@ -245,6 +246,17 @@ model projectmember {
   @@index([userId], map: "fk_member_user")
 }
 
+model partleadership {
+  id            Int        @id @default(autoincrement())
+  user_id       String     @db.VarChar(36)
+  department_id String     @db.VarChar(50)
+  user          user       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_partleadership_user")
+  department    department @relation(fields: [department_id], references: [department_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_partleadership_department")
+
+  @@unique([user_id, department_id], map: "unique_user_department_leadership")
+  @@index([department_id], map: "fk_partleadership_department")
+}
+
 model subtask {
   id      Int      @id @default(autoincrement())
   task_id String   @db.VarChar(36)
@@ -305,6 +317,7 @@ model user {
   task                          task[]
   documentfolder                documentfolder[]
   document                      document[]
+  partleadership                partleadership[]
   department                    department?      @relation(fields: [department_id], references: [department_id], onUpdate: Restrict, map: "fk_user_department")
   position                      position?        @relation(fields: [position_id], references: [position_id], onUpdate: Restrict, map: "fk_user_position")
 

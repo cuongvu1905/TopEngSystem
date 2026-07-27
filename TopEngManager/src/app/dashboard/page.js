@@ -396,6 +396,40 @@ export default function Dashboard() {
     }
   }, [allReports]);
 
+  // Team Leader-only scope filter for the reports list: default shows Part Leaders only,
+  // widen to the full team, or narrow to a single Part, via reportListScope/checkerScope.
+  const matchesReportScope = (report, scope) => {
+    if (!scope || scope === 'fullTeam') return true;
+    if (scope === 'partLeadersOnly') {
+      if (report.user_role === 'Part Leader') return true;
+      const owner = users.find(u => u.id === report.user_id);
+      return !!owner && !!currentUser?.additional_part_leader_of?.includes(owner.department_id);
+    }
+    const owner = users.find(u => u.id === report.user_id);
+    return owner?.department_id === scope;
+  };
+
+  // Keep the right-pane selection in sync with the left list's active filters —
+  // otherwise switching e.g. reportListScope can leave a now-hidden report's
+  // full detail showing on the right even though it disappeared from the left.
+  useEffect(() => {
+    if (!currentUser || activeDetailPopup !== 'reports') return;
+    const q = popupSearch.toLowerCase();
+    const list = allReports.filter(item => {
+      const matchSearch = item.content.toLowerCase().includes(q) || item.user_name.toLowerCase().includes(q);
+      const matchProject = !popupFilter1 || item.project_id === popupFilter1;
+      const matchStatus = !popupFilter2 || item.status === popupFilter2;
+      const matchScope = currentUser.system_role !== 'Team Leader' || matchesReportScope(item, reportListScope);
+      return matchSearch && matchProject && matchStatus && matchScope;
+    });
+    if (!list.find(r => r.id === selectedReportForPopup?.id)) {
+      const next = list[0] || null;
+      setSelectedReportForPopup(next);
+      setReportCommentText(next?.comment || '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportListScope, popupFilter1, popupFilter2, popupSearch, activeDetailPopup]);
+
   if (!currentUser) return null;
 
   // Resolve which sections should actually show
@@ -438,15 +472,6 @@ export default function Dashboard() {
     .filter(issue => visibleProjectIds.has(issue.project_id) && isMentionedInIssue(issue, currentUser, users) && issue.status !== 'DONE')
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  // Team Leader-only scope filter for the reports list: default shows Part Leaders only,
-  // widen to the full team, or narrow to a single Part, via reportListScope/checkerScope.
-  const matchesReportScope = (report, scope) => {
-    if (!scope || scope === 'fullTeam') return true;
-    if (scope === 'partLeadersOnly') return report.user_role === 'Part Leader';
-    const owner = users.find(u => u.id === report.user_id);
-    return owner?.department_id === scope;
-  };
-
   // 4. Resolve Daily Reports (Role-filtered)
   const getFilteredReports = () => {
     // The backend API `getDailyReports` already returns exactly the reports the user is allowed to see.
@@ -486,7 +511,10 @@ export default function Dashboard() {
       const first = myProjectsSorted[0]?.id || null;
       setSelectedProjectIdForPopup(first);
     } else if (type === 'reports') {
-      const first = allReports[0] || null;
+      const initialList = currentUser?.system_role === 'Team Leader'
+        ? allReports.filter(r => matchesReportScope(r, 'partLeadersOnly'))
+        : allReports;
+      const first = initialList[0] || null;
       setSelectedReportForPopup(first);
       setReportCommentText(first?.comment || '');
     }
@@ -629,7 +657,7 @@ export default function Dashboard() {
       const inScope = ownerDeptId === currentUser.department_id || isDescendant(ownerDeptId, currentUser.department_id);
       if (!inScope) return false;
       if (hasPermission('approve_daily_report_full_team')) return true;
-      if (currentUser.additional_part_leader_of && currentUser.additional_part_leader_of === ownerDeptId) return true;
+      if (currentUser.additional_part_leader_of?.includes(ownerDeptId)) return true;
       return ownerRole === 'Part Leader';
     }
 
@@ -724,7 +752,7 @@ export default function Dashboard() {
       });
       if (isTL) {
         if (checkerScope === 'partLeadersOnly') {
-          scoped = scoped.filter(u => u.system_role === 'Part Leader');
+          scoped = scoped.filter(u => u.system_role === 'Part Leader' || currentUser.additional_part_leader_of?.includes(u.department_id));
         } else if (checkerScope && checkerScope !== 'fullTeam') {
           scoped = scoped.filter(u => u.department_id === checkerScope);
         }

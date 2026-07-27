@@ -125,4 +125,40 @@ const prisma = new PrismaClient();
   }
 })();
 
+// Self-healing table creation for multi-Part additional leadership (a Team Leader
+// can additionally lead any number of Parts, replacing the old single-value
+// user.additional_part_leader_of column which is left in place but unused).
+(async () => {
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'partleadership'`;
+    if (tables.length === 0) {
+      console.log('Creating partleadership table...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`partleadership\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`user_id\` VARCHAR(36) NOT NULL,
+          \`department_id\` VARCHAR(50) NOT NULL,
+          CONSTRAINT \`fk_partleadership_user\` FOREIGN KEY (\`user_id\`) REFERENCES \`user\` (\`user_id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_partleadership_department\` FOREIGN KEY (\`department_id\`) REFERENCES \`department\` (\`department_id\`) ON DELETE CASCADE,
+          UNIQUE KEY \`unique_user_department_leadership\` (\`user_id\`, \`department_id\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('partleadership table created successfully.');
+
+      // One-time backfill from the old scalar column, if it exists and has data.
+      try {
+        await prisma.$executeRawUnsafe(`
+          INSERT IGNORE INTO \`partleadership\` (\`user_id\`, \`department_id\`)
+          SELECT \`user_id\`, \`additional_part_leader_of\` FROM \`user\` WHERE \`additional_part_leader_of\` IS NOT NULL;
+        `);
+        console.log('Backfilled partleadership from legacy additional_part_leader_of column.');
+      } catch (backfillErr) {
+        console.error('Skipped partleadership backfill (legacy column may not exist yet):', backfillErr.message);
+      }
+    }
+  } catch (err) {
+    console.error('Error during partleadership table migration check:', err);
+  }
+})();
+
 module.exports = prisma;

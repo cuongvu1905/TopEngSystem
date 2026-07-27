@@ -46,12 +46,12 @@ async function isApprovalAllowed(approverRole, approverId, ownerUser) {
 
   if (role === 'Team Leader') {
     if (!approverId) return false;
-    const approver = await prisma.user.findUnique({ where: { user_id: approverId }, select: { department_id: true, additional_part_leader_of: true } });
+    const approver = await prisma.user.findUnique({ where: { user_id: approverId }, select: { department_id: true, partleadership: true } });
     if (!approver || !approver.department_id) return false;
     const inScope = ownerUser.department_id === approver.department_id || await isDeptDescendant(ownerUser.department_id, approver.department_id);
     if (!inScope) return false;
     if (hasPermission(role, 'approve_daily_report_full_team')) return true;
-    if (approver.additional_part_leader_of && approver.additional_part_leader_of === ownerUser.department_id) return true;
+    if (approver.partleadership.some(pl => pl.department_id === ownerUser.department_id)) return true;
     return ownerUser.role === 'Part Leader';
   }
 

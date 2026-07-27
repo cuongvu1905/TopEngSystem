@@ -78,7 +78,7 @@ export const AppContextProvider = ({ children }) => {
             color: profile.color || '#1E40AF',
             department_id: profile.department_id || null,
             department_name: profile.department_name || 'Chưa phân phòng',
-            additional_part_leader_of: profile.additional_part_leader_of || null
+            additional_part_leader_of: profile.additional_part_leader_of || []
           });
         }
       }

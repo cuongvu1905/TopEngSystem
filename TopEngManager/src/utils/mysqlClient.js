@@ -376,8 +376,12 @@ export const MySQLAdapter = {
     return await callApi('updateUserRoleAndDept', { userId, role, departmentId, fullName, email, newEmployeeId, requestedBy });
   },
 
-  setAdditionalPartLeadership: async function(userId, departmentId) {
-    return await callApi('setAdditionalPartLeadership', { userId, departmentId });
+  addPartLeadership: async function(userId, departmentId) {
+    return await callApi('addPartLeadership', { userId, departmentId });
+  },
+
+  removePartLeadership: async function(userId, departmentId) {
+    return await callApi('removePartLeadership', { userId, departmentId });
   },
 
   checkSession: async function(userId, token) {

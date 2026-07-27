@@ -485,7 +485,7 @@ export default function HRManagement() {
   };
 
   const getFilteredUsersList = () => {
-    let list = [...users];
+    let list = users.filter(u => isAdmin || !u.system_role?.includes('Admin'));
 
     if (userSearchQuery.trim()) {
       const query = userSearchQuery.toLowerCase().trim();
@@ -753,15 +753,16 @@ export default function HRManagement() {
     }
   };
 
-  // Lets a Team Leader also be designated as the Part Leader of one specific
-  // Part (child department) inside their own Team, without losing the Team Leader role.
+  // Lets a Team Leader also be designated as the Part Leader of any number of
+  // Parts (child departments) inside their own Team, without losing the Team Leader role.
   const handleAssignAdditionalPartLeadership = async (userObj) => {
-    const myParts = departments.filter(d => d.parent_id === userObj.department_id);
+    const alreadyLeading = userObj.additional_part_leader_of || [];
+    const myParts = departments.filter(d => d.parent_id === userObj.department_id && !alreadyLeading.includes(d.department_id));
     if (myParts.length === 0) {
       Swal.fire({ icon: 'info', title: t('common.notice', 'Thông báo'), text: t('team.noPartsInTeam', 'Team này chưa có bộ phận con (Part) nào.') });
       return;
     }
-    const optionsHtml = myParts.map(p => `<option value="${p.department_id}" ${p.department_id === userObj.additional_part_leader_of ? 'selected' : ''}>${translateDepartmentName(p.name, t)}</option>`).join('\n');
+    const optionsHtml = myParts.map(p => `<option value="${p.department_id}">${translateDepartmentName(p.name, t)}</option>`).join('\n');
     const { value: departmentId } = await Swal.fire({
       title: t('team.assignAdditionalPartLeaderTitle', 'Chỉ định phụ trách thêm Part'),
       html: `<select id="swal-additional-part-leader" class="swal2-select" style="width:100%;">${optionsHtml}</select>`,
@@ -773,7 +774,7 @@ export default function HRManagement() {
     });
     if (!departmentId) return;
     try {
-      await db.setAdditionalPartLeadership(userObj.id, departmentId);
+      await db.addPartLeadership(userObj.id, departmentId);
       await db.logActivity(currentUser.id, "UPDATE", "User", userObj.id, `đã chỉ định '${userObj.name}' phụ trách thêm Part '${myParts.find(p => p.department_id === departmentId)?.name}'`);
       Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('team.togglePartLeaderSuccess', 'Đã {action} thành công!').replace('{action}', '') });
       await reloadAll();
@@ -782,7 +783,7 @@ export default function HRManagement() {
     }
   };
 
-  const handleRevokeAdditionalPartLeadership = async (userObj) => {
+  const handleRevokeAdditionalPartLeadership = async (userObj, departmentId) => {
     const result = await Swal.fire({
       title: t('team.revokeAdditionalPartLeaderTitle', 'Thu hồi phụ trách Part?'),
       text: t('team.togglePartLeaderText', 'Bạn có chắc chắn muốn {action} cho nhân viên "{name}"?').replace('{action}', t('team.revokeAdditionalPartLeaderAction', 'thu hồi quyền phụ trách Part')).replace('{name}', userObj.name),
@@ -793,7 +794,7 @@ export default function HRManagement() {
     });
     if (!result.isConfirmed) return;
     try {
-      await db.setAdditionalPartLeadership(userObj.id, null);
+      await db.removePartLeadership(userObj.id, departmentId);
       await db.logActivity(currentUser.id, "UPDATE", "User", userObj.id, `đã thu hồi quyền phụ trách Part bổ sung của '${userObj.name}'`);
       await reloadAll();
     } catch (err) {
@@ -1159,6 +1160,16 @@ export default function HRManagement() {
 
               const parentDept = departments.find(d => d.department_id === currentSelectedDept.parent_id);
               const deptMembers = users.filter(u => u.department_id === currentSelectedDept.department_id);
+              // A Team Leader additionally leading this Part shows up here too, as a
+              // synthetic member row (their real department stays their Team).
+              const additionalLeadersHere = users
+                .filter(u => u.system_role === 'Team Leader' && u.additional_part_leader_of?.includes(currentSelectedDept.department_id))
+                .map(u => ({ ...u, __isAdditionalPartLeaderHere: true }));
+              const displayMembers = [...deptMembers, ...additionalLeadersHere].sort((a, b) => {
+                const aIsPL = a.system_role === 'Part Leader' || a.__isAdditionalPartLeaderHere ? 1 : 0;
+                const bIsPL = b.system_role === 'Part Leader' || b.__isAdditionalPartLeaderHere ? 1 : 0;
+                return bIsPL - aIsPL;
+              });
 
               const isTargetDeptAllowed = currentSelectedDept.department_id === currentUser.department_id || 
                 isDescendant(currentSelectedDept.department_id, currentUser.department_id, departments);
@@ -1216,7 +1227,7 @@ export default function HRManagement() {
 
                   {/* Members Card */}
                   <div className="card" style={{ padding: '20px' }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>{t('team.membersOfThisPart', 'Thành viên của part này')} ({deptMembers.length})</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>{t('team.membersOfThisPart', 'Thành viên của part này')} ({displayMembers.length})</h3>
                     <div className="data-table-wrapper">
                       <table className="data-table">
                         <thead>
@@ -1228,15 +1239,16 @@ export default function HRManagement() {
                           </tr>
                         </thead>
                         <tbody>
-                          {deptMembers.map(member => {
-                            const isMemberOfMyTeam = member.department_id === currentUser.department_id || 
+                          {displayMembers.map(member => {
+                            const isMemberOfMyTeam = member.department_id === currentUser.department_id ||
                               isDescendant(member.department_id, currentUser.department_id, departments);
                              const canManageMemberRole = hasPermission('edit_employee_info') && (
                                isAdmin || isHR || (isTeamLeader && isMemberOfMyTeam) || (isCurrentUserInRootDept && isMemberOfMyTeam)
                              );
+                             const isSynthetic = !!member.__isAdditionalPartLeaderHere;
 
                             return (
-                              <tr key={member.id}>
+                              <tr key={isSynthetic ? `${member.id}-additional` : member.id}>
                                 <td>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: member.color || '#1e40af', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '600' }}>
@@ -1250,17 +1262,22 @@ export default function HRManagement() {
                                   <span className={`badge ${member.system_role === 'Team Leader' ? 'badge-danger' : member.system_role === 'Part Leader' ? 'badge-warning' : 'badge-info'}`}>
                                     {formatSystemRole(member.system_role, t)}
                                   </span>
-                                  {member.system_role === 'Team Leader' && member.additional_part_leader_of && (
-                                    <span className="badge badge-warning" style={{ marginLeft: '6px', fontSize: '10px' }}>
-                                      + {t('team.partLeaderOf', 'Part Leader')}: {translateDepartmentName(departments.find(d => d.department_id === member.additional_part_leader_of)?.name || '', t)}
+                                  {isSynthetic && (
+                                    <span className="badge badge-warning" style={{ marginLeft: '6px' }}>
+                                      {t('team.partLeaderOf', 'Part Leader')}
                                     </span>
                                   )}
+                                  {!isSynthetic && member.system_role === 'Team Leader' && member.additional_part_leader_of?.map(deptId => (
+                                    <span key={deptId} className="badge badge-warning" style={{ marginLeft: '6px', fontSize: '10px' }}>
+                                      + {t('team.partLeaderOf', 'Part Leader')}: {translateDepartmentName(departments.find(d => d.department_id === deptId)?.name || '', t)}
+                                    </span>
+                                  ))}
                                 </td>
                                 <td style={{ textAlign: 'center' }}>
                                   {canManageMemberRole && member.id !== currentUser.id && (
                                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                       {member.system_role !== 'Part Leader' && member.system_role !== 'Team Leader' && (
-                                        <button 
+                                       {!isSynthetic && member.system_role !== 'Part Leader' && member.system_role !== 'Team Leader' && (
+                                        <button
                                           className="btn btn-secondary btn-sm"
                                           style={{ padding: '4px 8px', fontSize: '11px' }}
                                           onClick={() => handleTogglePartLeader(member, true)}
@@ -1268,7 +1285,7 @@ export default function HRManagement() {
                                           <i className="fa-solid fa-user-shield"></i> {t('team.assignPartLeader', 'Chỉ định Part Leader')}
                                         </button>
                                       )}
-                                      {member.system_role === 'Part Leader' && (
+                                      {!isSynthetic && member.system_role === 'Part Leader' && (
                                         <button
                                           className="btn btn-danger btn-sm"
                                           style={{ padding: '4px 8px', fontSize: '11px' }}
@@ -1277,7 +1294,7 @@ export default function HRManagement() {
                                           <i className="fa-solid fa-user-minus"></i> {t('team.revokePartLeader', 'Thu hồi Part Leader')}
                                         </button>
                                       )}
-                                      {member.system_role === 'Team Leader' && !member.additional_part_leader_of && (
+                                      {!isSynthetic && member.system_role === 'Team Leader' && (
                                         <button
                                           className="btn btn-secondary btn-sm"
                                           style={{ padding: '4px 8px', fontSize: '11px' }}
@@ -1286,11 +1303,11 @@ export default function HRManagement() {
                                           <i className="fa-solid fa-user-shield"></i> {t('team.assignAdditionalPartLeader', 'Phụ trách thêm Part')}
                                         </button>
                                       )}
-                                      {member.system_role === 'Team Leader' && member.additional_part_leader_of && (
+                                      {isSynthetic && (
                                         <button
                                           className="btn btn-danger btn-sm"
                                           style={{ padding: '4px 8px', fontSize: '11px' }}
-                                          onClick={() => handleRevokeAdditionalPartLeadership(member)}
+                                          onClick={() => handleRevokeAdditionalPartLeadership(member, currentSelectedDept.department_id)}
                                         >
                                           <i className="fa-solid fa-user-minus"></i> {t('team.revokeAdditionalPartLeader', 'Thu hồi phụ trách Part')}
                                         </button>
@@ -1301,7 +1318,7 @@ export default function HRManagement() {
                               </tr>
                             );
                           })}
-                          {deptMembers.length === 0 && (
+                          {displayMembers.length === 0 && (
                             <tr>
                               <td colSpan="4" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
                                 {t('team.noMembersInPart', 'Không có thành viên nào trong phòng/part này.')}
