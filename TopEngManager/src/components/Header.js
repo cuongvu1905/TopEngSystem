@@ -254,8 +254,8 @@ export default function Header({ onToggleSidebar }) {
     });
 
     try {
-      const depts = await db.getDepartments();
-      const usersList = await db.getUsers();
+      const depts = await db.getDepartments(currentUser?.id);
+      const usersList = await db.getUsers(currentUser?.id);
       
       let teamDept = null;
       const myDeptId = currentUser.department_id;
@@ -377,7 +377,7 @@ export default function Header({ onToggleSidebar }) {
     // Fetch departments to find parent team
     let teamName = '';
     try {
-      const depts = await db.getDepartments();
+      const depts = await db.getDepartments(currentUser?.id);
       const myDept = depts.find(d => d.department_id === currentUser.department_id);
       if (myDept && myDept.parent_id) {
         const parentDept = depts.find(d => d.department_id === myDept.parent_id);

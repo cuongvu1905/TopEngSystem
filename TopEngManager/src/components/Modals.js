@@ -85,13 +85,13 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
     const loadProjectData = async () => {
       if (!isOpen) return;
       try {
-        const users = await db.getUsers();
+        const users = await db.getUsers(currentUser?.id);
         setSystemUsers(users);
 
         // Fetch customers and departments from database
         const custs = await db.getCustomers();
         setCustomers(custs);
-        const depts = await db.getDepartments();
+        const depts = await db.getDepartments(currentUser?.id);
         setDepartments(depts);
 
         if (projectId) {
@@ -419,12 +419,12 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
       try {
         setAssigneeSearchQuery('');
         setAssigneeSelectedDept('');
-        const depts = await db.getDepartments();
+        const depts = await db.getDepartments(currentUser?.id);
         setDepartments(depts);
 
         // Load assignees based on project
         const membersList = (await db.getProjectMembers()).filter(m => m.project_id === projId);
-        const users = await db.getUsers();
+        const users = await db.getUsers(currentUser?.id);
         const mappedMembers = [];
         membersList.forEach(m => {
           const u = users.find(usr => usr.id === m.user_id);

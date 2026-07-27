@@ -780,14 +780,15 @@ export default function ProjectDetail({ params }) {
   useEffect(() => {
     const loadDepts = async () => {
       try {
-        const list = await db.getDepartments();
+        const list = await db.getDepartments(currentUser?.id);
         setDepartments(list);
       } catch (e) {
         console.error(e);
       }
     };
     loadDepts();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
 
   // Modal open states moved to top
 

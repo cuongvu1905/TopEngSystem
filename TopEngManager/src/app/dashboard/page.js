@@ -248,14 +248,15 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDepts = async () => {
       try {
-        const list = await db.getDepartments();
+        const list = await db.getDepartments(currentUser?.id);
         setDepartments(list || []);
       } catch (err) {
         console.error("Failed to load departments", err);
       }
     };
     fetchDepts();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
 
   // Mobile-only: whether the right detail pane is shown below the list
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
@@ -628,6 +629,7 @@ export default function Dashboard() {
       const inScope = ownerDeptId === currentUser.department_id || isDescendant(ownerDeptId, currentUser.department_id);
       if (!inScope) return false;
       if (hasPermission('approve_daily_report_full_team')) return true;
+      if (currentUser.additional_part_leader_of && currentUser.additional_part_leader_of === ownerDeptId) return true;
       return ownerRole === 'Part Leader';
     }
 

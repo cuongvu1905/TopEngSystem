@@ -69,6 +69,7 @@ export default function HRManagement() {
   const [inputDeptId, setInputDeptId] = useState('');
   const [inputDeptName, setInputDeptName] = useState('');
   const [inputDeptParentId, setInputDeptParentId] = useState('');
+  const [inputDeptIsHidden, setInputDeptIsHidden] = useState(false);
   const [deptErrorMsg, setDeptErrorMsg] = useState('');
   const [deptSuccessMsg, setDeptSuccessMsg] = useState('');
   const [deptLoading, setDeptLoading] = useState(false);
@@ -109,7 +110,7 @@ export default function HRManagement() {
   // Set default selectedDeptId in tree view
   useEffect(() => {
     if (departments.length > 0 && !selectedDeptId) {
-      if ((isTeamLeader || isCurrentUserInRootDept) && currentUser.department_id) {
+      if (!isAdmin && !isHR && (isTeamLeader || isCurrentUserInRootDept) && currentUser.department_id) {
         setSelectedDeptId(currentUser.department_id);
       } else {
         const rootDept = departments.find(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
@@ -128,9 +129,11 @@ export default function HRManagement() {
       setInputDeptId(dept.department_id);
       setInputDeptName(dept.name);
       setInputDeptParentId(dept.parent_id || '');
+      setInputDeptIsHidden(!!dept.is_hidden);
     } else {
       setInputDeptId('');
       setInputDeptName('');
+      setInputDeptIsHidden(false);
       if (parentId) {
         setInputDeptParentId(parentId);
       } else if (isTeamLeader && currentUser.department_id) {
@@ -163,10 +166,11 @@ export default function HRManagement() {
       const list = await db.getRoles();
       setRoles(list);
       if (list.length > 0 && !roleId) {
-        setRoleId(list[0].id);
+        const assignableList = isAdmin ? list : list.filter(r => !r.name.includes('Admin'));
+        if (assignableList.length > 0) setRoleId(assignableList[0].id);
       }
 
-      const depts = await db.getDepartments();
+      const depts = await db.getDepartments(currentUser?.id);
       setDepartments(depts);
       if (depts.length > 0 && !departmentId) {
         setDepartmentId(depts[0].department_id);
@@ -225,7 +229,7 @@ export default function HRManagement() {
     setLoading(true);
 
     try {
-      await db.createUser(email, password, fullName, roleId, departmentId, employeeId);
+      await db.createUser(email, password, fullName, roleId, departmentId, employeeId, currentUser.id);
       setSuccessMsg('Đã cấp tài khoản thành công cho nhân viên mới!');
       
       // Log activity
@@ -269,13 +273,14 @@ export default function HRManagement() {
       const payload = {
         name: inputDeptName.trim(),
         department_id: inputDeptId.trim(),
-        parent_id: inputDeptParentId || null
+        parent_id: inputDeptParentId || null,
+        is_hidden: inputDeptIsHidden
       };
       if (selectedDept) {
         payload.id = selectedDept.id;
       }
 
-      await db.saveDepartment(payload);
+      await db.saveDepartment(payload, currentUser.id);
       setDeptSuccessMsg(selectedDept ? 'Cập nhật phòng ban thành công!' : 'Thêm phòng ban mới thành công!');
 
       // Log activity
@@ -571,19 +576,20 @@ export default function HRManagement() {
     // Filter available departments to transfer to
     // If Admin/HR: show all departments
     // If Team Leader: show only their own team and parts inside their team
-    const availableDepts = (isTeamLeader || isCurrentUserInRootDept)
+    const availableDepts = (!isAdmin && !isHR && (isTeamLeader || isCurrentUserInRootDept))
       ? departments.filter(d => d.department_id === currentUser.department_id || isDescendant(d.department_id, currentUser.department_id, departments))
       : departments;
 
     // Filter available roles
-    // If Admin/HR: show all roles
+    // If Admin: show all roles
     // If Team Leader: show only Staff and Part Leader
+    // Everyone else (HR, etc.): show all roles except Admin
     const availableRoles = isTeamLeader
       ? [
           { id: 'Nhân viên (Staff)', name: 'Nhân viên (Staff)' },
           { id: 'Part Leader', name: 'Part Leader' }
         ]
-      : roles.map(r => ({ id: r.name, name: r.name }));
+      : roles.filter(r => isAdmin || !r.name.includes('Admin')).map(r => ({ id: r.name, name: r.name }));
 
     const deptOptionsHtml = availableDepts.map(d => 
       `<option value="${d.department_id}" ${d.department_id === memberObj.department_id ? 'selected' : ''}>${translateDepartmentName(d.name, t)} (${d.department_id})</option>`
@@ -656,12 +662,13 @@ export default function HRManagement() {
         });
 
         await db.updateUserRoleAndDept(
-          memberObj.id, 
-          formValues.role, 
-          formValues.departmentId, 
-          formValues.fullName, 
+          memberObj.id,
+          formValues.role,
+          formValues.departmentId,
+          formValues.fullName,
           formValues.email,
-          formValues.newEmployeeId
+          formValues.newEmployeeId,
+          currentUser.id
         );
 
         await db.logActivity(
@@ -716,7 +723,7 @@ export default function HRManagement() {
           }
         });
         
-        await db.updateUserRoleAndDept(userObj.id, targetRole, userObj.department_id);
+        await db.updateUserRoleAndDept(userObj.id, targetRole, userObj.department_id, undefined, undefined, undefined, currentUser.id);
         
         await db.logActivity(
           currentUser.id,
@@ -746,6 +753,54 @@ export default function HRManagement() {
     }
   };
 
+  // Lets a Team Leader also be designated as the Part Leader of one specific
+  // Part (child department) inside their own Team, without losing the Team Leader role.
+  const handleAssignAdditionalPartLeadership = async (userObj) => {
+    const myParts = departments.filter(d => d.parent_id === userObj.department_id);
+    if (myParts.length === 0) {
+      Swal.fire({ icon: 'info', title: t('common.notice', 'Thông báo'), text: t('team.noPartsInTeam', 'Team này chưa có bộ phận con (Part) nào.') });
+      return;
+    }
+    const optionsHtml = myParts.map(p => `<option value="${p.department_id}" ${p.department_id === userObj.additional_part_leader_of ? 'selected' : ''}>${translateDepartmentName(p.name, t)}</option>`).join('\n');
+    const { value: departmentId } = await Swal.fire({
+      title: t('team.assignAdditionalPartLeaderTitle', 'Chỉ định phụ trách thêm Part'),
+      html: `<select id="swal-additional-part-leader" class="swal2-select" style="width:100%;">${optionsHtml}</select>`,
+      showCancelButton: true,
+      confirmButtonText: t('common.save', 'Lưu lại'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--primary-color)',
+      preConfirm: () => document.getElementById('swal-additional-part-leader').value
+    });
+    if (!departmentId) return;
+    try {
+      await db.setAdditionalPartLeadership(userObj.id, departmentId);
+      await db.logActivity(currentUser.id, "UPDATE", "User", userObj.id, `đã chỉ định '${userObj.name}' phụ trách thêm Part '${myParts.find(p => p.department_id === departmentId)?.name}'`);
+      Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('team.togglePartLeaderSuccess', 'Đã {action} thành công!').replace('{action}', '') });
+      await reloadAll();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: err.message || t('team.togglePartLeaderFailed', 'Không thể cập nhật phân quyền.') });
+    }
+  };
+
+  const handleRevokeAdditionalPartLeadership = async (userObj) => {
+    const result = await Swal.fire({
+      title: t('team.revokeAdditionalPartLeaderTitle', 'Thu hồi phụ trách Part?'),
+      text: t('team.togglePartLeaderText', 'Bạn có chắc chắn muốn {action} cho nhân viên "{name}"?').replace('{action}', t('team.revokeAdditionalPartLeaderAction', 'thu hồi quyền phụ trách Part')).replace('{name}', userObj.name),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--primary-color)',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await db.setAdditionalPartLeadership(userObj.id, null);
+      await db.logActivity(currentUser.id, "UPDATE", "User", userObj.id, `đã thu hồi quyền phụ trách Part bổ sung của '${userObj.name}'`);
+      await reloadAll();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: err.message || t('team.togglePartLeaderFailed', 'Không thể cập nhật phân quyền.') });
+    }
+  };
+
   const handleAddDeptMember = (currentSelectedDept) => {
     setAddMemberSearch('');
     setAddMemberDeptFilter('all');
@@ -771,7 +826,9 @@ export default function HRManagement() {
           targetUser.system_role || 'Nhân viên (Staff)',
           currentSelectedDept.department_id,
           targetUser.name,
-          targetUser.email
+          targetUser.email,
+          undefined,
+          currentUser.id
         );
 
         await db.logActivity(
@@ -1075,7 +1132,7 @@ export default function HRManagement() {
             </div>
             <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '4px' }}>
               {(() => {
-                const visibleRootDepts = (isTeamLeader || isCurrentUserInRootDept)
+                const visibleRootDepts = (!isAdmin && !isHR && (isTeamLeader || isCurrentUserInRootDept))
                   ? departments.filter(d => d.department_id === currentUser.department_id)
                   : departments.filter(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
                 
@@ -1193,6 +1250,11 @@ export default function HRManagement() {
                                   <span className={`badge ${member.system_role === 'Team Leader' ? 'badge-danger' : member.system_role === 'Part Leader' ? 'badge-warning' : 'badge-info'}`}>
                                     {formatSystemRole(member.system_role, t)}
                                   </span>
+                                  {member.system_role === 'Team Leader' && member.additional_part_leader_of && (
+                                    <span className="badge badge-warning" style={{ marginLeft: '6px', fontSize: '10px' }}>
+                                      + {t('team.partLeaderOf', 'Part Leader')}: {translateDepartmentName(departments.find(d => d.department_id === member.additional_part_leader_of)?.name || '', t)}
+                                    </span>
+                                  )}
                                 </td>
                                 <td style={{ textAlign: 'center' }}>
                                   {canManageMemberRole && member.id !== currentUser.id && (
@@ -1207,12 +1269,30 @@ export default function HRManagement() {
                                         </button>
                                       )}
                                       {member.system_role === 'Part Leader' && (
-                                        <button 
+                                        <button
                                           className="btn btn-danger btn-sm"
                                           style={{ padding: '4px 8px', fontSize: '11px' }}
                                           onClick={() => handleTogglePartLeader(member, false)}
                                         >
                                           <i className="fa-solid fa-user-minus"></i> {t('team.revokePartLeader', 'Thu hồi Part Leader')}
+                                        </button>
+                                      )}
+                                      {member.system_role === 'Team Leader' && !member.additional_part_leader_of && (
+                                        <button
+                                          className="btn btn-secondary btn-sm"
+                                          style={{ padding: '4px 8px', fontSize: '11px' }}
+                                          onClick={() => handleAssignAdditionalPartLeadership(member)}
+                                        >
+                                          <i className="fa-solid fa-user-shield"></i> {t('team.assignAdditionalPartLeader', 'Phụ trách thêm Part')}
+                                        </button>
+                                      )}
+                                      {member.system_role === 'Team Leader' && member.additional_part_leader_of && (
+                                        <button
+                                          className="btn btn-danger btn-sm"
+                                          style={{ padding: '4px 8px', fontSize: '11px' }}
+                                          onClick={() => handleRevokeAdditionalPartLeadership(member)}
+                                        >
+                                          <i className="fa-solid fa-user-minus"></i> {t('team.revokeAdditionalPartLeader', 'Thu hồi phụ trách Part')}
                                         </button>
                                       )}
                                     </div>
@@ -1637,7 +1717,7 @@ export default function HRManagement() {
                   <div className="form-group">
                     <label>{t('hr.systemRole', 'Vai trò chức vụ hệ thống')} <span className="required">*</span></label>
                     <select value={roleId} onChange={(e) => setRoleId(e.target.value)} style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none' }} required>
-                      {roles.map(r => (
+                      {roles.filter(r => isAdmin || !r.name.includes('Admin')).map(r => (
                         <option value={r.id} key={r.id}>{translateSystemRoleName(r.name, t)}</option>
                       ))}
                     </select>
@@ -1720,14 +1800,29 @@ export default function HRManagement() {
                   
                   <div className="form-group">
                     <label>{t('team.deptNameLabel', 'Tên phòng ban')} <span className="required">*</span></label>
-                    <input 
-                      type="text" 
-                      value={inputDeptName} 
-                      onChange={(e) => setInputDeptName(e.target.value)} 
-                      required 
-                      placeholder="Ví dụ: Phát triển phần mềm" 
+                    <input
+                      type="text"
+                      value={inputDeptName}
+                      onChange={(e) => setInputDeptName(e.target.value)}
+                      required
+                      placeholder="Ví dụ: Phát triển phần mềm"
                     />
                   </div>
+
+                  {isAdmin && (
+                    <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="checkbox"
+                        id="dept-is-hidden"
+                        checked={inputDeptIsHidden}
+                        onChange={(e) => setInputDeptIsHidden(e.target.checked)}
+                        style={{ width: 'auto' }}
+                      />
+                      <label htmlFor="dept-is-hidden" style={{ margin: 0, cursor: 'pointer' }}>
+                        {t('team.deptIsHidden', 'Ẩn phòng ban này khỏi người dùng khác (chỉ Admin thấy)')}
+                      </label>
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={() => setIsDeptOpen(false)}>{t('common.cancel', 'Hủy')}</button>

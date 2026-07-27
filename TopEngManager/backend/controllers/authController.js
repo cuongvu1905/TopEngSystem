@@ -41,6 +41,13 @@ function hashPasswordPlainSha256(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
 }
 
+// Resolves whether the given user_id currently holds the Admin role.
+async function isRequesterAdmin(requesterId) {
+  if (!requesterId) return false;
+  const requester = await prisma.user.findUnique({ where: { user_id: requesterId }, select: { role: true } });
+  return !!(requester && requester.role && requester.role.includes('Admin'));
+}
+
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -206,22 +213,30 @@ exports.signup = async (req, res, next) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
+    const { requesterId } = req.body;
+    const requesterIsAdmin = await isRequesterAdmin(requesterId);
     const dbUsers = await prisma.user.findMany({
       include: {
         department: true
       }
     });
-    const users = dbUsers.map(u => ({
-      id: u.user_id,
-      employee_id: u.user_id,
-      name: u.full_name,
-      email: u.email,
-      system_role: u.role,
-      department_id: u.department_id,
-      department_name: u.department ? u.department.name : 'Chưa phân phòng',
-      color: '#1E40AF',
-      create_at: u.create_at
-    }));
+    const users = dbUsers.map(u => {
+      // Hide which (hidden) department an account sits in from non-Admin viewers —
+      // the account itself still appears in the list, only its department is masked.
+      const deptIsMasked = u.department?.is_hidden && !requesterIsAdmin;
+      return {
+        id: u.user_id,
+        employee_id: u.user_id,
+        name: u.full_name,
+        email: u.email,
+        system_role: u.role,
+        department_id: deptIsMasked ? null : u.department_id,
+        department_name: deptIsMasked ? null : (u.department ? u.department.name : 'Chưa phân phòng'),
+        additional_part_leader_of: u.additional_part_leader_of,
+        color: '#1E40AF',
+        create_at: u.create_at
+      };
+    });
     res.json(users);
   } catch (err) {
     next(err);
@@ -266,7 +281,7 @@ exports.saveRolesPermissions = async (req, res, next) => {
 
 exports.createUser = async (req, res, next) => {
   try {
-    const { email, password, fullName, roleId, departmentId, employeeId } = req.body;
+    const { email, password, fullName, roleId, departmentId, employeeId, requestedBy } = req.body;
     if (!email || !password || !fullName || !roleId) {
       return res.status(400).json({ error: 'Thiếu thông tin đăng ký bắt buộc' });
     }
@@ -288,6 +303,10 @@ exports.createUser = async (req, res, next) => {
       'Ban điều hành (BOD)': 'Ban điều hành (BOD)'
     };
     const systemRole = roleMap[roleId] || roleId || 'Nhân viên (Staff)';
+
+    if (systemRole.includes('Admin') && !(await isRequesterAdmin(requestedBy))) {
+      return res.status(403).json({ error: 'Chỉ tài khoản Admin mới có quyền tạo tài khoản Admin.' });
+    }
 
     const passwordHash = hashPasswordSecurely(password);
     const userId = (employeeId && employeeId.trim()) || ('usr-' + Date.now());
@@ -442,9 +461,13 @@ exports.testConnection = async (req, res, next) => {
 
 exports.updateUserRoleAndDept = async (req, res, next) => {
   try {
-    const { userId, role, departmentId, fullName, email, newEmployeeId } = req.body;
+    const { userId, role, departmentId, fullName, email, newEmployeeId, requestedBy } = req.body;
     if (!userId) {
       return res.status(400).json({ error: 'Thiếu mã nhân viên cần cập nhật.' });
+    }
+
+    if (role && role.includes('Admin') && !(await isRequesterAdmin(requestedBy))) {
+      return res.status(403).json({ error: 'Chỉ tài khoản Admin mới có quyền cấp quyền Admin.' });
     }
 
     // Check if newEmployeeId already exists
@@ -504,6 +527,38 @@ exports.updateUserRoleAndDept = async (req, res, next) => {
     });
 
     res.json({ success: true, message: 'Cập nhật thông tin nhân sự thành công!' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Lets a Team Leader additionally be designated as the Part Leader of exactly one
+// Part (child department) inside their own Team, without losing their primary role.
+exports.setAdditionalPartLeadership = async (req, res, next) => {
+  try {
+    const { userId, departmentId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'Thiếu mã nhân viên.' });
+    }
+
+    const targetUser = await prisma.user.findUnique({ where: { user_id: userId } });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Không tìm thấy nhân viên.' });
+    }
+
+    if (departmentId) {
+      const targetDept = await prisma.department.findUnique({ where: { department_id: departmentId } });
+      if (!targetDept || targetDept.parent_id !== targetUser.department_id) {
+        return res.status(400).json({ error: 'Chỉ có thể chỉ định phụ trách một bộ phận con nằm trong Team của chính nhân viên đó.' });
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { user_id: userId },
+      data: { additional_part_leader_of: departmentId || null }
+    });
+
+    res.json({ success: true, additional_part_leader_of: updated.additional_part_leader_of });
   } catch (err) {
     next(err);
   }

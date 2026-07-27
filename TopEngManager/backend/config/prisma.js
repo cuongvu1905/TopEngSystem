@@ -97,4 +97,32 @@ const prisma = new PrismaClient();
   }
 })();
 
+// Self-healing column addition for hidden departments (e.g. an "Administrator" department)
+(async () => {
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`department\` LIKE 'is_hidden'`;
+    if (columns.length === 0) {
+      console.log('Adding is_hidden column to department table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `department` ADD COLUMN `is_hidden` TINYINT(1) NOT NULL DEFAULT 0;');
+      console.log('is_hidden column added successfully.');
+    }
+  } catch (err) {
+    console.error('Error during department is_hidden migration check:', err);
+  }
+})();
+
+// Self-healing column addition for dual Team Leader / additional Part Leader assignment
+(async () => {
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`user\` LIKE 'additional_part_leader_of'`;
+    if (columns.length === 0) {
+      console.log('Adding additional_part_leader_of column to user table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `user` ADD COLUMN `additional_part_leader_of` VARCHAR(50) NULL;');
+      console.log('additional_part_leader_of column added successfully.');
+    }
+  } catch (err) {
+    console.error('Error during additional_part_leader_of migration check:', err);
+  }
+})();
+
 module.exports = prisma;

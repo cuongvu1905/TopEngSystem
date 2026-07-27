@@ -92,8 +92,8 @@ export const MySQLAdapter = {
     return true;
   },
 
-  getUsers: async function() {
-    return await callApi('getUsers');
+  getUsers: async function(requesterId) {
+    return await callApi('getUsers', { requesterId });
   },
 
   getProjects: async function() {
@@ -356,8 +356,8 @@ export const MySQLAdapter = {
     return await callApi('getRoles');
   },
 
-  createUser: async function(email, password, fullName, roleId, departmentId = null, employeeId = '') {
-    return await callApi('createUser', { email, password, fullName, roleId, departmentId, employeeId });
+  createUser: async function(email, password, fullName, roleId, departmentId = null, employeeId = '', requestedBy = undefined) {
+    return await callApi('createUser', { email, password, fullName, roleId, departmentId, employeeId, requestedBy });
   },
 
   changePassword: async function(userId, currentPassword, newPassword) {
@@ -372,8 +372,12 @@ export const MySQLAdapter = {
     return await callApi('deleteUser', { userId });
   },
 
-  updateUserRoleAndDept: async function(userId, role, departmentId, fullName = undefined, email = undefined, newEmployeeId = undefined) {
-    return await callApi('updateUserRoleAndDept', { userId, role, departmentId, fullName, email, newEmployeeId });
+  updateUserRoleAndDept: async function(userId, role, departmentId, fullName = undefined, email = undefined, newEmployeeId = undefined, requestedBy = undefined) {
+    return await callApi('updateUserRoleAndDept', { userId, role, departmentId, fullName, email, newEmployeeId, requestedBy });
+  },
+
+  setAdditionalPartLeadership: async function(userId, departmentId) {
+    return await callApi('setAdditionalPartLeadership', { userId, departmentId });
   },
 
   checkSession: async function(userId, token) {
@@ -392,12 +396,12 @@ export const MySQLAdapter = {
     return await callApi('saveCustomer', { customer });
   },
 
-  getDepartments: async function() {
-    return await callApi('getDepartments');
+  getDepartments: async function(requesterId) {
+    return await callApi('getDepartments', { requesterId });
   },
 
-  saveDepartment: async function(department) {
-    return await callApi('saveDepartment', { department });
+  saveDepartment: async function(department, requesterId) {
+    return await callApi('saveDepartment', { department, requesterId });
   },
 
   deleteDepartment: async function(id) {

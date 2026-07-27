@@ -247,9 +247,19 @@ exports.getCustomers = async (req, res, next) => {
   }
 };
 
+// Resolves whether the given user_id currently holds the Admin role.
+async function isRequesterAdmin(requesterId) {
+  if (!requesterId) return false;
+  const requester = await prisma.user.findUnique({ where: { user_id: requesterId }, select: { role: true } });
+  return !!(requester && requester.role && requester.role.includes('Admin'));
+}
+
 exports.getDepartments = async (req, res, next) => {
   try {
+    const { requesterId } = req.body;
+    const includeHidden = await isRequesterAdmin(requesterId);
     const depts = await prisma.department.findMany({
+      where: includeHidden ? {} : { is_hidden: false },
       orderBy: { name: 'asc' }
     });
     res.json(depts);
@@ -260,8 +270,12 @@ exports.getDepartments = async (req, res, next) => {
 
 exports.saveDepartment = async (req, res, next) => {
   try {
-    const { department } = req.body;
+    const { department, requesterId } = req.body;
     const isNew = !department.id;
+    // Only an Admin may hide/unhide a department. A non-Admin editor never sends is_hidden
+    // (the checkbox isn't rendered for them), so their edits must preserve whatever the
+    // department's current hidden state already is rather than silently unhiding it.
+    const requesterIsAdmin = await isRequesterAdmin(requesterId);
 
     if (isNew) {
       if (!department.department_id) {
@@ -278,7 +292,8 @@ exports.saveDepartment = async (req, res, next) => {
         data: {
           department_id: department.department_id,
           name: department.name,
-          parent_id: department.parent_id || null
+          parent_id: department.parent_id || null,
+          is_hidden: requesterIsAdmin && department.is_hidden === true
         }
       });
     } else {
@@ -288,6 +303,8 @@ exports.saveDepartment = async (req, res, next) => {
       if (!oldDept) {
         return res.status(400).json({ error: 'Không tìm thấy phòng ban cần chỉnh sửa.' });
       }
+
+      const isHidden = requesterIsAdmin ? (department.is_hidden === true) : oldDept.is_hidden;
 
       if (department.department_id !== oldDept.department_id) {
         // Verify new code is not taken by another record
@@ -304,7 +321,7 @@ exports.saveDepartment = async (req, res, next) => {
         // Disable constraint checks temporarily to perform update cascades
         await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0');
         try {
-          await prisma.$executeRaw`UPDATE \`department\` SET \`department_id\` = ${department.department_id}, \`name\` = ${department.name}, \`parent_id\` = ${department.parent_id || null} WHERE \`id\` = ${parseInt(department.id)}`;
+          await prisma.$executeRaw`UPDATE \`department\` SET \`department_id\` = ${department.department_id}, \`name\` = ${department.name}, \`parent_id\` = ${department.parent_id || null}, \`is_hidden\` = ${isHidden} WHERE \`id\` = ${parseInt(department.id)}`;
           await prisma.$executeRaw`UPDATE \`department\` SET \`parent_id\` = ${department.department_id} WHERE \`parent_id\` = ${oldDept.department_id}`;
           await prisma.$executeRaw`UPDATE \`user\` SET \`department_id\` = ${department.department_id} WHERE \`department_id\` = ${oldDept.department_id}`;
         } finally {
@@ -315,7 +332,8 @@ exports.saveDepartment = async (req, res, next) => {
           where: { id: parseInt(department.id) },
           data: {
             name: department.name,
-            parent_id: department.parent_id || null
+            parent_id: department.parent_id || null,
+            is_hidden: isHidden
           }
         });
       }

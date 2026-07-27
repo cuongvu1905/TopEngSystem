@@ -58,7 +58,7 @@ export const AppContextProvider = ({ children }) => {
           }
         }
         // Fetch users list and find current user profile
-        const usersList = await db.getUsers().catch(() => []);
+        const usersList = await db.getUsers(session.user.id).catch(() => []);
         const profile = usersList.find(u => u.id === session.user.id);
 
         if (!profile) {
@@ -77,7 +77,8 @@ export const AppContextProvider = ({ children }) => {
             system_role: profile.system_role || 'Nhân viên (Staff)',
             color: profile.color || '#1E40AF',
             department_id: profile.department_id || null,
-            department_name: profile.department_name || 'Chưa phân phòng'
+            department_name: profile.department_name || 'Chưa phân phòng',
+            additional_part_leader_of: profile.additional_part_leader_of || null
           });
         }
       }
@@ -95,7 +96,7 @@ export const AppContextProvider = ({ children }) => {
         logs,
         rpConfig
       ] = await Promise.all([
-        db.getUsers().catch(() => []),
+        db.getUsers(session.user.id).catch(() => []),
         db.getProjects().catch(() => []),
         db.getTasks().catch(() => []),
         db.getSubtasks().catch(() => []),
