@@ -7,6 +7,7 @@ import { db } from '@/utils/db';
 import { usePathname, useRouter } from 'next/navigation';
 import { getSwal } from '@/utils/swal';
 
+const REJECTED_REPORT_TITLE = 'Báo cáo ngày bị từ chối';
 
 const translateDepartmentName = (name, t) => {
   if (!name || name === 'Chưa phân phòng') return t('dept.unassigned', 'Chưa phân phòng');
@@ -650,7 +651,19 @@ export default function Header({ onToggleSidebar }) {
                         }
                         setIsNotificationsOpen(false);
                         if (n.link_url.startsWith('#')) {
-                          router.push('/' + n.link_url.replace('#', ''));
+                          // A rejected-report notification goes straight to the composer to fix
+                          // it, same destination as the one-time rejection messagebox, instead
+                          // of the generic dashboard detail popup.
+                          const isRejectedReport = n.title === REJECTED_REPORT_TITLE;
+                          const reportIdMatch = n.link_url.match(/reportId=(\d+)/);
+                          if (isRejectedReport && reportIdMatch) {
+                            if (!n.modal_shown) {
+                              await db.markNotificationModalShown(n.id).catch(() => {});
+                            }
+                            router.push(`/daily-reports?reportId=${reportIdMatch[1]}`);
+                          } else {
+                            router.push('/' + n.link_url.replace('#', ''));
+                          }
                         }
                         await reloadAll();
                       }}>

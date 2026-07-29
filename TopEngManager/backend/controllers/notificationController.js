@@ -16,6 +16,7 @@ exports.getNotifications = async (req, res, next) => {
       content: n.content,
       link_url: n.link_url,
       is_read: !!n.is_read,
+      modal_shown: !!n.modal_shown,
       created_at: n.create_at
     })));
   } catch (err) {
@@ -85,6 +86,26 @@ exports.markNotificationRead = async (req, res, next) => {
       where: { id: parseInt(notificationId) },
       data: { is_read: true }
     });
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.markNotificationModalShown = async (req, res, next) => {
+  try {
+    const { notificationIds } = req.body;
+    const ids = (Array.isArray(notificationIds) ? notificationIds : [notificationIds])
+      .map(id => parseInt(id))
+      .filter(id => !Number.isNaN(id));
+
+    if (ids.length > 0) {
+      await prisma.notificyations.updateMany({
+        where: { id: { in: ids } },
+        data: { modal_shown: true }
+      });
+    }
 
     res.json({ success: true });
   } catch (err) {

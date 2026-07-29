@@ -5,6 +5,7 @@ const notificationController = require('../controllers/notificationController');
 router.post('/getNotifications', notificationController.getNotifications);
 router.post('/createNotification', notificationController.createNotification);
 router.post('/markNotificationRead', notificationController.markNotificationRead);
+router.post('/markNotificationModalShown', notificationController.markNotificationModalShown);
 router.post('/markAllNotificationsRead', notificationController.markAllNotificationsRead);
 router.post('/getActivityLogs', notificationController.getActivityLogs);
 router.post('/logActivity', notificationController.logActivity);

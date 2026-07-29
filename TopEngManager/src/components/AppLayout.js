@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import Login from '@/components/Login';
+import RejectedReportModalWatcher from '@/components/RejectedReportModalWatcher';
 
 export default function AppLayout({ children }) {
   const { currentUser, isLoading } = useApp();
@@ -80,6 +81,7 @@ export default function AppLayout({ children }) {
 
   return (
     <div className="app-container">
+      <RejectedReportModalWatcher />
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       {isSidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />

@@ -329,6 +329,10 @@ export const MySQLAdapter = {
   },
 
   // --- CUSTOM ADAPTER UTILITIES ---
+  markNotificationModalShown: async function(notificationIds) {
+    return await callApi('markNotificationModalShown', { notificationIds });
+  },
+
   markNotificationRead: async function(notificationId) {
     return await callApi('markNotificationRead', { notificationId });
   },

@@ -274,6 +274,36 @@ export default function DailyReportsPage() {
     (async () => {
       const list = await loadReports();
 
+      // A rejection notification/messagebox link takes priority: load that exact report
+      // straight into the composer for editing instead of showing a blank/draft one.
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const reportIdParam = searchParams?.get('reportId');
+      if (reportIdParam) {
+        const target = list.find(r => r.id === parseInt(reportIdParam) && r.user_id === currentUser?.id);
+        if (target) {
+          try {
+            const parsedCards = JSON.parse(target.content);
+            setReportCards(parsedCards);
+            setEditingReportId(target.id);
+            setEditingReportStatus(target.status);
+            setReportDate(formatDateToYMD(target.created_at));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            Swal.fire({
+              icon: 'info',
+              title: t('reports.editReportAlertTitle', 'Chỉnh sửa báo cáo'),
+              text: t('reports.editReportAlertText', 'Đã tải nội dung báo cáo vào khung soạn thảo trên trang chính. Sau khi chỉnh sửa xong, nhấn Cập Nhật Báo Cáo để lưu!'),
+              timer: 3000,
+              showConfirmButton: false
+            });
+          } catch (e) {
+            console.error('Failed to load report into composer:', e);
+          }
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+          return;
+        }
+      }
+
       // Resume today's in-progress draft, if one exists, instead of showing a blank composer.
       const todaysDraft = list.find(r => r.user_id === currentUser?.id && r.status === 'Draft' && formatDateToYMD(r.created_at) === getTodayDateString());
       if (todaysDraft) {

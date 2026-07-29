@@ -194,6 +194,7 @@ model notificyations {
   content   String?  @db.Text
   link_url  String?  @db.Text
   is_read   Boolean? @default(false)
+  modal_shown Boolean? @default(false)
   create_at DateTime @default(now()) @db.Timestamp(0)
   user      user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_notification_user")
 

@@ -161,4 +161,18 @@ const prisma = new PrismaClient();
   }
 })();
 
+// Self-healing column addition for "show once" rejected-report popup tracking
+(async () => {
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`notificyations\` LIKE 'modal_shown'`;
+    if (columns.length === 0) {
+      console.log('Adding modal_shown column to notificyations table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `notificyations` ADD COLUMN `modal_shown` TINYINT(1) NOT NULL DEFAULT 0;');
+      console.log('modal_shown column added successfully.');
+    }
+  } catch (err) {
+    console.error('Error during notificyations modal_shown migration check:', err);
+  }
+})();
+
 module.exports = prisma;
