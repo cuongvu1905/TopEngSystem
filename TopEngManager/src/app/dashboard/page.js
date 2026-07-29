@@ -789,10 +789,10 @@ export default function Dashboard() {
       return createdDate <= checkDate;
     });
 
-    // Get reports actually submitted (not Rejected, and not still a private Draft) on this date
+    // Get reports actually submitted (Rejected still counts as submitted; a private Draft doesn't) on this date
     const reportedUserIds = new Set(
       allReports
-        .filter(r => formatDateString(new Date(r.created_at)) === dateStr && r.status !== 'Rejected' && r.status !== 'Draft')
+        .filter(r => formatDateString(new Date(r.created_at)) === dateStr && r.status !== 'Draft')
         .map(r => r.user_id)
     );
 
