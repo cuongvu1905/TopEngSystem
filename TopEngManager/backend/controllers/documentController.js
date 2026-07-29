@@ -208,7 +208,12 @@ exports.downloadDocument = async (req, res, next) => {
       res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(doc.original_name)}"`);
       return res.sendFile(absolutePath);
     }
-    res.download(absolutePath, doc.original_name);
+    res.download(absolutePath, doc.original_name, (err) => {
+      if (err) {
+        console.error('Lỗi khi tải tệp:', doc.original_name, err.message);
+        if (!res.headersSent) res.status(500).json({ error: 'Lỗi khi tải tệp.' });
+      }
+    });
   } catch (err) {
     next(err);
   }

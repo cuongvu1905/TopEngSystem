@@ -286,11 +286,13 @@ exports.createProjectReport = async (req, res, next) => {
 
 exports.createDailyReport = async (req, res, next) => {
   try {
-    const { userId, content, fileUrl, projectId, createdAt } = req.body;
+    const { userId, content, fileUrl, projectId, createdAt, status } = req.body;
 
     if (!userId || !content) {
       return res.status(400).json({ error: 'Thiếu thông tin người dùng hoặc nội dung báo cáo' });
     }
+
+    const isDraft = status === 'Draft';
 
     let finalDate = new Date();
     if (createdAt) {
@@ -311,21 +313,23 @@ exports.createDailyReport = async (req, res, next) => {
         project_id: projectId || null,
         content: content,
         file_url: fileUrl || null,
-        status: 'Pending',
+        status: isDraft ? 'Draft' : 'Pending',
         comment: null,
         created_at: finalDate
       }
     });
 
-    // Log activity
-    await prisma.activitylogs.create({
-      data: {
-        user_id: userId,
-        action_type: "CREATE_REPORT",
-        entity_type: "DailyReport",
-        description: `đã gửi báo cáo ngày mới`
-      }
-    });
+    // Only log a real submission, not an in-progress draft save.
+    if (!isDraft) {
+      await prisma.activitylogs.create({
+        data: {
+          user_id: userId,
+          action_type: "CREATE_REPORT",
+          entity_type: "DailyReport",
+          description: `đã gửi báo cáo ngày mới`
+        }
+      });
+    }
 
     res.json({ success: true, report: newReport });
   } catch (err) {
@@ -358,7 +362,10 @@ exports.updateDailyReportStatus = async (req, res, next) => {
       return res.status(403).json({ error: 'Bạn không có quyền phê duyệt báo cáo ngày của nhân viên này.' });
     }
 
-    if (existingReport.status === 'Approved' || existingReport.status === 'Rejected') {
+    // A report that's already been decided can't be changed again — except an approver may
+    // still walk back an Approved report to Rejected (e.g. after spotting an issue later).
+    const isApprovedToRejected = existingReport.status === 'Approved' && status === 'Rejected';
+    if ((existingReport.status === 'Approved' || existingReport.status === 'Rejected') && !isApprovedToRejected) {
       return res.status(400).json({ error: 'Báo cáo đã được duyệt hoặc từ chối và không thể thay đổi thông tin nữa.' });
     }
 
@@ -388,7 +395,7 @@ exports.updateDailyReportStatus = async (req, res, next) => {
 
 exports.updateDailyReport = async (req, res, next) => {
   try {
-    const { reportId, content, fileUrl, projectId, createdAt } = req.body;
+    const { reportId, content, fileUrl, projectId, createdAt, status } = req.body;
 
     if (!reportId || !content) {
       return res.status(400).json({ error: 'Thiếu mã báo cáo hoặc nội dung cập nhật' });
@@ -402,8 +409,11 @@ exports.updateDailyReport = async (req, res, next) => {
       return res.status(404).json({ error: 'Không tìm thấy báo cáo' });
     }
 
-    if (report.status !== 'Pending' && report.status !== 'pending' && report.status !== 'Chờ duyệt') {
-      return res.status(400).json({ error: 'Chỉ có thể chỉnh sửa báo cáo ở trạng thái Chờ duyệt' });
+    const isPendingStatus = report.status === 'Pending' || report.status === 'pending' || report.status === 'Chờ duyệt';
+    const isRejectedStatus = report.status === 'Rejected';
+    const isDraftStatus = report.status === 'Draft';
+    if (!isPendingStatus && !isRejectedStatus && !isDraftStatus) {
+      return res.status(400).json({ error: 'Chỉ có thể chỉnh sửa báo cáo ở trạng thái Chờ duyệt, Bị từ chối hoặc Nháp' });
     }
 
     const updateData = {
@@ -411,6 +421,18 @@ exports.updateDailyReport = async (req, res, next) => {
       file_url: fileUrl !== undefined ? fileUrl : report.file_url,
       project_id: projectId !== undefined ? projectId : report.project_id
     };
+
+    // Editing a Rejected report resubmits it for approval, clearing the old rejection note.
+    if (isRejectedStatus) {
+      updateData.status = 'Pending';
+      updateData.comment = null;
+    }
+
+    // A Draft only leaves Draft status when the caller explicitly submits it
+    // (status: 'Pending'); an ordinary draft re-save omits status and stays Draft.
+    if (isDraftStatus && status === 'Pending') {
+      updateData.status = 'Pending';
+    }
 
     // Update report date if provided
     if (createdAt) {

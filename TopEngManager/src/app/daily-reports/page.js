@@ -6,6 +6,8 @@ import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { getSwal } from '@/utils/swal';
 
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
+
 const Swal = {
   fire: async (...args) => {
     const instance = await getSwal();
@@ -90,8 +92,7 @@ export default function DailyReportsPage() {
     return `${year}-${month}-${day}`;
   };
 
-  const [reports, setReports] = useState([]);
-  const [reportCards, setReportCards] = useState([
+  const getDefaultReportCards = () => [
     {
       id: 'card-1',
       content: '',
@@ -101,10 +102,18 @@ export default function DailyReportsPage() {
       fileUrl: '',
       fileName: ''
     }
-  ]);
+  ];
+
+  const [reports, setReports] = useState([]);
+  const [reportCards, setReportCards] = useState(getDefaultReportCards());
   const [editingReportId, setEditingReportId] = useState(null);
+  // Tracks the status of the report currently loaded into the composer (null = brand new).
+  // Lets "Save Draft" stay hidden while resubmitting a Rejected report, so it can't
+  // accidentally leave that report stuck at Draft instead of going back for approval.
+  const [editingReportStatus, setEditingReportStatus] = useState(null);
   const [reportDate, setReportDate] = useState(getTodayDateString());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const updateCardField = (cardId, field, value) => {
@@ -116,45 +125,85 @@ export default function DailyReportsPage() {
     }));
   };
 
-  const handleTimeBlur = (cardId, field, val) => {
-    if (!val) return;
-    let formatted = val.trim();
-    
-    // Remove spaces
-    formatted = formatted.replace(/\s+/g, '');
-    
-    // Match H:MM or HH:MM
-    const matchHm = formatted.match(/^(\d{1,2}):(\d{2})$/);
-    if (matchHm) {
-      const hours = String(Number(matchHm[1])).padStart(2, '0');
-      const minutes = matchHm[2];
-      if (Number(hours) < 24 && Number(minutes) < 60) {
-        updateCardField(cardId, field, `${hours}:${minutes}`);
-        return;
-      }
-    }
-    
-    // Match single hour like H or HH
-    const matchH = formatted.match(/^(\d{1,2})$/);
-    if (matchH) {
-      const hours = String(Number(matchH[1])).padStart(2, '0');
-      if (Number(hours) < 24) {
-        updateCardField(cardId, field, `${hours}:00`);
-        return;
-      }
-    }
+  // Which single time-dropdown (if any) is open, keyed as "<cardId>-startTime"/"<cardId>-endTime".
+  const [openTimeDropdown, setOpenTimeDropdown] = useState(null);
 
-    // Match 3 or 4 digits like 800 or 1430
-    const matchDigits = formatted.match(/^(\d{3,4})$/);
-    if (matchDigits) {
-      const len = matchDigits[1].length;
-      const hours = String(Number(matchDigits[1].substring(0, len - 2))).padStart(2, '0');
-      const minutes = matchDigits[1].substring(len - 2);
-      if (Number(hours) < 24 && Number(minutes) < 60) {
-        updateCardField(cardId, field, `${hours}:${minutes}`);
-        return;
+  useEffect(() => {
+    const handleDocClick = (e) => {
+      if (!e.target.closest('.time-dropdown-wrapper')) {
+        setOpenTimeDropdown(null);
       }
-    }
+    };
+    document.addEventListener('click', handleDocClick);
+    return () => document.removeEventListener('click', handleDocClick);
+  }, []);
+
+  const renderTimeDropdown = (card, field) => {
+    const key = `${card.id}-${field}`;
+    const isOpen = openTimeDropdown === key;
+    return (
+      <div className="time-dropdown-wrapper" style={{ position: 'relative', flex: 1 }}>
+        <button
+          type="button"
+          onClick={() => setOpenTimeDropdown(isOpen ? null : key)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            width: '100%',
+            border: '1px solid var(--neutral-border)',
+            borderRadius: '4px',
+            padding: '8px',
+            backgroundColor: 'var(--neutral-bg-card)',
+            color: 'var(--neutral-dark)',
+            fontSize: '13.5px',
+            fontWeight: '600',
+            cursor: 'pointer'
+          }}
+        >
+          <i className="fa-regular fa-clock" style={{ color: 'var(--primary-color)', fontSize: '18px' }}></i>
+          {card[field]}
+        </button>
+        {isOpen && (
+          <div style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            maxHeight: '220px',
+            overflowY: 'auto',
+            backgroundColor: 'var(--neutral-bg-card)',
+            border: '1px solid var(--neutral-border)',
+            borderRadius: '6px',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)',
+            zIndex: 20
+          }}>
+            {HOUR_OPTIONS.map(hour => (
+              <button
+                type="button"
+                key={hour}
+                onClick={() => { updateCardField(card.id, field, hour); setOpenTimeDropdown(null); }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  textAlign: 'center',
+                  padding: '8px',
+                  border: 'none',
+                  backgroundColor: card[field] === hour ? 'var(--primary-color)' : 'transparent',
+                  color: card[field] === hour ? '#fff' : 'var(--neutral-dark)',
+                  fontSize: '13px',
+                  fontWeight: card[field] === hour ? '700' : '500',
+                  cursor: 'pointer'
+                }}
+              >
+                {hour}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleAddReportCard = () => {
@@ -207,20 +256,39 @@ export default function DailyReportsPage() {
   const [attachedFileName, setAttachedFileName] = useState('');
 
   const loadReports = async () => {
-    if (!currentUser) return;
+    if (!currentUser) return [];
     try {
       setIsLoading(true);
       const list = await db.getDailyReports(currentUser.id, currentUser.system_role);
       setReports(list);
+      return list;
     } catch (e) {
       console.error("Failed to load reports:", e);
+      return [];
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadReports();
+    (async () => {
+      const list = await loadReports();
+
+      // Resume today's in-progress draft, if one exists, instead of showing a blank composer.
+      const todaysDraft = list.find(r => r.user_id === currentUser?.id && r.status === 'Draft' && formatDateToYMD(r.created_at) === getTodayDateString());
+      if (todaysDraft) {
+        try {
+          const parsedCards = JSON.parse(todaysDraft.content);
+          setReportCards(parsedCards);
+          setEditingReportId(todaysDraft.id);
+          setEditingReportStatus('Draft');
+          setReportDate(formatDateToYMD(todaysDraft.created_at));
+        } catch (e) {
+          console.error('Failed to load draft into composer:', e);
+        }
+      }
+    })();
+
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const projectIdParam = searchParams.get('projectId');
@@ -248,9 +316,10 @@ export default function DailyReportsPage() {
       const firstProjectId = reportCards[0]?.projectId || null;
 
       if (editingReportId) {
-        await db.updateDailyReport(editingReportId, serializedContent, null, firstProjectId, reportDate);
+        await db.updateDailyReport(editingReportId, serializedContent, null, firstProjectId, reportDate, 'Pending');
         Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('report.updateSuccessText', 'Đã cập nhật báo cáo ngày thành công!') });
         setEditingReportId(null);
+        setEditingReportStatus(null);
       } else {
         await db.createDailyReport({
           userId: currentUser.id,
@@ -262,23 +331,54 @@ export default function DailyReportsPage() {
         Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('report.submitSuccessText', 'Đã gửi báo cáo ngày thành công!') });
       }
 
-      setReportCards([
-        {
-          id: 'card-1',
-          content: '',
-          startTime: '08:00',
-          endTime: '12:00',
-          projectId: '',
-          fileUrl: '',
-          fileName: ''
-        }
-      ]);
+      setReportCards(getDefaultReportCards());
       setReportDate(getTodayDateString());
       await loadReports();
     } catch (err) {
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('report.saveErrorText', 'Lỗi lưu báo cáo: ') + err.message });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Saves the composer's current state without submitting it for approval, so the user
+  // can come back and keep writing across multiple sessions during the day. Reuses
+  // editingReportId as the pointer to the same Draft row across repeated saves.
+  const handleSaveDraft = async () => {
+    if (!currentUser) return;
+    if (reportCards.every(c => !c.content.trim())) {
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('report.draftEmptyWarning', 'Vui lòng nhập ít nhất một nội dung trước khi lưu tạm thời.') });
+      return;
+    }
+
+    try {
+      setIsSavingDraft(true);
+      const serializedContent = JSON.stringify(reportCards);
+      const firstProjectId = reportCards[0]?.projectId || null;
+
+      if (editingReportId) {
+        await db.updateDailyReport(editingReportId, serializedContent, null, firstProjectId, reportDate);
+      } else {
+        const result = await db.createDailyReport({
+          userId: currentUser.id,
+          content: serializedContent,
+          fileUrl: null,
+          projectId: firstProjectId,
+          createdAt: reportDate,
+          status: 'Draft'
+        });
+        if (result?.report?.id) {
+          setEditingReportId(result.report.id);
+          setEditingReportStatus('Draft');
+        }
+      }
+
+      Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('report.draftSaveSuccessText', 'Đã lưu tạm thời báo cáo!'), timer: 1500, showConfirmButton: false });
+      await loadReports();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('report.saveErrorText', 'Lỗi lưu báo cáo: ') + err.message });
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
@@ -451,71 +551,9 @@ export default function DailyReportsPage() {
                         {t('reports.timeframe', 'Khung giờ:')}
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          border: '1px solid var(--neutral-border)', 
-                          borderRadius: '4px', 
-                          padding: '0 8px',
-                          backgroundColor: 'var(--neutral-bg-card)',
-                          flex: 1
-                        }}>
-                          <input
-                            type="time"
-                            list="time-options"
-                            placeholder="08:00"
-                            pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
-                            title="Định dạng 24h (HH:mm), ví dụ: 08:30 hoặc 14:00"
-                            value={card.startTime}
-                            onChange={(e) => updateCardField(card.id, 'startTime', e.target.value)}
-                            onBlur={(e) => handleTimeBlur(card.id, 'startTime', e.target.value)}
-                            required
-                            style={{ 
-                              padding: '8px 4px', 
-                              border: 'none', 
-                              fontSize: '13.5px', 
-                              outline: 'none',
-                              textAlign: 'center',
-                              width: '100%',
-                              backgroundColor: 'transparent',
-                              color: 'var(--neutral-dark)'
-                            }}
-                          />
-                          <i className="fa-regular fa-clock" style={{ color: '#64748b', fontSize: '14px', pointerEvents: 'none' }}></i>
-                        </div>
+                        {renderTimeDropdown(card, 'startTime')}
                         <span style={{ fontWeight: '600' }}>-</span>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          border: '1px solid var(--neutral-border)', 
-                          borderRadius: '4px', 
-                          padding: '0 8px',
-                          backgroundColor: 'var(--neutral-bg-card)',
-                          flex: 1
-                        }}>
-                          <input
-                            type="time"
-                            list="time-options"
-                            placeholder="12:00"
-                            pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
-                            title="Định dạng 24h (HH:mm), ví dụ: 08:30 hoặc 14:00"
-                            value={card.endTime}
-                            onChange={(e) => updateCardField(card.id, 'endTime', e.target.value)}
-                            onBlur={(e) => handleTimeBlur(card.id, 'endTime', e.target.value)}
-                            required
-                            style={{ 
-                              padding: '8px 4px', 
-                              border: 'none', 
-                              fontSize: '13.5px', 
-                              outline: 'none',
-                              textAlign: 'center',
-                              width: '100%',
-                              backgroundColor: 'transparent',
-                              color: 'var(--neutral-dark)'
-                            }}
-                          />
-                          <i className="fa-regular fa-clock" style={{ color: '#64748b', fontSize: '14px', pointerEvents: 'none' }}></i>
-                        </div>
+                        {renderTimeDropdown(card, 'endTime')}
                       </div>
                     </div>
 
@@ -633,23 +671,26 @@ export default function DailyReportsPage() {
                   type="button"
                   onClick={() => {
                     setEditingReportId(null);
-                    setReportCards([
-                      {
-                        id: 'card-1',
-                        content: '',
-                        startTime: '08:00',
-                        endTime: '12:00',
-                        projectId: '',
-                        fileUrl: '',
-                        fileName: ''
-                      }
-                    ]);
+                    setEditingReportStatus(null);
+                    setReportCards(getDefaultReportCards());
                     setReportDate(getTodayDateString());
                   }}
                   className="btn btn-secondary"
                   style={{ flex: 1, padding: '12px 16px' }}
                 >
                   {t('reports.cancelEdit', 'Hủy Sửa')}
+                </button>
+              )}
+              {(!editingReportId || editingReportStatus === 'Draft') && (
+                <button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  disabled={isSavingDraft || isSubmitting}
+                  className="btn btn-secondary"
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontWeight: '600' }}
+                >
+                  <i className="fa-regular fa-floppy-disk"></i>
+                  {isSavingDraft ? t('common.saving', 'Đang lưu...') : t('report.saveDraftBtn', 'Lưu tạm thời')}
                 </button>
               )}
               <button
@@ -794,7 +835,7 @@ export default function DailyReportsPage() {
                         }}
                         onClick={async () => {
                           const SwalInstance = await getSwal();
-                          const isPending = report.status === 'Pending' || report.status === 'pending' || (report.status !== 'Approved' && report.status !== 'Rejected');
+                          const isEditable = report.status === 'Pending' || report.status === 'pending' || report.status === 'Rejected' || (report.status !== 'Approved' && report.status !== 'Rejected');
                           
                           const isJsonReport = (() => {
                             try {
@@ -803,11 +844,20 @@ export default function DailyReportsPage() {
                           })();
 
                           const formattedDate = new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US');
-                          const statusText = report.status === 'Approved' 
-                            ? t('report.approvedStatus', 'Đã duyệt') 
-                            : report.status === 'Rejected' 
-                              ? t('report.rejectedStatus', 'Từ chối') 
-                              : 'Pending'; // Always Pending in English
+                          const statusText = report.status === 'Approved'
+                            ? t('report.approvedStatus', 'Đã duyệt')
+                            : report.status === 'Rejected'
+                              ? t('report.rejectedStatus', 'Từ chối')
+                              : report.status === 'Draft'
+                                ? t('report.draftStatus', 'Nháp')
+                                : 'Pending'; // Always Pending in English
+
+                          const rejectionCommentHtml = (report.status === 'Rejected' && report.comment)
+                            ? `<div style="margin-bottom: 12px; padding: 10px 12px; background-color: #fef2f2; border: 1px dashed #fca5a5; border-radius: 6px;">
+                                 <strong style="font-size: 12.5px; color: #b91c1c; display: block; margin-bottom: 4px;">${t('reports.managerFeedbackLabel', 'Ý kiến phản hồi từ quản lý:')}</strong>
+                                 <span style="font-size: 13px; color: #7f1d1d; white-space: pre-wrap;">${report.comment}</span>
+                               </div>`
+                            : '';
 
                           const htmlContent = isJsonReport
                             ? `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: var(--neutral-dark);">
@@ -815,6 +865,7 @@ export default function DailyReportsPage() {
                                    <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
                                    <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
                                  </div>
+                                 ${rejectionCommentHtml}
                                  ${formatReportContentHtml(report.content, projects)}
                                </div>`
                             : `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: var(--neutral-dark);">
@@ -822,8 +873,9 @@ export default function DailyReportsPage() {
                                    <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
                                    <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
                                  </div>
+                                 ${rejectionCommentHtml}
                                  ${report.project_id ? `<div style="margin-bottom: 12px;"><span style="background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Dự án: ${proj?.name || 'Liên kết'}</span></div>` : ''}
-                                 <textarea id="swal-report-content" style="width: 100%; min-height: 250px; background-color: var(--neutral-bg-main); color: var(--neutral-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--neutral-border); font-family: inherit; font-size: 13.5px; line-height: 1.6; outline: none; resize: vertical; box-sizing: border-box;" ${isPending ? '' : 'readonly'}>${report.content}</textarea>
+                                 <textarea id="swal-report-content" style="width: 100%; min-height: 250px; background-color: var(--neutral-bg-main); color: var(--neutral-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--neutral-border); font-family: inherit; font-size: 13.5px; line-height: 1.6; outline: none; resize: vertical; box-sizing: border-box;" ${isEditable ? '' : 'readonly'}>${report.content}</textarea>
                                  ${report.file_url ? `<div style="margin-top: 12px;"><a href="${report.file_url}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600;"><i class="fa-solid fa-paperclip"></i> Tệp đính kèm tài liệu</a></div>` : ''}
                                </div>`;
 
@@ -831,13 +883,13 @@ export default function DailyReportsPage() {
                             title: t('dashboard.dailyReportDetail', 'Chi tiết báo cáo ngày'),
                             html: htmlContent,
                             width: '600px',
-                            showConfirmButton: isPending,
+                            showConfirmButton: isEditable,
                             confirmButtonText: isJsonReport ? t('common.edit', 'Chỉnh sửa') : t('common.saveChanges', 'Lưu thay đổi'),
                             showDenyButton: true,
                             denyButtonText: t('common.close', 'Đóng'),
                             denyButtonColor: 'var(--primary-color)',
                             didOpen: () => {
-                              if (!isJsonReport && isPending) {
+                              if (!isJsonReport && isEditable) {
                                 const textarea = document.getElementById('swal-report-content');
                                 const confirmBtn = SwalInstance.getConfirmButton();
                                 if (textarea && confirmBtn) {
@@ -867,12 +919,13 @@ export default function DailyReportsPage() {
                             }
                           });
 
-                          if (result.isConfirmed && isPending) {
+                          if (result.isConfirmed && isEditable) {
                             if (isJsonReport) {
                               try {
                                 const parsedCards = JSON.parse(report.content);
                                 setReportCards(parsedCards);
                                 setEditingReportId(report.id);
+                                setEditingReportStatus(report.status);
                                 setReportDate(formatDateToYMD(report.created_at));
                                 setIsHistoryOpen(false);
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -933,12 +986,12 @@ export default function DailyReportsPage() {
                             <span style={{ fontSize: '9.5px', color: 'var(--neutral-muted)' }}>
                               {new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US')}
                             </span>
-                            <span style={{ 
-                              fontSize: '9px', 
-                              color: report.status === 'Approved' ? 'var(--success-color)' : report.status === 'Rejected' ? 'var(--danger-color)' : 'var(--warning-color)', 
-                              fontWeight: 'bold' 
+                            <span style={{
+                              fontSize: '9px',
+                              color: report.status === 'Approved' ? 'var(--success-color)' : report.status === 'Rejected' ? 'var(--danger-color)' : report.status === 'Draft' ? 'var(--neutral-muted)' : 'var(--warning-color)',
+                              fontWeight: 'bold'
                             }}>
-                              {report.status === 'Approved' ? t('report.approvedStatus', 'Đã duyệt') : report.status === 'Rejected' ? t('report.rejectedStatus', 'Từ chối') : 'Pending'}
+                              {report.status === 'Approved' ? t('report.approvedStatus', 'Đã duyệt') : report.status === 'Rejected' ? t('report.rejectedStatus', 'Từ chối') : report.status === 'Draft' ? t('report.draftStatus', 'Nháp') : 'Pending'}
                             </span>
                           </div>
                         </div>

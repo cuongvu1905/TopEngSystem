@@ -1133,7 +1133,9 @@ export default function HRManagement() {
             </div>
             <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '4px' }}>
               {(() => {
-                const visibleRootDepts = (!isAdmin && !isHR && (isTeamLeader || isCurrentUserInRootDept))
+                // Team Leaders see the full company tree (view-only outside their own team —
+                // every management action below is separately scoped via isDescendant checks).
+                const visibleRootDepts = (!isAdmin && !isHR && !isTeamLeader && isCurrentUserInRootDept)
                   ? departments.filter(d => d.department_id === currentUser.department_id)
                   : departments.filter(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
                 
@@ -1805,9 +1807,12 @@ export default function HRManagement() {
                       onChange={(e) => setInputDeptParentId(e.target.value)}
                       style={{ padding: '8px', width: '100%', borderRadius: '4px', border: '1px solid var(--neutral-border)', outline: 'none', backgroundColor: 'var(--neutral-bg-card)' }}
                     >
-                      <option value="">{t('team.rootDeptSelect', 'Không (Phòng ban gốc)')}</option>
+                      {!(isTeamLeader && !isAdmin && !isHR) && (
+                        <option value="">{t('team.rootDeptSelect', 'Không (Phòng ban gốc)')}</option>
+                      )}
                       {departments
                         .filter(d => d.department_id !== inputDeptId)
+                        .filter(d => (isAdmin || isHR || !isTeamLeader) || (d.department_id === currentUser.department_id || isDescendant(d.department_id, currentUser.department_id, departments)))
                         .map(d => (
                           <option value={d.department_id} key={d.department_id}>{translateDepartmentName(d.name, t)} ({d.department_id})</option>
                         ))

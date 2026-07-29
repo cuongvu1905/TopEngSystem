@@ -194,7 +194,7 @@ exports.createIssue = async (req, res, next) => {
         user_id: assignee_id,
         title: 'Bạn được phân công một Issue mới',
         content: `Bạn vừa được phân công giải quyết Issue: "${summary}" (${issueKey})`,
-        link_url: `#projects/${project_id}`
+        link_url: `#projects/${project_id}?issueId=${newId}`
       });
     }
 
@@ -328,7 +328,7 @@ exports.updateIssue = async (req, res, next) => {
         user_id: assignee_id,
         title: 'Bạn được phân công một Issue',
         content: `Bạn vừa được phân công giải quyết Issue: "${summary}" (${old.issue_key})`,
-        link_url: `#projects/${old.project_id}`
+        link_url: `#projects/${old.project_id}?issueId=${old.id}`
       });
     }
 

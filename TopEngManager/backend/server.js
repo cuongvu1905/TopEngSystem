@@ -48,7 +48,15 @@ app.use(cors({
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" } // Allow browser to download assets like uploaded images
 }));
-app.use(compression()); // Compress responses
+// Compress responses, except file downloads: gzip forces chunked transfer-encoding
+// (no upfront Content-Length), which is the classic cause of a download getting
+// stuck as an unfinished "Unconfirmed NNNNNN.crdownload" in the browser.
+app.use(compression({
+  filter: (req, res) => {
+    if (req.path.startsWith('/api/downloadDocument')) return false;
+    return compression.filter(req, res);
+  }
+}));
 
 // Configure basic rate limiting
 const limiter = rateLimit({

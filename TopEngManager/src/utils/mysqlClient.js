@@ -445,8 +445,8 @@ export const MySQLAdapter = {
     return await callApi('updateDailyReportStatus', { reportId, status, comment, userRole, userId });
   },
 
-  updateDailyReport: async function(reportId, content, fileUrl, projectId, createdAt) {
-    return await callApi('updateDailyReport', { reportId, content, fileUrl, projectId, createdAt });
+  updateDailyReport: async function(reportId, content, fileUrl, projectId, createdAt, status = undefined) {
+    return await callApi('updateDailyReport', { reportId, content, fileUrl, projectId, createdAt, status });
   },
 
   deleteDailyReport: async function(reportId) {
