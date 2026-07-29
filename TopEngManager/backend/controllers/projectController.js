@@ -92,7 +92,7 @@ exports.saveProject = async (req, res, next) => {
       }
 
       await prisma.$executeRaw`
-        INSERT INTO Project (project_id, project_name, project_description, project_key, create_by, customer_id, status, start_date, end_date, visibility)
+        INSERT INTO \`project\` (project_id, project_name, project_description, project_key, create_by, customer_id, status, start_date, end_date, visibility)
         VALUES (${id}, ${finalProjectName}, ${proj.description}, ${projectKey}, ${proj.create_by || proj.created_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'}, ${visibility})
       `;
     } else {
@@ -113,8 +113,8 @@ exports.saveProject = async (req, res, next) => {
       }
 
       await prisma.$executeRaw`
-        UPDATE Project 
-        SET project_name = ${finalProjectName}, 
+        UPDATE \`project\`
+        SET project_name = ${finalProjectName},
             project_description = ${proj.description}, 
             project_key = ${projectKey},
             customer_id = ${proj.customer_id || null},
