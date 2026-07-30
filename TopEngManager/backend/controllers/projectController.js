@@ -236,6 +236,27 @@ exports.removeProjectMember = async (req, res, next) => {
   }
 };
 
+exports.deleteProject = async (req, res, next) => {
+  try {
+    const { projectId, requesterId } = req.body;
+
+    const requester = await prisma.user.findUnique({
+      where: { user_id: requesterId },
+      select: { role: true }
+    });
+    if (!requester || !requester.role?.includes('Admin')) {
+      return res.status(403).json({ error: 'Chỉ Admin mới có quyền xóa dự án.' });
+    }
+
+    // Related tasks/issues/members/chat rooms/documents all cascade-delete at the DB level.
+    await prisma.project.delete({ where: { project_id: projectId } });
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getCustomers = async (req, res, next) => {
   try {
     const customers = await prisma.customer.findMany({

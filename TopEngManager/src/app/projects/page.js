@@ -46,6 +46,29 @@ export default function Projects() {
     router.push(`/projects/${pId}`);
   };
 
+  const handleDeleteProject = async (e, project) => {
+    e.stopPropagation();
+    const Swal = await getSwal();
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: t('project.deleteProjectConfirmTitle', 'Xóa dự án'),
+      html: t('project.deleteProjectConfirmText', 'Bạn có chắc chắn muốn xóa dự án "{name}"? Toàn bộ công việc, issue, tài liệu và kênh chat liên quan sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.').replace('{name}', project.name),
+      showCancelButton: true,
+      confirmButtonText: t('common.delete', 'Xóa'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--danger-color)'
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await db.deleteProject(project.id, currentUser.id);
+      Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('project.deleteProjectSuccessText', 'Đã xóa dự án thành công.'), timer: 2000, showConfirmButton: false });
+      await reloadAll();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: err.message || t('project.deleteProjectErrorText', 'Không thể xóa dự án.') });
+    }
+  };
+
   const handleJoinProjectClick = async () => {
     const Swal = await getSwal();
     
@@ -396,7 +419,19 @@ export default function Projects() {
             >
               <div className="project-card-header">
                 <div className="project-title">{p.name}</div>
-                <span className={`badge ${badgeClass}`}>{(p.status === 'Thực thi' || p.status === 'Ongoing') ? 'ONGOING' : (p.status === 'Giám sát' || p.status === 'Monitoring') ? 'MONITORING' : (p.status === 'Kết thúc' || p.status === 'Finished') ? 'FINISHED' : (p.status ? p.status.toUpperCase() : 'ONGOING')}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className={`badge ${badgeClass}`}>{(p.status === 'Thực thi' || p.status === 'Ongoing') ? 'ONGOING' : (p.status === 'Giám sát' || p.status === 'Monitoring') ? 'MONITORING' : (p.status === 'Kết thúc' || p.status === 'Finished') ? 'FINISHED' : (p.status ? p.status.toUpperCase() : 'ONGOING')}</span>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      title={t('project.deleteProjectTooltip', 'Xóa dự án')}
+                      onClick={(e) => handleDeleteProject(e, p)}
+                      style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontSize: '14px', padding: '4px' }}
+                    >
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="project-card-body">
                 <p className="project-desc">{p.description || 'Không có mô tả.'}</p>

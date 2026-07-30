@@ -212,6 +212,10 @@ export const MySQLAdapter = {
     return await callApi('saveProject', { proj, membersList });
   },
 
+  deleteProject: async function(projectId, requesterId) {
+    return await callApi('deleteProject', { projectId, requesterId });
+  },
+
   saveTask: async function(task) {
     return await callApi('saveTask', { task });
   },

@@ -466,8 +466,8 @@ exports.deleteDailyReport = async (req, res, next) => {
       return res.status(404).json({ error: 'Không tìm thấy báo cáo' });
     }
 
-    if (report.status !== 'Pending' && report.status !== 'pending' && report.status !== 'Chờ duyệt') {
-      return res.status(400).json({ error: 'Chỉ có thể xóa báo cáo ở trạng thái Chờ duyệt' });
+    if (report.status !== 'Pending' && report.status !== 'pending' && report.status !== 'Chờ duyệt' && report.status !== 'Draft') {
+      return res.status(400).json({ error: 'Chỉ có thể xóa báo cáo ở trạng thái Chờ duyệt hoặc Nháp' });
     }
 
     await prisma.dailyreport.delete({

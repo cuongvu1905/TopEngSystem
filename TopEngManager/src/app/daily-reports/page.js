@@ -1052,7 +1052,7 @@ export default function DailyReportsPage() {
                           <span style={{ fontSize: '11px', color: '#64748b' }}>
                             {report.file_url ? <><i className="fa-solid fa-paperclip"></i> {t('report.hasAttachment', 'Có đính kèm')}</> : t('report.noAttachment', 'Không có đính kèm')}
                           </span>
-                          {(report.status === 'Pending' || report.status === 'pending' || report.status === 'Chờ duyệt') && report.user_id === currentUser?.id && (
+                          {(report.status === 'Pending' || report.status === 'pending' || report.status === 'Chờ duyệt' || report.status === 'Draft') && report.user_id === currentUser?.id && (
                             <button
                               onClick={async (e) => {
                                 e.stopPropagation();
