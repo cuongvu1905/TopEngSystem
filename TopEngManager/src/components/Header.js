@@ -662,7 +662,18 @@ export default function Header({ onToggleSidebar }) {
                             }
                             router.push(`/daily-reports?reportId=${reportIdMatch[1]}`);
                           } else {
-                            router.push('/' + n.link_url.replace('#', ''));
+                            let target = '/' + n.link_url.replace('#', '');
+                            // Older issue notifications (created before deep-linking existed)
+                            // were saved without an issueId query param, so they just land on
+                            // the project's default Kanban tab. Recover the issue from its key,
+                            // e.g. "(CRM-I103)", which every issue-notification message ends with.
+                            if (target.includes('/projects/') && !target.includes('issueId=')) {
+                              const issueKeyMatch = n.content?.match(/\(([A-Za-z0-9]+-[A-Za-z0-9]+)\)\s*$/);
+                              if (issueKeyMatch) {
+                                target += (target.includes('?') ? '&' : '?') + `issueId=${issueKeyMatch[1]}`;
+                              }
+                            }
+                            router.push(target);
                           }
                         }
                         await reloadAll();
