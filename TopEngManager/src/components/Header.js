@@ -232,6 +232,8 @@ export default function Header({ onToggleSidebar }) {
     pageTitle = pathname.includes('/projects/') ? t('projects.projectDetailTitle', 'Chi tiết dự án') : t('sidebar.projects', 'Quản lý Dự án');
   } else if (pathname === '/tasks') {
     pageTitle = t('sidebar.tasks', 'Quản lý Công việc');
+  // } else if (pathname === '/room-booking') {
+  //   pageTitle = t('sidebar.roomBooking', 'Đặt phòng họp');
   } else if (pathname === '/chat') {
     pageTitle = t('sidebar.chat', 'Hộp thoại Trò chuyện');
   } else if (pathname === '/documents') {

@@ -8,6 +8,16 @@ import { getSwal } from '@/utils/swal';
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
 
+// Default Timeframe per card position: card 1 = morning, card 2 = afternoon,
+// card 3 = late afternoon, card 4 = evening. Cards beyond this fall back to
+// continuing 3 hours after the previous card's end time.
+const DEFAULT_TIME_SLOTS = [
+  { startTime: '08:00', endTime: '12:00' },
+  { startTime: '13:00', endTime: '17:00' },
+  { startTime: '17:00', endTime: '20:00' },
+  { startTime: '20:00', endTime: '00:00' }
+];
+
 const Swal = {
   fire: async (...args) => {
     const instance = await getSwal();
@@ -96,8 +106,8 @@ export default function DailyReportsPage() {
     {
       id: 'card-1',
       content: '',
-      startTime: '08:00',
-      endTime: '12:00',
+      startTime: DEFAULT_TIME_SLOTS[0].startTime,
+      endTime: DEFAULT_TIME_SLOTS[0].endTime,
       projectId: '',
       fileUrl: '',
       fileName: ''
@@ -127,6 +137,8 @@ export default function DailyReportsPage() {
 
   // Which single time-dropdown (if any) is open, keyed as "<cardId>-startTime"/"<cardId>-endTime".
   const [openTimeDropdown, setOpenTimeDropdown] = useState(null);
+  // In-progress manual hour/minute typed for the currently open time-dropdown, keyed the same way.
+  const [manualTimeDraft, setManualTimeDraft] = useState({});
 
   useEffect(() => {
     const handleDocClick = (e) => {
@@ -141,11 +153,26 @@ export default function DailyReportsPage() {
   const renderTimeDropdown = (card, field) => {
     const key = `${card.id}-${field}`;
     const isOpen = openTimeDropdown === key;
+    const [currentHour, currentMinute] = card[field].split(':');
+    const draft = manualTimeDraft[key] || { hour: currentHour, minute: currentMinute };
+
+    const applyManualTime = () => {
+      const h = String(Math.min(23, Math.max(0, parseInt(draft.hour, 10) || 0))).padStart(2, '0');
+      const m = String(Math.min(59, Math.max(0, parseInt(draft.minute, 10) || 0))).padStart(2, '0');
+      updateCardField(card.id, field, `${h}:${m}`);
+      setOpenTimeDropdown(null);
+    };
+
     return (
       <div className="time-dropdown-wrapper" style={{ position: 'relative', flex: 1 }}>
         <button
           type="button"
-          onClick={() => setOpenTimeDropdown(isOpen ? null : key)}
+          onClick={() => {
+            if (!isOpen) {
+              setManualTimeDraft(prev => ({ ...prev, [key]: { hour: currentHour, minute: currentMinute } }));
+            }
+            setOpenTimeDropdown(isOpen ? null : key);
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -169,9 +196,9 @@ export default function DailyReportsPage() {
           <div style={{
             position: 'absolute',
             top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
-            maxHeight: '220px',
+            ...(field === 'endTime' ? { right: 0 } : { left: 0 }),
+            minWidth: '220px',
+            maxHeight: '280px',
             overflowY: 'auto',
             backgroundColor: 'var(--neutral-bg-card)',
             border: '1px solid var(--neutral-border)',
@@ -179,6 +206,37 @@ export default function DailyReportsPage() {
             boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)',
             zIndex: 20
           }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', borderBottom: '1px solid var(--neutral-border)' }}>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={2}
+                value={draft.hour}
+                onChange={(e) => setManualTimeDraft(prev => ({ ...prev, [key]: { ...draft, hour: e.target.value.replace(/\D/g, '') } }))}
+                onKeyDown={(e) => { if (e.key === 'Enter') applyManualTime(); }}
+                style={{ width: '48px', textAlign: 'center', border: '1px solid var(--neutral-border)', borderRadius: '4px', padding: '8px 4px', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '17px', fontWeight: '600' }}
+              />
+              <span style={{ color: 'var(--neutral-dark)', fontWeight: '700', fontSize: '17px' }}>:</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={2}
+                value={draft.minute}
+                onChange={(e) => setManualTimeDraft(prev => ({ ...prev, [key]: { ...draft, minute: e.target.value.replace(/\D/g, '') } }))}
+                onKeyDown={(e) => { if (e.key === 'Enter') applyManualTime(); }}
+                style={{ width: '48px', textAlign: 'center', border: '1px solid var(--neutral-border)', borderRadius: '4px', padding: '8px 4px', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '17px', fontWeight: '600' }}
+              />
+              <button
+                type="button"
+                onClick={applyManualTime}
+                title={t('common.confirm', 'Xác nhận')}
+                style={{ flex: 1, border: 'none', borderRadius: '4px', padding: '8px 10px', backgroundColor: 'var(--primary-color)', color: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+              >
+                <i className="fa-solid fa-check"></i>
+              </button>
+            </div>
             {HOUR_OPTIONS.map(hour => (
               <button
                 type="button"
@@ -207,13 +265,17 @@ export default function DailyReportsPage() {
   };
 
   const handleAddReportCard = () => {
-    let nextStart = '08:00';
-    let nextEnd = '12:00';
-    if (reportCards.length > 0) {
+    const nextIndex = reportCards.length;
+    let nextStart;
+    let nextEnd;
+    if (nextIndex < DEFAULT_TIME_SLOTS.length) {
+      nextStart = DEFAULT_TIME_SLOTS[nextIndex].startTime;
+      nextEnd = DEFAULT_TIME_SLOTS[nextIndex].endTime;
+    } else {
       const lastCard = reportCards[reportCards.length - 1];
       nextStart = lastCard.endTime || '08:00';
       const [hours, minutes] = nextStart.split(':').map(Number);
-      const endHours = Math.min(hours + 4, 23);
+      const endHours = Math.min(hours + 3, 23);
       nextEnd = `${String(endHours).padStart(2, '0')}:${String(minutes || 0).padStart(2, '0')}`;
     }
     setReportCards(prev => [
@@ -882,9 +944,13 @@ export default function DailyReportsPage() {
                                 ? t('report.draftStatus', 'Nháp')
                                 : 'Pending'; // Always Pending in English
 
+                          const feedbackLabel = report.reviewer_name
+                            ? t('reports.managerFeedbackLabelNamed', 'Ý kiến phản hồi từ quản lý({name}):').replace('{name}', report.reviewer_name)
+                            : t('reports.managerFeedbackLabel', 'Ý kiến phản hồi từ quản lý:');
+
                           const rejectionCommentHtml = (report.status === 'Rejected' && report.comment)
                             ? `<div style="margin-bottom: 12px; padding: 10px 12px; background-color: #fef2f2; border: 1px dashed #fca5a5; border-radius: 6px;">
-                                 <strong style="font-size: 12.5px; color: #b91c1c; display: block; margin-bottom: 4px;">${t('reports.managerFeedbackLabel', 'Ý kiến phản hồi từ quản lý:')}</strong>
+                                 <strong style="font-size: 12.5px; color: #b91c1c; display: block; margin-bottom: 4px;">${feedbackLabel}</strong>
                                  <span style="font-size: 13px; color: #7f1d1d; white-space: pre-wrap;">${report.comment}</span>
                                </div>`
                             : '';

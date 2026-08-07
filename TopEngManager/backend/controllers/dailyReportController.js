@@ -158,6 +158,13 @@ exports.getDailyReports = async (req, res, next) => {
     // Exclude Project Reports (keep all Daily Reports)
     const dailyOnlyReports = reports.filter(r => r.comment !== 'PROJECT_REPORT');
 
+    const reviewerIds = [...new Set(dailyOnlyReports.map(r => r.reviewer_id).filter(Boolean))];
+    const reviewers = reviewerIds.length > 0 ? await prisma.user.findMany({
+      where: { user_id: { in: reviewerIds } },
+      select: { user_id: true, full_name: true }
+    }) : [];
+    const reviewerNameById = Object.fromEntries(reviewers.map(rv => [rv.user_id, rv.full_name]));
+
     const formattedReports = dailyOnlyReports.map(r => ({
       id: r.id,
       user_id: r.user_id,
@@ -169,7 +176,8 @@ exports.getDailyReports = async (req, res, next) => {
       comment: r.comment || '',
       user_name: r.user?.full_name || 'Không xác định',
       user_email: r.user?.email || '',
-      user_role: r.user?.role || ''
+      user_role: r.user?.role || '',
+      reviewer_name: r.reviewer_id ? (reviewerNameById[r.reviewer_id] || '') : ''
     }));
 
     res.json(formattedReports);
@@ -307,6 +315,24 @@ exports.createDailyReport = async (req, res, next) => {
       }
     }
 
+    // Only one real submission per day is allowed — a Draft doesn't count since it
+    // hasn't been sent for approval yet, and Project Reports are a separate feature.
+    if (!isDraft) {
+      const dayStart = new Date(finalDate.getFullYear(), finalDate.getMonth(), finalDate.getDate(), 0, 0, 0);
+      const dayEnd = new Date(finalDate.getFullYear(), finalDate.getMonth(), finalDate.getDate(), 23, 59, 59, 999);
+      const existingForDay = await prisma.dailyreport.findFirst({
+        where: {
+          user_id: userId,
+          status: { not: 'Draft' },
+          created_at: { gte: dayStart, lte: dayEnd },
+          OR: [{ comment: null }, { comment: { not: 'PROJECT_REPORT' } }]
+        }
+      });
+      if (existingForDay) {
+        return res.status(400).json({ error: 'Bạn đã gửi báo cáo ngày này rồi. Mỗi ngày chỉ được gửi 1 báo cáo.' });
+      }
+    }
+
     const newReport = await prisma.dailyreport.create({
       data: {
         user_id: userId,
@@ -373,7 +399,8 @@ exports.updateDailyReportStatus = async (req, res, next) => {
       where: { id: parseInt(reportId) },
       data: {
         status: status,
-        comment: comment || null
+        comment: comment || null,
+        reviewer_id: userId || null
       }
     });
 
@@ -431,6 +458,29 @@ exports.updateDailyReport = async (req, res, next) => {
     // A Draft only leaves Draft status when the caller explicitly submits it
     // (status: 'Pending'); an ordinary draft re-save omits status and stays Draft.
     if (isDraftStatus && status === 'Pending') {
+      // Same one-submission-per-day rule as a brand new report — a Draft being
+      // promoted to Pending is still a first-time real submission for that date.
+      let refDate = report.created_at;
+      if (createdAt) {
+        const dateParts = createdAt.split('-');
+        if (dateParts.length === 3) {
+          refDate = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10), 12, 0, 0);
+        }
+      }
+      const dayStart = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate(), 0, 0, 0);
+      const dayEnd = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate(), 23, 59, 59, 999);
+      const existingForDay = await prisma.dailyreport.findFirst({
+        where: {
+          user_id: report.user_id,
+          status: { not: 'Draft' },
+          created_at: { gte: dayStart, lte: dayEnd },
+          OR: [{ comment: null }, { comment: { not: 'PROJECT_REPORT' } }],
+          NOT: { id: report.id }
+        }
+      });
+      if (existingForDay) {
+        return res.status(400).json({ error: 'Bạn đã gửi báo cáo ngày này rồi. Mỗi ngày chỉ được gửi 1 báo cáo.' });
+      }
       updateData.status = 'Pending';
     }
 

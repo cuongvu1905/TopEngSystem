@@ -59,6 +59,12 @@ export default function Sidebar({ isOpen = false, onClose }) {
           <i className="fa-solid fa-list-check"></i>
           <span>{t('sidebar.tasks', 'Công việc')}</span>
         </Link>
+        {/*
+        <Link href="/room-booking" onClick={handleNavigate} className={`menu-item ${pathname === '/room-booking' ? 'active' : ''}`}>
+          <i className="fa-solid fa-door-open"></i>
+          <span>{t('sidebar.roomBooking', 'Đặt phòng họp')}</span>
+        </Link>
+        */}
         <Link href="/chat" onClick={handleNavigate} className={`menu-item ${pathname === '/chat' ? 'active' : ''}`}>
           <i className="fa-solid fa-comments"></i>
           <span>{t('sidebar.chat', 'Trò chuyện')}</span>

@@ -65,6 +65,7 @@ model dailyreport {
   project_id String?  @db.VarChar(36)
   status     String?  @default("Pending") @db.VarChar(50)
   comment    String?  @db.Text
+  reviewer_id String? @db.VarChar(36)
   project    project? @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_report_project")
   user       user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_report_user")
 

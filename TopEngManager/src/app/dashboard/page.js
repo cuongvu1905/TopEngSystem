@@ -1642,7 +1642,9 @@ export default function Dashboard() {
                 selectedReportForPopup.comment && (
                   <div style={{ backgroundColor: '#f0fdf4', border: '1.5px dashed #b7ebc6', borderRadius: '6px', padding: '12px' }}>
                     <strong style={{ fontSize: '12.5px', color: '#1e4620', display: 'block', marginBottom: '4px' }}>
-                      {t('reports.managerFeedbackLabel', 'Ý kiến phản hồi từ quản lý:')}
+                      {selectedReportForPopup.reviewer_name
+                        ? t('reports.managerFeedbackLabelNamed', 'Ý kiến phản hồi từ quản lý({name}):').replace('{name}', selectedReportForPopup.reviewer_name)
+                        : t('reports.managerFeedbackLabel', 'Ý kiến phản hồi từ quản lý:')}
                     </strong>
                     <p style={{ fontSize: '13px', color: '#2b5a2e', margin: 0, whiteSpace: 'pre-wrap' }}>
                       {selectedReportForPopup.comment}

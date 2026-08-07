@@ -175,4 +175,18 @@ const prisma = new PrismaClient();
   }
 })();
 
+// Self-healing column addition for tracking who approved/rejected a daily report
+(async () => {
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`dailyreport\` LIKE 'reviewer_id'`;
+    if (columns.length === 0) {
+      console.log('Adding reviewer_id column to dailyreport table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `dailyreport` ADD COLUMN `reviewer_id` VARCHAR(36) NULL;');
+      console.log('reviewer_id column added successfully.');
+    }
+  } catch (err) {
+    console.error('Error during dailyreport reviewer_id migration check:', err);
+  }
+})();
+
 module.exports = prisma;
