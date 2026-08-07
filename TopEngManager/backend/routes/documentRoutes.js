@@ -11,7 +11,7 @@ if (!fs.existsSync(documentsUploadDir)) {
   fs.mkdirSync(documentsUploadDir, { recursive: true });
 }
 
-const ALLOWED_EXTENSIONS = ['txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf', 'csv', 'png', 'jpg', 'jpeg', 'zip', 'rar'];
+const ALLOWED_EXTENSIONS = ['txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf', 'csv', 'png', 'jpg', 'jpeg', 'zip', 'rar', 'dwg', 'zw1'];
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -40,6 +40,16 @@ router.post('/createDocumentFolder', documentController.createDocumentFolder);
 router.post('/renameDocumentFolder', documentController.renameDocumentFolder);
 router.post('/deleteDocumentFolder', documentController.deleteDocumentFolder);
 router.post('/getDocuments', documentController.getDocuments);
+router.post('/getDocumentFileSlots', documentController.getDocumentFileSlots);
+router.post('/createDocumentFileSlot', documentController.createDocumentFileSlot);
+router.post('/uploadDocumentFileSlot', (req, res, next) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+}, documentController.uploadDocumentFileSlot);
 router.post('/deleteDocument', documentController.deleteDocument);
 router.get('/downloadDocument/:documentId', documentController.downloadDocument);
 router.post('/getDocumentContent', documentController.getDocumentContent);

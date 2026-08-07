@@ -180,6 +180,31 @@ export const MySQLAdapter = {
     return data;
   },
 
+  getDocumentFileSlots: async function({ folderId }) {
+    return await callApi('getDocumentFileSlots', { folderId });
+  },
+
+  createDocumentFileSlot: async function({ folderId }) {
+    return await callApi('createDocumentFileSlot', { folderId });
+  },
+
+  uploadDocumentFileSlot: async function(file, { slotId, folderId, projectId, uploadedBy }) {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (slotId) formData.append('slotId', slotId);
+    if (folderId) formData.append('folderId', folderId);
+    if (projectId) formData.append('projectId', projectId);
+    if (uploadedBy) formData.append('uploadedBy', uploadedBy);
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5000/api';
+    const res = await fetch(`${backendUrl}/uploadDocumentFileSlot`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload error');
+    return data;
+  },
+
   getDocumentContent: async function(documentId) {
     return await callApi('getDocumentContent', { documentId });
   },

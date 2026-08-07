@@ -189,4 +189,44 @@ const prisma = new PrismaClient();
   }
 })();
 
+// Self-healing column addition for tagging special-purpose document folders
+// (e.g. the auto-provisioned "01.TK Điện" folder that renders a file-slot table)
+(async () => {
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`documentfolder\` LIKE 'folder_type'`;
+    if (columns.length === 0) {
+      console.log('Adding folder_type column to documentfolder table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `documentfolder` ADD COLUMN `folder_type` VARCHAR(30) NULL;');
+      console.log('folder_type column added successfully.');
+    }
+  } catch (err) {
+    console.error('Error during documentfolder folder_type migration check:', err);
+  }
+})();
+
+// Self-healing table creation for the Document file-slot table feature
+(async () => {
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'documentfileslot'`;
+    if (tables.length === 0) {
+      console.log('Creating documentfileslot table...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`documentfileslot\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`folder_id\` VARCHAR(50) NOT NULL,
+          \`row_order\` INT NOT NULL,
+          \`prefix\` VARCHAR(150) DEFAULT NULL,
+          \`document_id\` VARCHAR(50) DEFAULT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT \`fk_fileslot_folder\` FOREIGN KEY (\`folder_id\`) REFERENCES \`documentfolder\` (\`folder_id\`) ON DELETE CASCADE,
+          CONSTRAINT \`fk_fileslot_document\` FOREIGN KEY (\`document_id\`) REFERENCES \`document\` (\`document_id\`) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('documentfileslot table created successfully.');
+    }
+  } catch (err) {
+    console.error('Error during documentfileslot table migration check:', err);
+  }
+})();
+
 module.exports = prisma;

@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const { createNotificationSafe } = require('./notificationController');
+const { createDefaultProjectFolderTree } = require('./documentController');
 
 const formatProjectDto = (p) => {
   if (!p) return null;
@@ -95,6 +96,12 @@ exports.saveProject = async (req, res, next) => {
         INSERT INTO \`project\` (project_id, project_name, project_description, project_key, create_by, customer_id, status, start_date, end_date, visibility)
         VALUES (${id}, ${finalProjectName}, ${proj.description}, ${projectKey}, ${proj.create_by || proj.created_by || null}, ${proj.customer_id || null}, ${proj.status || 'Thực thi'}, ${proj.start_date || '2026-06-01'}, ${proj.end_date || '2026-12-31'}, ${visibility})
       `;
+
+      try {
+        await createDefaultProjectFolderTree(id, proj.create_by || proj.created_by || null);
+      } catch (folderErr) {
+        console.error('Failed to auto-provision default document folder tree for new project:', folderErr);
+      }
     } else {
       let projectKey = proj.project_key ? proj.project_key.trim().toUpperCase() : null;
       if (!projectKey) {

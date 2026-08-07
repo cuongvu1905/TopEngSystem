@@ -7,6 +7,7 @@ import { db } from '@/utils/db';
 import { getSwal } from '@/utils/swal';
 import TextDocumentEditor from '@/components/TextDocumentEditor';
 import FilePreviewModal, { PREVIEWABLE_EXTENSIONS } from '@/components/FilePreviewModal';
+import DocumentFileSlotTable from '@/components/DocumentFileSlotTable';
 
 const FILE_ICONS = {
   pdf: 'fa-file-pdf',
@@ -23,9 +24,11 @@ const FILE_ICONS = {
   zip: 'fa-file-zipper',
   rar: 'fa-file-zipper',
   txt: 'fa-file-lines',
-  html: 'fa-file-lines'
+  html: 'fa-file-lines',
+  dwg: 'fa-file-pen',
+  zw1: 'fa-file-pen'
 };
-const ACCEPT_EXT = '.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.csv,.png,.jpg,.jpeg,.zip,.rar';
+const ACCEPT_EXT = '.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.csv,.png,.jpg,.jpeg,.zip,.rar,.dwg,.zw1';
 
 function formatFileSize(bytes) {
   if (bytes === null || bytes === undefined) return '';
@@ -49,6 +52,8 @@ export default function DocumentExplorer({ projectId = null }) {
   const [mobileTreeOpen, setMobileTreeOpen] = useState(false);
   const [textEditorState, setTextEditorState] = useState(null); // { doc, autoEdit } | null
   const [previewDoc, setPreviewDoc] = useState(null);
+  // Right-click folder menu: { x, y, folder } while open, null when closed.
+  const [folderContextMenu, setFolderContextMenu] = useState(null);
 
   const isAdmin = currentUser?.system_role?.includes('Admin');
 
@@ -72,6 +77,20 @@ export default function DocumentExplorer({ projectId = null }) {
 
   useEffect(() => { loadFolders(); }, [loadFolders]);
   useEffect(() => { loadDocuments(); }, [loadDocuments]);
+
+  useEffect(() => {
+    if (!folderContextMenu) return;
+    const closeMenu = () => setFolderContextMenu(null);
+    const handleKeyDown = (e) => { if (e.key === 'Escape') closeMenu(); };
+    window.addEventListener('click', closeMenu);
+    window.addEventListener('contextmenu', closeMenu);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('click', closeMenu);
+      window.removeEventListener('contextmenu', closeMenu);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [folderContextMenu]);
 
   const getChildren = (parentId) => folders.filter(f => (f.parent_folder_id || null) === parentId);
 
@@ -239,6 +258,7 @@ export default function DocumentExplorer({ projectId = null }) {
   };
 
   const currentFolder = folders.find(f => f.folder_id === selectedFolderId);
+  const isSlotTableFolder = currentFolder?.folder_type === 'file_slot_table';
   const rootFolders = getChildren(null);
 
   const renderFolderNode = (folder, depth = 0) => {
@@ -257,7 +277,15 @@ export default function DocumentExplorer({ projectId = null }) {
             if (hasChildren) toggleCollapse(folder.folder_id);
           }}
         >
-          <div className="doc-folder-node-left">
+          <div
+            className="doc-folder-node-left"
+            onContextMenu={(e) => {
+              if (!canManageFolder(folder)) return;
+              e.preventDefault();
+              e.stopPropagation();
+              setFolderContextMenu({ x: e.clientX, y: e.clientY, folder });
+            }}
+          >
             {hasChildren ? (
               <i className={isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down'}></i>
             ) : (
@@ -274,24 +302,6 @@ export default function DocumentExplorer({ projectId = null }) {
             >
               <i className="fa-solid fa-plus"></i>
             </button>
-            {canManageFolder(folder) && (
-              <button
-                type="button"
-                title={t('common.edit', 'Sửa')}
-                onClick={(e) => handleRenameFolder(folder, e)}
-              >
-                <i className="fa-solid fa-pen"></i>
-              </button>
-            )}
-            {canManageFolder(folder) && (
-              <button
-                type="button"
-                title={t('common.delete', 'Xóa')}
-                onClick={(e) => handleDeleteFolder(folder, e)}
-              >
-                <i className="fa-solid fa-trash-can"></i>
-              </button>
-            )}
           </div>
         </div>
         {hasChildren && !isCollapsed && (
@@ -353,31 +363,33 @@ export default function DocumentExplorer({ projectId = null }) {
           <i className="fa-solid fa-folder-tree"></i> {t('documents.folders', 'Thư mục')}
         </button>
 
-        <div className="doc-filters">
-          <form onSubmit={handleSearchSubmit} className="doc-search-input">
-            <i className="fa-solid fa-magnifying-glass"></i>
+        {!isSlotTableFolder && (
+          <div className="doc-filters">
+            <form onSubmit={handleSearchSubmit} className="doc-search-input">
+              <i className="fa-solid fa-magnifying-glass"></i>
+              <input
+                type="text"
+                placeholder={t('documents.searchPlaceholder', 'Tìm tài liệu trong toàn bộ thư mục...')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
             <input
-              type="text"
-              placeholder={t('documents.searchPlaceholder', 'Tìm tài liệu trong toàn bộ thư mục...')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept={ACCEPT_EXT}
+              style={{ display: 'none' }}
+              onChange={handleFilesSelected}
             />
-          </form>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept={ACCEPT_EXT}
-            style={{ display: 'none' }}
-            onChange={handleFilesSelected}
-          />
-          <button type="button" className="btn btn-secondary" onClick={() => setTextEditorState({ doc: null, autoEdit: true })}>
-            <i className="fa-solid fa-file-circle-plus"></i> {t('documents.createDocument', 'Tạo tài liệu')}
-          </button>
-          <button type="button" className="btn btn-primary" onClick={handleUploadClick} disabled={uploading}>
-            <i className="fa-solid fa-upload"></i> {uploading ? t('documents.uploading', 'Đang tải lên...') : t('common.upload', 'Tải lên')}
-          </button>
-        </div>
+            <button type="button" className="btn btn-secondary" onClick={() => setTextEditorState({ doc: null, autoEdit: true })}>
+              <i className="fa-solid fa-file-circle-plus"></i> {t('documents.createDocument', 'Tạo tài liệu')}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={handleUploadClick} disabled={uploading}>
+              <i className="fa-solid fa-upload"></i> {uploading ? t('documents.uploading', 'Đang tải lên...') : t('common.upload', 'Tải lên')}
+            </button>
+          </div>
+        )}
 
         <div className="doc-breadcrumb">
           {activeSearch ? (
@@ -390,6 +402,9 @@ export default function DocumentExplorer({ projectId = null }) {
           )}
         </div>
 
+        {isSlotTableFolder ? (
+          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} />
+        ) : (
         <div className="doc-file-list">
           {documents.length === 0 ? (
             <div className="empty-widget-state">
@@ -457,11 +472,45 @@ export default function DocumentExplorer({ projectId = null }) {
             })
           )}
         </div>
+        )}
         </>
         )}
       </div>
       {previewDoc && (
         <FilePreviewModal doc={previewDoc} onClose={() => setPreviewDoc(null)} />
+      )}
+      {folderContextMenu && (
+        <div
+          style={{
+            position: 'fixed',
+            top: folderContextMenu.y,
+            left: folderContextMenu.x,
+            zIndex: 1000,
+            backgroundColor: 'var(--neutral-bg-card)',
+            border: '1px solid var(--neutral-border)',
+            borderRadius: '6px',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)',
+            minWidth: '160px',
+            overflow: 'hidden'
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            type="button"
+            onClick={(e) => { handleRenameFolder(folderContextMenu.folder, e); setFolderContextMenu(null); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13.5px', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <i className="fa-solid fa-pen" style={{ width: '14px' }}></i> {t('documents.renameFolderAction', 'Đổi tên thư mục')}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { handleDeleteFolder(folderContextMenu.folder, e); setFolderContextMenu(null); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 14px', border: 'none', background: 'none', color: 'var(--danger-color)', fontSize: '13.5px', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <i className="fa-solid fa-trash-can" style={{ width: '14px' }}></i> {t('documents.deleteFolderAction', 'Xóa thư mục')}
+          </button>
+        </div>
       )}
     </div>
   );

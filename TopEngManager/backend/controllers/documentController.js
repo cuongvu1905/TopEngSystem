@@ -85,6 +85,73 @@ exports.createDocumentFolder = async (req, res, next) => {
   }
 };
 
+// Subfolders auto-created under <Tên_Máy> for every new project; "01.TK Điện" is
+// tagged file_slot_table so it renders the fixed file-slot table instead of a normal
+// file list, and gets seeded with the 4 required rows below.
+const DEFAULT_MACHINE_SUBFOLDERS = [
+  { name: '00.TK Cơ Khí', folder_type: null },
+  { name: '01.TK Điện', folder_type: 'file_slot_table' },
+  { name: '02.PGM', folder_type: null }
+];
+
+const FILE_SLOT_TABLE_PREFIXES = [
+  '1.[BOM LIST]',
+  '2.[IO MAP]',
+  '3.[LAYOUT DRAW]',
+  '4.[Schematic Diagram]'
+];
+
+// Called once from project creation (not exposed as its own route) to provision
+// <Tên_Xưởng> -> <Tên_Máy> -> {00.TK Cơ Khí, 01.TK Điện, 02.PGM} for a brand new project.
+exports.createDefaultProjectFolderTree = async (projectId, createdBy) => {
+  const workshopFolder = await prisma.documentfolder.create({
+    data: {
+      folder_id: 'fold-' + crypto.randomUUID(),
+      name: '<Tên_Xưởng>',
+      parent_folder_id: null,
+      project_id: projectId,
+      created_by: createdBy || null
+    }
+  });
+
+  const machineFolder = await prisma.documentfolder.create({
+    data: {
+      folder_id: 'fold-' + crypto.randomUUID(),
+      name: '<Tên_Máy>',
+      parent_folder_id: workshopFolder.folder_id,
+      project_id: projectId,
+      created_by: createdBy || null
+    }
+  });
+
+  for (const sub of DEFAULT_MACHINE_SUBFOLDERS) {
+    const subFolder = await prisma.documentfolder.create({
+      data: {
+        folder_id: 'fold-' + crypto.randomUUID(),
+        name: sub.name,
+        parent_folder_id: machineFolder.folder_id,
+        project_id: projectId,
+        created_by: createdBy || null,
+        folder_type: sub.folder_type
+      }
+    });
+
+    if (sub.folder_type === 'file_slot_table') {
+      let rowOrder = 1;
+      for (const prefix of FILE_SLOT_TABLE_PREFIXES) {
+        await prisma.documentfileslot.create({
+          data: {
+            folder_id: subFolder.folder_id,
+            row_order: rowOrder++,
+            prefix,
+            document_id: null
+          }
+        });
+      }
+    }
+  }
+};
+
 exports.renameDocumentFolder = async (req, res, next) => {
   try {
     const { folderId, name } = req.body;
@@ -180,6 +247,104 @@ exports.uploadDocument = async (req, res, next) => {
       created.push(doc);
     }
     res.json(created);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getDocumentFileSlots = async (req, res, next) => {
+  try {
+    const { folderId } = req.body;
+    const slots = await prisma.documentfileslot.findMany({
+      where: { folder_id: folderId },
+      orderBy: { row_order: 'asc' },
+      include: { document: true }
+    });
+    res.json(slots);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.createDocumentFileSlot = async (req, res, next) => {
+  try {
+    const { folderId } = req.body;
+    if (!folderId) {
+      return res.status(400).json({ error: 'Thiếu folderId' });
+    }
+    const maxRow = await prisma.documentfileslot.aggregate({
+      where: { folder_id: folderId },
+      _max: { row_order: true }
+    });
+    const slot = await prisma.documentfileslot.create({
+      data: {
+        folder_id: folderId,
+        row_order: (maxRow._max.row_order || 0) + 1,
+        prefix: null,
+        document_id: null
+      },
+      include: { document: true }
+    });
+    res.json(slot);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.uploadDocumentFileSlot = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Không tìm thấy tệp tải lên' });
+    }
+    const { slotId, folderId, projectId, uploadedBy } = req.body;
+    if (!slotId) {
+      return res.status(400).json({ error: 'Thiếu slotId' });
+    }
+
+    const slot = await prisma.documentfileslot.findUnique({ where: { id: parseInt(slotId) } });
+    if (!slot) {
+      return res.status(404).json({ error: 'Không tìm thấy hàng trong bảng quản lý file' });
+    }
+
+    const originalName = fixOriginalName(req.file.originalname);
+    if (slot.prefix && !originalName.startsWith(slot.prefix)) {
+      return res.status(400).json({ error: `Tên tệp phải bắt đầu bằng "${slot.prefix}"` });
+    }
+
+    const ext = path.extname(req.file.originalname).slice(1).toLowerCase();
+    const newDoc = await prisma.document.create({
+      data: {
+        document_id: 'doc-' + crypto.randomUUID(),
+        folder_id: folderId || slot.folder_id,
+        project_id: projectId || null,
+        original_name: originalName,
+        stored_name: req.file.filename,
+        file_path: `/uploads/documents/${req.file.filename}`,
+        file_size: req.file.size,
+        file_ext: ext,
+        uploaded_by: uploadedBy || null
+      }
+    });
+
+    // Re-uploading to an already-filled row replaces the previous file instead of leaving an orphan.
+    if (slot.document_id) {
+      const oldDoc = await prisma.document.findUnique({ where: { document_id: slot.document_id } });
+      if (oldDoc) {
+        const absolutePath = path.join(__dirname, '..', oldDoc.file_path);
+        fs.unlink(absolutePath, (err) => {
+          if (err && err.code !== 'ENOENT') console.error('Failed to delete replaced file:', absolutePath, err.message);
+        });
+        await prisma.document.delete({ where: { document_id: oldDoc.document_id } }).catch(() => {});
+      }
+    }
+
+    const updatedSlot = await prisma.documentfileslot.update({
+      where: { id: slot.id },
+      data: { document_id: newDoc.document_id },
+      include: { document: true }
+    });
+
+    res.json(updatedSlot);
   } catch (err) {
     next(err);
   }

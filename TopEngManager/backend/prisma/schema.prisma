@@ -74,18 +74,20 @@ model dailyreport {
 }
 
 model documentfolder {
-  id               Int              @id @default(autoincrement())
-  folder_id        String           @unique(map: "folder_id") @db.VarChar(50)
-  name             String           @db.VarChar(255)
-  parent_folder_id String?          @db.VarChar(50)
-  project_id       String?          @db.VarChar(36)
-  created_by       String?          @db.VarChar(36)
-  created_at       DateTime         @default(now()) @db.Timestamp(0)
-  parent           documentfolder?  @relation("FolderHierarchy", fields: [parent_folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_parent")
-  children         documentfolder[] @relation("FolderHierarchy")
-  project          project?         @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_project")
-  user             user?            @relation(fields: [created_by], references: [user_id], onUpdate: Restrict, map: "fk_folder_creator")
+  id               Int                 @id @default(autoincrement())
+  folder_id        String              @unique(map: "folder_id") @db.VarChar(50)
+  name             String              @db.VarChar(255)
+  parent_folder_id String?             @db.VarChar(50)
+  project_id       String?             @db.VarChar(36)
+  created_by       String?             @db.VarChar(36)
+  created_at       DateTime            @default(now()) @db.Timestamp(0)
+  folder_type      String?             @db.VarChar(30)
+  parent           documentfolder?     @relation("FolderHierarchy", fields: [parent_folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_parent")
+  children         documentfolder[]    @relation("FolderHierarchy")
+  project          project?            @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_project")
+  user             user?               @relation(fields: [created_by], references: [user_id], onUpdate: Restrict, map: "fk_folder_creator")
   document         document[]
+  documentfileslot documentfileslot[]
 
   @@index([parent_folder_id], map: "fk_folder_parent")
   @@index([project_id], map: "fk_folder_project")
@@ -93,26 +95,41 @@ model documentfolder {
 }
 
 model document {
-  id             Int             @id @default(autoincrement())
-  document_id    String          @unique(map: "document_id") @db.VarChar(50)
-  folder_id      String?         @db.VarChar(50)
-  project_id     String?         @db.VarChar(36)
-  original_name  String          @db.VarChar(255)
-  stored_name    String          @db.VarChar(255)
-  file_path      String          @db.VarChar(500)
-  file_size      Int?
-  file_ext       String?         @db.VarChar(20)
-  uploaded_by    String?         @db.VarChar(36)
-  created_at     DateTime        @default(now()) @db.Timestamp(0)
-  doc_type       String          @default("upload") @db.VarChar(20)
-  updated_at     DateTime?       @db.Timestamp(0)
-  documentfolder documentfolder? @relation(fields: [folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_document_folder")
-  project        project?        @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_document_project")
-  user           user?           @relation(fields: [uploaded_by], references: [user_id], onUpdate: Restrict, map: "fk_document_uploader")
+  id               Int                @id @default(autoincrement())
+  document_id      String             @unique(map: "document_id") @db.VarChar(50)
+  folder_id        String?            @db.VarChar(50)
+  project_id       String?            @db.VarChar(36)
+  original_name    String             @db.VarChar(255)
+  stored_name      String             @db.VarChar(255)
+  file_path        String             @db.VarChar(500)
+  file_size        Int?
+  file_ext         String?            @db.VarChar(20)
+  uploaded_by      String?            @db.VarChar(36)
+  created_at       DateTime           @default(now()) @db.Timestamp(0)
+  doc_type         String             @default("upload") @db.VarChar(20)
+  updated_at       DateTime?          @db.Timestamp(0)
+  documentfolder   documentfolder?    @relation(fields: [folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_document_folder")
+  project          project?           @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_document_project")
+  user             user?              @relation(fields: [uploaded_by], references: [user_id], onUpdate: Restrict, map: "fk_document_uploader")
+  documentfileslot documentfileslot[]
 
   @@index([folder_id], map: "fk_document_folder")
   @@index([project_id], map: "fk_document_project")
   @@index([uploaded_by], map: "fk_document_uploader")
+}
+
+model documentfileslot {
+  id             Int             @id @default(autoincrement())
+  folder_id      String          @db.VarChar(50)
+  row_order      Int
+  prefix         String?         @db.VarChar(150)
+  document_id    String?         @db.VarChar(50)
+  created_at     DateTime        @default(now()) @db.Timestamp(0)
+  documentfolder documentfolder  @relation(fields: [folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_fileslot_folder")
+  document       document?       @relation(fields: [document_id], references: [document_id], onDelete: SetNull, onUpdate: Restrict, map: "fk_fileslot_document")
+
+  @@index([folder_id], map: "fk_fileslot_folder")
+  @@index([document_id], map: "fk_fileslot_document")
 }
 
 model department {
