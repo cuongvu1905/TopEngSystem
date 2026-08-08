@@ -156,6 +156,7 @@ export default function HRManagement() {
   const [localPermissions, setLocalPermissions] = useState([]);
   const [localRolePermissions, setLocalRolePermissions] = useState({});
   const [newRoleName, setNewRoleName] = useState('');
+  const [isAddingRole, setIsAddingRole] = useState(false);
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [selectedModuleFilter, setSelectedModuleFilter] = useState('all');
 
@@ -1379,7 +1380,7 @@ export default function HRManagement() {
             
             <form onSubmit={async (e) => {
               e.preventDefault();
-              if (!newRoleName.trim()) return;
+              if (!newRoleName.trim() || isAddingRole) return;
 
               const trimmed = newRoleName.trim();
               if (localRoles.some(r => r.name.toLowerCase() === trimmed.toLowerCase())) {
@@ -1394,6 +1395,7 @@ export default function HRManagement() {
                 [trimmed]: ["view_dashboard"]
               };
 
+              setIsAddingRole(true);
               setLocalRoles(updatedRoles);
               setLocalRolePermissions(updatedRolePerms);
               setNewRoleName('');
@@ -1401,28 +1403,31 @@ export default function HRManagement() {
               try {
                 await db.saveRolesPermissions(updatedRoles, updatedRolePerms);
                 await db.logActivity(
-                  currentUser.id, 
-                  "CREATE_ROLE", 
-                  "Role", 
-                  newId, 
+                  currentUser.id,
+                  "CREATE_ROLE",
+                  "Role",
+                  newId,
                   `đã thêm vai trò người dùng mới '${trimmed}'`
                 );
                 await reloadAll();
                 Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('team.addRoleSuccess', "Đã thêm vai trò '{name}' thành công! Hãy cấu hình quyền hạn cho vai trò này.").replace('{name}', trimmed) });
               } catch (err) {
                 Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('team.addRoleFailed', "Lỗi thêm vai trò: ") + err.message });
+              } finally {
+                setIsAddingRole(false);
               }
             }} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <input 
-                type="text" 
-                placeholder={t('team.newRolePlaceholder', 'Tên vai trò mới...')} 
+              <input
+                type="text"
+                placeholder={t('team.newRolePlaceholder', 'Tên vai trò mới...')}
                 value={newRoleName}
                 onChange={(e) => setNewRoleName(e.target.value)}
+                disabled={isAddingRole}
                 style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13px', outline: 'none', width: '180px' }}
                 required
               />
-              <button type="submit" className="btn btn-secondary btn-sm" style={{ padding: '7px 12px' }}>
-                <i className="fa-solid fa-plus"></i> {t('team.addRole', 'Thêm Vai Trò')}
+              <button type="submit" className="btn btn-secondary btn-sm" style={{ padding: '7px 12px' }} disabled={isAddingRole}>
+                <i className="fa-solid fa-plus"></i> {isAddingRole ? t('common.processing', 'Đang xử lý...') : t('team.addRole', 'Thêm Vai Trò')}
               </button>
             </form>
           </div>

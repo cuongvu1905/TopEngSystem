@@ -207,6 +207,7 @@ export default function ProjectDetail({ params }) {
    const [memberSearchQuery, setMemberSearchQuery] = useState('');
    const [selectedMemberToAdd, setSelectedMemberToAdd] = useState(null);
    const [showMemberDropdown, setShowMemberDropdown] = useState(false);
+   const [isAddingMember, setIsAddingMember] = useState(false);
 
   // Chat state inside project room
   const [chatRoomId, setChatRoomId] = useState(null);
@@ -237,6 +238,7 @@ export default function ProjectDetail({ params }) {
   const [isSubTaskPopupOpen, setIsSubTaskPopupOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState('');
   const [typingUser, setTypingUser] = useState(null);
   
@@ -249,6 +251,7 @@ export default function ProjectDetail({ params }) {
   const [issues, setIssues] = useState([]);
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [issueTitle, setIssueTitle] = useState('');
+  const [isCreatingIssue, setIsCreatingIssue] = useState(false);
   const [issueDesc, setIssueDesc] = useState('');
   const [issueType, setIssueType] = useState('TASK');
   const [issueStatus, setIssueStatus] = useState('TO_DO');
@@ -302,6 +305,7 @@ export default function ProjectDetail({ params }) {
   const [issueComments, setIssueComments] = useState([]);
   const [issueHistory, setIssueHistory] = useState([]);
   const [newCommentText, setNewCommentText] = useState('');
+  const [isAddingIssueComment, setIsAddingIssueComment] = useState(false);
   const [isEditingIssue, setIsEditingIssue] = useState(false);
   const [editIssueDesc, setEditIssueDesc] = useState('');
 
@@ -1285,13 +1289,16 @@ export default function ProjectDetail({ params }) {
 
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!newCommentText.trim() || !activeIssueDetail) return;
+    if (!newCommentText.trim() || !activeIssueDetail || isAddingIssueComment) return;
+    setIsAddingIssueComment(true);
     try {
       await db.addComment(activeIssueDetail.id, currentUser.id, newCommentText);
       setNewCommentText('');
       loadIssueDetail(activeIssueDetail.id);
     } catch (err) {
       Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi thêm bình luận: " + err.message });
+    } finally {
+      setIsAddingIssueComment(false);
     }
   };
 
@@ -1551,6 +1558,7 @@ export default function ProjectDetail({ params }) {
   // Add project member
   const handleAddMember = async (e) => {
     e.preventDefault();
+    if (isAddingMember) return;
     const userId = selectedMemberToAdd?.id;
     const role = e.target.elements.role.value;
     if (!userId || !role) {
@@ -1563,33 +1571,38 @@ export default function ProjectDetail({ params }) {
       return;
     }
 
-    const isPublic = project.visibility === 'Public';
-    const status = isPublic ? 'PENDING' : 'ACTIVE';
+    setIsAddingMember(true);
+    try {
+      const isPublic = project.visibility === 'Public';
+      const status = isPublic ? 'PENDING' : 'ACTIVE';
 
-    await db.addProjectMember(projectId, userId, role, status);
-    const u = users.find(usr => usr.id === userId);
-    
-    await db.logActivity(
-      currentUser.id, 
-      "ADD_MEMBER", 
-      "Project", 
-      projectId, 
-      isPublic 
-        ? `đã gửi lời mời tham gia dự án cho thành viên '${u ? u.name : userId}' với vai trò ${role}`
-        : `đã thêm thành viên '${u ? u.name : userId}' với vai trò ${role}`
-    );
-    
-    Swal.fire({
-      icon: 'success',
-      title: t('common.success', 'Thành công'),
-      text: isPublic ? t('project.inviteSentPendingAgreement', 'Đã gửi lời mời tham gia dự án (đang chờ xác nhận điều khoản)!') : t('project.memberAddedSuccess', 'Đã thêm thành viên thành công!'),
-      confirmButtonColor: 'var(--primary-color)'
-    });
+      await db.addProjectMember(projectId, userId, role, status);
+      const u = users.find(usr => usr.id === userId);
 
-    e.target.reset();
-    setSelectedMemberToAdd(null);
-    setMemberSearchQuery('');
-    await reloadAll();
+      await db.logActivity(
+        currentUser.id,
+        "ADD_MEMBER",
+        "Project",
+        projectId,
+        isPublic
+          ? `đã gửi lời mời tham gia dự án cho thành viên '${u ? u.name : userId}' với vai trò ${role}`
+          : `đã thêm thành viên '${u ? u.name : userId}' với vai trò ${role}`
+      );
+
+      Swal.fire({
+        icon: 'success',
+        title: t('common.success', 'Thành công'),
+        text: isPublic ? t('project.inviteSentPendingAgreement', 'Đã gửi lời mời tham gia dự án (đang chờ xác nhận điều khoản)!') : t('project.memberAddedSuccess', 'Đã thêm thành viên thành công!'),
+        confirmButtonColor: 'var(--primary-color)'
+      });
+
+      e.target.reset();
+      setSelectedMemberToAdd(null);
+      setMemberSearchQuery('');
+      await reloadAll();
+    } finally {
+      setIsAddingMember(false);
+    }
   };
 
   const handleRemoveMember = async (userId, name) => {
@@ -1613,16 +1626,18 @@ export default function ProjectDetail({ params }) {
   // Chat message sending & simulated reply
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!chatInput.trim() || !chatRoomId) return;
+    if (!chatInput.trim() || !chatRoomId || isSendingMessage) return;
+    setIsSendingMessage(true);
 
     // Check asking before send tag @all confirmation if Sales / BOD / Admin
     if (chatInput.includes("@all")) {
       const canTagAll = isAdmin || isLeader || isSales; // project chat tag @all
       if (!canTagAll) {
         Swal.fire({ icon: 'error', title: 'Quyền hạn', text: "Bạn không có quyền tag @all trong nhóm dự án." });
+        setIsSendingMessage(false);
         return;
       }
-      
+
       const shouldAsk = isAdmin || isSales || isBOD;
       if (shouldAsk) {
         const confirmResult = await Swal.fire({
@@ -1636,11 +1651,13 @@ export default function ProjectDetail({ params }) {
           cancelButtonText: 'Hủy'
         });
         if (!confirmResult.isConfirmed) {
+          setIsSendingMessage(false);
           return;
         }
       }
     }
 
+    try {
     if (StreamChatAdapter.isEnabled()) {
       await StreamChatAdapter.sendMessage(chatInput.trim());
     } else {
@@ -1689,6 +1706,9 @@ export default function ProjectDetail({ params }) {
 
     setChatInput('');
     setMentionQuery(null);
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -2343,8 +2363,8 @@ export default function ProjectDetail({ params }) {
                     <option value="Member">{t('project.roleMember', 'Thành viên')}</option>
                     <option value="PM">{t('project.rolePM', 'Quản lý')}</option>
                   </select>
-                  <button type="submit" className="btn btn-primary btn-sm">
-                    <i className="fa-solid fa-user-plus"></i> {project.visibility === 'Public' ? t('project.inviteMember', 'Mời tham gia') : t('common.add', 'Thêm')}
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={isAddingMember}>
+                    <i className="fa-solid fa-user-plus"></i> {isAddingMember ? t('common.processing', 'Đang xử lý...') : (project.visibility === 'Public' ? t('project.inviteMember', 'Mời tham gia') : t('common.add', 'Thêm'))}
                   </button>
                 </form>
               </div>
@@ -2461,12 +2481,13 @@ export default function ProjectDetail({ params }) {
               
               <form className="chat-input-area" onSubmit={handleSendMessage} style={{ borderTop: '1px solid var(--neutral-border)' }}>
                 <div className="chat-input-wrapper">
-                  <textarea 
+                  <textarea
                     ref={chatInputRef}
-                    value={chatInput} 
-                    onChange={handleChatInputChange} 
+                    value={chatInput}
+                    onChange={handleChatInputChange}
                     onKeyDown={handleKeyDown}
-                    placeholder={t('project.inputMessagePlaceholder', 'Nhập tin nhắn... Gõ @ nhắc tên')} 
+                    disabled={isSendingMessage}
+                    placeholder={t('project.inputMessagePlaceholder', 'Nhập tin nhắn... Gõ @ nhắc tên')}
                     rows="1"
                   />
                   {mentionQuery !== null && (
@@ -2481,7 +2502,7 @@ export default function ProjectDetail({ params }) {
                   )}
                 </div>
                 <div className="chat-input-actions">
-                  <button type="submit" className="btn btn-primary btn-sm"><i className="fa-solid fa-paper-plane"></i> {t('common.send', 'Gửi')}</button>
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={isSendingMessage}><i className="fa-solid fa-paper-plane"></i> {t('common.send', 'Gửi')}</button>
                 </div>
               </form>
             </div>
@@ -2930,8 +2951,8 @@ export default function ProjectDetail({ params }) {
               </div>
               <form onSubmit={async (e) => {
                 e.preventDefault();
-                if (!issueTitle.trim()) return;
-                
+                if (!issueTitle.trim() || isCreatingIssue) return;
+
                 if (!jiraCreateDeadline) {
                   Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('issues.deadlineRequiredAlert', 'Vui lòng gắn Hạn chót (Deadline) cho Issue!') });
                   return;
@@ -2954,6 +2975,7 @@ export default function ProjectDetail({ params }) {
                   }
                 }
 
+                setIsCreatingIssue(true);
                 try {
                   const selectedUsers = users.filter(u => jiraCreateAssigneeIds.includes(u.id));
                   const calculatedAssigneesText = selectedUsers.map(u => `@${u.name}`).join(' ') + (selectedUsers.length > 0 ? ' ' : '');
@@ -3007,6 +3029,8 @@ export default function ProjectDetail({ params }) {
                   Swal.fire({ icon: 'success', title: 'Thành công', text: "Đã tạo issue mới thành công!" });
                 } catch (err) {
                   Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi tạo issue: " + err.message });
+                } finally {
+                  setIsCreatingIssue(false);
                 }
               }}>
                 <div className="modal-body create-issue-modal-body">
@@ -3200,8 +3224,8 @@ export default function ProjectDetail({ params }) {
                   </div>
                 </div>
                 <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', padding: '15px 20px', borderTop: '1px solid var(--neutral-border)' }}>
-                  <button type="button" className="btn btn-secondary" onClick={() => setIsIssueModalOpen(false)}>{t('common.cancel', 'Hủy')}</button>
-                  <button type="submit" className="btn btn-primary">{t('common.create', 'Tạo mới')}</button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsIssueModalOpen(false)} disabled={isCreatingIssue}>{t('common.cancel', 'Hủy')}</button>
+                  <button type="submit" className="btn btn-primary" disabled={isCreatingIssue}>{isCreatingIssue ? t('common.processing', 'Đang xử lý...') : t('common.create', 'Tạo mới')}</button>
                 </div>
               </form>
             </div>
@@ -3600,15 +3624,15 @@ export default function ProjectDetail({ params }) {
                     </div>
 
                     <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '8px' }}>
-                      <input 
-                        type="text" 
-                        placeholder={isLockedByOther ? t('issues.noCommentPermission', 'Bạn không có quyền bình luận...') : t('issues.writeComment', 'Viết bình luận...')} 
-                        value={newCommentText} 
-                        onChange={(e) => setNewCommentText(e.target.value)} 
-                        disabled={isLockedByOther}
+                      <input
+                        type="text"
+                        placeholder={isLockedByOther ? t('issues.noCommentPermission', 'Bạn không có quyền bình luận...') : t('issues.writeComment', 'Viết bình luận...')}
+                        value={newCommentText}
+                        onChange={(e) => setNewCommentText(e.target.value)}
+                        disabled={isLockedByOther || isAddingIssueComment}
                         style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--neutral-border)', fontSize: '13px', outline: 'none', backgroundColor: isLockedByOther ? 'var(--neutral-bg-hover)' : 'var(--neutral-bg-main)', color: 'var(--neutral-dark)' }}
                       />
-                      <button type="submit" className="btn btn-primary btn-sm" disabled={isLockedByOther}>{t('common.send', 'Gửi')}</button>
+                      <button type="submit" className="btn btn-primary btn-sm" disabled={isLockedByOther || isAddingIssueComment}>{t('common.send', 'Gửi')}</button>
                     </form>
                   </div>
 

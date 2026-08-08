@@ -142,6 +142,7 @@ export default function RoomBookingPage() {
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSavingBooking, setIsSavingBooking] = useState(false);
   const [modalLocation, setModalLocation] = useState('HN');
   const [modalRoomId, setModalRoomId] = useState('room-large');
   const [modalDate, setModalDate] = useState(formatDateStr(new Date('2026-08-10')));
@@ -231,6 +232,8 @@ export default function RoomBookingPage() {
   // Handle Submit Booking
   const handleSaveBooking = async (e) => {
     e.preventDefault();
+    if (isSavingBooking) return;
+    setIsSavingBooking(true);
     const Swal = await getSwal();
 
     if (!modalBookerName.trim() || !modalTeam.trim() || !modalDate) {
@@ -240,6 +243,7 @@ export default function RoomBookingPage() {
         text: 'Vui lòng điền đầy đủ thông tin đặt phòng.',
         confirmButtonColor: 'var(--primary-color)'
       });
+      setIsSavingBooking(false);
       return;
     }
 
@@ -250,6 +254,7 @@ export default function RoomBookingPage() {
         text: 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu.',
         confirmButtonColor: 'var(--primary-color)'
       });
+      setIsSavingBooking(false);
       return;
     }
 
@@ -272,6 +277,7 @@ export default function RoomBookingPage() {
         text: 'Khung giờ này đã có nhóm khác đặt phòng. Vui lòng chọn khung giờ khác!',
         confirmButtonColor: 'var(--primary-color)'
       });
+      setIsSavingBooking(false);
       return;
     }
 
@@ -290,6 +296,7 @@ export default function RoomBookingPage() {
     const updated = [...bookings, newBooking];
     saveBookingsState(updated);
     setIsModalOpen(false);
+    setIsSavingBooking(false);
 
     Swal.fire({
       icon: 'success',
@@ -806,14 +813,16 @@ export default function RoomBookingPage() {
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => setIsModalOpen(false)}
+                    disabled={isSavingBooking}
                   >
                     {t('common.cancel', 'Hủy')}
                   </button>
                   <button
                     type="submit"
                     className="btn btn-primary"
+                    disabled={isSavingBooking}
                   >
-                    {t('roomBooking.bookBtn', 'Đặt phòng họp')}
+                    {isSavingBooking ? t('common.processing', 'Đang xử lý...') : t('roomBooking.bookBtn', 'Đặt phòng họp')}
                   </button>
                 </div>
               </form>

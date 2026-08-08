@@ -293,6 +293,7 @@ export default function Dashboard() {
   const issueProj = (selectedIssueDetail && selectedIssueDetail.issue) ? projects.find(p => p.id === selectedIssueDetail.issue.project_id) : null;
   const [loadingIssueDetail, setLoadingIssueDetail] = useState(false);
   const [newCommentText, setNewCommentText] = useState('');
+  const [isAddingComment, setIsAddingComment] = useState(false);
 
   const [reportCommentText, setReportCommentText] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -524,7 +525,8 @@ export default function Dashboard() {
 
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!newCommentText.trim() || !selectedIssueIdForPopup) return;
+    if (!newCommentText.trim() || !selectedIssueIdForPopup || isAddingComment) return;
+    setIsAddingComment(true);
     try {
       await db.addComment(selectedIssueIdForPopup, currentUser.id, newCommentText);
       setNewCommentText('');
@@ -532,6 +534,8 @@ export default function Dashboard() {
     } catch (err) {
       const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi thêm bình luận: " + err.message });
+    } finally {
+      setIsAddingComment(false);
     }
   };
 
@@ -1368,10 +1372,11 @@ export default function Dashboard() {
                   placeholder={t('issues.commentPlaceholder', 'Nhập câu trả lời hoặc thảo luận...')}
                   value={newCommentText}
                   onChange={(e) => setNewCommentText(e.target.value)}
+                  disabled={isAddingComment}
                   style={{ flex: 1, padding: '6px 12px', borderRadius: '6px', border: '1.5px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '12.5px', outline: 'none' }}
                   required
                 />
-                <button type="submit" className="btn btn-primary btn-sm">{t('common.send', 'Gửi')}</button>
+                <button type="submit" className="btn btn-primary btn-sm" disabled={isAddingComment}>{t('common.send', 'Gửi')}</button>
               </form>
             </div>
 

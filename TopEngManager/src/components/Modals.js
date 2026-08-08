@@ -81,6 +81,7 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
   const [selectedMembers, setSelectedMembers] = useState({}); // userId -> role
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadProjectData = async () => {
@@ -162,8 +163,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name) return;
+    if (!name || isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       const projData = {
         id: projectId || null,
@@ -198,6 +200,8 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
     } catch (e) {
       const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('project.saveProjectError', 'Lỗi lưu dự án: ') + e.message });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -336,8 +340,12 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
             </div>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>{t('common.cancel', 'Hủy')}</button>
-            <button type="submit" className="btn btn-primary">{projectId ? t('project.saveChanges', 'Lưu thay đổi') : t('project.createProjectBtn', 'Tạo dự án')}</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>{t('common.cancel', 'Hủy')}</button>
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+              {isSubmitting
+                ? t('common.processing', 'Đang xử lý...')
+                : (projectId ? t('project.saveChanges', 'Lưu thay đổi') : t('project.createProjectBtn', 'Tạo dự án'))}
+            </button>
           </div>
         </form>
       </div>
@@ -386,6 +394,9 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
 
   const [newSubtask, setNewSubtask] = useState('');
   const [newComment, setNewComment] = useState('');
+  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+  const [isSendingComment, setIsSendingComment] = useState(false);
+  const [isProcessingAttachment, setIsProcessingAttachment] = useState(false);
 
   const { hasPermission } = useApp();
   const isPM = hasPermission('edit_task'); // can edit/delete tasks
@@ -507,8 +518,9 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title) return;
+    if (!title || isSubmittingTask) return;
 
+    setIsSubmittingTask(true);
     try {
       const taskData = {
         id: taskId || null,
@@ -559,6 +571,8 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
     } catch (e) {
       const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi lưu task: " + e.message });
+    } finally {
+      setIsSubmittingTask(false);
     }
   };
 
@@ -601,8 +615,9 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
 
   // Comments mutations
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || isSendingComment) return;
 
+    setIsSendingComment(true);
     try {
       await db.addComment({
         task_id: taskId,
@@ -622,14 +637,17 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
       await loadCollabData();
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsSendingComment(false);
     }
   };
 
   // Attachments
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || isProcessingAttachment) return;
 
+    setIsProcessingAttachment(true);
     try {
       const updatedAttachments = [...attachments, {
         file_url: file.name,
@@ -647,14 +665,19 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsProcessingAttachment(false);
+      e.target.value = '';
     }
   };
 
   const handleDeleteAttachment = async (idx) => {
+    if (isProcessingAttachment) return;
+    setIsProcessingAttachment(true);
     try {
       const updated = [...attachments];
       updated.splice(idx, 1);
-      
+
       const tasks = await db.getTasks();
       const task = tasks.find(t => t.id === taskId);
       if (task) {
@@ -664,6 +687,8 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsProcessingAttachment(false);
     }
   };
 
@@ -822,7 +847,11 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                 </div>
               </div>
               <div className="task-form-actions">
-                {isPM && !isLockedByOther && <button type="submit" className="btn btn-primary">{t('common.saveChanges', 'Lưu thay đổi')}</button>}
+                {isPM && !isLockedByOther && (
+                  <button type="submit" className="btn btn-primary" disabled={isSubmittingTask}>
+                    {isSubmittingTask ? t('common.processing', 'Đang xử lý...') : t('common.saveChanges', 'Lưu thay đổi')}
+                  </button>
+                )}
               </div>
             </form>
 
@@ -847,11 +876,11 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                             <span className="attachment-size">{att.file_size || 'N/A'}</span>
                           </div>
                         </div>
-                        <button 
-                          className="btn-delete-attachment" 
-                          onClick={() => { if (!isLockedByOther) handleDeleteAttachment(idx); }}
-                          disabled={isLockedByOther}
-                          style={{ opacity: isLockedByOther ? 0.5 : 1, cursor: isLockedByOther ? 'not-allowed' : 'pointer' }}
+                        <button
+                          className="btn-delete-attachment"
+                          onClick={() => { if (!isLockedByOther && !isProcessingAttachment) handleDeleteAttachment(idx); }}
+                          disabled={isLockedByOther || isProcessingAttachment}
+                          style={{ opacity: (isLockedByOther || isProcessingAttachment) ? 0.5 : 1, cursor: (isLockedByOther || isProcessingAttachment) ? 'not-allowed' : 'pointer' }}
                         >
                           <i className="fa-solid fa-trash"></i>
                         </button>
@@ -860,12 +889,12 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                   )}
                 </div>
                 <div className="attachment-upload-box">
-                  <label 
-                    className="btn btn-secondary btn-sm btn-block" 
-                    style={{ marginBottom: 0, opacity: isLockedByOther ? 0.6 : 1, pointerEvents: isLockedByOther ? 'none' : 'auto', cursor: isLockedByOther ? 'not-allowed' : 'pointer' }}
+                  <label
+                    className="btn btn-secondary btn-sm btn-block"
+                    style={{ marginBottom: 0, opacity: (isLockedByOther || isProcessingAttachment) ? 0.6 : 1, pointerEvents: (isLockedByOther || isProcessingAttachment) ? 'none' : 'auto', cursor: (isLockedByOther || isProcessingAttachment) ? 'not-allowed' : 'pointer' }}
                   >
-                    <i className="fa-solid fa-cloud-arrow-up"></i> {t('task.uploadFile', 'Tải file lên')}
-                    <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isLockedByOther} />
+                    <i className="fa-solid fa-cloud-arrow-up"></i> {isProcessingAttachment ? t('common.processing', 'Đang xử lý...') : t('task.uploadFile', 'Tải file lên')}
+                    <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isLockedByOther || isProcessingAttachment} />
                   </label>
                 </div>
               </div>
@@ -900,20 +929,21 @@ export const TaskModal = ({ isOpen, onClose, taskId, projId, currentUser, onSave
                   )}
                 </div>
                 <div className="comment-input-box" style={{ display: 'flex', gap: '6px', marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid var(--neutral-border)' }}>
-                  <input 
-                    type="text" 
-                    value={newComment} 
-                    onChange={(e) => setNewComment(e.target.value)} 
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         handleAddComment();
                       }
                     }}
-                    placeholder={t('task.enterMessagePlaceholder', 'Nhập nội dung trao đổi...')} 
-                    style={{ flex: 1, padding: '8px 12px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--neutral-border)', outline: 'none' }} 
+                    disabled={isSendingComment}
+                    placeholder={t('task.enterMessagePlaceholder', 'Nhập nội dung trao đổi...')}
+                    style={{ flex: 1, padding: '8px 12px', fontSize: '12.5px', borderRadius: '6px', border: '1px solid var(--neutral-border)', outline: 'none' }}
                   />
-                  <button type="button" className="btn btn-primary btn-sm" style={{ padding: '6px 12px' }} onClick={handleAddComment}>{t('common.send', 'Gửi')}</button>
+                  <button type="button" className="btn btn-primary btn-sm" style={{ padding: '6px 12px' }} onClick={handleAddComment} disabled={isSendingComment}>{t('common.send', 'Gửi')}</button>
                 </div>
               </div>
             </div>

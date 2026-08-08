@@ -80,6 +80,7 @@ function Chat() {
 
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState('');
   const [showChatRooms, setShowChatRooms] = useState(false);
   const [typingUser, setTypingUser] = useState(null);
@@ -171,7 +172,7 @@ function Chat() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || isSendingMessage) return;
 
     // Ask before sending message based on dynamic permission
     const shouldConfirm = hasPermission('chat_confirm_send');
@@ -209,6 +210,8 @@ function Chat() {
       }
     }
 
+    setIsSendingMessage(true);
+    try {
     if (StreamChatAdapter.isEnabled()) {
       await StreamChatAdapter.sendMessage(chatInput.trim());
     } else {
@@ -262,6 +265,9 @@ function Chat() {
 
     setChatInput('');
     setMentionQuery(null);
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -464,12 +470,13 @@ function Chat() {
 
         <form className="chat-input-area" onSubmit={handleSendMessage}>
           <div className="chat-input-wrapper">
-            <textarea 
+            <textarea
               ref={chatInputRef}
-              value={chatInput} 
-              onChange={handleChatInputChange} 
+              value={chatInput}
+              onChange={handleChatInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={t('chat.inputPlaceholder', 'Nhập tin nhắn... Gõ @ nhắc tên')} 
+              disabled={isSendingMessage}
+              placeholder={t('chat.inputPlaceholder', 'Nhập tin nhắn... Gõ @ nhắc tên')}
               rows="1"
             />
             {mentionQuery !== null && (
@@ -488,7 +495,7 @@ function Chat() {
               <i className="fa-solid fa-paperclip"></i>
               <input type="file" onChange={handleChatFileUpload} style={{ display: 'none' }} />
             </label>
-            <button type="submit" className="btn btn-primary btn-sm"><i className="fa-solid fa-paper-plane"></i></button>
+            <button type="submit" className="btn btn-primary btn-sm" disabled={isSendingMessage}><i className="fa-solid fa-paper-plane"></i></button>
           </div>
         </form>
       </div>
