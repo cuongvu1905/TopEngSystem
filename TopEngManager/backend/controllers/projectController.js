@@ -7,6 +7,7 @@ const formatProjectDto = (p) => {
   const prefix = p.customer_id && !p.project_name.startsWith('[') ? `[${p.customer_id}] ` : '';
   return {
     id: p.project_id,
+    db_id: p.id,
     name: `${prefix}${p.project_name}`,
     description: p.project_description || 'Không có mô tả.',
     project_key: p.project_key || p.project_id.split('-').pop().toUpperCase().slice(0, 5),

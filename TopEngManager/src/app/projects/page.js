@@ -311,12 +311,16 @@ export default function Projects() {
     });
   };
 
-  const filteredByYearProjects = visibleProjects.filter(p => {
-    if (!selectedYear) return true;
-    if (getProjectYear(p) !== selectedYear) return false;
-    if (!selectedCustomerCode) return true;
-    return (p.customer_id || UNASSIGNED_CUSTOMER) === selectedCustomerCode;
-  });
+  // Newest-created project first — db_id is the underlying auto-increment row id,
+  // a reliable creation-order proxy since projects have no dedicated created_at field.
+  const filteredByYearProjects = visibleProjects
+    .filter(p => {
+      if (!selectedYear) return true;
+      if (getProjectYear(p) !== selectedYear) return false;
+      if (!selectedCustomerCode) return true;
+      return (p.customer_id || UNASSIGNED_CUSTOMER) === selectedCustomerCode;
+    })
+    .sort((a, b) => (b.db_id || 0) - (a.db_id || 0));
 
   return (
     <div className="scrollable-view">
@@ -406,7 +410,7 @@ export default function Projects() {
               <div className="doc-folder-node-left">
                 <span className="doc-folder-node-spacer" />
                 <i className="fa-solid fa-layer-group"></i>
-                <span>{t('projects.allProjects', 'Tất cả dự án')}</span>
+                <span>{t('projects.treeAllProjects', 'Tất cả dự án')}</span>
               </div>
             </div>
             {availableYears.length === 0 ? (
