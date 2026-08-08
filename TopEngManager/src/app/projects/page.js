@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { useRouter } from 'next/navigation';
 import { ProjectModal, CustomerModal, FolderTemplateModal } from '@/components/Modals';
 import { getSwal } from '@/utils/swal';
+
+// Sentinel customer-code bucket for projects that aren't linked to any customer,
+// used as a tree node/filter key alongside real customer codes like "SEVT"/"SDV".
+const UNASSIGNED_CUSTOMER = '__UNASSIGNED__';
 
 export default function Projects() {
   const { currentUser, projects, tasks, projectMembers, users, reloadAll, hasPermission } = useApp();
@@ -17,15 +21,35 @@ export default function Projects() {
   const router = useRouter();
 
   const currentYear = new Date().getFullYear();
-  const previousYear = currentYear - 1;
-  const [startYearFilter, setStartYearFilter] = useState(String(previousYear));
-  const [endYearFilter, setEndYearFilter] = useState(String(currentYear));
+
+  // Year → customer-code tree navigation (replaces the old "Từ năm/Đến năm" range filter).
+  const [customers, setCustomers] = useState([]);
+  const [expandedYears, setExpandedYears] = useState(() => new Set([String(currentYear)]));
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedCustomerCode, setSelectedCustomerCode] = useState(null);
+
+  useEffect(() => {
+    db.getCustomers().then(setCustomers).catch(() => {});
+  }, []);
+
+  const customerNameByCode = customers.reduce((acc, c) => {
+    acc[c.customer_id] = c.customer_name;
+    return acc;
+  }, {});
 
   const getProjectYear = (p) => {
     if (p.start_date && p.start_date.includes('-')) {
       return p.start_date.split('-')[0];
     }
     return '';
+  };
+
+  const toggleYearExpanded = (year) => {
+    setExpandedYears(prev => {
+      const next = new Set(prev);
+      if (next.has(year)) next.delete(year); else next.add(year);
+      return next;
+    });
   };
 
   if (!currentUser) return null;
@@ -261,38 +285,38 @@ export default function Projects() {
     return projectMembers.some(m => m.project_id === p.id && m.user_id === currentUser.id);
   });
 
-  const filteredByYearProjects = visibleProjects.filter(p => {
-    const startInput = startYearFilter.trim();
-    const endInput = endYearFilter.trim();
-    
-    // If both inputs are empty, don't filter (show all)
-    if (!startInput && !endInput) return true;
-    
-    const pYearStr = getProjectYear(p);
-    if (!pYearStr) return false; // Hide projects without start dates if any filter is set
-    
-    const pYear = parseInt(pYearStr);
-    const startVal = startInput ? parseInt(startInput) : null;
-    const endVal = endInput ? parseInt(endInput) : null;
-    
-    if (startVal !== null && !isNaN(startVal) && endVal !== null && !isNaN(endVal)) {
-      const minYear = Math.min(startVal, endVal);
-      const maxYear = Math.max(startVal, endVal);
-      return pYear >= minYear && pYear <= maxYear;
-    } else if (startVal !== null && !isNaN(startVal)) {
-      return pYear >= startVal;
-    } else if (endVal !== null && !isNaN(endVal)) {
-      return pYear <= endVal;
-    }
-    
-    return true;
+  // Group visible projects by creation year, then by customer code within each year,
+  // to drive the year → customer tree on the left (mirrors the folder-tree UX already
+  // used for Documents: pick a year, then a customer, to narrow the project list).
+  const projectsByYear = {};
+  visibleProjects.forEach(p => {
+    const year = getProjectYear(p);
+    if (!year) return;
+    if (!projectsByYear[year]) projectsByYear[year] = [];
+    projectsByYear[year].push(p);
   });
+  const availableYears = Object.keys(projectsByYear).sort((a, b) => b - a);
 
-  const availableYears = Array.from(new Set(
-    projects
-      .map(p => getProjectYear(p))
-      .filter(yr => yr && yr !== '')
-  )).sort((a, b) => b - a);
+  const getCustomersForYear = (year) => {
+    const byCode = {};
+    (projectsByYear[year] || []).forEach(p => {
+      const code = p.customer_id || UNASSIGNED_CUSTOMER;
+      if (!byCode[code]) byCode[code] = [];
+      byCode[code].push(p);
+    });
+    return Object.entries(byCode).sort(([a], [b]) => {
+      if (a === UNASSIGNED_CUSTOMER) return 1;
+      if (b === UNASSIGNED_CUSTOMER) return -1;
+      return a.localeCompare(b);
+    });
+  };
+
+  const filteredByYearProjects = visibleProjects.filter(p => {
+    if (!selectedYear) return true;
+    if (getProjectYear(p) !== selectedYear) return false;
+    if (!selectedCustomerCode) return true;
+    return (p.customer_id || UNASSIGNED_CUSTOMER) === selectedCustomerCode;
+  });
 
   return (
     <div className="scrollable-view">
@@ -302,53 +326,7 @@ export default function Projects() {
           <p>{t('projects.subtitle', 'Quản lý quy trình và theo dõi tiến độ của tất cả các dự án trong doanh nghiệp.')}</p>
         </div>
         <div className="view-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <input
-              type="text"
-              list="year-suggestions"
-              value={startYearFilter}
-              onChange={(e) => setStartYearFilter(e.target.value)}
-              placeholder="Từ năm"
-              style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid var(--neutral-border)',
-                fontSize: '13px',
-                fontWeight: '600',
-                outline: 'none',
-                backgroundColor: 'var(--neutral-bg-card)',
-                color: 'var(--neutral-dark)',
-                width: '100px',
-                textAlign: 'center'
-              }}
-            />
-            <span style={{ color: '#64748b', fontWeight: '600' }}>-</span>
-            <input
-              type="text"
-              list="year-suggestions"
-              value={endYearFilter}
-              onChange={(e) => setEndYearFilter(e.target.value)}
-              placeholder="Đến năm"
-              style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid var(--neutral-border)',
-                fontSize: '13px',
-                fontWeight: '600',
-                outline: 'none',
-                backgroundColor: 'var(--neutral-bg-card)',
-                color: 'var(--neutral-dark)',
-                width: '100px',
-                textAlign: 'center'
-              }}
-            />
-          </div>
-          <datalist id="year-suggestions">
-            {availableYears.map(yr => (
-              <option key={yr} value={yr}>Năm {yr}</option>
-            ))}
-          </datalist>
-          <button 
+          <button
             className="btn btn-secondary" 
             onClick={handleJoinProjectClick}
             style={{ 
@@ -414,8 +392,87 @@ export default function Projects() {
           )}
         </div>
       </div>
-      
-      <div className="project-list-grid">
+
+      <div className="doc-layout" style={{ gridTemplateColumns: '240px 1fr', alignItems: 'start' }}>
+        <div className="doc-folder-tree-panel" style={{ maxHeight: 'none' }}>
+          <div className="doc-folder-tree-header">
+            <span>{t('projects.byYearAndCustomer', 'Theo năm / khách hàng')}</span>
+          </div>
+          <div className="doc-folder-tree-scroll">
+            <div
+              className={`doc-folder-node ${!selectedYear ? 'active' : ''}`}
+              onClick={() => { setSelectedYear(null); setSelectedCustomerCode(null); }}
+            >
+              <div className="doc-folder-node-left">
+                <span className="doc-folder-node-spacer" />
+                <i className="fa-solid fa-layer-group"></i>
+                <span>{t('projects.allProjects', 'Tất cả dự án')}</span>
+              </div>
+            </div>
+            {availableYears.length === 0 ? (
+              <div className="doc-folder-empty">{t('projects.noYearsYet', 'Chưa có dự án nào')}</div>
+            ) : (
+              availableYears.map(year => {
+                const yearProjects = projectsByYear[year] || [];
+                const isExpanded = expandedYears.has(year);
+                const isYearSelected = selectedYear === year && !selectedCustomerCode;
+                const customerEntries = getCustomersForYear(year);
+                return (
+                  <div key={year}>
+                    <div
+                      className={`doc-folder-node ${isYearSelected ? 'active' : ''}`}
+                      onClick={() => {
+                        setSelectedYear(year);
+                        setSelectedCustomerCode(null);
+                        if (!isExpanded) toggleYearExpanded(year);
+                      }}
+                    >
+                      <div className="doc-folder-node-left">
+                        <i
+                          className={`doc-folder-node-chevron ${isExpanded ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-right'}`}
+                          onClick={(e) => { e.stopPropagation(); toggleYearExpanded(year); }}
+                        ></i>
+                        <i className="fa-solid fa-calendar-days"></i>
+                        <span>{year}</span>
+                      </div>
+                      <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', flexShrink: 0 }}>{yearProjects.length}</span>
+                    </div>
+                    {isExpanded && (
+                      <div className="doc-folder-children">
+                        {customerEntries.map(([code, custProjects]) => {
+                          const isSelected = selectedYear === year && selectedCustomerCode === code;
+                          const label = code === UNASSIGNED_CUSTOMER
+                            ? t('projects.unassignedCustomer', 'Chưa gán khách hàng')
+                            : `[${code}]`;
+                          return (
+                            <div
+                              key={code}
+                              className={`doc-folder-node ${isSelected ? 'active' : ''}`}
+                              onClick={() => { setSelectedYear(year); setSelectedCustomerCode(code); }}
+                            >
+                              <div className="doc-folder-node-left">
+                                <span className="doc-folder-node-spacer" />
+                                <i className="fa-solid fa-user-tie"></i>
+                                <span title={customerNameByCode[code] || label}>{label}</span>
+                              </div>
+                              <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', flexShrink: 0 }}>{custProjects.length}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="doc-main-panel">
+          <div style={{ fontSize: '12.5px', color: 'var(--neutral-muted)', fontWeight: 600 }}>
+            {t('projects.projectCount', '{count} dự án').replace('{count}', filteredByYearProjects.length)}
+          </div>
+          <div className="project-list-grid">
         {filteredByYearProjects.length === 0 ? (
           <div className="card" style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--neutral-muted)', fontSize: '14px' }}>
             {t('projects.noProjectsFound', 'Không tìm thấy dự án nào trong năm đã chọn.')}
@@ -489,9 +546,11 @@ export default function Projects() {
           );
         })
       )}
+          </div>
+        </div>
       </div>
 
-      <ProjectModal 
+      <ProjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         projectId={null}

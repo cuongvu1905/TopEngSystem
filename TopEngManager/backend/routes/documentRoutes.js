@@ -41,6 +41,7 @@ router.post('/renameDocumentFolder', documentController.renameDocumentFolder);
 router.post('/deleteDocumentFolder', documentController.deleteDocumentFolder);
 router.post('/getDocuments', documentController.getDocuments);
 router.post('/getDocumentFileSlots', documentController.getDocumentFileSlots);
+router.post('/getProjectFileSlots', documentController.getProjectFileSlots);
 router.post('/createDocumentFileSlot', documentController.createDocumentFileSlot);
 router.post('/uploadDocumentFileSlot', (req, res, next) => {
   upload.single('file')(req, res, (err) => {

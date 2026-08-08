@@ -47,6 +47,7 @@ export default function DocumentExplorer({ projectId = null }) {
 
   const [folders, setFolders] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [fileSlots, setFileSlots] = useState([]); // required-prefix slots across every folder, for progress %
   const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [collapsedFolders, setCollapsedFolders] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,8 +87,26 @@ export default function DocumentExplorer({ projectId = null }) {
     }
   }, [projectId, selectedFolderId, activeSearch]);
 
+  const loadFileSlots = useCallback(async () => {
+    try {
+      const list = await db.getProjectFileSlots(projectId);
+      setFileSlots(list || []);
+    } catch (err) {
+      console.error('Failed to load file slot progress', err);
+    }
+  }, [projectId]);
+
   useEffect(() => { loadFolders(); }, [loadFolders]);
   useEffect(() => { loadDocuments(); }, [loadDocuments]);
+  useEffect(() => { loadFileSlots(); }, [loadFileSlots]);
+
+  // Default the cursor to the top-level folder (e.g. <Tên_Xưởng>) instead of the
+  // company/project root once folders have loaded, rather than leaving it unselected.
+  useEffect(() => {
+    if (selectedFolderId || folders.length === 0) return;
+    const firstRoot = folders.find(f => !f.parent_folder_id);
+    if (firstRoot) setSelectedFolderId(firstRoot.folder_id);
+  }, [folders, selectedFolderId]);
 
   useEffect(() => {
     if (!folderContextMenu) return;
@@ -325,6 +344,33 @@ export default function DocumentExplorer({ projectId = null }) {
   const isSlotTableFolder = currentFolder?.folder_type === 'file_slot_table';
   const rootFolders = getChildren(null);
 
+  // A folder's required-file upload progress = (filled required-prefix rows) / (total
+  // required-prefix rows), counted across itself AND every descendant folder recursively.
+  // Rows with no prefix defined (free-form rows) never count toward either side.
+  const computeFolderProgress = (folderId) => {
+    let filled = 0;
+    let total = 0;
+    const folder = folders.find(f => f.folder_id === folderId);
+    if (folder?.folder_type === 'file_slot_table') {
+      const requiredSlots = fileSlots.filter(s => s.folder_id === folderId && s.prefix && s.prefix.trim());
+      total += requiredSlots.length;
+      filled += requiredSlots.filter(s => s.document_id).length;
+    }
+    for (const child of getChildren(folderId)) {
+      const sub = computeFolderProgress(child.folder_id);
+      total += sub.total;
+      filled += sub.filled;
+    }
+    return { filled, total };
+  };
+
+  const progressFolderIds = selectedFolderId ? [selectedFolderId] : rootFolders.map(f => f.folder_id);
+  const progressTotals = progressFolderIds.reduce((acc, id) => {
+    const sub = computeFolderProgress(id);
+    return { filled: acc.filled + sub.filled, total: acc.total + sub.total };
+  }, { filled: 0, total: 0 });
+  const progressPercent = progressTotals.total > 0 ? Math.round((progressTotals.filled / progressTotals.total) * 100) : null;
+
   const renderFolderNode = (folder, depth = 0) => {
     const children = getChildren(folder.folder_id);
     const hasChildren = children.length > 0;
@@ -338,7 +384,9 @@ export default function DocumentExplorer({ projectId = null }) {
           onClick={() => {
             setSelectedFolderId(folder.folder_id);
             setMobileTreeOpen(false);
-            if (hasChildren) toggleCollapse(folder.folder_id);
+            // Clicking the row itself only ever expands (never collapses) — collapsing
+            // is exclusively the chevron's job, handled by its own click below.
+            if (hasChildren && isCollapsed) toggleCollapse(folder.folder_id);
           }}
         >
           <div
@@ -351,7 +399,10 @@ export default function DocumentExplorer({ projectId = null }) {
             }}
           >
             {hasChildren ? (
-              <i className={isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down'}></i>
+              <i
+                className={`doc-folder-node-chevron ${isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down'}`}
+                onClick={(e) => { e.stopPropagation(); toggleCollapse(folder.folder_id); }}
+              ></i>
             ) : (
               <span className="doc-folder-node-spacer" />
             )}
@@ -396,15 +447,6 @@ export default function DocumentExplorer({ projectId = null }) {
           >
             <i className="fa-solid fa-folder-plus"></i>
           </button>
-        </div>
-        <div
-          className={`doc-folder-node root-node ${selectedFolderId === null ? 'active' : ''}`}
-          onClick={() => { setSelectedFolderId(null); setMobileTreeOpen(false); }}
-        >
-          <div className="doc-folder-node-left">
-            <i className="fa-solid fa-building"></i>
-            <span>{rootLabel}</span>
-          </div>
         </div>
         <div className="doc-folder-tree-scroll">
           {rootFolders.length === 0 ? (
@@ -473,6 +515,14 @@ export default function DocumentExplorer({ projectId = null }) {
           ) : (
             <span><i className="fa-solid fa-folder"></i> {currentFolder ? getFolderPath(currentFolder.folder_id) : rootLabel}</span>
           )}
+          {!activeSearch && progressPercent !== null && (
+            <div className="doc-folder-progress" title={t('documents.folderProgressTitle', 'Tỉ lệ upload các file bắt buộc')}>
+              <span className="doc-folder-progress-bar">
+                <span className="doc-folder-progress-fill" style={{ width: `${progressPercent}%` }}></span>
+              </span>
+              <span className="doc-folder-progress-label">{progressPercent}%</span>
+            </div>
+          )}
         </div>
         {!activeSearch && (currentFolder?.default_prefix || currentFolder?.allowed_extensions) && (
           <div style={{ marginTop: '-8px', marginBottom: '12px' }}>
@@ -490,7 +540,7 @@ export default function DocumentExplorer({ projectId = null }) {
         )}
 
         {isSlotTableFolder ? (
-          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} canUpload={canUploadDocuments} allowedExtensions={currentFolder?.allowed_extensions} />
+          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} canUpload={canUploadDocuments} allowedExtensions={currentFolder?.allowed_extensions} onSlotsChanged={loadFileSlots} />
         ) : (
         <div className="doc-file-list">
           {documents.length === 0 ? (

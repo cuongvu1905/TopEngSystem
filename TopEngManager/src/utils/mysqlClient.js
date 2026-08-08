@@ -228,6 +228,10 @@ export const MySQLAdapter = {
     return await callApi('getDocumentFileSlots', { folderId });
   },
 
+  getProjectFileSlots: async function(projectId = null) {
+    return await callApi('getProjectFileSlots', { projectId });
+  },
+
   createDocumentFileSlot: async function({ folderId }) {
     return await callApi('createDocumentFileSlot', { folderId });
   },

@@ -1700,6 +1700,14 @@ h1, h2, h3, h4, h5, h6 {
   color: inherit;
   flex-shrink: 0;
 }
+.doc-folder-node-chevron {
+  padding: 4px;
+  margin: -4px;
+  border-radius: 4px;
+}
+.doc-folder-node-chevron:hover {
+  color: var(--primary-color);
+}
 .doc-folder-node-spacer {
   width: 12px;
   display: inline-block;
@@ -1743,6 +1751,37 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.doc-folder-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.doc-folder-progress-bar {
+  position: relative;
+  display: inline-block;
+  width: 100px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--neutral-border);
+  overflow: hidden;
+}
+.doc-folder-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: var(--success-color, #16a34a);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+.doc-folder-progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neutral-dark);
+  min-width: 32px;
+  text-align: right;
 }
 .doc-file-list {
   display: flex;

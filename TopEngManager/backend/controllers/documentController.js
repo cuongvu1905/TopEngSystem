@@ -494,6 +494,29 @@ exports.uploadDocument = async (req, res, next) => {
   }
 };
 
+// Returns every file-slot row across every folder scoped to a project (or the
+// company-wide root when projectId is null), used by the frontend to compute
+// each folder's required-file upload progress percentage without one round
+// trip per folder.
+exports.getProjectFileSlots = async (req, res, next) => {
+  try {
+    const { projectId } = req.body;
+    const folders = await prisma.documentfolder.findMany({
+      where: { project_id: projectId || null, folder_type: 'file_slot_table' },
+      select: { folder_id: true }
+    });
+    const folderIds = folders.map(f => f.folder_id);
+    if (folderIds.length === 0) return res.json([]);
+    const slots = await prisma.documentfileslot.findMany({
+      where: { folder_id: { in: folderIds } },
+      select: { folder_id: true, prefix: true, document_id: true }
+    });
+    res.json(slots);
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getDocumentFileSlots = async (req, res, next) => {
   try {
     const { folderId } = req.body;

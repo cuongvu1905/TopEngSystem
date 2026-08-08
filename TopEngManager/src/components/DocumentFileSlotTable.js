@@ -13,7 +13,7 @@ const ACCEPT_EXT = '.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.csv,.png,.jpg,.j
 // Fixed-row file manager for folders tagged folder_type === 'file_slot_table'
 // (e.g. the auto-provisioned "01.TK Điện" folder): each predefined row only
 // accepts an upload whose filename starts with that row's required prefix.
-export default function DocumentFileSlotTable({ folderId, projectId, currentUser, canUpload = true, allowedExtensions = null }) {
+export default function DocumentFileSlotTable({ folderId, projectId, currentUser, canUpload = true, allowedExtensions = null, onSlotsChanged }) {
   const { t } = useLanguage();
   const [slots, setSlots] = useState([]);
   const [uploadingSlotId, setUploadingSlotId] = useState(null);
@@ -69,6 +69,7 @@ export default function DocumentFileSlotTable({ folderId, projectId, currentUser
     try {
       await db.uploadDocumentFileSlot(file, { slotId: slot.id, folderId, projectId, uploadedBy: currentUser.id });
       await loadSlots();
+      onSlotsChanged?.();
     } catch (err) {
       const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
