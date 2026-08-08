@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
 
 const prisma = new PrismaClient();
 
@@ -226,6 +227,111 @@ const prisma = new PrismaClient();
     }
   } catch (err) {
     console.error('Error during documentfileslot table migration check:', err);
+  }
+})();
+
+// Self-healing table creation for the admin-editable default project folder tree
+// template. Seeded once, on first creation only, with exactly the tree that used
+// to be hardcoded in documentController.js's createDefaultProjectFolderTree, so
+// existing deployments see zero behavior change until an admin actually edits it.
+(async () => {
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'foldertemplate'`;
+    if (tables.length === 0) {
+      console.log('Creating foldertemplate / foldertemplateslot tables...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`foldertemplate\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`template_folder_id\` VARCHAR(50) NOT NULL UNIQUE,
+          \`name\` VARCHAR(255) NOT NULL,
+          \`parent_template_folder_id\` VARCHAR(50) DEFAULT NULL,
+          \`folder_type\` VARCHAR(30) DEFAULT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT \`fk_foldertemplate_parent\` FOREIGN KEY (\`parent_template_folder_id\`) REFERENCES \`foldertemplate\` (\`template_folder_id\`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`foldertemplateslot\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`template_folder_id\` VARCHAR(50) NOT NULL,
+          \`row_order\` INT NOT NULL,
+          \`prefix\` VARCHAR(150) NOT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT \`fk_foldertemplateslot_folder\` FOREIGN KEY (\`template_folder_id\`) REFERENCES \`foldertemplate\` (\`template_folder_id\`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('foldertemplate / foldertemplateslot tables created successfully.');
+
+      try {
+        const genId = () => 'ftpl-' + crypto.randomUUID();
+        const workshopId = genId();
+        const machineId = genId();
+        const mechId = genId();
+        const electricalId = genId();
+        const pgmId = genId();
+
+        await prisma.foldertemplate.create({ data: { template_folder_id: workshopId, name: '<Tên_Xưởng>', parent_template_folder_id: null, folder_type: null } });
+        await prisma.foldertemplate.create({ data: { template_folder_id: machineId, name: '<Tên_Máy>', parent_template_folder_id: workshopId, folder_type: null } });
+        await prisma.foldertemplate.create({ data: { template_folder_id: mechId, name: '00.TK Cơ Khí', parent_template_folder_id: machineId, folder_type: null } });
+        await prisma.foldertemplate.create({ data: { template_folder_id: electricalId, name: '01.TK Điện', parent_template_folder_id: machineId, folder_type: 'file_slot_table' } });
+        await prisma.foldertemplate.create({ data: { template_folder_id: pgmId, name: '02.PGM', parent_template_folder_id: machineId, folder_type: null } });
+
+        const prefixes = ['1.[BOM LIST]', '2.[IO MAP]', '3.[LAYOUT DRAW]', '4.[Schematic Diagram]'];
+        let rowOrder = 1;
+        for (const prefix of prefixes) {
+          await prisma.foldertemplateslot.create({ data: { template_folder_id: electricalId, row_order: rowOrder++, prefix } });
+        }
+        console.log('Seeded default folder tree template successfully.');
+      } catch (seedErr) {
+        console.error('Error seeding default folder tree template:', seedErr);
+      }
+    }
+  } catch (err) {
+    console.error('Error during foldertemplate table migration check:', err);
+  }
+})();
+
+// Self-healing column addition for a folder-level required upload-name prefix
+// (applies to every file uploaded into that folder, both on the admin's template
+// and the real per-project folders cloned from it).
+(async () => {
+  try {
+    const templateColumns = await prisma.$queryRaw`SHOW COLUMNS FROM \`foldertemplate\` LIKE 'default_prefix'`;
+    if (templateColumns.length === 0) {
+      console.log('Adding default_prefix column to foldertemplate table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `foldertemplate` ADD COLUMN `default_prefix` VARCHAR(150) NULL;');
+      console.log('default_prefix column added to foldertemplate successfully.');
+    }
+    const folderColumns = await prisma.$queryRaw`SHOW COLUMNS FROM \`documentfolder\` LIKE 'default_prefix'`;
+    if (folderColumns.length === 0) {
+      console.log('Adding default_prefix column to documentfolder table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `documentfolder` ADD COLUMN `default_prefix` VARCHAR(150) NULL;');
+      console.log('default_prefix column added to documentfolder successfully.');
+    }
+  } catch (err) {
+    console.error('Error during default_prefix migration check:', err);
+  }
+})();
+
+// Self-healing column addition for a folder-level allowed-file-extension list
+// (semicolon-separated, e.g. "pdf;xlsx;pptx"), on both the admin's template and
+// the real per-project folders cloned from it.
+(async () => {
+  try {
+    const templateColumns = await prisma.$queryRaw`SHOW COLUMNS FROM \`foldertemplate\` LIKE 'allowed_extensions'`;
+    if (templateColumns.length === 0) {
+      console.log('Adding allowed_extensions column to foldertemplate table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `foldertemplate` ADD COLUMN `allowed_extensions` VARCHAR(255) NULL;');
+      console.log('allowed_extensions column added to foldertemplate successfully.');
+    }
+    const folderColumns = await prisma.$queryRaw`SHOW COLUMNS FROM \`documentfolder\` LIKE 'allowed_extensions'`;
+    if (folderColumns.length === 0) {
+      console.log('Adding allowed_extensions column to documentfolder table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `documentfolder` ADD COLUMN `allowed_extensions` VARCHAR(255) NULL;');
+      console.log('allowed_extensions column added to documentfolder successfully.');
+    }
+  } catch (err) {
+    console.error('Error during allowed_extensions migration check:', err);
   }
 })();
 

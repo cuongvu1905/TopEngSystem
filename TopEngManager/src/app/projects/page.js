@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { useRouter } from 'next/navigation';
-import { ProjectModal, CustomerModal } from '@/components/Modals';
+import { ProjectModal, CustomerModal, FolderTemplateModal } from '@/components/Modals';
 import { getSwal } from '@/utils/swal';
 
 export default function Projects() {
@@ -13,6 +13,7 @@ export default function Projects() {
   const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isFolderTemplateModalOpen, setIsFolderTemplateModalOpen] = useState(false);
   const router = useRouter();
 
   const currentYear = new Date().getFullYear();
@@ -385,6 +386,27 @@ export default function Projects() {
           >
             <i className="fa-solid fa-user-tie"></i> {t('projects.manageCustomers', 'Quản lý khách hàng')}
           </button>
+          {isAdmin && (
+            <button
+              className="btn btn-secondary"
+              onClick={() => setIsFolderTemplateModalOpen(true)}
+              style={{
+                backgroundColor: 'var(--neutral-bg-card)',
+                color: 'var(--neutral-dark)',
+                border: '1px solid var(--neutral-border)',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: '600',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              <i className="fa-solid fa-folder-tree"></i> {t('projects.designFolderTemplate', 'Thiết kế cây thư mục')}
+            </button>
+          )}
           {showCreateBtn && (
             <button className="btn btn-primary" onClick={() => setIsModalOpen(true)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600' }}>
               <i className="fa-solid fa-plus"></i> {t('projects.createProject', 'Tạo Dự Án')}
@@ -482,6 +504,11 @@ export default function Projects() {
         onClose={() => setIsCustomerModalOpen(false)}
         currentUser={currentUser}
         onSaved={reloadAll}
+      />
+
+      <FolderTemplateModal
+        isOpen={isFolderTemplateModalOpen}
+        onClose={() => setIsFolderTemplateModalOpen(false)}
       />
     </div>
   );

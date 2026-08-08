@@ -100,6 +100,11 @@
       "module": "Tài liệu"
     },
     {
+      "key": "upload_project_documents",
+      "name": "Tải lên tài liệu trong Chi tiết dự án",
+      "module": "Tài liệu"
+    },
+    {
       "key": "view_hr",
       "name": "Truy cập Quản trị nhân sự (Trang HR)",
       "module": "Quản trị hệ thống"
@@ -185,6 +190,7 @@
       "edit_issue",
       "view_documents",
       "upload_documents",
+      "upload_project_documents",
       "view_hr",
       "view_hr_members",
       "manage_role_permissions",
@@ -238,6 +244,7 @@
       "edit_issue",
       "view_documents",
       "upload_documents",
+      "upload_project_documents",
       "view_hr",
       "view_hr_members",
       "edit_employee_info",
@@ -260,6 +267,7 @@
       "edit_issue",
       "view_documents",
       "upload_documents",
+      "upload_project_documents",
       "create_daily_report",
       "chat_tag_all_project",
       "view_daily_reports",

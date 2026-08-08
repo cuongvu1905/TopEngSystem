@@ -180,6 +180,50 @@ export const MySQLAdapter = {
     return data;
   },
 
+  getFolderTemplates: async function() {
+    return await callApi('getFolderTemplates', {});
+  },
+
+  createFolderTemplateFolder: async function({ name, parentTemplateFolderId }) {
+    return await callApi('createFolderTemplateFolder', { name, parentTemplateFolderId });
+  },
+
+  renameFolderTemplateFolder: async function(templateFolderId, name) {
+    return await callApi('renameFolderTemplateFolder', { templateFolderId, name });
+  },
+
+  deleteFolderTemplateFolder: async function(templateFolderId) {
+    return await callApi('deleteFolderTemplateFolder', { templateFolderId });
+  },
+
+  setFolderTemplateType: async function(templateFolderId, folderType) {
+    return await callApi('setFolderTemplateType', { templateFolderId, folderType });
+  },
+
+  setFolderTemplateDefaultPrefix: async function(templateFolderId, defaultPrefix) {
+    return await callApi('setFolderTemplateDefaultPrefix', { templateFolderId, defaultPrefix });
+  },
+
+  setFolderTemplateAllowedExtensions: async function(templateFolderId, allowedExtensions) {
+    return await callApi('setFolderTemplateAllowedExtensions', { templateFolderId, allowedExtensions });
+  },
+
+  getFolderTemplateSlots: async function({ templateFolderId }) {
+    return await callApi('getFolderTemplateSlots', { templateFolderId });
+  },
+
+  createFolderTemplateSlot: async function({ templateFolderId, prefix }) {
+    return await callApi('createFolderTemplateSlot', { templateFolderId, prefix });
+  },
+
+  updateFolderTemplateSlot: async function(slotId, prefix) {
+    return await callApi('updateFolderTemplateSlot', { slotId, prefix });
+  },
+
+  deleteFolderTemplateSlot: async function(slotId) {
+    return await callApi('deleteFolderTemplateSlot', { slotId });
+  },
+
   getDocumentFileSlots: async function({ folderId }) {
     return await callApi('getDocumentFileSlots', { folderId });
   },

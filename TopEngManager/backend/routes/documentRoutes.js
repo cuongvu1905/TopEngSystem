@@ -50,6 +50,17 @@ router.post('/uploadDocumentFileSlot', (req, res, next) => {
     next();
   });
 }, documentController.uploadDocumentFileSlot);
+router.post('/getFolderTemplates', documentController.getFolderTemplates);
+router.post('/createFolderTemplateFolder', documentController.createFolderTemplateFolder);
+router.post('/renameFolderTemplateFolder', documentController.renameFolderTemplateFolder);
+router.post('/deleteFolderTemplateFolder', documentController.deleteFolderTemplateFolder);
+router.post('/setFolderTemplateType', documentController.setFolderTemplateType);
+router.post('/setFolderTemplateDefaultPrefix', documentController.setFolderTemplateDefaultPrefix);
+router.post('/setFolderTemplateAllowedExtensions', documentController.setFolderTemplateAllowedExtensions);
+router.post('/getFolderTemplateSlots', documentController.getFolderTemplateSlots);
+router.post('/createFolderTemplateSlot', documentController.createFolderTemplateSlot);
+router.post('/updateFolderTemplateSlot', documentController.updateFolderTemplateSlot);
+router.post('/deleteFolderTemplateSlot', documentController.deleteFolderTemplateSlot);
 router.post('/deleteDocument', documentController.deleteDocument);
 router.get('/downloadDocument/:documentId', documentController.downloadDocument);
 router.post('/getDocumentContent', documentController.getDocumentContent);

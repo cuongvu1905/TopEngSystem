@@ -10,6 +10,35 @@ function fixOriginalName(name) {
   return Buffer.from(name, 'latin1').toString('utf8');
 }
 
+// A required prefix may be written like "1.[BOM LIST]" or just "[CONCEPT]" — only the
+// bracketed token itself is enforced; up to this many arbitrary characters (e.g. a
+// running number like "00001.") are allowed before it in the string being checked.
+const PREFIX_LEADING_SLACK = 6;
+function extractPrefixToken(prefix) {
+  const match = prefix && prefix.match(/\[[^\]]*\]/);
+  return match ? match[0] : null;
+}
+function matchesRequiredPrefix(value, requiredPrefix) {
+  if (!requiredPrefix) return true;
+  if (!value) return false;
+  const token = extractPrefixToken(requiredPrefix);
+  if (!token) return value.startsWith(requiredPrefix);
+  const idx = value.indexOf(token);
+  return idx !== -1 && idx <= PREFIX_LEADING_SLACK;
+}
+
+// A folder's allowed-extensions setting is a semicolon-separated list, e.g. "pdf;xlsx;pptx".
+function parseAllowedExtensions(allowedExtensions) {
+  if (!allowedExtensions) return [];
+  return allowedExtensions.split(';').map(e => e.trim().replace(/^\./, '').toLowerCase()).filter(Boolean);
+}
+function matchesAllowedExtensions(filename, allowedExtensions) {
+  const list = parseAllowedExtensions(allowedExtensions);
+  if (list.length === 0) return true;
+  const ext = path.extname(filename).slice(1).toLowerCase();
+  return list.includes(ext);
+}
+
 // Allow-list for the in-browser text document editor: basic formatting only,
 // no scripts/event handlers/links — content is rendered via dangerouslySetInnerHTML.
 const TEXT_DOC_SANITIZE_OPTIONS = {
@@ -85,70 +114,250 @@ exports.createDocumentFolder = async (req, res, next) => {
   }
 };
 
-// Subfolders auto-created under <Tên_Máy> for every new project; "01.TK Điện" is
-// tagged file_slot_table so it renders the fixed file-slot table instead of a normal
-// file list, and gets seeded with the 4 required rows below.
-const DEFAULT_MACHINE_SUBFOLDERS = [
-  { name: '00.TK Cơ Khí', folder_type: null },
-  { name: '01.TK Điện', folder_type: 'file_slot_table' },
-  { name: '02.PGM', folder_type: null }
-];
-
-const FILE_SLOT_TABLE_PREFIXES = [
-  '1.[BOM LIST]',
-  '2.[IO MAP]',
-  '3.[LAYOUT DRAW]',
-  '4.[Schematic Diagram]'
-];
-
-// Called once from project creation (not exposed as its own route) to provision
-// <Tên_Xưởng> -> <Tên_Máy> -> {00.TK Cơ Khí, 01.TK Điện, 02.PGM} for a brand new project.
+// Called once from project creation (not exposed as its own route) to clone the
+// admin-designed default folder tree (see getFolderTemplates/etc. below, edited via
+// the "Thiết kế cây thư mục" admin modal) into real folders/slots for a brand new
+// project. A completely empty template (admin deleted everything) is a safe no-op.
 exports.createDefaultProjectFolderTree = async (projectId, createdBy) => {
-  const workshopFolder = await prisma.documentfolder.create({
-    data: {
-      folder_id: 'fold-' + crypto.randomUUID(),
-      name: '<Tên_Xưởng>',
-      parent_folder_id: null,
-      project_id: projectId,
-      created_by: createdBy || null
-    }
-  });
+  const templateFolders = await prisma.foldertemplate.findMany();
+  if (templateFolders.length === 0) return;
+  const templateSlots = await prisma.foldertemplateslot.findMany();
 
-  const machineFolder = await prisma.documentfolder.create({
-    data: {
-      folder_id: 'fold-' + crypto.randomUUID(),
-      name: '<Tên_Máy>',
-      parent_folder_id: workshopFolder.folder_id,
-      project_id: projectId,
-      created_by: createdBy || null
-    }
-  });
-
-  for (const sub of DEFAULT_MACHINE_SUBFOLDERS) {
-    const subFolder = await prisma.documentfolder.create({
+  const cloneNode = async (templateNode, parentRealFolderId) => {
+    const realFolder = await prisma.documentfolder.create({
       data: {
         folder_id: 'fold-' + crypto.randomUUID(),
-        name: sub.name,
-        parent_folder_id: machineFolder.folder_id,
+        name: templateNode.name,
+        parent_folder_id: parentRealFolderId,
         project_id: projectId,
         created_by: createdBy || null,
-        folder_type: sub.folder_type
+        folder_type: templateNode.folder_type,
+        default_prefix: templateNode.default_prefix,
+        allowed_extensions: templateNode.allowed_extensions
       }
     });
 
-    if (sub.folder_type === 'file_slot_table') {
+    if (templateNode.folder_type === 'file_slot_table') {
+      const slots = templateSlots
+        .filter(s => s.template_folder_id === templateNode.template_folder_id)
+        .sort((a, b) => a.row_order - b.row_order);
       let rowOrder = 1;
-      for (const prefix of FILE_SLOT_TABLE_PREFIXES) {
+      for (const slot of slots) {
         await prisma.documentfileslot.create({
           data: {
-            folder_id: subFolder.folder_id,
+            folder_id: realFolder.folder_id,
             row_order: rowOrder++,
-            prefix,
+            prefix: slot.prefix,
             document_id: null
           }
         });
       }
     }
+
+    const children = templateFolders.filter(f => f.parent_template_folder_id === templateNode.template_folder_id);
+    for (const child of children) {
+      await cloneNode(child, realFolder.folder_id);
+    }
+  };
+
+  const roots = templateFolders.filter(f => !f.parent_template_folder_id);
+  for (const root of roots) {
+    await cloneNode(root, null);
+  }
+};
+
+exports.getFolderTemplates = async (req, res, next) => {
+  try {
+    const folders = await prisma.foldertemplate.findMany({ orderBy: { name: 'asc' } });
+    res.json(folders);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.createFolderTemplateFolder = async (req, res, next) => {
+  try {
+    const { name, parentTemplateFolderId } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Tên thư mục không được để trống' });
+    }
+    const folder = await prisma.foldertemplate.create({
+      data: {
+        template_folder_id: 'ftpl-' + crypto.randomUUID(),
+        name: name.trim(),
+        parent_template_folder_id: parentTemplateFolderId || null
+      }
+    });
+    res.json(folder);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.renameFolderTemplateFolder = async (req, res, next) => {
+  try {
+    const { templateFolderId, name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Tên thư mục không được để trống' });
+    }
+    const folder = await prisma.foldertemplate.update({
+      where: { template_folder_id: templateFolderId },
+      data: { name: name.trim() }
+    });
+    res.json(folder);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteFolderTemplateFolder = async (req, res, next) => {
+  try {
+    const { templateFolderId } = req.body;
+    if (!templateFolderId) {
+      return res.status(400).json({ error: 'Thiếu templateFolderId' });
+    }
+    // DB cascade removes descendant template folders + their slot rows automatically
+    await prisma.foldertemplate.delete({ where: { template_folder_id: templateFolderId } });
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.setFolderTemplateType = async (req, res, next) => {
+  try {
+    const { templateFolderId, folderType } = req.body;
+    if (!templateFolderId) {
+      return res.status(400).json({ error: 'Thiếu templateFolderId' });
+    }
+    if (folderType !== 'file_slot_table') {
+      // No longer a file-slot-table folder: its prefix definitions are now orphaned.
+      await prisma.foldertemplateslot.deleteMany({ where: { template_folder_id: templateFolderId } });
+    }
+    const folder = await prisma.foldertemplate.update({
+      where: { template_folder_id: templateFolderId },
+      data: { folder_type: folderType || null }
+    });
+    res.json(folder);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.setFolderTemplateDefaultPrefix = async (req, res, next) => {
+  try {
+    const { templateFolderId, defaultPrefix } = req.body;
+    if (!templateFolderId) {
+      return res.status(400).json({ error: 'Thiếu templateFolderId' });
+    }
+    const trimmed = defaultPrefix && defaultPrefix.trim() ? defaultPrefix.trim() : null;
+    // Existing row prefixes that no longer comply with the new default aren't
+    // retroactively touched — the rule only applies going forward, to new/edited rows.
+    const folder = await prisma.foldertemplate.update({
+      where: { template_folder_id: templateFolderId },
+      data: { default_prefix: trimmed }
+    });
+    res.json(folder);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.setFolderTemplateAllowedExtensions = async (req, res, next) => {
+  try {
+    const { templateFolderId, allowedExtensions } = req.body;
+    if (!templateFolderId) {
+      return res.status(400).json({ error: 'Thiếu templateFolderId' });
+    }
+    const normalized = parseAllowedExtensions(allowedExtensions).join(';');
+    const folder = await prisma.foldertemplate.update({
+      where: { template_folder_id: templateFolderId },
+      data: { allowed_extensions: normalized || null }
+    });
+    res.json(folder);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getFolderTemplateSlots = async (req, res, next) => {
+  try {
+    const { templateFolderId } = req.body;
+    const slots = await prisma.foldertemplateslot.findMany({
+      where: { template_folder_id: templateFolderId },
+      orderBy: { row_order: 'asc' }
+    });
+    res.json(slots);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.createFolderTemplateSlot = async (req, res, next) => {
+  try {
+    const { templateFolderId, prefix } = req.body;
+    if (!templateFolderId) {
+      return res.status(400).json({ error: 'Thiếu templateFolderId' });
+    }
+    if (!prefix || !prefix.trim()) {
+      return res.status(400).json({ error: 'Vui lòng nhập tiền tố tên tệp' });
+    }
+    const trimmedPrefix = prefix.trim();
+    const parentFolder = await prisma.foldertemplate.findUnique({ where: { template_folder_id: templateFolderId } });
+    if (parentFolder?.default_prefix && !matchesRequiredPrefix(trimmedPrefix, parentFolder.default_prefix)) {
+      return res.status(400).json({ error: `Tiền tố hàng phải chứa tiền tố mặc định của thư mục ("${parentFolder.default_prefix}"), tối đa 6 ký tự bất kỳ phía trước` });
+    }
+    const maxRow = await prisma.foldertemplateslot.aggregate({
+      where: { template_folder_id: templateFolderId },
+      _max: { row_order: true }
+    });
+    const slot = await prisma.foldertemplateslot.create({
+      data: {
+        template_folder_id: templateFolderId,
+        row_order: (maxRow._max.row_order || 0) + 1,
+        prefix: trimmedPrefix
+      }
+    });
+    res.json(slot);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateFolderTemplateSlot = async (req, res, next) => {
+  try {
+    const { slotId, prefix } = req.body;
+    if (!prefix || !prefix.trim()) {
+      return res.status(400).json({ error: 'Vui lòng nhập tiền tố tên tệp' });
+    }
+    const trimmedPrefix = prefix.trim();
+    const existingSlot = await prisma.foldertemplateslot.findUnique({ where: { id: parseInt(slotId) } });
+    if (existingSlot) {
+      const parentFolder = await prisma.foldertemplate.findUnique({ where: { template_folder_id: existingSlot.template_folder_id } });
+      if (parentFolder?.default_prefix && !matchesRequiredPrefix(trimmedPrefix, parentFolder.default_prefix)) {
+        return res.status(400).json({ error: `Tiền tố hàng phải chứa tiền tố mặc định của thư mục ("${parentFolder.default_prefix}"), tối đa 6 ký tự bất kỳ phía trước` });
+      }
+    }
+    const slot = await prisma.foldertemplateslot.update({
+      where: { id: parseInt(slotId) },
+      data: { prefix: trimmedPrefix }
+    });
+    res.json(slot);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteFolderTemplateSlot = async (req, res, next) => {
+  try {
+    const { slotId } = req.body;
+    if (!slotId) {
+      return res.status(400).json({ error: 'Thiếu slotId' });
+    }
+    await prisma.foldertemplateslot.delete({ where: { id: parseInt(slotId) } });
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -227,6 +436,39 @@ exports.uploadDocument = async (req, res, next) => {
       return res.status(400).json({ error: 'Không tìm thấy tệp tải lên' });
     }
     const { folderId, projectId, uploadedBy } = req.body;
+
+    if (folderId) {
+      const targetFolder = await prisma.documentfolder.findUnique({ where: { folder_id: folderId } });
+      const rejectBatch = async (error) => {
+        // Multer already wrote these to disk before this handler ran — clean them up
+        // since the whole batch is being rejected, not just the offending files.
+        for (const file of req.files) {
+          const absolutePath = path.join(__dirname, '..', 'uploads', 'documents', file.filename);
+          fs.unlink(absolutePath, (err) => {
+            if (err && err.code !== 'ENOENT') console.error('Failed to delete rejected upload:', absolutePath, err.message);
+          });
+        }
+        return res.status(400).json({ error });
+      };
+
+      if (targetFolder?.default_prefix) {
+        const invalidFiles = req.files
+          .map(f => fixOriginalName(f.originalname))
+          .filter(name => !matchesRequiredPrefix(name, targetFolder.default_prefix));
+        if (invalidFiles.length > 0) {
+          return rejectBatch(`Tên tệp phải chứa tiền tố "${targetFolder.default_prefix}" (tối đa 6 ký tự bất kỳ phía trước): ${invalidFiles.join(', ')}`);
+        }
+      }
+
+      if (targetFolder?.allowed_extensions) {
+        const invalidFiles = req.files
+          .map(f => fixOriginalName(f.originalname))
+          .filter(name => !matchesAllowedExtensions(name, targetFolder.allowed_extensions));
+        if (invalidFiles.length > 0) {
+          return rejectBatch(`Thư mục này chỉ chấp nhận đuôi tệp: ${parseAllowedExtensions(targetFolder.allowed_extensions).join(', ')}. Tệp không hợp lệ: ${invalidFiles.join(', ')}`);
+        }
+      }
+    }
 
     const created = [];
     for (const file of req.files) {
@@ -307,8 +549,13 @@ exports.uploadDocumentFileSlot = async (req, res, next) => {
     }
 
     const originalName = fixOriginalName(req.file.originalname);
-    if (slot.prefix && !originalName.startsWith(slot.prefix)) {
-      return res.status(400).json({ error: `Tên tệp phải bắt đầu bằng "${slot.prefix}"` });
+    if (slot.prefix && !matchesRequiredPrefix(originalName, slot.prefix)) {
+      return res.status(400).json({ error: `Tên tệp phải chứa "${slot.prefix}" (tối đa 6 ký tự bất kỳ phía trước)` });
+    }
+
+    const parentFolder = await prisma.documentfolder.findUnique({ where: { folder_id: folderId || slot.folder_id } });
+    if (parentFolder?.allowed_extensions && !matchesAllowedExtensions(originalName, parentFolder.allowed_extensions)) {
+      return res.status(400).json({ error: `Thư mục này chỉ chấp nhận đuôi tệp: ${parseAllowedExtensions(parentFolder.allowed_extensions).join(', ')}` });
     }
 
     const ext = path.extname(req.file.originalname).slice(1).toLowerCase();

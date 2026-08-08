@@ -82,6 +82,8 @@ model documentfolder {
   created_by       String?             @db.VarChar(36)
   created_at       DateTime            @default(now()) @db.Timestamp(0)
   folder_type      String?             @db.VarChar(30)
+  default_prefix   String?             @db.VarChar(150)
+  allowed_extensions String?           @db.VarChar(255)
   parent           documentfolder?     @relation("FolderHierarchy", fields: [parent_folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_parent")
   children         documentfolder[]    @relation("FolderHierarchy")
   project          project?            @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_project")
@@ -130,6 +132,33 @@ model documentfileslot {
 
   @@index([folder_id], map: "fk_fileslot_folder")
   @@index([document_id], map: "fk_fileslot_document")
+}
+
+model foldertemplate {
+  id                         Int                  @id @default(autoincrement())
+  template_folder_id         String               @unique(map: "template_folder_id") @db.VarChar(50)
+  name                       String               @db.VarChar(255)
+  parent_template_folder_id  String?              @db.VarChar(50)
+  folder_type                String?              @db.VarChar(30)
+  default_prefix             String?              @db.VarChar(150)
+  allowed_extensions         String?              @db.VarChar(255)
+  created_at                 DateTime             @default(now()) @db.Timestamp(0)
+  parent                     foldertemplate?      @relation("FolderTemplateHierarchy", fields: [parent_template_folder_id], references: [template_folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_foldertemplate_parent")
+  children                   foldertemplate[]     @relation("FolderTemplateHierarchy")
+  foldertemplateslot         foldertemplateslot[]
+
+  @@index([parent_template_folder_id], map: "fk_foldertemplate_parent")
+}
+
+model foldertemplateslot {
+  id                  Int             @id @default(autoincrement())
+  template_folder_id  String          @db.VarChar(50)
+  row_order           Int
+  prefix              String          @db.VarChar(150)
+  created_at          DateTime        @default(now()) @db.Timestamp(0)
+  foldertemplate      foldertemplate  @relation(fields: [template_folder_id], references: [template_folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_foldertemplateslot_folder")
+
+  @@index([template_folder_id], map: "fk_foldertemplateslot_folder")
 }
 
 model department {

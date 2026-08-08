@@ -8,6 +8,7 @@ import { getSwal } from '@/utils/swal';
 import TextDocumentEditor from '@/components/TextDocumentEditor';
 import FilePreviewModal, { PREVIEWABLE_EXTENSIONS } from '@/components/FilePreviewModal';
 import DocumentFileSlotTable from '@/components/DocumentFileSlotTable';
+import { matchesRequiredPrefix, matchesAllowedExtensions, parseAllowedExtensions } from '@/utils/filePrefixMatch';
 
 const FILE_ICONS = {
   pdf: 'fa-file-pdf',
@@ -38,9 +39,11 @@ function formatFileSize(bytes) {
 }
 
 export default function DocumentExplorer({ projectId = null }) {
-  const { currentUser, users } = useApp();
+  const { currentUser, users, projectMembers, hasPermission } = useApp();
   const { t, currentLang } = useLanguage();
   const fileInputRef = useRef(null);
+  const layoutRef = useRef(null);
+  const resizeStateRef = useRef(null);
 
   const [folders, setFolders] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -54,8 +57,16 @@ export default function DocumentExplorer({ projectId = null }) {
   const [previewDoc, setPreviewDoc] = useState(null);
   // Right-click folder menu: { x, y, folder } while open, null when closed.
   const [folderContextMenu, setFolderContextMenu] = useState(null);
+  const [treeWidth, setTreeWidth] = useState(260);
 
   const isAdmin = currentUser?.system_role?.includes('Admin');
+
+  // Upload is only gated inside a project's Tài liệu tab; the company-wide Documents
+  // page (no projectId) keeps its existing open-to-everyone behavior.
+  const myProjectRole = projectId
+    ? projectMembers.find(m => m.project_id === projectId && m.user_id === currentUser?.id)?.project_role
+    : null;
+  const canUploadDocuments = !projectId || hasPermission('upload_project_documents') || myProjectRole === 'PM';
 
   const loadFolders = useCallback(async () => {
     try {
@@ -195,6 +206,26 @@ export default function DocumentExplorer({ projectId = null }) {
     }
   };
 
+  const handleTreeResizeStart = (e) => {
+    e.preventDefault();
+    resizeStateRef.current = { startX: e.clientX, startWidth: treeWidth };
+    const handleMove = (moveEvent) => {
+      const state = resizeStateRef.current;
+      if (!state) return;
+      const delta = moveEvent.clientX - state.startX;
+      const containerWidth = layoutRef.current?.getBoundingClientRect().width || 800;
+      const maxWidth = containerWidth / 2;
+      setTreeWidth(Math.min(maxWidth, Math.max(180, state.startWidth + delta)));
+    };
+    const handleUp = () => {
+      resizeStateRef.current = null;
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+  };
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -202,6 +233,39 @@ export default function DocumentExplorer({ projectId = null }) {
   const handleFilesSelected = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
+
+    const targetFolder = folders.find(f => f.folder_id === selectedFolderId);
+    if (targetFolder?.default_prefix) {
+      const invalidFiles = files.filter(f => !matchesRequiredPrefix(f.name, targetFolder.default_prefix));
+      if (invalidFiles.length > 0) {
+        const Swal = await getSwal();
+        Swal.fire({
+          icon: 'warning',
+          title: t('common.warning', 'Cảnh báo'),
+          text: t('documents.uploadPrefixMismatch', 'Tên tệp phải chứa tiền tố "{prefix}" (tối đa 6 ký tự bất kỳ phía trước): {files}')
+            .replace('{prefix}', targetFolder.default_prefix)
+            .replace('{files}', invalidFiles.map(f => f.name).join(', '))
+        });
+        e.target.value = '';
+        return;
+      }
+    }
+    if (targetFolder?.allowed_extensions) {
+      const invalidFiles = files.filter(f => !matchesAllowedExtensions(f.name, targetFolder.allowed_extensions));
+      if (invalidFiles.length > 0) {
+        const Swal = await getSwal();
+        Swal.fire({
+          icon: 'warning',
+          title: t('common.warning', 'Cảnh báo'),
+          text: t('documents.uploadExtensionMismatch', 'Thư mục này chỉ chấp nhận đuôi tệp: {exts}. Tệp không hợp lệ: {files}')
+            .replace('{exts}', parseAllowedExtensions(targetFolder.allowed_extensions).join(', '))
+            .replace('{files}', invalidFiles.map(f => f.name).join(', '))
+        });
+        e.target.value = '';
+        return;
+      }
+    }
+
     setUploading(true);
     try {
       const created = await db.uploadDocuments(files, { folderId: selectedFolderId, projectId, uploadedBy: currentUser.id });
@@ -316,7 +380,11 @@ export default function DocumentExplorer({ projectId = null }) {
   if (!currentUser) return null;
 
   return (
-    <div className={`doc-layout doc-explorer-layout ${textEditorState ? 'editor-open' : ''}`}>
+    <div
+      ref={layoutRef}
+      className={`doc-layout doc-explorer-layout ${textEditorState ? 'editor-open' : ''}`}
+      style={{ '--doc-tree-width': `${treeWidth}px` }}
+    >
       <div className={`doc-folder-tree-panel ${mobileTreeOpen ? 'show' : ''}`}>
         <div className="doc-folder-tree-header">
           <span>{t('documents.folders', 'Thư mục')}</span>
@@ -343,6 +411,7 @@ export default function DocumentExplorer({ projectId = null }) {
             <div className="doc-folder-empty">{t('documents.noFoldersYet', 'Chưa có thư mục nào')}</div>
           ) : rootFolders.map(f => renderFolderNode(f, 0))}
         </div>
+        <div className="doc-tree-resize-handle" onMouseDown={handleTreeResizeStart} title={t('documents.resizeTreePanel', 'Kéo để thay đổi kích thước')}></div>
       </div>
 
       <div className="doc-main-panel">
@@ -374,20 +443,24 @@ export default function DocumentExplorer({ projectId = null }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </form>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept={ACCEPT_EXT}
-              style={{ display: 'none' }}
-              onChange={handleFilesSelected}
-            />
-            <button type="button" className="btn btn-secondary" onClick={() => setTextEditorState({ doc: null, autoEdit: true })}>
-              <i className="fa-solid fa-file-circle-plus"></i> {t('documents.createDocument', 'Tạo tài liệu')}
-            </button>
-            <button type="button" className="btn btn-primary" onClick={handleUploadClick} disabled={uploading}>
-              <i className="fa-solid fa-upload"></i> {uploading ? t('documents.uploading', 'Đang tải lên...') : t('common.upload', 'Tải lên')}
-            </button>
+            {canUploadDocuments && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={ACCEPT_EXT}
+                  style={{ display: 'none' }}
+                  onChange={handleFilesSelected}
+                />
+                <button type="button" className="btn btn-secondary" onClick={() => setTextEditorState({ doc: null, autoEdit: true })}>
+                  <i className="fa-solid fa-file-circle-plus"></i> {t('documents.createDocument', 'Tạo tài liệu')}
+                </button>
+                <button type="button" className="btn btn-primary" onClick={handleUploadClick} disabled={uploading}>
+                  <i className="fa-solid fa-upload"></i> {uploading ? t('documents.uploading', 'Đang tải lên...') : t('common.upload', 'Tải lên')}
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -401,9 +474,23 @@ export default function DocumentExplorer({ projectId = null }) {
             <span><i className="fa-solid fa-folder"></i> {currentFolder ? getFolderPath(currentFolder.folder_id) : rootLabel}</span>
           )}
         </div>
+        {!activeSearch && (currentFolder?.default_prefix || currentFolder?.allowed_extensions) && (
+          <div style={{ marginTop: '-8px', marginBottom: '12px' }}>
+            {currentFolder?.default_prefix && (
+              <div style={{ fontSize: '12px', color: 'var(--warning-color)' }}>
+                <i className="fa-solid fa-circle-info"></i> {t('documents.folderDefaultPrefixHint2', 'Tên file phải chứa "{prefix}" (tối đa 6 ký tự bất kỳ phía trước)').replace('{prefix}', currentFolder.default_prefix)}
+              </div>
+            )}
+            {currentFolder?.allowed_extensions && (
+              <div style={{ fontSize: '12px', color: 'var(--warning-color)' }}>
+                <i className="fa-solid fa-circle-info"></i> {t('documents.folderAllowedExtensionsHint2', 'Chỉ chấp nhận đuôi tệp: {exts}').replace('{exts}', parseAllowedExtensions(currentFolder.allowed_extensions).join(', '))}
+              </div>
+            )}
+          </div>
+        )}
 
         {isSlotTableFolder ? (
-          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} />
+          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} canUpload={canUploadDocuments} allowedExtensions={currentFolder?.allowed_extensions} />
         ) : (
         <div className="doc-file-list">
           {documents.length === 0 ? (

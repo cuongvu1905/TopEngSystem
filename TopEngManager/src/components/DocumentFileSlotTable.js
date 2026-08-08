@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/utils/db';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
+import { matchesRequiredPrefix, matchesAllowedExtensions, parseAllowedExtensions } from '@/utils/filePrefixMatch';
 
 // Kept in sync with DocumentExplorer.js's ACCEPT_EXT (duplicated rather than
 // imported to avoid a circular import between the two sibling components).
@@ -12,7 +13,7 @@ const ACCEPT_EXT = '.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.csv,.png,.jpg,.j
 // Fixed-row file manager for folders tagged folder_type === 'file_slot_table'
 // (e.g. the auto-provisioned "01.TK Điện" folder): each predefined row only
 // accepts an upload whose filename starts with that row's required prefix.
-export default function DocumentFileSlotTable({ folderId, projectId, currentUser }) {
+export default function DocumentFileSlotTable({ folderId, projectId, currentUser, canUpload = true, allowedExtensions = null }) {
   const { t } = useLanguage();
   const [slots, setSlots] = useState([]);
   const [uploadingSlotId, setUploadingSlotId] = useState(null);
@@ -43,12 +44,23 @@ export default function DocumentFileSlotTable({ folderId, projectId, currentUser
     e.target.value = '';
     if (!file || !slot) return;
 
-    if (slot.prefix && !file.name.startsWith(slot.prefix)) {
+    if (slot.prefix && !matchesRequiredPrefix(file.name, slot.prefix)) {
       const Swal = await getSwal();
       Swal.fire({
         icon: 'error',
         title: t('common.failed', 'Thất bại'),
-        text: t('documents.slotPrefixMismatch', 'Tên tệp phải bắt đầu bằng "{prefix}"').replace('{prefix}', slot.prefix)
+        text: t('documents.slotPrefixMismatch', 'Tên tệp phải chứa "{prefix}" (tối đa 6 ký tự bất kỳ phía trước)').replace('{prefix}', slot.prefix)
+      });
+      return;
+    }
+    if (allowedExtensions && !matchesAllowedExtensions(file.name, allowedExtensions)) {
+      const Swal = await getSwal();
+      Swal.fire({
+        icon: 'error',
+        title: t('common.failed', 'Thất bại'),
+        text: t('documents.uploadExtensionMismatch', 'Thư mục này chỉ chấp nhận đuôi tệp: {exts}. Tệp không hợp lệ: {files}')
+          .replace('{exts}', parseAllowedExtensions(allowedExtensions).join(', '))
+          .replace('{files}', file.name)
       });
       return;
     }
@@ -118,15 +130,17 @@ export default function DocumentFileSlotTable({ folderId, projectId, currentUser
                   </span>
                 </td>
                 <td style={{ padding: '10px', textAlign: 'center' }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    disabled={uploadingSlotId === slot.id}
-                    onClick={() => handleUploadClick(slot)}
-                    title={t('common.upload', 'Tải lên')}
-                  >
-                    <i className="fa-solid fa-upload"></i>
-                  </button>
+                  {canUpload && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      disabled={uploadingSlotId === slot.id}
+                      onClick={() => handleUploadClick(slot)}
+                      title={t('common.upload', 'Tải lên')}
+                    >
+                      <i className="fa-solid fa-upload"></i>
+                    </button>
+                  )}
                 </td>
                 <td style={{ padding: '10px', textAlign: 'center' }}>
                   {hasDoc ? (
@@ -148,15 +162,17 @@ export default function DocumentFileSlotTable({ folderId, projectId, currentUser
           })}
         </tbody>
       </table>
-      <button
-        type="button"
-        onClick={handleAddRow}
-        disabled={addingRow}
-        title={t('documents.slotAddRow', 'Thêm hàng')}
-        style={{ marginTop: '12px', width: '36px', height: '36px', borderRadius: '4px', border: 'none', backgroundColor: '#0f766e', color: '#fff', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer' }}
-      >
-        +
-      </button>
+      {canUpload && (
+        <button
+          type="button"
+          onClick={handleAddRow}
+          disabled={addingRow}
+          title={t('documents.slotAddRow', 'Thêm hàng')}
+          style={{ marginTop: '12px', width: '36px', height: '36px', borderRadius: '4px', border: 'none', backgroundColor: '#0f766e', color: '#fff', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          +
+        </button>
+      )}
     </div>
   );
 }

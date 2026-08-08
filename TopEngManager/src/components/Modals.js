@@ -3,6 +3,7 @@ import { db } from '@/utils/db';
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
+import { matchesRequiredPrefix } from '@/utils/filePrefixMatch';
 
 const translateDepartmentName = (name, t) => {
   if (!name || name === 'Chưa phân phòng') return t('dept.unassigned', 'Chưa phân phòng');
@@ -1311,6 +1312,458 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
           </div>
         </div>
       </div>
+    </ModalWrapperLg>
+  );
+};
+
+// ================= 4. FOLDER TEMPLATE MODAL (Admin-only) =================
+// Lets an Admin design the default folder tree that gets cloned into every newly
+// created project's "Tài liệu" tab (see createDefaultProjectFolderTree on the
+// backend). Mirrors DocumentExplorer.js's tree + right-click rename/delete pattern,
+// simplified (no collapse state, no ownership gating — the whole modal is Admin-only).
+export const FolderTemplateModal = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
+  const [folders, setFolders] = useState([]);
+  const [selectedFolderId, setSelectedFolderId] = useState(null);
+  const [slots, setSlots] = useState([]);
+  const [newPrefix, setNewPrefix] = useState('');
+  const [folderContextMenu, setFolderContextMenu] = useState(null);
+  const [defaultPrefixInput, setDefaultPrefixInput] = useState('');
+  const [allowedExtensionsInput, setAllowedExtensionsInput] = useState('');
+
+  const loadFolders = async () => {
+    try {
+      const list = await db.getFolderTemplates();
+      setFolders(list || []);
+    } catch (err) {
+      console.error('Failed to load folder templates', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadFolders();
+      setSelectedFolderId(null);
+    }
+  }, [isOpen]);
+
+  const selectedFolder = folders.find(f => f.template_folder_id === selectedFolderId);
+
+  useEffect(() => {
+    setDefaultPrefixInput(selectedFolder?.default_prefix || '');
+    setAllowedExtensionsInput(selectedFolder?.allowed_extensions || '');
+  }, [selectedFolderId, selectedFolder?.default_prefix, selectedFolder?.allowed_extensions]);
+
+  const handleSaveDefaultPrefix = async () => {
+    if (!selectedFolder) return;
+    try {
+      await db.setFolderTemplateDefaultPrefix(selectedFolder.template_folder_id, defaultPrefixInput);
+      await loadFolders();
+    } catch (err) {
+      const Swal = await getSwal();
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const handleSaveAllowedExtensions = async () => {
+    if (!selectedFolder) return;
+    try {
+      await db.setFolderTemplateAllowedExtensions(selectedFolder.template_folder_id, allowedExtensionsInput);
+      await loadFolders();
+    } catch (err) {
+      const Swal = await getSwal();
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const loadSlots = async (templateFolderId) => {
+    try {
+      const list = await db.getFolderTemplateSlots({ templateFolderId });
+      setSlots(list || []);
+    } catch (err) {
+      console.error('Failed to load folder template slots', err);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedFolder?.folder_type === 'file_slot_table') {
+      loadSlots(selectedFolder.template_folder_id);
+    } else {
+      setSlots([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFolderId, selectedFolder?.folder_type]);
+
+  useEffect(() => {
+    if (!folderContextMenu) return;
+    const closeMenu = () => setFolderContextMenu(null);
+    const handleKeyDown = (e) => { if (e.key === 'Escape') closeMenu(); };
+    window.addEventListener('click', closeMenu);
+    window.addEventListener('contextmenu', closeMenu);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('click', closeMenu);
+      window.removeEventListener('contextmenu', closeMenu);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [folderContextMenu]);
+
+  const getChildren = (parentId) => folders.filter(f => (f.parent_template_folder_id || null) === parentId);
+  const rootFolders = getChildren(null);
+
+  const handleAddFolder = async (parentTemplateFolderId) => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    const Swal = await getSwal();
+    const { value: name } = await Swal.fire({
+      title: t('documents.newFolderTitle', 'Thư mục mới'),
+      input: 'text',
+      inputPlaceholder: t('documents.folderNamePlaceholder', 'Nhập tên thư mục...'),
+      showCancelButton: true,
+      confirmButtonText: t('common.create', 'Tạo mới'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--primary-color)',
+      inputValidator: (value) => (!value || !value.trim()) ? t('documents.folderNameRequired', 'Vui lòng nhập tên thư mục') : undefined
+    });
+    if (!name) return;
+    try {
+      await db.createFolderTemplateFolder({ name: name.trim(), parentTemplateFolderId });
+      await loadFolders();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const handleRenameFolder = async (folder) => {
+    const Swal = await getSwal();
+    const { value: name } = await Swal.fire({
+      title: t('documents.renameFolderTitle', 'Đổi tên thư mục'),
+      input: 'text',
+      inputValue: folder.name,
+      showCancelButton: true,
+      confirmButtonText: t('common.save', 'Lưu thay đổi'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--primary-color)',
+      inputValidator: (value) => (!value || !value.trim()) ? t('documents.folderNameRequired', 'Vui lòng nhập tên thư mục') : undefined
+    });
+    if (!name || name.trim() === folder.name) return;
+    try {
+      await db.renameFolderTemplateFolder(folder.template_folder_id, name.trim());
+      await loadFolders();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const handleDeleteFolder = async (folder) => {
+    const Swal = await getSwal();
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: t('documents.deleteFolderConfirmTitle', 'Xóa thư mục?'),
+      text: t('documents.deleteFolderConfirmText', 'Toàn bộ thư mục con và tài liệu bên trong sẽ bị xóa vĩnh viễn.'),
+      showCancelButton: true,
+      confirmButtonText: t('common.delete', 'Xóa'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--danger-color)'
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await db.deleteFolderTemplateFolder(folder.template_folder_id);
+      if (selectedFolderId === folder.template_folder_id) setSelectedFolderId(null);
+      await loadFolders();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const handleToggleSlotType = async (checked) => {
+    if (!selectedFolder) return;
+    try {
+      await db.setFolderTemplateType(selectedFolder.template_folder_id, checked ? 'file_slot_table' : null);
+      await loadFolders();
+    } catch (err) {
+      const Swal = await getSwal();
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const handleAddPrefix = async () => {
+    if (!selectedFolder || !newPrefix.trim()) return;
+    if (selectedFolder.default_prefix && !matchesRequiredPrefix(newPrefix.trim(), selectedFolder.default_prefix)) {
+      const Swal = await getSwal();
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('documents.slotPrefixMustMatchFolder', 'Tiền tố hàng phải chứa tiền tố mặc định của thư mục ("{prefix}"), có thể có tối đa 6 ký tự bất kỳ phía trước').replace('{prefix}', selectedFolder.default_prefix) });
+      return;
+    }
+    try {
+      await db.createFolderTemplateSlot({ templateFolderId: selectedFolder.template_folder_id, prefix: newPrefix.trim() });
+      setNewPrefix('');
+      await loadSlots(selectedFolder.template_folder_id);
+    } catch (err) {
+      const Swal = await getSwal();
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const handleDeletePrefix = async (slotId) => {
+    try {
+      await db.deleteFolderTemplateSlot(slotId);
+      await loadSlots(selectedFolder.template_folder_id);
+    } catch (err) {
+      const Swal = await getSwal();
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const handleEditPrefix = async (slot) => {
+    const Swal = await getSwal();
+    const { value: prefix } = await Swal.fire({
+      title: t('documents.editPrefixTitle', 'Sửa tiền tố'),
+      input: 'text',
+      inputValue: slot.prefix,
+      showCancelButton: true,
+      confirmButtonText: t('common.save', 'Lưu thay đổi'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--primary-color)',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) return t('documents.slotPrefixRequired', 'Vui lòng nhập tiền tố tên tệp');
+        if (selectedFolder?.default_prefix && !matchesRequiredPrefix(value.trim(), selectedFolder.default_prefix)) {
+          return t('documents.slotPrefixMustMatchFolder', 'Tiền tố hàng phải chứa tiền tố mặc định của thư mục ("{prefix}"), có thể có tối đa 6 ký tự bất kỳ phía trước').replace('{prefix}', selectedFolder.default_prefix);
+        }
+        return undefined;
+      }
+    });
+    if (!prefix || prefix.trim() === slot.prefix) return;
+    try {
+      await db.updateFolderTemplateSlot(slot.id, prefix.trim());
+      await loadSlots(selectedFolder.template_folder_id);
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
+  const renderNode = (folder, depth = 0) => {
+    const children = getChildren(folder.template_folder_id);
+    const isSelected = selectedFolderId === folder.template_folder_id;
+    return (
+      <div key={folder.template_folder_id} style={{ marginLeft: depth > 0 ? '16px' : '0px' }}>
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px',
+            padding: '6px 8px', borderRadius: '4px', cursor: 'pointer',
+            backgroundColor: isSelected ? 'var(--primary-color)' : 'transparent',
+            color: isSelected ? '#fff' : 'var(--neutral-dark)'
+          }}
+          onClick={() => setSelectedFolderId(folder.template_folder_id)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setFolderContextMenu({ x: e.clientX, y: e.clientY, folder });
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13.5px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <i className={folder.folder_type === 'file_slot_table' ? 'fa-solid fa-table-list' : 'fa-solid fa-folder'}></i>
+            {folder.name}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+            <button
+              type="button"
+              title={t('documents.newSubfolder', 'Thư mục con mới')}
+              onClick={(e) => { e.stopPropagation(); handleAddFolder(folder.template_folder_id); }}
+              style={{ border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', opacity: 0.8, padding: '4px' }}
+            >
+              <i className="fa-solid fa-plus"></i>
+            </button>
+            <button
+              type="button"
+              title={t('documents.renameFolderAction', 'Đổi tên thư mục')}
+              onClick={(e) => { e.stopPropagation(); handleRenameFolder(folder); }}
+              style={{ border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', opacity: 0.8, padding: '4px' }}
+            >
+              <i className="fa-solid fa-pen"></i>
+            </button>
+            <button
+              type="button"
+              title={t('documents.deleteFolderAction', 'Xóa thư mục')}
+              onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder); }}
+              style={{ border: 'none', background: 'none', color: isSelected ? '#fff' : 'var(--danger-color)', cursor: 'pointer', opacity: 0.9, padding: '4px' }}
+            >
+              <i className="fa-solid fa-trash-can"></i>
+            </button>
+          </span>
+        </div>
+        {children.length > 0 && (
+          <div>{children.map(child => renderNode(child, depth + 1))}</div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <ModalWrapperLg isOpen={isOpen} onClose={onClose} style={{ width: '75vw', maxWidth: '1600px', height: '85vh', maxHeight: '85vh' }}>
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
+            {t('projects.designFolderTemplate', 'Thiết kế cây thư mục mặc định')}
+          </h3>
+          <button className="btn-close-modal" onClick={onClose}><i className="fa-solid fa-xmark"></i></button>
+        </div>
+        <div className="modal-body modal-body-split">
+          <div className="modal-split-left" style={{ minWidth: '260px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <strong style={{ fontSize: '13px', color: 'var(--neutral-muted)' }}>{t('documents.folders', 'Thư mục')}</strong>
+              <button
+                type="button"
+                title={t('documents.newFolder', 'Thư mục mới')}
+                onClick={() => handleAddFolder(null)}
+                style={{ border: 'none', borderRadius: '4px', width: '26px', height: '26px', backgroundColor: 'var(--primary-color)', color: '#fff', cursor: 'pointer' }}
+              >
+                <i className="fa-solid fa-folder-plus"></i>
+              </button>
+            </div>
+            {rootFolders.length === 0 ? (
+              <div style={{ fontSize: '13px', color: 'var(--neutral-muted)' }}>{t('documents.noFoldersYet', 'Chưa có thư mục nào')}</div>
+            ) : rootFolders.map(f => renderNode(f, 0))}
+          </div>
+          <div className="modal-split-right">
+            {!selectedFolder ? (
+              <div style={{ color: 'var(--neutral-muted)', fontSize: '13.5px', padding: '20px 0' }}>
+                {t('documents.selectFolderToConfigure', 'Chọn một thư mục bên trái để cấu hình.')}
+              </div>
+            ) : (
+              <div>
+                <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', color: 'var(--neutral-dark)' }}>{selectedFolder.name}</h4>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <strong style={{ fontSize: '13px', color: 'var(--neutral-muted)', display: 'block', marginBottom: '8px' }}>
+                    {t('documents.folderAllowedExtensionsLabel', 'Đuôi file được phép tải lên thư mục này')}
+                  </strong>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      value={allowedExtensionsInput}
+                      onChange={(e) => setAllowedExtensionsInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSaveAllowedExtensions(); } }}
+                      placeholder={t('documents.folderAllowedExtensionsPlaceholder', 'Ví dụ: pdf;xlsx;pptx (để trống nếu không giới hạn)')}
+                      autoComplete="off"
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13.5px' }}
+                    />
+                    <button type="button" className="btn btn-primary btn-sm" onClick={handleSaveAllowedExtensions}>
+                      {t('common.save', 'Lưu')}
+                    </button>
+                  </div>
+                  {selectedFolder.allowed_extensions && (
+                    <p style={{ fontSize: '12px', color: 'var(--neutral-muted)', marginTop: '6px' }}>
+                      {t('documents.folderAllowedExtensionsHint', 'Chỉ những file có đuôi nằm trong danh sách này mới được tải lên thư mục này.')}
+                    </p>
+                  )}
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <strong style={{ fontSize: '13px', color: 'var(--neutral-muted)', display: 'block', marginBottom: '8px' }}>
+                    {t('documents.folderDefaultPrefixLabel', 'Tiền tố mặc định cho file tải lên thư mục này')}
+                  </strong>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      value={defaultPrefixInput}
+                      onChange={(e) => setDefaultPrefixInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSaveDefaultPrefix(); } }}
+                      placeholder={t('documents.folderDefaultPrefixPlaceholder', 'Ví dụ: [CONCEPT] (để trống nếu không giới hạn)')}
+                      autoComplete="off"
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13.5px' }}
+                    />
+                    <button type="button" className="btn btn-primary btn-sm" onClick={handleSaveDefaultPrefix}>
+                      {t('common.save', 'Lưu')}
+                    </button>
+                  </div>
+                  {selectedFolder.default_prefix && (
+                    <p style={{ fontSize: '12px', color: 'var(--neutral-muted)', marginTop: '6px' }}>
+                      {t('documents.folderDefaultPrefixHint', 'Chỉ những file có tên chứa tiền tố này (có thể có tối đa 6 ký tự bất kỳ phía trước, ví dụ số thứ tự) mới được tải lên thư mục này.')}
+                    </p>
+                  )}
+                </div>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: 'var(--neutral-dark)', cursor: 'pointer', marginBottom: '16px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedFolder.folder_type === 'file_slot_table'}
+                    onChange={(e) => handleToggleSlotType(e.target.checked)}
+                  />
+                  {t('documents.slotTableToggle', 'Bảng quản lý file cố định (yêu cầu đúng tiền tố tên tệp)')}
+                </label>
+                {selectedFolder.folder_type === 'file_slot_table' && (
+                  <div>
+                    <strong style={{ fontSize: '13px', color: 'var(--neutral-muted)' }}>{t('documents.slotPrefixListLabel', 'Danh sách tiền tố bắt buộc')}</strong>
+                    <div style={{ marginTop: '8px', marginBottom: '12px' }}>
+                      {slots.length === 0 ? (
+                        <div style={{ fontSize: '13px', color: 'var(--neutral-muted)' }}>{t('documents.noPrefixesYet', 'Chưa có tiền tố nào.')}</div>
+                      ) : slots.map((slot, idx) => (
+                        <div key={slot.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderBottom: '1px solid var(--neutral-border)', fontSize: '13.5px' }}>
+                          <span>{idx + 1}. {slot.prefix}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <button type="button" onClick={() => handleEditPrefix(slot)} style={{ border: 'none', background: 'none', color: 'var(--neutral-dark)', cursor: 'pointer' }} title={t('common.edit', 'Sửa')}>
+                              <i className="fa-solid fa-pen"></i>
+                            </button>
+                            <button type="button" onClick={() => handleDeletePrefix(slot.id)} style={{ border: 'none', background: 'none', color: 'var(--danger-color)', cursor: 'pointer' }} title={t('common.delete', 'Xóa')}>
+                              <i className="fa-solid fa-trash-can"></i>
+                            </button>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="text"
+                        value={newPrefix}
+                        onChange={(e) => setNewPrefix(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddPrefix(); } }}
+                        placeholder={t('documents.slotPrefixPlaceholder', 'Ví dụ: 5.[Test Report]')}
+                        autoComplete="off"
+                        style={{ flex: 1, padding: '8px 10px', borderRadius: '4px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13.5px' }}
+                      />
+                      <button type="button" className="btn btn-primary btn-sm" onClick={handleAddPrefix}>
+                        {t('documents.addPrefixBtn', 'Thêm tiền tố')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {folderContextMenu && (
+        <div
+          style={{
+            position: 'fixed',
+            top: folderContextMenu.y,
+            left: folderContextMenu.x,
+            zIndex: 1100,
+            backgroundColor: 'var(--neutral-bg-card)',
+            border: '1px solid var(--neutral-border)',
+            borderRadius: '6px',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)',
+            minWidth: '160px',
+            overflow: 'hidden'
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            type="button"
+            onClick={() => { handleRenameFolder(folderContextMenu.folder); setFolderContextMenu(null); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13.5px', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <i className="fa-solid fa-pen" style={{ width: '14px' }}></i> {t('documents.renameFolderAction', 'Đổi tên thư mục')}
+          </button>
+          <button
+            type="button"
+            onClick={() => { handleDeleteFolder(folderContextMenu.folder); setFolderContextMenu(null); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 14px', border: 'none', background: 'none', color: 'var(--danger-color)', fontSize: '13.5px', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <i className="fa-solid fa-trash-can" style={{ width: '14px' }}></i> {t('documents.deleteFolderAction', 'Xóa thư mục')}
+          </button>
+        </div>
+      )}
     </ModalWrapperLg>
   );
 };

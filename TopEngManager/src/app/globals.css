@@ -1587,7 +1587,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Document Explorer (folder tree + file list, company & per-project) */
 .doc-explorer-layout {
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: var(--doc-tree-width, 260px) 1fr;
   align-items: start;
 }
 .doc-explorer-layout.editor-open {
@@ -1597,6 +1597,7 @@ h1, h2, h3, h4, h5, h6 {
   display: none;
 }
 .doc-folder-tree-panel {
+  position: relative;
   background-color: var(--neutral-bg-card);
   border: 1px solid var(--neutral-border);
   border-radius: var(--border-radius);
@@ -1607,6 +1608,19 @@ h1, h2, h3, h4, h5, h6 {
   gap: 4px;
   max-height: 70vh;
   overflow: hidden;
+}
+.doc-tree-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 5;
+}
+.doc-tree-resize-handle:hover {
+  background-color: var(--primary-color);
+  opacity: 0.5;
 }
 .doc-folder-tree-header {
   display: flex;
