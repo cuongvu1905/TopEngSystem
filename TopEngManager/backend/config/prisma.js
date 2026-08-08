@@ -3,8 +3,17 @@ const crypto = require('crypto');
 
 const prisma = new PrismaClient();
 
-// Self-healing database migration check for security fields
-(async () => {
+// All self-healing migration steps below used to be independent self-invoking async
+// IIFEs, which run concurrently rather than in sequence. That's harmless when each
+// step only touches its own pre-existing table, but it's a real race when a later
+// step ALTERs a table that an earlier step is still in the middle of CREATE-ing (e.g.
+// on a brand new production DB, the "add default_prefix to foldertemplate" step could
+// run its "SHOW COLUMNS" check before the "create foldertemplate table" step had
+// finished inserting its seed rows, silently fail with a caught error, and never
+// retry — leaving the column missing forever even though the table exists). Running
+// every step sequentially, awaited in order, removes that entire class of bug.
+async function runMigrations() {
+  // Self-healing database migration check for security fields
   try {
     const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`user\``;
     const hasSessionToken = columns.some(col => col.Field === 'session_token');
@@ -19,10 +28,8 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during security migration check:', err);
   }
-})();
 
-// Self-healing table creation for the Document Repository feature
-(async () => {
+  // Self-healing table creation for the Document Repository feature
   try {
     const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'documentfolder'`;
     if (tables.length === 0) {
@@ -81,10 +88,8 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during document tables migration check:', err);
   }
-})();
 
-// Self-healing column addition for the in-browser Text Document feature
-(async () => {
+  // Self-healing column addition for the in-browser Text Document feature
   try {
     const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`document\` LIKE 'doc_type'`;
     if (columns.length === 0) {
@@ -96,10 +101,8 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during text document columns migration check:', err);
   }
-})();
 
-// Self-healing column addition for hidden departments (e.g. an "Administrator" department)
-(async () => {
+  // Self-healing column addition for hidden departments (e.g. an "Administrator" department)
   try {
     const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`department\` LIKE 'is_hidden'`;
     if (columns.length === 0) {
@@ -110,10 +113,8 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during department is_hidden migration check:', err);
   }
-})();
 
-// Self-healing column addition for dual Team Leader / additional Part Leader assignment
-(async () => {
+  // Self-healing column addition for dual Team Leader / additional Part Leader assignment
   try {
     const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`user\` LIKE 'additional_part_leader_of'`;
     if (columns.length === 0) {
@@ -124,12 +125,10 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during additional_part_leader_of migration check:', err);
   }
-})();
 
-// Self-healing table creation for multi-Part additional leadership (a Team Leader
-// can additionally lead any number of Parts, replacing the old single-value
-// user.additional_part_leader_of column which is left in place but unused).
-(async () => {
+  // Self-healing table creation for multi-Part additional leadership (a Team Leader
+  // can additionally lead any number of Parts, replacing the old single-value
+  // user.additional_part_leader_of column which is left in place but unused).
   try {
     const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'partleadership'`;
     if (tables.length === 0) {
@@ -160,10 +159,8 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during partleadership table migration check:', err);
   }
-})();
 
-// Self-healing column addition for "show once" rejected-report popup tracking
-(async () => {
+  // Self-healing column addition for "show once" rejected-report popup tracking
   try {
     const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`notificyations\` LIKE 'modal_shown'`;
     if (columns.length === 0) {
@@ -174,10 +171,8 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during notificyations modal_shown migration check:', err);
   }
-})();
 
-// Self-healing column addition for tracking who approved/rejected a daily report
-(async () => {
+  // Self-healing column addition for tracking who approved/rejected a daily report
   try {
     const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`dailyreport\` LIKE 'reviewer_id'`;
     if (columns.length === 0) {
@@ -188,11 +183,9 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during dailyreport reviewer_id migration check:', err);
   }
-})();
 
-// Self-healing column addition for tagging special-purpose document folders
-// (e.g. the auto-provisioned "01.TK Điện" folder that renders a file-slot table)
-(async () => {
+  // Self-healing column addition for tagging special-purpose document folders
+  // (e.g. the auto-provisioned "01.TK Điện" folder that renders a file-slot table)
   try {
     const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`documentfolder\` LIKE 'folder_type'`;
     if (columns.length === 0) {
@@ -203,10 +196,8 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during documentfolder folder_type migration check:', err);
   }
-})();
 
-// Self-healing table creation for the Document file-slot table feature
-(async () => {
+  // Self-healing table creation for the Document file-slot table feature
   try {
     const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'documentfileslot'`;
     if (tables.length === 0) {
@@ -228,13 +219,11 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during documentfileslot table migration check:', err);
   }
-})();
 
-// Self-healing table creation for the admin-editable default project folder tree
-// template. Seeded once, on first creation only, with exactly the tree that used
-// to be hardcoded in documentController.js's createDefaultProjectFolderTree, so
-// existing deployments see zero behavior change until an admin actually edits it.
-(async () => {
+  // Self-healing table creation for the admin-editable default project folder tree
+  // template. Seeded once, on first creation only, with exactly the tree that used
+  // to be hardcoded in documentController.js's createDefaultProjectFolderTree, so
+  // existing deployments see zero behavior change until an admin actually edits it.
   try {
     const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'foldertemplate'`;
     if (tables.length === 0) {
@@ -246,6 +235,8 @@ const prisma = new PrismaClient();
           \`name\` VARCHAR(255) NOT NULL,
           \`parent_template_folder_id\` VARCHAR(50) DEFAULT NULL,
           \`folder_type\` VARCHAR(30) DEFAULT NULL,
+          \`default_prefix\` VARCHAR(150) DEFAULT NULL,
+          \`allowed_extensions\` VARCHAR(255) DEFAULT NULL,
           \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           CONSTRAINT \`fk_foldertemplate_parent\` FOREIGN KEY (\`parent_template_folder_id\`) REFERENCES \`foldertemplate\` (\`template_folder_id\`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -289,12 +280,10 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during foldertemplate table migration check:', err);
   }
-})();
 
-// Self-healing column addition for a folder-level required upload-name prefix
-// (applies to every file uploaded into that folder, both on the admin's template
-// and the real per-project folders cloned from it).
-(async () => {
+  // Self-healing column addition for a folder-level required upload-name prefix
+  // (applies to every file uploaded into that folder, both on the admin's template
+  // and the real per-project folders cloned from it).
   try {
     const templateColumns = await prisma.$queryRaw`SHOW COLUMNS FROM \`foldertemplate\` LIKE 'default_prefix'`;
     if (templateColumns.length === 0) {
@@ -311,12 +300,10 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during default_prefix migration check:', err);
   }
-})();
 
-// Self-healing column addition for a folder-level allowed-file-extension list
-// (semicolon-separated, e.g. "pdf;xlsx;pptx"), on both the admin's template and
-// the real per-project folders cloned from it.
-(async () => {
+  // Self-healing column addition for a folder-level allowed-file-extension list
+  // (semicolon-separated, e.g. "pdf;xlsx;pptx"), on both the admin's template and
+  // the real per-project folders cloned from it.
   try {
     const templateColumns = await prisma.$queryRaw`SHOW COLUMNS FROM \`foldertemplate\` LIKE 'allowed_extensions'`;
     if (templateColumns.length === 0) {
@@ -333,6 +320,8 @@ const prisma = new PrismaClient();
   } catch (err) {
     console.error('Error during allowed_extensions migration check:', err);
   }
-})();
+}
+
+runMigrations();
 
 module.exports = prisma;
