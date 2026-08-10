@@ -320,6 +320,18 @@ async function runMigrations() {
   } catch (err) {
     console.error('Error during allowed_extensions migration check:', err);
   }
+
+  // Self-healing column addition for a user's personal phone number
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`user\` LIKE 'phone'`;
+    if (columns.length === 0) {
+      console.log('Adding phone column to user table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `user` ADD COLUMN `phone` VARCHAR(20) NULL;');
+      console.log('phone column added successfully.');
+    }
+  } catch (err) {
+    console.error('Error during user phone migration check:', err);
+  }
 }
 
 runMigrations();

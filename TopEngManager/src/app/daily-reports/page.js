@@ -121,7 +121,9 @@ export default function DailyReportsPage() {
   // Lets "Save Draft" stay hidden while resubmitting a Rejected report, so it can't
   // accidentally leave that report stuck at Draft instead of going back for approval.
   const [editingReportStatus, setEditingReportStatus] = useState(null);
-  const [reportDate, setReportDate] = useState(getTodayDateString());
+  // No date is pre-selected: the composer starts locked until the user explicitly
+  // picks a report date (see the Content textarea's readOnly guard below).
+  const [reportDate, setReportDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -133,6 +135,15 @@ export default function DailyReportsPage() {
       }
       return c;
     }));
+  };
+
+  // The content textarea is readOnly until a report date is picked; focusing it while
+  // locked (click or tab) blurs it right back out and nudges the user to pick a date first.
+  const handleContentFocusGuard = (e) => {
+    if (!reportDate) {
+      e.target.blur();
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.selectDateFirstWarning', 'Vui lòng chọn ngày báo cáo trước khi nhập nội dung.') });
+    }
   };
 
   // Which single time-dropdown (if any) is open, keyed as "<cardId>-startTime"/"<cardId>-endTime".
@@ -393,6 +404,10 @@ export default function DailyReportsPage() {
   const handleSubmitReport = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
+    if (!reportDate) {
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.selectDateFirstWarning', 'Vui lòng chọn ngày báo cáo trước khi nhập nội dung.') });
+      return;
+    }
     if (reportCards.some(c => !c.content.trim())) {
       Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('report.incompleteCardsWarning', 'Vui lòng điền đầy đủ nội dung và chọn dự án cho tất cả các thẻ báo cáo!') });
       return;
@@ -424,7 +439,7 @@ export default function DailyReportsPage() {
       }
 
       setReportCards(getDefaultReportCards());
-      setReportDate(getTodayDateString());
+      setReportDate('');
       await loadReports();
     } catch (err) {
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('report.saveErrorText', 'Lỗi lưu báo cáo: ') + err.message });
@@ -438,6 +453,10 @@ export default function DailyReportsPage() {
   // editingReportId as the pointer to the same Draft row across repeated saves.
   const handleSaveDraft = async () => {
     if (!currentUser) return;
+    if (!reportDate) {
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.selectDateFirstWarning', 'Vui lòng chọn ngày báo cáo trước khi nhập nội dung.') });
+      return;
+    }
     if (reportCards.every(c => !c.content.trim())) {
       Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('report.draftEmptyWarning', 'Vui lòng nhập ít nhất một nội dung trước khi lưu tạm thời.') });
       return;
@@ -495,6 +514,197 @@ export default function DailyReportsPage() {
     return true;
   });
 
+  // Shared "report detail" popup: opened both from a History card click and from
+  // clicking a green (already-reported) day in the Report Status calendar below.
+  const showReportDetailPopup = async (report) => {
+    const SwalInstance = await getSwal();
+    const proj = projects.find(p => p.id === report.project_id);
+    const isEditable = report.status === 'Pending' || report.status === 'pending' || report.status === 'Rejected' || (report.status !== 'Approved' && report.status !== 'Rejected');
+
+    const isJsonReport = (() => {
+      try {
+        return Array.isArray(JSON.parse(report.content));
+      } catch (e) { return false; }
+    })();
+
+    const formattedDate = new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US');
+    const statusText = report.status === 'Approved'
+      ? t('report.approvedStatus', 'Đã duyệt')
+      : report.status === 'Rejected'
+        ? t('report.rejectedStatus', 'Từ chối')
+        : report.status === 'Draft'
+          ? t('report.draftStatus', 'Nháp')
+          : 'Pending'; // Always Pending in English
+
+    const feedbackLabel = report.reviewer_name
+      ? t('reports.managerFeedbackLabelNamed', 'Ý kiến phản hồi từ quản lý({name}):').replace('{name}', report.reviewer_name)
+      : t('reports.managerFeedbackLabel', 'Ý kiến phản hồi từ quản lý:');
+
+    const rejectionCommentHtml = (report.status === 'Rejected' && report.comment)
+      ? `<div style="margin-bottom: 12px; padding: 10px 12px; background-color: #fef2f2; border: 1px dashed #fca5a5; border-radius: 6px;">
+           <strong style="font-size: 12.5px; color: #b91c1c; display: block; margin-bottom: 4px;">${feedbackLabel}</strong>
+           <span style="font-size: 13px; color: #7f1d1d; white-space: pre-wrap;">${report.comment}</span>
+         </div>`
+      : '';
+
+    const htmlContent = isJsonReport
+      ? `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: var(--neutral-dark);">
+           <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--neutral-border); display: flex; justify-content: space-between;">
+             <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
+             <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
+           </div>
+           ${rejectionCommentHtml}
+           ${formatReportContentHtml(report.content, projects)}
+         </div>`
+      : `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: var(--neutral-dark);">
+           <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--neutral-border); display: flex; justify-content: space-between;">
+             <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
+             <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
+           </div>
+           ${rejectionCommentHtml}
+           ${report.project_id ? `<div style="margin-bottom: 12px;"><span style="background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Dự án: ${proj?.name || 'Liên kết'}</span></div>` : ''}
+           <textarea id="swal-report-content" style="width: 100%; min-height: 250px; background-color: var(--neutral-bg-main); color: var(--neutral-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--neutral-border); font-family: inherit; font-size: 13.5px; line-height: 1.6; outline: none; resize: vertical; box-sizing: border-box;" ${isEditable ? '' : 'readonly'}>${report.content}</textarea>
+           ${report.file_url ? `<div style="margin-top: 12px;"><a href="${report.file_url}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600;"><i class="fa-solid fa-paperclip"></i> Tệp đính kèm tài liệu</a></div>` : ''}
+         </div>`;
+
+    const result = await SwalInstance.fire({
+      title: t('dashboard.dailyReportDetail', 'Chi tiết báo cáo ngày'),
+      html: htmlContent,
+      width: '600px',
+      showConfirmButton: isEditable,
+      confirmButtonText: isJsonReport ? t('common.edit', 'Chỉnh sửa') : t('common.saveChanges', 'Lưu thay đổi'),
+      showDenyButton: true,
+      denyButtonText: t('common.close', 'Đóng'),
+      denyButtonColor: 'var(--primary-color)',
+      didOpen: () => {
+        if (!isJsonReport && isEditable) {
+          const textarea = document.getElementById('swal-report-content');
+          const confirmBtn = SwalInstance.getConfirmButton();
+          if (textarea && confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.style.opacity = '0.5';
+            confirmBtn.style.cursor = 'not-allowed';
+            confirmBtn.style.backgroundColor = '#94a3b8';
+
+            const originalValue = report.content;
+            const checkChange = () => {
+              const currentValue = textarea.value;
+              if (currentValue !== originalValue && currentValue.trim().length > 0) {
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+                confirmBtn.style.cursor = 'pointer';
+                confirmBtn.style.backgroundColor = '#10b981';
+              } else {
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = '0.5';
+                confirmBtn.style.cursor = 'not-allowed';
+                confirmBtn.style.backgroundColor = '#94a3b8';
+              }
+            };
+            textarea.addEventListener('input', checkChange);
+          }
+        }
+      }
+    });
+
+    if (result.isConfirmed && isEditable) {
+      if (isJsonReport) {
+        try {
+          const parsedCards = JSON.parse(report.content);
+          setReportCards(parsedCards);
+          setEditingReportId(report.id);
+          setEditingReportStatus(report.status);
+          setReportDate(formatDateToYMD(report.created_at));
+          setIsHistoryOpen(false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          SwalInstance.fire({
+            icon: 'info',
+            title: t('reports.editReportAlertTitle', 'Chỉnh sửa báo cáo'),
+            text: t('reports.editReportAlertText', 'Đã tải nội dung báo cáo vào khung soạn thảo trên trang chính. Sau khi chỉnh sửa xong, nhấn Cập Nhật Báo Cáo để lưu!'),
+            timer: 3000,
+            showConfirmButton: false
+          });
+        } catch (e) {
+          SwalInstance.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: t('report.loadErrorText', 'Không thể tải báo cáo để sửa: ') + e.message });
+        }
+      } else {
+        const newContent = document.getElementById('swal-report-content')?.value;
+        if (newContent && newContent.trim()) {
+          try {
+            await db.updateDailyReport(report.id, newContent, report.file_url, report.project_id);
+            await loadReports();
+            SwalInstance.fire({
+              icon: 'success',
+              title: t('common.success', 'Thành công'),
+              text: t('report.updateSuccessText', 'Đã cập nhật nội dung báo cáo!')
+            });
+          } catch (err) {
+            SwalInstance.fire({
+              icon: 'error',
+              title: t('common.failed', 'Thất bại'),
+              text: t('report.updateFailedText', 'Lỗi cập nhật: ') + err.message
+            });
+          }
+        }
+      }
+    }
+  };
+
+  // --- Report Status calendar (monthly view of missing/reported days) ---
+  const [isStatusCalendarOpen, setIsStatusCalendarOpen] = useState(false);
+  const [calendarMonthCursor, setCalendarMonthCursor] = useState(() => {
+    const today = new Date();
+    return { year: today.getFullYear(), month: today.getMonth() }; // month is 0-indexed
+  });
+
+  const findReportForDate = (dateStr) => myReports.find(r => formatDateToYMD(r.created_at) === dateStr);
+
+  const handleSelectMissingDay = (dateStr) => {
+    if (dateStr > getTodayDateString()) {
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.futureDateNotAllowedWarning', 'Không được chọn ngày trong tương lai. Chỉ có thể chọn ngày hôm nay hoặc trước đó.') });
+      return;
+    }
+    setReportCards(getDefaultReportCards());
+    setEditingReportId(null);
+    setEditingReportStatus(null);
+    setReportDate(dateStr);
+    setIsStatusCalendarOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSelectReportedDay = (report) => {
+    setIsStatusCalendarOpen(false);
+    showReportDetailPopup(report);
+  };
+
+  const changeCalendarMonth = (delta) => {
+    setCalendarMonthCursor(prev => {
+      let month = prev.month + delta;
+      let year = prev.year;
+      if (month < 0) { month = 11; year -= 1; }
+      else if (month > 11) { month = 0; year += 1; }
+      return { year, month };
+    });
+  };
+
+  const buildCalendarWeeks = () => {
+    const { year, month } = calendarMonthCursor;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // JS getDay(): Sun=0..Sat=6 → convert to Mon=0..Sun=6 to match the Mon-first header.
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+
+    const cells = [];
+    for (let i = 0; i < firstWeekday; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    const weeks = [];
+    for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+    return weeks;
+  };
+
+  const todayDateStr = getTodayDateString();
+
   if (!currentUser) {
     return (
       <div className="flex-center" style={{ height: '70vh', flexDirection: 'column' }}>
@@ -517,19 +727,40 @@ export default function DailyReportsPage() {
             {t('reports.subtitle', 'Gửi báo cáo tiến độ công việc hàng ngày và quản lý danh sách báo cáo của cá nhân.')}
           </p>
         </div>
-        <div>
-          <button 
-            type="button" 
-            className="btn btn-secondary" 
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setIsStatusCalendarOpen(true)}
+            style={{
+              backgroundColor: 'var(--neutral-bg-card)',
+              color: 'var(--neutral-dark)',
+              border: '1px solid var(--neutral-border)',
+              padding: '10px 18px',
+              borderRadius: '6px',
+              fontSize: '13.5px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            <i className="fa-solid fa-calendar-days"></i> {t('reports.statusCalendar', 'Trạng thái báo cáo')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
             onClick={() => setIsHistoryOpen(true)}
             style={{
               backgroundColor: 'var(--neutral-bg-card)',
               color: 'var(--neutral-dark)',
               border: '1px solid var(--neutral-border)',
-              padding: '10px 18px', 
-              borderRadius: '6px', 
-              fontSize: '13.5px', 
-              fontWeight: '600', 
+              padding: '10px 18px',
+              borderRadius: '6px',
+              fontSize: '13.5px',
+              fontWeight: '600',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
@@ -552,11 +783,19 @@ export default function DailyReportsPage() {
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '13px', fontWeight: '500', color: 'var(--neutral-muted)' }}>{t('reports.reportDate', 'Ngày báo cáo:')}</span>
-              <input 
-                type="date" 
-                value={reportDate} 
-                onChange={(e) => setReportDate(e.target.value)} 
-                style={{ 
+              <input
+                type="date"
+                value={reportDate}
+                max={getTodayDateString()}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && val > getTodayDateString()) {
+                    Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.futureDateNotAllowedWarning', 'Không được chọn ngày trong tương lai. Chỉ có thể chọn ngày hôm nay hoặc trước đó.') });
+                    return;
+                  }
+                  setReportDate(val);
+                }}
+                style={{
                   padding: '6px 12px', 
                   borderRadius: '6px', 
                   border: '1px solid var(--neutral-border)', 
@@ -616,20 +855,24 @@ export default function DailyReportsPage() {
                       className="report-content-textarea"
                       value={card.content}
                       onChange={(e) => updateCardField(card.id, 'content', e.target.value)}
+                      onFocus={handleContentFocusGuard}
+                      onClick={handleContentFocusGuard}
+                      readOnly={!reportDate}
                       required
-                      placeholder={t('reports.placeholderContent', 'Nhập nội dung báo cáo trong khung giờ này...')}
+                      placeholder={reportDate ? t('reports.placeholderContent', 'Nhập nội dung báo cáo trong khung giờ này...') : t('reports.selectDateFirstPlaceholder', 'Vui lòng chọn ngày báo cáo trước...')}
                       rows="6"
                       style={{
                         width: '100%',
                         padding: '12px',
                         borderRadius: '4px',
                         border: '1px solid var(--neutral-border)',
-                        backgroundColor: 'var(--neutral-bg-card)',
+                        backgroundColor: reportDate ? 'var(--neutral-bg-card)' : 'var(--neutral-bg-hover)',
                         color: 'var(--neutral-dark)',
                         outline: 'none',
                         resize: 'vertical',
                         fontSize: '14px',
-                        lineHeight: '1.6'
+                        lineHeight: '1.6',
+                        cursor: reportDate ? 'text' : 'not-allowed'
                       }}
                     />
                   </div>
@@ -765,7 +1008,7 @@ export default function DailyReportsPage() {
                     setEditingReportId(null);
                     setEditingReportStatus(null);
                     setReportCards(getDefaultReportCards());
-                    setReportDate(getTodayDateString());
+                    setReportDate('');
                   }}
                   className="btn btn-secondary"
                   style={{ flex: 1, padding: '12px 16px' }}
@@ -798,6 +1041,134 @@ export default function DailyReportsPage() {
           </form>
         </div>
       </div>
+
+      {/* Report Status calendar: red days have no report yet (click to write one),
+          green days already have a report (click to view its details). */}
+      {isStatusCalendarOpen && (
+        <div
+          className="modal show"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 1000,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+          onClick={() => setIsStatusCalendarOpen(false)}
+        >
+          <div
+            style={{
+              width: '420px',
+              maxWidth: '92vw',
+              backgroundColor: 'var(--neutral-bg-card)',
+              border: '1.5px solid #cbd5e1',
+              borderRadius: '12px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              overflow: 'hidden'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className="fa-solid fa-calendar-days" style={{ color: 'var(--primary-color)' }}></i> {t('reports.statusCalendarTitle', 'Trạng thái báo cáo')}
+              </h3>
+              <button type="button" onClick={() => setIsStatusCalendarOpen(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div style={{ padding: '18px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => changeCalendarMonth(-1)}
+                  style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', cursor: 'pointer' }}
+                >
+                  <i className="fa-solid fa-chevron-left"></i>
+                </button>
+                <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--neutral-dark)' }}>
+                  {t('reports.statusCalendarMonthTitle', 'Tháng {month}, {year}').replace('{month}', calendarMonthCursor.month + 1).replace('{year}', calendarMonthCursor.year)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => changeCalendarMonth(1)}
+                  style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', cursor: 'pointer' }}
+                >
+                  <i className="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', marginBottom: '8px' }}>
+                {[
+                  t('reports.calMon', 'Mon'), t('reports.calTue', 'Tue'), t('reports.calWed', 'Wed'), t('reports.calThu', 'Thu'),
+                  t('reports.calFri', 'Fri'), t('reports.calSat', 'Sat'), t('reports.calSun', 'Sun')
+                ].map((d, i) => (
+                  <div key={i} style={{ textAlign: 'center', fontSize: '11.5px', fontWeight: 700, color: 'var(--neutral-muted)' }}>{d}</div>
+                ))}
+              </div>
+
+              {buildCalendarWeeks().map((week, wi) => (
+                <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', marginBottom: '6px' }}>
+                  {week.map((day, di) => {
+                    if (day === null) return <div key={di} />;
+                    const dateStr = `${calendarMonthCursor.year}-${String(calendarMonthCursor.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayReport = findReportForDate(dateStr);
+                    const isSunday = di === 6;
+                    const isPastOrToday = dateStr <= todayDateStr;
+                    const isMissing = !dayReport && !isSunday && isPastOrToday;
+                    const isFuture = !dayReport && dateStr > todayDateStr;
+
+                    let bg = 'transparent';
+                    let color = 'var(--neutral-dark)';
+                    if (dayReport) { bg = 'var(--success-color, #16a34a)'; color = '#fff'; }
+                    else if (isMissing) { bg = 'var(--danger-color, #ef4444)'; color = '#fff'; }
+                    else if (isSunday) { color = 'var(--neutral-muted)'; }
+                    if (isFuture) { color = 'var(--neutral-muted)'; }
+
+                    return (
+                      <button
+                        key={di}
+                        type="button"
+                        onClick={() => { if (dayReport) handleSelectReportedDay(dayReport); else handleSelectMissingDay(dateStr); }}
+                        style={{
+                          aspectRatio: '1',
+                          border: 'none',
+                          borderRadius: '6px',
+                          backgroundColor: bg,
+                          color,
+                          fontSize: '13px',
+                          fontWeight: dayReport || isMissing ? 700 : 500,
+                          cursor: isFuture ? 'not-allowed' : 'pointer',
+                          opacity: isFuture ? 0.5 : 1
+                        }}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+
+              <div style={{ display: 'flex', gap: '16px', marginTop: '14px', fontSize: '11.5px', color: 'var(--neutral-muted)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--danger-color, #ef4444)', display: 'inline-block' }}></span>
+                  {t('reports.calMissingLegend', 'Chưa làm báo cáo')}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--success-color, #16a34a)', display: 'inline-block' }}></span>
+                  {t('reports.calReportedLegend', 'Đã làm báo cáo')}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* History Modal Popup (75% Width, 75% Height) */}
       {isHistoryOpen && (
@@ -925,138 +1296,7 @@ export default function DailyReportsPage() {
                           transition: 'all 0.2s',
                           boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                         }}
-                        onClick={async () => {
-                          const SwalInstance = await getSwal();
-                          const isEditable = report.status === 'Pending' || report.status === 'pending' || report.status === 'Rejected' || (report.status !== 'Approved' && report.status !== 'Rejected');
-                          
-                          const isJsonReport = (() => {
-                            try {
-                              return Array.isArray(JSON.parse(report.content));
-                            } catch (e) { return false; }
-                          })();
-
-                          const formattedDate = new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US');
-                          const statusText = report.status === 'Approved'
-                            ? t('report.approvedStatus', 'Đã duyệt')
-                            : report.status === 'Rejected'
-                              ? t('report.rejectedStatus', 'Từ chối')
-                              : report.status === 'Draft'
-                                ? t('report.draftStatus', 'Nháp')
-                                : 'Pending'; // Always Pending in English
-
-                          const feedbackLabel = report.reviewer_name
-                            ? t('reports.managerFeedbackLabelNamed', 'Ý kiến phản hồi từ quản lý({name}):').replace('{name}', report.reviewer_name)
-                            : t('reports.managerFeedbackLabel', 'Ý kiến phản hồi từ quản lý:');
-
-                          const rejectionCommentHtml = (report.status === 'Rejected' && report.comment)
-                            ? `<div style="margin-bottom: 12px; padding: 10px 12px; background-color: #fef2f2; border: 1px dashed #fca5a5; border-radius: 6px;">
-                                 <strong style="font-size: 12.5px; color: #b91c1c; display: block; margin-bottom: 4px;">${feedbackLabel}</strong>
-                                 <span style="font-size: 13px; color: #7f1d1d; white-space: pre-wrap;">${report.comment}</span>
-                               </div>`
-                            : '';
-
-                          const htmlContent = isJsonReport
-                            ? `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: var(--neutral-dark);">
-                                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--neutral-border); display: flex; justify-content: space-between;">
-                                   <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
-                                   <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
-                                 </div>
-                                 ${rejectionCommentHtml}
-                                 ${formatReportContentHtml(report.content, projects)}
-                               </div>`
-                            : `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: var(--neutral-dark);">
-                                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--neutral-border); display: flex; justify-content: space-between;">
-                                   <span>${t('report.timeLabel', 'Thời gian:')} <strong>${formattedDate}</strong></span>
-                                   <span>${t('report.statusLabel', 'Trạng thái:')} <strong>${statusText}</strong></span>
-                                 </div>
-                                 ${rejectionCommentHtml}
-                                 ${report.project_id ? `<div style="margin-bottom: 12px;"><span style="background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Dự án: ${proj?.name || 'Liên kết'}</span></div>` : ''}
-                                 <textarea id="swal-report-content" style="width: 100%; min-height: 250px; background-color: var(--neutral-bg-main); color: var(--neutral-dark); padding: 12px; border-radius: 6px; border: 1px solid var(--neutral-border); font-family: inherit; font-size: 13.5px; line-height: 1.6; outline: none; resize: vertical; box-sizing: border-box;" ${isEditable ? '' : 'readonly'}>${report.content}</textarea>
-                                 ${report.file_url ? `<div style="margin-top: 12px;"><a href="${report.file_url}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600;"><i class="fa-solid fa-paperclip"></i> Tệp đính kèm tài liệu</a></div>` : ''}
-                               </div>`;
-
-                          const result = await SwalInstance.fire({
-                            title: t('dashboard.dailyReportDetail', 'Chi tiết báo cáo ngày'),
-                            html: htmlContent,
-                            width: '600px',
-                            showConfirmButton: isEditable,
-                            confirmButtonText: isJsonReport ? t('common.edit', 'Chỉnh sửa') : t('common.saveChanges', 'Lưu thay đổi'),
-                            showDenyButton: true,
-                            denyButtonText: t('common.close', 'Đóng'),
-                            denyButtonColor: 'var(--primary-color)',
-                            didOpen: () => {
-                              if (!isJsonReport && isEditable) {
-                                const textarea = document.getElementById('swal-report-content');
-                                const confirmBtn = SwalInstance.getConfirmButton();
-                                if (textarea && confirmBtn) {
-                                  confirmBtn.disabled = true;
-                                  confirmBtn.style.opacity = '0.5';
-                                  confirmBtn.style.cursor = 'not-allowed';
-                                  confirmBtn.style.backgroundColor = '#94a3b8';
-                                  
-                                  const originalValue = report.content;
-                                  const checkChange = () => {
-                                    const currentValue = textarea.value;
-                                    if (currentValue !== originalValue && currentValue.trim().length > 0) {
-                                      confirmBtn.disabled = false;
-                                      confirmBtn.style.opacity = '1';
-                                      confirmBtn.style.cursor = 'pointer';
-                                      confirmBtn.style.backgroundColor = '#10b981';
-                                    } else {
-                                      confirmBtn.disabled = true;
-                                      confirmBtn.style.opacity = '0.5';
-                                      confirmBtn.style.cursor = 'not-allowed';
-                                      confirmBtn.style.backgroundColor = '#94a3b8';
-                                    }
-                                  };
-                                  textarea.addEventListener('input', checkChange);
-                                }
-                              }
-                            }
-                          });
-
-                          if (result.isConfirmed && isEditable) {
-                            if (isJsonReport) {
-                              try {
-                                const parsedCards = JSON.parse(report.content);
-                                setReportCards(parsedCards);
-                                setEditingReportId(report.id);
-                                setEditingReportStatus(report.status);
-                                setReportDate(formatDateToYMD(report.created_at));
-                                setIsHistoryOpen(false);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                SwalInstance.fire({
-                                  icon: 'info',
-                                  title: t('reports.editReportAlertTitle', 'Chỉnh sửa báo cáo'),
-                                  text: t('reports.editReportAlertText', 'Đã tải nội dung báo cáo vào khung soạn thảo trên trang chính. Sau khi chỉnh sửa xong, nhấn Cập Nhật Báo Cáo để lưu!'),
-                                  timer: 3000,
-                                  showConfirmButton: false
-                                });
-                              } catch (e) {
-                                SwalInstance.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: t('report.loadErrorText', 'Không thể tải báo cáo để sửa: ') + e.message });
-                              }
-                            } else {
-                              const newContent = document.getElementById('swal-report-content')?.value;
-                              if (newContent && newContent.trim()) {
-                                try {
-                                  await db.updateDailyReport(report.id, newContent, report.file_url, report.project_id);
-                                  await loadReports();
-                                  SwalInstance.fire({
-                                    icon: 'success',
-                                    title: t('common.success', 'Thành công'),
-                                    text: t('report.updateSuccessText', 'Đã cập nhật nội dung báo cáo!')
-                                  });
-                                } catch (err) {
-                                  SwalInstance.fire({
-                                    icon: 'error',
-                                    title: t('common.failed', 'Thất bại'),
-                                    text: t('report.updateFailedText', 'Lỗi cập nhật: ') + err.message
-                                  });
-                                }
-                              }
-                            }
-                          }
-                        }}
+                        onClick={() => showReportDetailPopup(report)}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = 'translateY(-2px)';
                           e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';

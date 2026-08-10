@@ -130,9 +130,22 @@ exports.markAllNotificationsRead = async (req, res, next) => {
 
 exports.getActivityLogs = async (req, res, next) => {
   try {
+    // userId/actionType are applied at the DB level so a filtered view (e.g. "only this
+    // member") returns that member's actual most-recent logs, instead of being filtered
+    // client-side out of a small global top-N snapshot where their events may have
+    // already scrolled out of the window (previously a fixed, unfiltered take: 100).
+    const { userId, actionType } = req.body || {};
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const where = { create_at: { gte: thirtyDaysAgo } };
+    if (userId) where.user_id = userId;
+    if (actionType) where.action_type = actionType;
+
     const logsRaw = await prisma.activitylogs.findMany({
+      where,
       orderBy: { create_at: 'desc' },
-      take: 100
+      take: 2000
     });
 
     res.json(logsRaw.map(log => {

@@ -230,6 +230,7 @@ exports.getUsers = async (req, res, next) => {
         employee_id: u.user_id,
         name: u.full_name,
         email: u.email,
+        phone: u.phone,
         system_role: u.role,
         department_id: deptIsMasked ? null : u.department_id,
         department_name: deptIsMasked ? null : (u.department ? u.department.name : 'Chưa phân phòng'),
@@ -379,6 +380,27 @@ exports.changePassword = async (req, res, next) => {
     });
 
     res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Self-service: a user edits/clears their own phone number from the Personal Profile
+// modal. Empty string clears it (stored as NULL), matching the "delete" part of the ask.
+exports.updateUserPhone = async (req, res, next) => {
+  try {
+    const { userId, phone } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'Thiếu mã người dùng.' });
+    }
+
+    const trimmed = phone && phone.trim() ? phone.trim() : null;
+    await prisma.user.update({
+      where: { user_id: userId },
+      data: { phone: trimmed }
+    });
+
+    res.json({ success: true, phone: trimmed });
   } catch (err) {
     next(err);
   }

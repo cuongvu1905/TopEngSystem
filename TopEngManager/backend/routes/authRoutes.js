@@ -13,6 +13,7 @@ router.post('/updateUserRoleAndDept', authController.updateUserRoleAndDept);
 router.post('/addPartLeadership', authController.addPartLeadership);
 router.post('/removePartLeadership', authController.removePartLeadership);
 router.post('/changePassword', authController.changePassword);
+router.post('/updateUserPhone', authController.updateUserPhone);
 router.post('/resetUserPassword', authController.resetUserPassword);
 router.post('/deleteUser', authController.deleteUser);
 router.post('/checkSession', authController.checkSession);

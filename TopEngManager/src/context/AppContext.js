@@ -74,6 +74,7 @@ export const AppContextProvider = ({ children }) => {
             id: profile.id,
             name: profile.name,
             email: profile.email,
+            phone: profile.phone || '',
             system_role: profile.system_role || 'Nhân viên (Staff)',
             color: profile.color || '#1E40AF',
             department_id: profile.department_id || null,

@@ -342,6 +342,7 @@ model user {
   position_id                   String?          @db.VarChar(36)
   full_name                     String           @db.VarChar(100)
   email                         String           @unique(map: "email") @db.VarChar(100)
+  phone                         String?          @db.VarChar(20)
   jandi_link                    String?          @db.VarChar(255)
   create_at                     DateTime         @default(now()) @db.Timestamp(0)
   password                      String           @db.VarChar(255)

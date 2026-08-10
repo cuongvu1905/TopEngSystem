@@ -1013,6 +1013,7 @@ export default function HRManagement() {
                   <th>{t('team.fullName', 'Họ và tên')}</th>
                   <th>{t('team.employeeCode', 'Mã nhân viên')}</th>
                   <th>{t('team.email', 'Địa chỉ Email')}</th>
+                  <th>{t('team.phone', 'Số điện thoại')}</th>
                   <th>{t('team.systemRole', 'Vai trò hệ thống')}</th>
                   <th>{t('team.department', 'Phòng ban')}</th>
                   <th style={{ textAlign: 'center', width: '220px' }}>{t('common.actions', 'Thao tác')}</th>
@@ -1040,6 +1041,7 @@ export default function HRManagement() {
                       <strong style={{ color: '#475569', fontSize: '13px' }}>{u.employee_id || 'N/A'}</strong>
                     </td>
                     <td>{u.email}</td>
+                    <td>{u.phone || <span className="text-muted">—</span>}</td>
                     <td>
                       <span className="badge badge-info">{formatSystemRole(u.system_role, t)}</span>
                     </td>
@@ -1082,7 +1084,7 @@ export default function HRManagement() {
               })}
               {paginatedUsers.length === 0 && (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
+                    <td colSpan="7" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
                       {t('team.noStaffFound', 'Không tìm thấy nhân viên nào phù hợp.')}
                     </td>
                   </tr>
@@ -1237,6 +1239,7 @@ export default function HRManagement() {
                           <tr>
                             <th>{t('team.fullName', 'Họ và tên')}</th>
                             <th>Email</th>
+                            <th>{t('team.phone', 'Số điện thoại')}</th>
                             <th>{t('team.systemRole', 'Vai trò hệ thống')}</th>
                             <th style={{ textAlign: 'center', width: '200px' }}>{t('common.actions', 'Thao tác')}</th>
                           </tr>
@@ -1261,6 +1264,7 @@ export default function HRManagement() {
                                   </div>
                                 </td>
                                 <td>{member.email}</td>
+                                <td>{member.phone || <span className="text-muted">—</span>}</td>
                                 <td>
                                   <span className={`badge ${member.system_role === 'Team Leader' ? 'badge-danger' : member.system_role === 'Part Leader' ? 'badge-warning' : 'badge-info'}`}>
                                     {formatSystemRole(member.system_role, t)}
@@ -1323,7 +1327,7 @@ export default function HRManagement() {
                           })}
                           {displayMembers.length === 0 && (
                             <tr>
-                              <td colSpan="4" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
+                              <td colSpan="5" style={{ textAlign: 'center', color: 'var(--neutral-muted)', padding: '24px' }}>
                                 {t('team.noMembersInPart', 'Không có thành viên nào trong phòng/part này.')}
                               </td>
                             </tr>

@@ -273,8 +273,8 @@ export const MySQLAdapter = {
     return await callApi('unlockDocument', { documentId, userId });
   },
 
-  getActivityLogs: async function() {
-    return await callApi('getActivityLogs');
+  getActivityLogs: async function({ userId, actionType } = {}) {
+    return await callApi('getActivityLogs', { userId, actionType });
   },
 
   getNotifications: async function(userId) {
@@ -443,6 +443,10 @@ export const MySQLAdapter = {
 
   changePassword: async function(userId, currentPassword, newPassword) {
     return await callApi('changePassword', { userId, currentPassword, newPassword });
+  },
+
+  updateUserPhone: async function(userId, phone) {
+    return await callApi('updateUserPhone', { userId, phone });
   },
 
   resetUserPassword: async function(userId, newPassword) {

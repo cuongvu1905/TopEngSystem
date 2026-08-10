@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { db } from '@/utils/db';
 
 function translateLogDescription(desc, currentLang) {
   if (!desc) return '';
@@ -389,6 +390,26 @@ export default function ActivityLogs() {
   const [logActionFilter, setLogActionFilter] = useState('all');
   const [logProjectFilter, setLogProjectFilter] = useState('all');
 
+  // When a Member/Action filter is picked, re-query the backend for that exact
+  // user/action instead of only filtering the already-capped global log cache
+  // (activityLogs) client-side — otherwise an older-but-real event (e.g. a
+  // LOGIN_SUCCESS) can appear "missing" simply because it scrolled out of the
+  // fixed top-N window due to unrelated activity from other users, not because
+  // it was never recorded.
+  const [serverFilteredLogs, setServerFilteredLogs] = useState(null);
+  useEffect(() => {
+    if (logUserFilter === 'all' && logActionFilter === 'all') {
+      setServerFilteredLogs(null);
+      return;
+    }
+    let cancelled = false;
+    db.getActivityLogs({
+      userId: logUserFilter !== 'all' ? logUserFilter : undefined,
+      actionType: logActionFilter !== 'all' ? logActionFilter : undefined
+    }).then(list => { if (!cancelled) setServerFilteredLogs(list); }).catch(() => { if (!cancelled) setServerFilteredLogs([]); });
+    return () => { cancelled = true; };
+  }, [logUserFilter, logActionFilter]);
+
   if (!currentUser) return null;
 
   const isAdmin = currentUser.system_role.includes("Admin");
@@ -414,7 +435,7 @@ export default function ActivityLogs() {
   const myProjectIds = myProjects.map(p => p.id);
 
   // Resolve project ID and project name for each log
-  const resolvedLogs = activityLogs.map(l => {
+  const resolvedLogs = (serverFilteredLogs || activityLogs).map(l => {
     let projId = null;
     if (l.entity_type === 'Project') {
       projId = l.entity_id;

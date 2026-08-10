@@ -416,6 +416,21 @@ export default function Header({ onToggleSidebar }) {
             <span>${translateDepartmentName(currentUser.department_name, t)}</span>
             <strong style="color: var(--neutral-muted);">Quyền hạn:</strong>
             <span>${formatSystemRole(currentUser.system_role, t)}</span>
+            <strong style="color: var(--neutral-muted);">${t('header.phoneLabel', 'Số điện thoại:')}</strong>
+            <span id="profile-phone-display" style="display: flex; align-items: center; gap: 8px;">
+              <span id="profile-phone-value">${currentUser.phone || t('header.phoneNotSet', 'Chưa cập nhật')}</span>
+              <button type="button" id="profile-phone-edit-btn" title="${t('common.edit', 'Sửa')}" style="background: none; border: none; cursor: pointer; color: var(--primary-color); font-size: 12px; padding: 2px;">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button type="button" id="profile-phone-delete-btn" title="${t('common.delete', 'Xóa')}" style="background: none; border: none; cursor: pointer; color: #ef4444; font-size: 12px; padding: 2px; display: ${currentUser.phone ? 'inline-block' : 'none'};">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </span>
+            <span id="profile-phone-edit-row" style="display: none; grid-column: 1 / -1; align-items: center; gap: 8px; margin-top: 4px;">
+              <input type="tel" id="profile-phone-input" value="${currentUser.phone || ''}" placeholder="${t('header.phonePlaceholder', 'Nhập số điện thoại...')}" style="flex: 1; min-width: 0; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--neutral-border); background-color: var(--neutral-bg-card); color: var(--neutral-dark); font-size: 13px; outline: none; box-sizing: border-box;" />
+              <button type="button" id="profile-phone-save-btn" style="flex-shrink: 0; white-space: nowrap; padding: 6px 14px; border-radius: 4px; border: none; background-color: var(--primary-color); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;">${t('common.save', 'Lưu')}</button>
+              <button type="button" id="profile-phone-cancel-btn" style="flex-shrink: 0; white-space: nowrap; padding: 6px 14px; border-radius: 4px; border: 1px solid var(--neutral-border); background: none; color: var(--neutral-dark); font-size: 12px; cursor: pointer;">${t('common.cancel', 'Hủy')}</button>
+            </span>
           </div>
         </div>
       `,
@@ -434,6 +449,39 @@ export default function Header({ onToggleSidebar }) {
             }, 150);
           };
         }
+
+        const displayRow = document.getElementById('profile-phone-display');
+        const editRow = document.getElementById('profile-phone-edit-row');
+        const valueSpan = document.getElementById('profile-phone-value');
+        const deleteBtn = document.getElementById('profile-phone-delete-btn');
+        const input = document.getElementById('profile-phone-input');
+
+        const showEditRow = () => {
+          displayRow.style.display = 'none';
+          editRow.style.display = 'flex';
+          input.focus();
+        };
+        const showDisplayRow = () => {
+          displayRow.style.display = 'flex';
+          editRow.style.display = 'none';
+        };
+        const savePhone = async (newPhone) => {
+          try {
+            await db.updateUserPhone(currentUser.id, newPhone);
+            valueSpan.textContent = newPhone || t('header.phoneNotSet', 'Chưa cập nhật');
+            deleteBtn.style.display = newPhone ? 'inline-block' : 'none';
+            showDisplayRow();
+            reloadAll();
+          } catch (err) {
+            const SwalErr = await getSwal();
+            SwalErr.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+          }
+        };
+
+        document.getElementById('profile-phone-edit-btn').onclick = showEditRow;
+        document.getElementById('profile-phone-cancel-btn').onclick = () => { input.value = valueSpan.textContent === t('header.phoneNotSet', 'Chưa cập nhật') ? '' : valueSpan.textContent; showDisplayRow(); };
+        document.getElementById('profile-phone-save-btn').onclick = () => savePhone(input.value.trim());
+        deleteBtn.onclick = () => savePhone('');
       }
     }).then((result) => {
       if (result.isDenied) {
