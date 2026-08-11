@@ -57,8 +57,10 @@ export default function HRManagement() {
   const [loading, setLoading] = useState(false);
 
   const isTeamLeader = currentUser?.system_role === 'Team Leader';
+  const isPartLeader = currentUser?.system_role === 'Part Leader';
   const isAdmin = currentUser?.system_role?.includes("Admin");
   const isHR = currentUser?.system_role?.includes("Nhân sự");
+  const isPartLeaderOnly = isPartLeader && !isAdmin && !isHR && !isTeamLeader;
 
   const currentUserDept = departments.find(d => d.department_id === currentUser?.department_id);
   const isCurrentUserInRootDept = currentUserDept && !currentUserDept.parent_id;
@@ -485,8 +487,29 @@ export default function HRManagement() {
     };
   };
 
+  const isDeptVisibleToPartLeader = (deptId) => {
+    if (!isPartLeaderOnly) return true;
+    const myPartIds = [currentUser?.department_id, ...(currentUser?.additional_part_leader_of || [])].filter(Boolean);
+    if (myPartIds.includes(deptId)) return true;
+    
+    // Check if deptId is an ancestor of any of myPartIds
+    const isAncestor = myPartIds.some(partId => isDescendant(partId, deptId, departments));
+    if (isAncestor) return true;
+
+    // Check if deptId is a descendant of any of myPartIds
+    const isDescendantOfMyPart = myPartIds.some(partId => isDescendant(deptId, partId, departments));
+    if (isDescendantOfMyPart) return true;
+
+    return false;
+  };
+
   const getFilteredUsersList = () => {
     let list = users.filter(u => isAdmin || !u.system_role?.includes('Admin'));
+
+    if (isPartLeaderOnly) {
+      const myPartIds = [currentUser?.department_id, ...(currentUser?.additional_part_leader_of || [])].filter(Boolean);
+      list = list.filter(u => myPartIds.includes(u.department_id));
+    }
 
     if (userSearchQuery.trim()) {
       const query = userSearchQuery.toLowerCase().trim();
@@ -505,7 +528,7 @@ export default function HRManagement() {
 
   // Get children of a department
   const getDeptChildren = (deptId) => {
-    return departments.filter(d => d.parent_id === deptId);
+    return departments.filter(d => d.parent_id === deptId && isDeptVisibleToPartLeader(d.department_id));
   };
 
   // Render a node in the treeview
@@ -1139,8 +1162,8 @@ export default function HRManagement() {
                 // Team Leaders see the full company tree (view-only outside their own team —
                 // every management action below is separately scoped via isDescendant checks).
                 const visibleRootDepts = (!isAdmin && !isHR && !isTeamLeader && isCurrentUserInRootDept)
-                  ? departments.filter(d => d.department_id === currentUser.department_id)
-                  : departments.filter(d => !d.parent_id || !departments.some(p => p.department_id === d.parent_id));
+                  ? departments.filter(d => d.department_id === currentUser.department_id && isDeptVisibleToPartLeader(d.department_id))
+                  : departments.filter(d => (!d.parent_id || !departments.some(p => p.department_id === d.parent_id)) && isDeptVisibleToPartLeader(d.department_id));
                 
                 if (visibleRootDepts.length === 0) {
                   return <div className="text-muted" style={{ fontSize: '13px', textAlign: 'center', padding: '20px' }}>{t('team.noDepartments', 'Chưa có phòng ban nào.')}</div>;
