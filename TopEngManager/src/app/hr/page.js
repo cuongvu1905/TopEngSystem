@@ -506,7 +506,9 @@ export default function HRManagement() {
   const getFilteredUsersList = () => {
     let list = users.filter(u => isAdmin || !u.system_role?.includes('Admin'));
 
-    if (isPartLeaderOnly) {
+    if (!isAdmin && !isHR && isTeamLeader) {
+      list = list.filter(u => u.department_id === currentUser?.department_id || isDescendant(u.department_id, currentUser?.department_id, departments));
+    } else if (isPartLeaderOnly) {
       const myPartIds = [currentUser?.department_id, ...(currentUser?.additional_part_leader_of || [])].filter(Boolean);
       list = list.filter(u => myPartIds.includes(u.department_id));
     }
