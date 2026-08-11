@@ -271,7 +271,8 @@
       "create_daily_report",
       "chat_tag_all_project",
       "view_daily_reports",
-      "approve_daily_report"
+      "approve_daily_report",
+      "view_hr"
     ],
     "Nhân viên (Staff)": [
       "view_dashboard",

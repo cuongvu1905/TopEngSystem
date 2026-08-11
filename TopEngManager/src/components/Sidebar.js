@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen = false, onClose }) {
         {hasPermission('view_hr') && (
           <Link href="/hr" onClick={handleNavigate} className={`menu-item ${pathname === '/hr' ? 'active' : ''}`}>
             <i className="fa-solid fa-user-gear"></i>
-            <span>{t('sidebar.teamManagement', currentUser.system_role === 'Team Leader' ? 'Quản lý Team' : 'Quản lý nhân sự')}</span>
+            <span>{t('sidebar.teamManagement', (currentUser.system_role === 'Team Leader' || currentUser.system_role === 'Part Leader') ? 'Quản lý Team' : 'Quản lý nhân sự')}</span>
           </Link>
         )}
       </nav>
