@@ -10,10 +10,15 @@ const LOCATIONS = [
   { id: 'VP', name: 'Vĩnh Phúc (VP)' }
 ];
 
+// Room names are UI labels, not data, so they carry a translation key. LOCATIONS keep
+// their literal names on purpose: "Hà Nội (HN)" / "Vĩnh Phúc (VP)" are place names and
+// read the same in every language.
 const ROOMS = [
-  { id: 'room-large', name: 'Phòng họp lớn' },
-  { id: 'room-small', name: 'Phòng họp nhỏ' }
+  { id: 'room-large', name: 'Phòng họp lớn', nameKey: 'roomBooking.largeRoom' },
+  { id: 'room-small', name: 'Phòng họp nhỏ', nameKey: 'roomBooking.smallRoom' }
 ];
+
+const roomName = (room, t) => (room ? t(room.nameKey, room.name) : '');
 
 // Meeting importance. The colour and the wording together tell a viewer how negotiable a
 // slot is, which is the whole point of the field: HIGH is immovable, LOW is a conversation.
@@ -292,7 +297,7 @@ export default function RoomBookingPage() {
       Swal.fire({
         icon: 'warning',
         title: t('common.notice', 'Thông báo'),
-        text: 'Vui lòng điền đầy đủ thông tin đặt phòng.',
+        text: t('roomBooking.fillAllFields', 'Vui lòng điền đầy đủ thông tin đặt phòng.'),
         confirmButtonColor: 'var(--primary-color)'
       });
       setIsSavingBooking(false);
@@ -303,7 +308,7 @@ export default function RoomBookingPage() {
       Swal.fire({
         icon: 'warning',
         title: t('common.notice', 'Thông báo'),
-        text: 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu.',
+        text: t('roomBooking.endAfterStart', 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu.'),
         confirmButtonColor: 'var(--primary-color)'
       });
       setIsSavingBooking(false);
@@ -326,7 +331,7 @@ export default function RoomBookingPage() {
       Swal.fire({
         icon: 'error',
         title: t('common.error', 'Lỗi'),
-        text: 'Khung giờ này đã có nhóm khác đặt phòng. Vui lòng chọn khung giờ khác!',
+        text: t('roomBooking.slotTaken', 'Khung giờ này đã có nhóm khác đặt phòng. Vui lòng chọn khung giờ khác!'),
         confirmButtonColor: 'var(--primary-color)'
       });
       setIsSavingBooking(false);
@@ -342,7 +347,7 @@ export default function RoomBookingPage() {
       endTime: modalEndTime,
       team: modalTeam.trim(),
       bookerName: modalBookerName.trim(),
-      purpose: modalPurpose.trim() || 'Họp nhóm',
+      purpose: modalPurpose.trim() || t('roomBooking.defaultPurpose', 'Họp nhóm'),
       importance: modalImportance
     };
 
@@ -354,7 +359,7 @@ export default function RoomBookingPage() {
     Swal.fire({
       icon: 'success',
       title: t('common.success', 'Thành công'),
-      text: 'Đặt phòng họp thành công!',
+      text: t('roomBooking.bookSuccess', 'Đặt phòng họp thành công!'),
       confirmButtonColor: 'var(--primary-color)',
       timer: 1800,
       showConfirmButton: false
@@ -500,7 +505,7 @@ export default function RoomBookingPage() {
             onClick={handleTodayWeek}
             style={{ fontSize: '12.5px' }}
           >
-            <i className="fa-solid fa-calendar-day" style={{ marginRight: '4px' }}></i> Tuần này
+            <i className="fa-solid fa-calendar-day" style={{ marginRight: '4px' }}></i> {t('roomBooking.thisWeek', 'Tuần này')}
           </button>
         </div>
 
@@ -512,7 +517,7 @@ export default function RoomBookingPage() {
             <button
               type="button"
               onClick={handlePrevWeek}
-              title="Tuần trước"
+              title={t('roomBooking.prevWeek', 'Tuần trước')}
               style={{
                 width: '36px',
                 height: '36px',
@@ -534,7 +539,7 @@ export default function RoomBookingPage() {
             <button
               type="button"
               onClick={handleNextWeek}
-              title="Tuần sau"
+              title={t('roomBooking.nextWeek', 'Tuần sau')}
               style={{
                 width: '36px',
                 height: '36px',
@@ -570,7 +575,7 @@ export default function RoomBookingPage() {
             >
               <i className="fa-solid fa-door-open" style={{ fontSize: '18px', color: 'var(--primary-color)' }}></i>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
-                {t(`roomBooking.${room.id === 'room-large' ? 'largeRoom' : 'smallRoom'}`, room.name)}
+                {roomName(room, t)}
               </h3>
             </div>
 
@@ -625,7 +630,7 @@ export default function RoomBookingPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
                         {dayBookings.length === 0 ? (
                           <div style={{ textAlign: 'center', padding: '24px 4px', color: 'var(--neutral-muted)', fontSize: '12px', fontStyle: 'italic' }}>
-                            Trống
+                            {t('roomBooking.emptyDay', 'Trống')}
                           </div>
                         ) : (
                           dayBookings.map(b => {
@@ -717,7 +722,7 @@ export default function RoomBookingPage() {
                           e.currentTarget.style.color = 'var(--neutral-muted)';
                         }}
                       >
-                        + Đặt giờ này
+                        + {t('roomBooking.bookThisSlot', 'Đặt giờ này')}
                       </button>
                     </div>
                   );
@@ -735,7 +740,7 @@ export default function RoomBookingPage() {
               <div className="modal-header">
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
                   <i className="fa-solid fa-door-open" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i>
-                  Đặt phòng họp mới
+                  {t('roomBooking.newBookingTitle', 'Đặt phòng họp mới')}
                 </h3>
                 <button className="btn-close-modal" onClick={() => setIsModalOpen(false)}>
                   <i className="fa-solid fa-xmark"></i>
@@ -747,7 +752,7 @@ export default function RoomBookingPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div className="form-group">
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
-                        Địa điểm <span style={{ color: '#ef4444' }}>*</span>
+                        {t('roomBooking.locationLabel', 'Địa điểm')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <select
                         value={modalLocation}
@@ -762,7 +767,7 @@ export default function RoomBookingPage() {
 
                     <div className="form-group">
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
-                        Phòng họp <span style={{ color: '#ef4444' }}>*</span>
+                        {t('roomBooking.roomLabel', 'Phòng họp')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <select
                         value={modalRoomId}
@@ -770,7 +775,7 @@ export default function RoomBookingPage() {
                         style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
                       >
                         {ROOMS.map(r => (
-                          <option key={r.id} value={r.id}>{r.name}</option>
+                          <option key={r.id} value={r.id}>{roomName(r, t)}</option>
                         ))}
                       </select>
                     </div>
@@ -779,7 +784,7 @@ export default function RoomBookingPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '10px' }}>
                     <div className="form-group">
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
-                        Ngày đặt <span style={{ color: '#ef4444' }}>*</span>
+                        {t('roomBooking.bookingDate', 'Ngày đặt')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
                         type="date"
@@ -792,7 +797,7 @@ export default function RoomBookingPage() {
 
                     <div className="form-group">
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
-                        Bắt đầu <span style={{ color: '#ef4444' }}>*</span>
+                        {t('roomBooking.startTime', 'Bắt đầu')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <select
                         value={modalStartTime}
@@ -807,7 +812,7 @@ export default function RoomBookingPage() {
 
                     <div className="form-group">
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
-                        Kết thúc <span style={{ color: '#ef4444' }}>*</span>
+                        {t('roomBooking.endTime', 'Kết thúc')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <select
                         value={modalEndTime}
@@ -824,13 +829,13 @@ export default function RoomBookingPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div className="form-group">
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
-                        Team / Bộ phận <span style={{ color: '#ef4444' }}>*</span>
+                        {t('roomBooking.team', 'Team / Bộ phận')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
                         type="text"
                         value={modalTeam}
                         onChange={(e) => setModalTeam(e.target.value)}
-                        placeholder="VD: Team R&D"
+                        placeholder={t('roomBooking.teamPlaceholder', 'VD: Team R&D')}
                         required
                         style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
                       />
@@ -838,13 +843,13 @@ export default function RoomBookingPage() {
 
                     <div className="form-group">
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
-                        Tên người đặt <span style={{ color: '#ef4444' }}>*</span>
+                        {t('roomBooking.bookerName', 'Tên người đặt')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
                         type="text"
                         value={modalBookerName}
                         onChange={(e) => setModalBookerName(e.target.value)}
-                        placeholder="VD: Nguyễn Văn A"
+                        placeholder={t('roomBooking.bookerPlaceholder', 'VD: Nguyễn Văn A')}
                         required
                         style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
                       />
@@ -853,13 +858,13 @@ export default function RoomBookingPage() {
 
                   <div className="form-group">
                     <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
-                      Nội dung / Mục đích cuộc họp
+                      {t('roomBooking.purposeLabel', 'Nội dung / Mục đích cuộc họp')}
                     </label>
                     <textarea
                       rows={3}
                       value={modalPurpose}
                       onChange={(e) => setModalPurpose(e.target.value)}
-                      placeholder="Nhập nội dung hoặc mục đích cuộc họp..."
+                      placeholder={t('roomBooking.purposePlaceholder', 'Nhập nội dung hoặc mục đích cuộc họp...')}
                       style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none', resize: 'vertical' }}
                     />
                   </div>
@@ -955,7 +960,7 @@ export default function RoomBookingPage() {
         const dayDate = parseDateStr(b.date);
         const rows = [
           [t('roomBooking.locationLabel', 'Địa điểm'), loc ? loc.name : b.location],
-          [t('roomBooking.roomLabel', 'Phòng họp'), room ? room.name : b.roomId],
+          [t('roomBooking.roomLabel', 'Phòng họp'), room ? roomName(room, t) : b.roomId],
           [t('roomBooking.dateLabel', 'Ngày họp'), `${getDayLabel(dayDate.getDay() === 0 ? 6 : dayDate.getDay() - 1)}, ${formatDateShort(dayDate)}`],
           [t('roomBooking.time', 'Khung giờ'), `${b.startTime} ~ ${b.endTime}`],
           [t('roomBooking.team', 'Team / Bộ phận'), b.team],
