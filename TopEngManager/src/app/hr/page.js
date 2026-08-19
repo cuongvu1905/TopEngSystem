@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import Link from 'next/link';
 import { getSwal } from '@/utils/swal';
+import ManpowerTab from '@/components/ManpowerTab';
 
 const Swal = {
   fire: async (...args) => {
@@ -61,6 +62,8 @@ export default function HRManagement() {
   const isAdmin = currentUser?.system_role?.includes("Admin");
   const isHR = currentUser?.system_role?.includes("Nhân sự");
   const isPartLeaderOnly = isPartLeader && !isAdmin && !isHR && !isTeamLeader;
+  // The Project Manpower board is open to Admin, Team Leader and Part Leader.
+  const canManageManpower = isAdmin || isTeamLeader || isPartLeader;
 
   const currentUserDept = departments.find(d => d.department_id === currentUser?.department_id);
   const isCurrentUserInRootDept = currentUserDept && !currentUserDept.parent_id;
@@ -207,7 +210,7 @@ export default function HRManagement() {
   }, [userSearchQuery, selectedDeptFilter]);
 
   // Enforce access control: only Admin, HR, Team Leader, user with view_hr permission or Root Dept Member can see this
-  const canAccessHR = isAdmin || isHR || isTeamLeader || hasPermission('view_hr') || isCurrentUserInRootDept;
+  const canAccessHR = isAdmin || isHR || isTeamLeader || isPartLeader || hasPermission('view_hr') || isCurrentUserInRootDept;
   if (!canAccessHR) {
     return (
       <div className="scrollable-view" style={{ textAlign: 'center', padding: '40px' }}>
@@ -967,7 +970,7 @@ export default function HRManagement() {
         </div>
       </div>
 
-      {(hasPermission('view_hr_members') || hasPermission('manage_role_permissions') || hasPermission('manage_departments') || isTeamLeader || isCurrentUserInRootDept) && (
+      {(hasPermission('view_hr_members') || hasPermission('manage_role_permissions') || hasPermission('manage_departments') || isTeamLeader || isCurrentUserInRootDept || canManageManpower) && (
         <div className="project-tabs" style={{ marginTop: '16px', marginBottom: '16px' }}>
           {(hasPermission('view_hr_members') || isCurrentUserInRootDept) && (
             <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
@@ -979,12 +982,24 @@ export default function HRManagement() {
               <i className="fa-solid fa-shield-halved"></i> {t('team.permissionsTable', 'Bảng Phân Quyền')}
             </button>
           )}
-          {(hasPermission('manage_departments') || isTeamLeader || isCurrentUserInRootDept) && (
+          {/* A Part Leader lands on this tab by default, so the button has to be there
+              too — otherwise they can leave for "Nhân lực dự án" and never come back. */}
+          {(hasPermission('manage_departments') || isTeamLeader || isPartLeader || isCurrentUserInRootDept) && (
             <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
-              {t('team.tabDepartments', 'Quản lý phòng ban')}
+              <i className="fa-solid fa-sitemap"></i> {t('team.tabDepartments', 'Quản lý phòng ban')}
+            </button>
+          )}
+          {canManageManpower && (
+            <button className={`tab-btn ${activeTab === 'manpower' ? 'active' : ''}`} onClick={() => setActiveTab('manpower')}>
+              <i className="fa-solid fa-users-gear"></i> {t('team.tabManpower', 'Nhân lực dự án')}
             </button>
           )}
         </div>
+      )}
+
+      {/* ================= TAB: PROJECT MANPOWER BOARD ================= */}
+      {activeTab === 'manpower' && canManageManpower && (
+        <ManpowerTab currentUser={currentUser} />
       )}
 
       {/* ================= TAB 1: USERS LIST ================= */}

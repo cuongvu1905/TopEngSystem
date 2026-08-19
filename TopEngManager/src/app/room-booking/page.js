@@ -15,6 +15,39 @@ const ROOMS = [
   { id: 'room-small', name: 'Phòng họp nhỏ' }
 ];
 
+// Meeting importance. The colour and the wording together tell a viewer how negotiable a
+// slot is, which is the whole point of the field: HIGH is immovable, LOW is a conversation.
+// `id` is what gets stored on a booking; bookings made before this field existed have none
+// and stay visually neutral rather than being labelled something nobody chose.
+const IMPORTANCE_LEVELS = [
+  {
+    id: 'HIGH',
+    color: '#ef4444',
+    bg: 'rgba(239, 68, 68, 0.16)',
+    border: 'rgba(239, 68, 68, 0.55)',
+    descKey: 'roomBooking.importanceHighDesc',
+    descFallback: 'Cuộc họp với TOPK, Khách hàng, Sếp Hàn. Lịch họp không thể thay đổi.'
+  },
+  {
+    id: 'MEDIUM',
+    color: '#f59e0b',
+    bg: 'rgba(245, 158, 11, 0.16)',
+    border: 'rgba(245, 158, 11, 0.55)',
+    descKey: 'roomBooking.importanceMediumDesc',
+    descFallback: 'Cuộc họp với Sếp Hàn là quản lý ở Việt Nam, lịch họp chỉ có thể thay đổi khi Sếp Hàn đồng ý.'
+  },
+  {
+    id: 'LOW',
+    color: '#22c55e',
+    bg: 'rgba(34, 197, 94, 0.16)',
+    border: 'rgba(34, 197, 94, 0.55)',
+    descKey: 'roomBooking.importanceLowDesc',
+    descFallback: 'Họp nội bộ Team (có thể thoả thuận với người đặt để thay đổi lịch họp).'
+  }
+];
+
+const getImportanceLevel = (id) => IMPORTANCE_LEVELS.find(lvl => lvl.id === id) || null;
+
 // Helper to format Date object to YYYY-MM-DD
 const formatDateStr = (dateObj) => {
   const y = dateObj.getFullYear();
@@ -29,6 +62,22 @@ const formatDateShort = (dateObj) => {
   const m = String(dateObj.getMonth() + 1).padStart(2, '0');
   const y = String(dateObj.getFullYear()).slice(-2);
   return `${d}/${m}/${y}`;
+};
+
+// Local midnight today. Every "which week am I looking at" decision goes through this so
+// the view follows the real clock instead of a date that was pinned during development.
+const getToday = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+};
+
+// Parses the YYYY-MM-DD a <input type="date"> produces into a LOCAL date.
+// new Date('2026-08-17') would parse as UTC midnight, which lands on the previous day -
+// and therefore in the previous week - for anyone in a timezone behind UTC.
+const parseDateStr = (str) => {
+  const [y, m, d] = String(str).split('-').map(Number);
+  if (!y || !m || !d) return getToday();
+  return new Date(y, m - 1, d);
 };
 
 // Get array of 7 dates for the week containing referenceDate (Monday to Sunday)
@@ -129,28 +178,30 @@ const INITIAL_BOOKINGS = [
 ];
 
 export default function RoomBookingPage() {
-  // Tính năng "Đặt phòng họp" đang tạm thời comment theo yêu cầu
-  return null;
-
-  /*
   const { currentUser } = useApp();
   const { t } = useLanguage();
 
   const [selectedLocation, setSelectedLocation] = useState('HN');
-  const [currentDate, setCurrentDate] = useState(new Date('2026-08-10'));
+  const [currentDate, setCurrentDate] = useState(getToday);
   const [bookings, setBookings] = useState([]);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // The booking whose detail popup is open, or null. Anyone may open it; only the owner
+  // (or an Admin) is offered the cancel button inside.
+  const [detailBooking, setDetailBooking] = useState(null);
   const [isSavingBooking, setIsSavingBooking] = useState(false);
   const [modalLocation, setModalLocation] = useState('HN');
   const [modalRoomId, setModalRoomId] = useState('room-large');
-  const [modalDate, setModalDate] = useState(formatDateStr(new Date('2026-08-10')));
+  const [modalDate, setModalDate] = useState(() => formatDateStr(getToday()));
   const [modalStartTime, setModalStartTime] = useState('09:00');
   const [modalEndTime, setModalEndTime] = useState('11:00');
   const [modalTeam, setModalTeam] = useState('Team R&D');
   const [modalBookerName, setModalBookerName] = useState('');
   const [modalPurpose, setModalPurpose] = useState('');
+  // Defaults to LOW on purpose: leaving the field untouched should describe the most
+  // common case (an internal team meeting), never lock a slot nobody agreed to lock.
+  const [modalImportance, setModalImportance] = useState('LOW');
 
   // Load stored bookings or initialize
   useEffect(() => {
@@ -205,7 +256,7 @@ export default function RoomBookingPage() {
   };
 
   const handleTodayWeek = () => {
-    setCurrentDate(new Date('2026-08-10'));
+    setCurrentDate(getToday());
   };
 
   // Open booking modal
@@ -226,6 +277,7 @@ export default function RoomBookingPage() {
       }
     }
     setModalPurpose('');
+    setModalImportance('LOW');
     setIsModalOpen(true);
   };
 
@@ -290,7 +342,8 @@ export default function RoomBookingPage() {
       endTime: modalEndTime,
       team: modalTeam.trim(),
       bookerName: modalBookerName.trim(),
-      purpose: modalPurpose.trim() || 'Họp nhóm'
+      purpose: modalPurpose.trim() || 'Họp nhóm',
+      importance: modalImportance
     };
 
     const updated = [...bookings, newBooking];
@@ -312,11 +365,12 @@ export default function RoomBookingPage() {
   const handleDeleteBooking = async (bookingId, bookingTeam, timeSlot) => {
     const Swal = await getSwal();
     const result = await Swal.fire({
-      title: t('common.confirmDelete', 'Xác nhận xóa'),
-      text: `Bạn có chắc chắn muốn hủy lịch đặt phòng [${timeSlot}] của ${bookingTeam}?`,
+      title: t('roomBooking.cancelMeeting', 'Huỷ cuộc họp'),
+      text: t('roomBooking.cancelConfirmText', 'Bạn có chắc chắn muốn huỷ lịch đặt phòng [{time}] của {team}?')
+        .replace('{time}', timeSlot).replace('{team}', bookingTeam),
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Đồng ý',
+      confirmButtonText: t('common.confirm', 'Đồng ý'),
       cancelButtonText: t('common.cancel', 'Hủy'),
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#64748b'
@@ -325,10 +379,11 @@ export default function RoomBookingPage() {
     if (result.isConfirmed) {
       const updated = bookings.filter(b => b.id !== bookingId);
       saveBookingsState(updated);
+      setDetailBooking(null);
       Swal.fire({
         icon: 'success',
         title: t('common.deleted', 'Đã xóa'),
-        text: 'Đã hủy lịch đặt phòng thành công.',
+        text: t('roomBooking.cancelSuccess', 'Đã huỷ lịch đặt phòng thành công.'),
         timer: 1500,
         showConfirmButton: false
       });
@@ -424,7 +479,7 @@ export default function RoomBookingPage() {
               value={formatDateStr(currentDate)}
               onChange={(e) => {
                 if (e.target.value) {
-                  setCurrentDate(new Date(e.target.value));
+                  setCurrentDate(parseDateStr(e.target.value));
                 }
               }}
               style={{
@@ -574,40 +629,42 @@ export default function RoomBookingPage() {
                           </div>
                         ) : (
                           dayBookings.map(b => {
-                            const isMyBooking = currentUser && (b.bookerName === currentUser.name || currentUser.system_role.includes('Admin'));
+                            // Bookings saved before the importance field existed have no level:
+                            // they keep the original neutral look instead of being relabelled.
+                            const lvl = getImportanceLevel(b.importance);
                             return (
                               <div
                                 key={b.id}
-                                title={`Mục đích: ${b.purpose}`}
+                                onDoubleClick={() => setDetailBooking(b)}
+                                title={t('roomBooking.viewDetailHint', 'Nhấp đúp để xem chi tiết cuộc họp')}
                                 style={{
-                                  border: '1.5px solid rgba(56, 189, 248, 0.65)',
+                                  border: `1.5px solid ${lvl ? lvl.border : 'rgba(56, 189, 248, 0.65)'}`,
                                   borderRadius: '10px',
                                   padding: '10px 8px',
                                   backgroundColor: 'var(--neutral-bg-main)',
                                   textAlign: 'center',
                                   position: 'relative',
+                                  cursor: 'pointer',
                                   transition: 'all 0.15s ease'
                                 }}
                               >
-                                {isMyBooking && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteBooking(b.id, b.team, `${b.startTime}~${b.endTime}`)}
-                                    title="Hủy đặt phòng"
+                                {/* Importance as a dot in the corner the × used to occupy: it costs no
+                                    row height, and the colour alone carries the level. */}
+                                {lvl && (
+                                  <span
+                                    title={`${lvl.id} — ${t(lvl.descKey, lvl.descFallback)}`}
                                     style={{
                                       position: 'absolute',
-                                      top: '4px',
-                                      right: '6px',
-                                      border: 'none',
-                                      background: 'transparent',
-                                      color: '#ef4444',
-                                      fontSize: '11px',
-                                      cursor: 'pointer',
-                                      padding: '2px'
+                                      top: '7px',
+                                      right: '7px',
+                                      width: '9px',
+                                      height: '9px',
+                                      borderRadius: '50%',
+                                      backgroundColor: lvl.color,
+                                      border: `1px solid ${lvl.border}`,
+                                      boxShadow: `0 0 5px ${lvl.color}`
                                     }}
-                                  >
-                                    <i className="fa-solid fa-xmark"></i>
-                                  </button>
+                                  ></span>
                                 )}
                                 <div style={{ fontWeight: '700', fontSize: '12.5px', color: 'var(--neutral-dark)', marginBottom: '2px' }}>
                                   {b.team}
@@ -673,7 +730,7 @@ export default function RoomBookingPage() {
 
       {isModalOpen && (
         <div className="modal show" style={{ display: 'flex', zIndex: 1000 }}>
-          <div className="modal-dialog" style={{ maxWidth: '540px', width: '95%' }}>
+          <div className="modal-dialog" style={{ maxWidth: '660px', width: '95%' }}>
             <div className="modal-content">
               <div className="modal-header">
                 <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
@@ -806,6 +863,63 @@ export default function RoomBookingPage() {
                       style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none', resize: 'vertical' }}
                     />
                   </div>
+                  {/* Importance: the level badge on the left, what it commits you to on the
+                      right, so the choice is made against its meaning rather than a bare word. */}
+                  <div className="form-group">
+                    <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '6px', display: 'block' }}>
+                      {t('roomBooking.importance', 'Mức độ quan trọng')} <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {IMPORTANCE_LEVELS.map(lvl => {
+                        const isPicked = modalImportance === lvl.id;
+                        return (
+                          <label
+                            key={lvl.id}
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'auto 88px 1fr',
+                              alignItems: 'center',
+                              gap: '10px',
+                              padding: '9px 11px',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              border: `1.5px solid ${isPicked ? lvl.border : 'var(--neutral-border)'}`,
+                              backgroundColor: isPicked ? lvl.bg : 'var(--neutral-bg-main)',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name="meeting-importance"
+                              value={lvl.id}
+                              checked={isPicked}
+                              onChange={() => setModalImportance(lvl.id)}
+                              style={{ cursor: 'pointer', margin: 0, accentColor: lvl.color }}
+                            />
+                            <span
+                              style={{
+                                fontSize: '11.5px',
+                                fontWeight: '800',
+                                letterSpacing: '0.04em',
+                                textAlign: 'center',
+                                color: lvl.color,
+                                backgroundColor: lvl.bg,
+                                border: `1px solid ${lvl.border}`,
+                                borderRadius: '6px',
+                                padding: '3px 0'
+                              }}
+                            >
+                              {lvl.id}
+                            </span>
+                            <span style={{ fontSize: '12px', lineHeight: 1.45, color: isPicked ? 'var(--neutral-dark)' : 'var(--neutral-muted)' }}>
+                              {t(lvl.descKey, lvl.descFallback)}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                 </div>
 
                 <div className="modal-footer" style={{ padding: '12px 20px', borderTop: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -830,19 +944,113 @@ export default function RoomBookingPage() {
           </div>
         </div>
       )}
-    </div>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                  >
-                    {t('roomBooking.bookBtn', 'Đặt phòng họp')}
+      {/* Meeting detail. Opened by double-clicking a booking; readable by everyone, and the
+          place the cancel action now lives so it can never be hit by a stray single click. */}
+      {detailBooking && (() => {
+        const b = detailBooking;
+        const lvl = getImportanceLevel(b.importance);
+        const canCancel = currentUser && (b.bookerName === currentUser.name || currentUser.system_role.includes('Admin'));
+        const room = ROOMS.find(r => r.id === b.roomId);
+        const loc = LOCATIONS.find(l => l.id === b.location);
+        const dayDate = parseDateStr(b.date);
+        const rows = [
+          [t('roomBooking.locationLabel', 'Địa điểm'), loc ? loc.name : b.location],
+          [t('roomBooking.roomLabel', 'Phòng họp'), room ? room.name : b.roomId],
+          [t('roomBooking.dateLabel', 'Ngày họp'), `${getDayLabel(dayDate.getDay() === 0 ? 6 : dayDate.getDay() - 1)}, ${formatDateShort(dayDate)}`],
+          [t('roomBooking.time', 'Khung giờ'), `${b.startTime} ~ ${b.endTime}`],
+          [t('roomBooking.team', 'Team / Bộ phận'), b.team],
+          [t('roomBooking.booker', 'Người đặt'), b.bookerName]
+        ];
+
+        return (
+          <div className="modal show" style={{ display: 'flex', zIndex: 1001 }}>
+            <div className="modal-dialog" style={{ maxWidth: '560px', width: '95%' }}>
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <i className="fa-solid fa-circle-info" style={{ color: 'var(--primary-color)' }}></i>
+                    {t('roomBooking.detailTitle', 'Chi tiết cuộc họp')}
+                  </h3>
+                  <button className="btn-close-modal" onClick={() => setDetailBooking(null)}>
+                    <i className="fa-solid fa-xmark"></i>
                   </button>
                 </div>
-              </form>
+
+                <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '132px 1fr', rowGap: '10px', columnGap: '12px', fontSize: '13px' }}>
+                    {rows.map(([label, value]) => (
+                      <React.Fragment key={label}>
+                        <span style={{ color: 'var(--neutral-muted)', fontWeight: '600' }}>{label}</span>
+                        <span style={{ color: 'var(--neutral-dark)', fontWeight: '600' }}>{value}</span>
+                      </React.Fragment>
+                    ))}
+                  </div>
+
+                  {/* The level is shown with its meaning, not just its name: what a viewer needs
+                      to know is whether this slot can be moved. */}
+                  <div>
+                    <div style={{ color: 'var(--neutral-muted)', fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>
+                      {t('roomBooking.importance', 'Mức độ quan trọng')}
+                    </div>
+                    {lvl ? (
+                      <div style={{
+                        display: 'flex', alignItems: 'flex-start', gap: '10px',
+                        padding: '10px 12px', borderRadius: '8px',
+                        border: `1.5px solid ${lvl.border}`, backgroundColor: lvl.bg
+                      }}>
+                        <span style={{
+                          fontSize: '11.5px', fontWeight: '800', letterSpacing: '0.04em',
+                          color: lvl.color, border: `1px solid ${lvl.border}`,
+                          borderRadius: '6px', padding: '3px 8px', flexShrink: 0
+                        }}>
+                          {lvl.id}
+                        </span>
+                        <span style={{ fontSize: '12.5px', lineHeight: 1.45, color: 'var(--neutral-dark)' }}>
+                          {t(lvl.descKey, lvl.descFallback)}
+                        </span>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '12.5px', color: 'var(--neutral-muted)', fontStyle: 'italic' }}>
+                        {t('roomBooking.noImportance', 'Lịch này được đặt trước khi có mục mức độ quan trọng.')}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div style={{ color: 'var(--neutral-muted)', fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>
+                      {t('roomBooking.purpose', 'Mục đích sử dụng')}
+                    </div>
+                    <div style={{
+                      fontSize: '12.5px', lineHeight: 1.5, color: 'var(--neutral-dark)',
+                      whiteSpace: 'pre-wrap', padding: '10px 12px', borderRadius: '8px',
+                      border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)'
+                    }}>
+                      {b.purpose || t('roomBooking.noPurpose', '(Không có nội dung)')}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-footer" style={{ padding: '12px 20px', borderTop: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                  {canCancel ? (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => handleDeleteBooking(b.id, b.team, `${b.startTime}~${b.endTime}`)}
+                      style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
+                    >
+                      <i className="fa-solid fa-trash-can"></i> {t('roomBooking.cancelMeeting', 'Huỷ cuộc họp')}
+                    </button>
+                  ) : <span></span>}
+                  <button type="button" className="btn btn-secondary" onClick={() => setDetailBooking(null)}>
+                    {t('common.close', 'Đóng')}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
     </div>
-  */
+  );
 }

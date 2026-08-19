@@ -273,6 +273,90 @@ export const MySQLAdapter = {
     return await callApi('unlockDocument', { documentId, userId });
   },
 
+  // --- Project Manpower board (HR → "Nhân lực dự án" tab) ---
+  getManpowerProjects: async function(departmentIds) {
+    return await callApi('getManpowerProjects', { departmentIds });
+  },
+
+  createManpowerProject: async function(name, departmentId) {
+    return await callApi('createManpowerProject', { name, departmentId });
+  },
+
+  renameManpowerProject: async function(manpowerProjectId, name) {
+    return await callApi('renameManpowerProject', { manpowerProjectId, name });
+  },
+
+  setManpowerProjectScope: async function(manpowerProjectId, departmentId) {
+    return await callApi('setManpowerProjectScope', { manpowerProjectId, departmentId });
+  },
+
+  deleteManpowerProject: async function(manpowerProjectId) {
+    return await callApi('deleteManpowerProject', { manpowerProjectId });
+  },
+
+  getManpowerLocations: async function() {
+    return await callApi('getManpowerLocations', {});
+  },
+
+  createManpowerLocation: async function(name) {
+    return await callApi('createManpowerLocation', { name });
+  },
+
+  renameManpowerLocation: async function(manpowerLocationId, name) {
+    return await callApi('renameManpowerLocation', { manpowerLocationId, name });
+  },
+
+  deleteManpowerLocation: async function(manpowerLocationId) {
+    return await callApi('deleteManpowerLocation', { manpowerLocationId });
+  },
+
+  getManpowerHeadcount: async function(reportDate, departmentIds, excludedDepartmentIds) {
+    return await callApi('getManpowerHeadcount', { reportDate, departmentIds, excludedDepartmentIds });
+  },
+
+  getManpowerCellMembers: async function(reportDate, manpowerProjectId, manpowerLocationId, excludedDepartmentIds) {
+    return await callApi('getManpowerCellMembers', { reportDate, manpowerProjectId, manpowerLocationId, excludedDepartmentIds });
+  },
+
+  getUserDayReports: async function(reportDate, userId) {
+    return await callApi('getUserDayReports', { reportDate, userId });
+  },
+
+  getPlacedUserIds: async function(reportDate) {
+    return await callApi('getPlacedUserIds', { reportDate });
+  },
+
+  addManpowerCellMember: async function({ reportDate, manpowerProjectId, manpowerLocationId, userId, addedBy }) {
+    return await callApi('addManpowerCellMember', { reportDate, manpowerProjectId, manpowerLocationId, userId, addedBy });
+  },
+
+  removeManpowerCellMember: async function({ reportDate, manpowerProjectId, manpowerLocationId, userId }) {
+    return await callApi('removeManpowerCellMember', { reportDate, manpowerProjectId, manpowerLocationId, userId });
+  },
+
+  getManpowerReports: async function(departmentId) {
+    return await callApi('getManpowerReports', { departmentId });
+  },
+
+  getManpowerReport: async function(reportDate, departmentId) {
+    return await callApi('getManpowerReport', { reportDate, departmentId });
+  },
+
+  saveManpowerReport: async function({ reportDate, departmentId, departmentName, locations, rows, savedBy }) {
+    return await callApi('saveManpowerReport', { reportDate, departmentId, departmentName, locations, rows, savedBy });
+  },
+
+  deleteManpowerReport: async function(reportDate, departmentId, requesterId) {
+    return await callApi('deleteManpowerReport', { reportDate, departmentId, requesterId });
+  },
+
+  getManpowerReportDownloadUrl: function(reportDate, departmentId = '', requesterId = '') {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5000/api';
+    return `${backendUrl}/downloadManpowerReport/${reportDate}`
+      + `?dept=${encodeURIComponent(departmentId || '')}`
+      + `&requesterId=${encodeURIComponent(requesterId || '')}`;
+  },
+
   getActivityLogs: async function({ userId, actionType } = {}) {
     return await callApi('getActivityLogs', { userId, actionType });
   },

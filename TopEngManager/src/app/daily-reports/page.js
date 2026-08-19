@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { getSwal } from '@/utils/swal';
+import { getDepartmentDepth, getScopeDepartmentIds } from '@/utils/orgScope';
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
 
@@ -57,8 +58,12 @@ const formatReportContentHtml = (content, projects) => {
     const parsed = JSON.parse(content);
     if (Array.isArray(parsed)) {
       const cardsHtml = parsed.map((card, idx) => {
-        const projName = projects?.find(p => p.id === card.projectId)?.name || 'Dự án';
-        const fileHtml = card.fileUrl 
+        // New cards carry the name inline; older ones still point at a company project.
+        const projName = card.projectName || projects?.find(p => p.id === card.projectId)?.name || 'Dự án';
+        const locationHtml = card.locationName
+          ? `<span style="font-size: 11px; font-weight: 600; background-color: #ecfccb; color: #4d7c0f; padding: 2px 6px; border-radius: 4px; margin-left: 4px;"><i class="fa-solid fa-location-dot"></i> ${card.locationName}</span>`
+          : '';
+        const fileHtml = card.fileUrl
           ? `<div style="margin-top: 6px;"><a href="${card.fileUrl}" target="_blank" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 12px;"><i class="fa-solid fa-paperclip"></i> ${card.fileName || 'Tệp đính kèm'}</a></div>`
           : '';
         return `
@@ -67,8 +72,8 @@ const formatReportContentHtml = (content, projects) => {
               <span style="font-size: 11.5px; font-weight: 700; color: #0f766e; background-color: #ccfbf1; padding: 2px 6px; border-radius: 4px;">
                 <i class="fa-regular fa-clock"></i> ${card.startTime} - ${card.endTime}
               </span>
-              <span style="font-size: 11px; font-weight: 600; background-color: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px;">
-                ${projName}
+              <span>
+                <span style="font-size: 11px; font-weight: 600; background-color: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px;">${projName}</span>${locationHtml}
               </span>
             </div>
             <div style="font-size: 13px; color: var(--neutral-dark); white-space: pre-wrap; line-height: 1.5;">${card.content}</div>
@@ -109,10 +114,58 @@ export default function DailyReportsPage() {
       startTime: DEFAULT_TIME_SLOTS[0].startTime,
       endTime: DEFAULT_TIME_SLOTS[0].endTime,
       projectId: '',
+      projectName: '',
+      locationId: '',
+      locationName: '',
       fileUrl: '',
       fileName: ''
     }
   ];
+
+  // The project dropdown lists the manpower projects of the writer's own Part
+  // ("Quản lý Team → Nhân lực dự án → Các dự án đang thực hiện"), not the company
+  // project list. Someone sitting directly on a Team (not inside any Part) gets that
+  // whole Team's list, i.e. the Team's own projects plus every Part's.
+  const [departments, setDepartments] = useState([]);
+  const [manpowerProjects, setManpowerProjects] = useState([]);
+  const [manpowerLocations, setManpowerLocations] = useState([]);
+  // The project list depends on the department tree, so both have to finish loading
+  // before the dropdown means anything. Without these flags the page briefly renders
+  // "your Part has no project" while the fetch is still in flight.
+  const [departmentsLoaded, setDepartmentsLoaded] = useState(false);
+  const [projectsLoaded, setProjectsLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    db.getDepartments(currentUser?.id)
+      .then(list => { if (!cancelled) { setDepartments(list || []); setDepartmentsLoaded(true); } })
+      .catch(() => { if (!cancelled) { setDepartments([]); setDepartmentsLoaded(true); } });
+    db.getManpowerLocations()
+      .then(list => { if (!cancelled) setManpowerLocations(list || []); })
+      .catch(() => { if (!cancelled) setManpowerLocations([]); });
+    return () => { cancelled = true; };
+  }, [currentUser?.id]);
+
+  const myManpowerScopeIds = useMemo(() => {
+    const deptId = currentUser?.department_id;
+    if (!deptId || departments.length === 0) return null;
+    const depth = getDepartmentDepth(departments, deptId);
+    if (depth >= 2) return [deptId];                                  // inside a Part
+    if (depth === 1) return getScopeDepartmentIds(departments, deptId); // on the Team itself
+    return null;                                                      // root/admin → unrestricted
+  }, [departments, currentUser?.department_id]);
+
+  useEffect(() => {
+    // Waiting for the department tree matters for correctness, not just for the flash:
+    // with no tree yet the scope resolves to "unrestricted", and the dropdown would
+    // momentarily list projects belonging to other Teams.
+    if (!departmentsLoaded) return undefined;
+    let cancelled = false;
+    db.getManpowerProjects(myManpowerScopeIds || undefined)
+      .then(list => { if (!cancelled) { setManpowerProjects(list || []); setProjectsLoaded(true); } })
+      .catch(() => { if (!cancelled) { setManpowerProjects([]); setProjectsLoaded(true); } });
+    return () => { cancelled = true; };
+  }, [myManpowerScopeIds, departmentsLoaded]);
 
   const [reports, setReports] = useState([]);
   const [reportCards, setReportCards] = useState(getDefaultReportCards());
@@ -121,9 +174,8 @@ export default function DailyReportsPage() {
   // Lets "Save Draft" stay hidden while resubmitting a Rejected report, so it can't
   // accidentally leave that report stuck at Draft instead of going back for approval.
   const [editingReportStatus, setEditingReportStatus] = useState(null);
-  // No date is pre-selected: the composer starts locked until the user explicitly
-  // picks a report date (see the Content textarea's readOnly guard below).
-  const [reportDate, setReportDate] = useState('');
+  // Defaults to today; past days can be picked, future days cannot (see max= below).
+  const [reportDate, setReportDate] = useState(getTodayDateString());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,13 +189,21 @@ export default function DailyReportsPage() {
     }));
   };
 
-  // The content textarea is readOnly until a report date is picked; focusing it while
-  // locked (click or tab) blurs it right back out and nudges the user to pick a date first.
-  const handleContentFocusGuard = (e) => {
-    if (!reportDate) {
-      e.target.blur();
-      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.selectDateFirstWarning', 'Vui lòng chọn ngày báo cáo trước khi nhập nội dung.') });
-    }
+  // The chosen name is stored next to the id: a submitted report is a historical record,
+  // so it must keep reading correctly even if that manpower project/location is later
+  // renamed or deleted.
+  const updateCardProject = (cardId, projectId) => {
+    const picked = manpowerProjects.find(p => p.manpower_project_id === projectId);
+    setReportCards(prev => prev.map(c => (
+      c.id === cardId ? { ...c, projectId, projectName: picked?.name || '' } : c
+    )));
+  };
+
+  const updateCardLocation = (cardId, locationId) => {
+    const picked = manpowerLocations.find(l => l.manpower_location_id === locationId);
+    setReportCards(prev => prev.map(c => (
+      c.id === cardId ? { ...c, locationId, locationName: picked?.name || '' } : c
+    )));
   };
 
   // Which single time-dropdown (if any) is open, keyed as "<cardId>-startTime"/"<cardId>-endTime".
@@ -297,6 +357,9 @@ export default function DailyReportsPage() {
         startTime: nextStart,
         endTime: nextEnd,
         projectId: '',
+        projectName: '',
+        locationId: '',
+        locationName: '',
         fileUrl: '',
         fileName: ''
       }
@@ -401,29 +464,54 @@ export default function DailyReportsPage() {
     }
   }, [currentUser]);
 
+  // Project and work location are mandatory on every card, for both "Gửi báo cáo" and
+  // "Lưu tạm thời" — the manpower board is built from those two fields, so a card
+  // missing either one would never be counted anywhere.
+  const warnIfCardsIncomplete = () => {
+    if (reportCards.some(c => !c.projectId)) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('report.projectNotSelectedTitle', 'Chưa chọn dự án'),
+        text: t('report.projectNotSelectedText', 'Vui lòng chọn dự án cho tất cả các thẻ báo cáo trước khi gửi.')
+      });
+      return true;
+    }
+    if (reportCards.some(c => !c.locationId)) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('report.locationNotSelectedTitle', 'Chưa chọn địa điểm làm việc'),
+        text: t('report.locationNotSelectedText', 'Vui lòng chọn địa điểm làm việc cho tất cả các thẻ báo cáo.')
+      });
+      return true;
+    }
+    return false;
+  };
+
   const handleSubmitReport = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
     if (!reportDate) {
-      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.selectDateFirstWarning', 'Vui lòng chọn ngày báo cáo trước khi nhập nội dung.') });
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.dateRequiredWarning', 'Vui lòng chọn ngày báo cáo.') });
       return;
     }
     if (reportCards.some(c => !c.content.trim())) {
       Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('report.incompleteCardsWarning', 'Vui lòng điền đầy đủ nội dung và chọn dự án cho tất cả các thẻ báo cáo!') });
       return;
     }
-    if (reportCards.some(c => !c.projectId)) {
-      Swal.fire({ icon: 'warning', title: t('report.projectNotSelectedTitle', 'Chưa chọn dự án'), text: t('report.projectNotSelectedText', 'Vui lòng chọn dự án cho tất cả các thẻ báo cáo trước khi gửi.') });
-      return;
-    }
+    if (warnIfCardsIncomplete()) return;
 
     try {
       setIsSubmitting(true);
       const serializedContent = JSON.stringify(reportCards);
-      const firstProjectId = reportCards[0]?.projectId || null;
+      // Cards now reference a manpower project, which is not a row in the `project`
+      // table, so a NEW report's project_id FK column stays null; the chosen project
+      // and location live inside the serialized card content instead.
+      // When UPDATING, project_id is left out entirely (undefined) so an older report
+      // that legitimately points at a company project keeps that link untouched.
+      const newReportProjectId = null;
 
       if (editingReportId) {
-        await db.updateDailyReport(editingReportId, serializedContent, null, firstProjectId, reportDate, 'Pending');
+        await db.updateDailyReport(editingReportId, serializedContent, null, undefined, reportDate, 'Pending');
         Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('report.updateSuccessText', 'Đã cập nhật báo cáo ngày thành công!') });
         setEditingReportId(null);
         setEditingReportStatus(null);
@@ -432,14 +520,14 @@ export default function DailyReportsPage() {
           userId: currentUser.id,
           content: serializedContent,
           fileUrl: null,
-          projectId: firstProjectId,
+          projectId: newReportProjectId,
           createdAt: reportDate
         });
         Swal.fire({ icon: 'success', title: t('common.success', 'Thành công'), text: t('report.submitSuccessText', 'Đã gửi báo cáo ngày thành công!') });
       }
 
       setReportCards(getDefaultReportCards());
-      setReportDate('');
+      setReportDate(getTodayDateString());
       await loadReports();
     } catch (err) {
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: t('report.saveErrorText', 'Lỗi lưu báo cáo: ') + err.message });
@@ -454,27 +542,33 @@ export default function DailyReportsPage() {
   const handleSaveDraft = async () => {
     if (!currentUser) return;
     if (!reportDate) {
-      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.selectDateFirstWarning', 'Vui lòng chọn ngày báo cáo trước khi nhập nội dung.') });
+      Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('reports.dateRequiredWarning', 'Vui lòng chọn ngày báo cáo.') });
       return;
     }
     if (reportCards.every(c => !c.content.trim())) {
       Swal.fire({ icon: 'warning', title: t('common.warning', 'Cảnh báo'), text: t('report.draftEmptyWarning', 'Vui lòng nhập ít nhất một nội dung trước khi lưu tạm thời.') });
       return;
     }
+    if (warnIfCardsIncomplete()) return;
 
     try {
       setIsSavingDraft(true);
       const serializedContent = JSON.stringify(reportCards);
-      const firstProjectId = reportCards[0]?.projectId || null;
+      // Cards now reference a manpower project, which is not a row in the `project`
+      // table, so a NEW report's project_id FK column stays null; the chosen project
+      // and location live inside the serialized card content instead.
+      // When UPDATING, project_id is left out entirely (undefined) so an older report
+      // that legitimately points at a company project keeps that link untouched.
+      const newReportProjectId = null;
 
       if (editingReportId) {
-        await db.updateDailyReport(editingReportId, serializedContent, null, firstProjectId, reportDate);
+        await db.updateDailyReport(editingReportId, serializedContent, null, undefined, reportDate);
       } else {
         const result = await db.createDailyReport({
           userId: currentUser.id,
           content: serializedContent,
           fileUrl: null,
-          projectId: firstProjectId,
+          projectId: newReportProjectId,
           createdAt: reportDate,
           status: 'Draft'
         });
@@ -855,29 +949,75 @@ export default function DailyReportsPage() {
                       className="report-content-textarea"
                       value={card.content}
                       onChange={(e) => updateCardField(card.id, 'content', e.target.value)}
-                      onFocus={handleContentFocusGuard}
-                      onClick={handleContentFocusGuard}
-                      readOnly={!reportDate}
                       required
-                      placeholder={reportDate ? t('reports.placeholderContent', 'Nhập nội dung báo cáo trong khung giờ này...') : t('reports.selectDateFirstPlaceholder', 'Vui lòng chọn ngày báo cáo trước...')}
+                      placeholder={t('reports.placeholderContent', 'Nhập nội dung báo cáo trong khung giờ này...')}
                       rows="6"
                       style={{
                         width: '100%',
                         padding: '12px',
                         borderRadius: '4px',
                         border: '1px solid var(--neutral-border)',
-                        backgroundColor: reportDate ? 'var(--neutral-bg-card)' : 'var(--neutral-bg-hover)',
+                        backgroundColor: 'var(--neutral-bg-card)',
                         color: 'var(--neutral-dark)',
                         outline: 'none',
                         resize: 'vertical',
                         fontSize: '14px',
-                        lineHeight: '1.6',
-                        cursor: reportDate ? 'text' : 'not-allowed'
+                        lineHeight: '1.6'
                       }}
                     />
+
+                    {/* File Attachment — sits directly under the content box */}
+                    <div>
+                      <input
+                        type="file"
+                        id={`card-file-input-${card.id}`}
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleCardFileUpload(card.id, e.target.files[0])}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => document.getElementById(`card-file-input-${card.id}`).click()}
+                          style={{
+                            padding: '8px 16px',
+                            fontSize: '13px',
+                            border: '1px solid var(--neutral-border)',
+                            borderRadius: '4px',
+                            backgroundColor: 'var(--neutral-bg-card)',
+                            color: 'var(--neutral-dark)',
+                            cursor: 'pointer',
+                            fontWeight: '600'
+                          }}
+                        >
+                          {t('common.selectAttachment', 'Chọn Tệp')}
+                        </button>
+                        {card.fileName && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--neutral-bg-hover)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                            <span style={{ color: 'var(--neutral-dark)', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {card.fileName}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReportCards(prev => prev.map(c => {
+                                  if (c.id === card.id) {
+                                    return { ...c, fileUrl: '', fileName: '' };
+                                  }
+                                  return c;
+                                }));
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontSize: '14px', fontWeight: 'bold' }}
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Right Column: Time, Project, File Attachment */}
+                  {/* Right Column: Time, Project, Work location */}
                   <div className="report-card-meta-col" style={{ width: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     
                     {/* Time fields */}
@@ -899,73 +1039,55 @@ export default function DailyReportsPage() {
                       </label>
                       <select
                         value={card.projectId}
-                        onChange={(e) => updateCardField(card.id, 'projectId', e.target.value)}
-                        style={{ 
-                          width: '100%', 
-                          padding: '10px', 
-                          borderRadius: '4px', 
-                          border: '1px solid var(--neutral-border)', 
+                        onChange={(e) => updateCardProject(card.id, e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          borderRadius: '4px',
+                          border: '1px solid var(--neutral-border)',
                           backgroundColor: 'var(--neutral-bg-card)',
-                          outline: 'none', 
-                          fontSize: '13.5px', 
-                          color: 'var(--neutral-dark)' 
+                          outline: 'none',
+                          fontSize: '13.5px',
+                          color: 'var(--neutral-dark)'
                         }}
                       >
                         <option value="">{t('reports.selectProjectOptional', '-- Chọn dự án (Không bắt buộc) --')}</option>
-                        {myProjects?.map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
+                        {manpowerProjects.map(p => (
+                          <option key={p.manpower_project_id} value={p.manpower_project_id}>{p.name}</option>
                         ))}
                       </select>
+                      {projectsLoaded && manpowerProjects.length === 0 && (
+                        <div style={{ fontSize: '11.5px', color: 'var(--warning-color)', marginTop: '6px' }}>
+                          <i className="fa-solid fa-circle-info"></i>{' '}
+                          {t('reports.noManpowerProjects', 'Part/Team của bạn chưa có dự án nào. Vui lòng liên hệ quản lý để thêm trong "Quản lý Team → Nhân lực dự án".')}
+                        </div>
+                      )}
                     </div>
 
-                    {/* File Attachment */}
+                    {/* Work location select */}
                     <div>
-                      <input
-                        type="file"
-                        id={`card-file-input-${card.id}`}
-                        style={{ display: 'none' }}
-                        onChange={(e) => handleCardFileUpload(card.id, e.target.files[0])}
-                      />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => document.getElementById(`card-file-input-${card.id}`).click()}
-                          style={{ 
-                            padding: '8px 16px', 
-                            fontSize: '13px',
-                            border: '1px solid var(--neutral-border)',
-                            borderRadius: '4px',
-                            backgroundColor: 'var(--neutral-bg-card)',
-                            color: 'var(--neutral-dark)',
-                            cursor: 'pointer',
-                            fontWeight: '600'
-                          }}
-                        >
-                          {t('common.selectAttachment', 'Chọn Tệp')}
-                        </button>
-                        {card.fileName && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--neutral-bg-hover)', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
-                            <span style={{ color: 'var(--neutral-dark)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {card.fileName}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setReportCards(prev => prev.map(c => {
-                                  if (c.id === card.id) {
-                                    return { ...c, fileUrl: '', fileName: '' };
-                                  }
-                                  return c;
-                                }));
-                              }}
-                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontSize: '14px', fontWeight: 'bold' }}
-                            >
-                              &times;
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-dark)' }}>
+                        {t('reports.selectLocation', 'Chọn địa điểm làm việc')}
+                      </label>
+                      <select
+                        value={card.locationId || ''}
+                        onChange={(e) => updateCardLocation(card.id, e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          borderRadius: '4px',
+                          border: '1px solid var(--neutral-border)',
+                          backgroundColor: 'var(--neutral-bg-card)',
+                          outline: 'none',
+                          fontSize: '13.5px',
+                          color: 'var(--neutral-dark)'
+                        }}
+                      >
+                        <option value="">{t('reports.selectLocationPlaceholder', '-- Chọn địa điểm làm việc --')}</option>
+                        {manpowerLocations.map(loc => (
+                          <option key={loc.manpower_location_id} value={loc.manpower_location_id}>{loc.name}</option>
+                        ))}
+                      </select>
                     </div>
 
                   </div>
@@ -1008,7 +1130,7 @@ export default function DailyReportsPage() {
                     setEditingReportId(null);
                     setEditingReportStatus(null);
                     setReportCards(getDefaultReportCards());
-                    setReportDate('');
+                    setReportDate(getTodayDateString());
                   }}
                   className="btn btn-secondary"
                   style={{ flex: 1, padding: '12px 16px' }}

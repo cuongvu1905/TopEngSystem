@@ -86,7 +86,8 @@ const renderReportContentVisual = (content, projects) => {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
           {parsed.map((card, idx) => {
-            const projName = projects?.find(p => p.id === card.projectId)?.name || 'Dự án';
+            // New cards carry the name inline; older ones still point at a company project.
+            const projName = card.projectName || projects?.find(p => p.id === card.projectId)?.name || 'Dự án';
             return (
               <div
                 key={card.id || idx}
@@ -102,8 +103,15 @@ const renderReportContentVisual = (content, projects) => {
                   <span style={{ fontSize: '11px', fontWeight: '700', color: '#0f766e', backgroundColor: '#ccfbf1', padding: '1px 5px', borderRadius: '4px' }}>
                     <i className="fa-regular fa-clock"></i> {card.startTime} - {card.endTime}
                   </span>
-                  <span style={{ fontSize: '10.5px', fontWeight: '600', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '4px' }}>
-                    {projName}
+                  <span style={{ display: 'inline-flex', gap: '4px' }}>
+                    <span style={{ fontSize: '10.5px', fontWeight: '600', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '4px' }}>
+                      {projName}
+                    </span>
+                    {card.locationName && (
+                      <span style={{ fontSize: '10.5px', fontWeight: '600', backgroundColor: '#ecfccb', color: '#4d7c0f', padding: '1px 5px', borderRadius: '4px' }}>
+                        <i className="fa-solid fa-location-dot"></i> {card.locationName}
+                      </span>
+                    )}
                   </span>
                 </div>
                 <div style={{ fontSize: '12.5px', color: 'var(--neutral-dark)', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>

@@ -17,6 +17,7 @@ const chatRoutes = require('./routes/chatRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const dailyReportRoutes = require('./routes/dailyReportRoutes');
+const manpowerRoutes = require('./routes/manpowerRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -80,6 +81,7 @@ app.use('/api', chatRoutes);
 app.use('/api', documentRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api', dailyReportRoutes);
+app.use('/api', manpowerRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -321,6 +321,177 @@ async function runMigrations() {
     console.error('Error during allowed_extensions migration check:', err);
   }
 
+  // Self-healing table creation for the Project Manpower board (HR → "Nhân lực dự án").
+  // Its project list is intentionally separate from the `project` table — it is a
+  // lightweight, manually curated list used only for the daily headcount board.
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'manpowerproject'`;
+    if (tables.length === 0) {
+      console.log('Creating manpowerproject / manpowerlocation / manpowerreport tables...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`manpowerproject\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`manpower_project_id\` VARCHAR(50) NOT NULL UNIQUE,
+          \`name\` VARCHAR(255) NOT NULL,
+          \`row_order\` INT NOT NULL DEFAULT 0,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`manpowerlocation\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`manpower_location_id\` VARCHAR(50) NOT NULL UNIQUE,
+          \`name\` VARCHAR(255) NOT NULL,
+          \`col_order\` INT NOT NULL DEFAULT 0,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`manpowerreport\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`report_date\` VARCHAR(10) NOT NULL UNIQUE,
+          \`file_name\` VARCHAR(255) NOT NULL,
+          \`file_path\` VARCHAR(500) NOT NULL,
+          \`updated_by\` VARCHAR(36) DEFAULT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('manpower tables created successfully.');
+    }
+
+    // Seed the work-location columns from the reference layout so the board is usable
+    // immediately. Guarded on "no locations yet AND no report ever saved" rather than
+    // on "tables were just created": that way a half-applied migration (tables created
+    // but the seed loop interrupted part-way) still heals on the next start, while a
+    // board already in real use is never silently re-seeded behind the admin's back.
+    try {
+      const existingCount = await prisma.manpowerlocation.count();
+      if (existingCount === 0 && (await prisma.manpowerreport.count()) === 0) {
+        const defaultLocations = ['Phú Thọ', 'Hà Nội', 'Hải Phòng', 'Bắc Ninh', 'Thái Nguyên', 'Nghỉ', 'Nghỉ Sinh', 'Hàn Quốc', 'Trung Quốc'];
+        let colOrder = 1;
+        for (const name of defaultLocations) {
+          await prisma.manpowerlocation.create({
+            data: { manpower_location_id: 'mloc-' + crypto.randomUUID(), name, col_order: colOrder++ }
+          });
+        }
+        console.log('Seeded default manpower work locations successfully.');
+      }
+    } catch (seedErr) {
+      console.error('Error seeding default manpower locations:', seedErr);
+    }
+  } catch (err) {
+    console.error('Error during manpower tables migration check:', err);
+  }
+
+  // Self-healing scope columns for the Project Manpower board: a manpower project and
+  // a saved daily board both belong to exactly one Team or Part (department). Existing
+  // rows keep department_id = '' meaning "unscoped/legacy" so nothing is reassigned
+  // behind the user's back. The report's uniqueness therefore moves from report_date
+  // alone to (report_date, department_id) — one board per day *per* Team/Part.
+  try {
+    const projCols = await prisma.$queryRaw`SHOW COLUMNS FROM \`manpowerproject\` LIKE 'department_id'`;
+    if (projCols.length === 0) {
+      console.log('Adding department_id column to manpowerproject table...');
+      await prisma.$executeRawUnsafe("ALTER TABLE `manpowerproject` ADD COLUMN `department_id` VARCHAR(36) NOT NULL DEFAULT '';");
+      await prisma.$executeRawUnsafe('ALTER TABLE `manpowerproject` ADD INDEX `idx_manpowerproject_department` (`department_id`);');
+      console.log('manpowerproject.department_id added successfully.');
+    }
+
+    const reportCols = await prisma.$queryRaw`SHOW COLUMNS FROM \`manpowerreport\` LIKE 'department_id'`;
+    if (reportCols.length === 0) {
+      console.log('Adding department_id column to manpowerreport table...');
+      await prisma.$executeRawUnsafe("ALTER TABLE `manpowerreport` ADD COLUMN `department_id` VARCHAR(36) NOT NULL DEFAULT '';");
+      console.log('manpowerreport.department_id added successfully.');
+    }
+
+    // Swap the single-column unique key for the composite one. Checked independently of
+    // the column check above so an interrupted run still finishes on the next start.
+    const indexes = await prisma.$queryRaw`SHOW INDEX FROM \`manpowerreport\``;
+    const hasComposite = indexes.some(i => i.Key_name === 'unique_report_date_department');
+    if (!hasComposite) {
+      console.log('Replacing manpowerreport unique key with (report_date, department_id)...');
+      if (indexes.some(i => i.Key_name === 'report_date')) {
+        await prisma.$executeRawUnsafe('ALTER TABLE `manpowerreport` DROP INDEX `report_date`;');
+      }
+      await prisma.$executeRawUnsafe('ALTER TABLE `manpowerreport` ADD UNIQUE KEY `unique_report_date_department` (`report_date`, `department_id`);');
+      console.log('manpowerreport composite unique key created successfully.');
+    }
+  } catch (err) {
+    console.error('Error during manpower department scope migration check:', err);
+  }
+
+  // Self-healing table for members added to a manpower cell by hand (they filed no
+  // daily report but still count toward that cell's headcount).
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'manpowercellmember'`;
+    if (tables.length === 0) {
+      console.log('Creating manpowercellmember table...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`manpowercellmember\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`report_date\` VARCHAR(10) NOT NULL,
+          \`manpower_project_id\` VARCHAR(50) NOT NULL,
+          \`manpower_location_id\` VARCHAR(50) NOT NULL,
+          \`user_id\` VARCHAR(36) NOT NULL,
+          \`added_by\` VARCHAR(36) DEFAULT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE KEY \`unique_manpower_cell_member\` (\`report_date\`, \`manpower_project_id\`, \`manpower_location_id\`, \`user_id\`),
+          KEY \`idx_manpowercellmember_date\` (\`report_date\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('manpowercellmember table created successfully.');
+    }
+  } catch (err) {
+    console.error('Error during manpowercellmember migration check:', err);
+  }
+
+  // Manpower projects now belong to a Team, never to an individual Part. Any project
+  // still pinned to a Part is lifted to that Part's owning Team so nothing disappears
+  // from the board. Idempotent: a project already on a Team is left alone.
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'manpowerproject'`;
+    if (tables.length > 0) {
+      const departments = await prisma.department.findMany({
+        select: { department_id: true, parent_id: true }
+      });
+      const byId = new Map(departments.map(d => [d.department_id, d]));
+      // Depth 0 = root (BOD), depth 1 = Team, depth 2+ = Part.
+      const owningTeamOf = (departmentId) => {
+        const chain = [];
+        let current = byId.get(departmentId);
+        const seen = new Set();
+        while (current && !seen.has(current.department_id)) {
+          seen.add(current.department_id);
+          chain.unshift(current.department_id);
+          current = current.parent_id ? byId.get(current.parent_id) : null;
+        }
+        return chain.length >= 2 ? chain[1] : null;
+      };
+
+      const projects = await prisma.manpowerproject.findMany({
+        select: { id: true, department_id: true }
+      });
+      let moved = 0;
+      for (const project of projects) {
+        if (!project.department_id) continue; // legacy unscoped rows stay as they are
+        const team = owningTeamOf(project.department_id);
+        if (team && team !== project.department_id) {
+          await prisma.manpowerproject.update({
+            where: { id: project.id },
+            data: { department_id: team }
+          });
+          moved += 1;
+        }
+      }
+      if (moved > 0) {
+        console.log(`Moved ${moved} manpower project(s) from a Part up to their Team.`);
+      }
+    }
+  } catch (err) {
+    console.error('Error during manpower project Team-scope migration:', err);
+  }
+
   // Self-healing column addition for a user's personal phone number
   try {
     const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`user\` LIKE 'phone'`;
