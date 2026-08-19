@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { db } from '@/utils/db';
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
@@ -102,86 +103,6 @@ const getWeekDays = (referenceDate) => {
   return week;
 };
 
-// Default initial demo bookings matching the user's wireframe
-const INITIAL_BOOKINGS = [
-  // Large Room Monday
-  {
-    id: 'b-1',
-    location: 'HN',
-    roomId: 'room-large',
-    date: '2026-08-10', // Monday
-    startTime: '09:00',
-    endTime: '11:00',
-    team: 'Team R&D',
-    bookerName: 'Lê Nhân Viên',
-    purpose: 'Họp quy hoạch hệ thống mới'
-  },
-  {
-    id: 'b-2',
-    location: 'HN',
-    roomId: 'room-large',
-    date: '2026-08-10',
-    startTime: '11:00',
-    endTime: '12:00',
-    team: 'Team Sales',
-    bookerName: 'Vũ Kinh Doanh',
-    purpose: 'Họp với đối tác khách hàng'
-  },
-  {
-    id: 'b-3',
-    location: 'HN',
-    roomId: 'room-large',
-    date: '2026-08-10',
-    startTime: '14:00',
-    endTime: '16:00',
-    team: 'Team HR',
-    bookerName: 'Phạm Trưởng Nhóm',
-    purpose: 'Phỏng vấn nhân sự quý III'
-  },
-  // Large Room Tuesday
-  {
-    id: 'b-4',
-    location: 'HN',
-    roomId: 'room-large',
-    date: '2026-08-11', // Tuesday
-    startTime: '09:00',
-    endTime: '11:00',
-    team: 'Team PC',
-    bookerName: 'PC Team Leader',
-    purpose: 'Họp giao ban tuần'
-  },
-  {
-    id: 'b-5',
-    location: 'HN',
-    roomId: 'room-large',
-    date: '2026-08-11',
-    startTime: '11:00',
-    endTime: '12:00',
-    team: 'Team R&D',
-    bookerName: 'Hoàng Phát Triển',
-    purpose: 'Review tính năng mới'
-  },
-  {
-    id: 'b-6',
-    location: 'HN',
-    roomId: 'room-large',
-    date: '2026-08-11',
-    startTime: '14:00',
-    endTime: '16:00',
-    team: 'Team BOD',
-    bookerName: 'Nguyễn Admin',
-    purpose: 'Họp chiến lược ban điều hành'
-  },
-  // Small Room Wednesday
-  {
-    id: 'b-7',
-    location: 'HN',
-    team: 'Team R&D',
-    bookerName: 'Ngo Lập Trình',
-    purpose: 'Code review nội bộ'
-  }
-];
-
 export default function RoomBookingPage() {
   const { currentUser } = useApp();
   const { t } = useLanguage();
@@ -189,6 +110,8 @@ export default function RoomBookingPage() {
   const [selectedLocation, setSelectedLocation] = useState('HN');
   const [currentDate, setCurrentDate] = useState(getToday);
   const [bookings, setBookings] = useState([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -208,20 +131,25 @@ export default function RoomBookingPage() {
   // common case (an internal team meeting), never lock a slot nobody agreed to lock.
   const [modalImportance, setModalImportance] = useState('LOW');
 
-  // Load stored bookings or initialize
-  useEffect(() => {
+  // Bookings come from the server: a meeting room is shared, so everyone must see the same
+  // schedule. They used to be kept in localStorage, which is per-browser - that is why a
+  // booking was invisible to every other member, including Admin.
+  const loadBookings = useCallback(async () => {
+    setIsLoadingBookings(true);
     try {
-      const stored = localStorage.getItem('ems_room_bookings');
-      if (stored) {
-        setBookings(JSON.parse(stored));
-      } else {
-        setBookings(INITIAL_BOOKINGS);
-        localStorage.setItem('ems_room_bookings', JSON.stringify(INITIAL_BOOKINGS));
-      }
-    } catch (e) {
-      setBookings(INITIAL_BOOKINGS);
+      const list = await db.getRoomBookings({});
+      setBookings(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error('Failed to load room bookings', err);
+      setBookings([]);
+      setLoadError(err.message || 'error');
+    } finally {
+      setIsLoadingBookings(false);
     }
   }, []);
+
+  useEffect(() => { loadBookings(); }, [loadBookings]);
+
 
   // Update booker name when currentUser is loaded
   useEffect(() => {
@@ -233,15 +161,6 @@ export default function RoomBookingPage() {
     }
   }, [currentUser]);
 
-  // Save bookings to localStorage
-  const saveBookingsState = (newBookings) => {
-    setBookings(newBookings);
-    try {
-      localStorage.setItem('ems_room_bookings', JSON.stringify(newBookings));
-    } catch (e) {
-      console.error("Failed to save room bookings to localStorage", e);
-    }
-  };
 
   // Week navigation
   const weekDays = getWeekDays(currentDate);
@@ -315,16 +234,14 @@ export default function RoomBookingPage() {
       return;
     }
 
-    // Check overlap for the same location, room, and date
-    const isOverlap = bookings.some(b => 
+    // A local overlap check catches the common case instantly, but it can only see the
+    // schedule this browser has already loaded. The server repeats the check and is the
+    // authority: two people booking the same slot at the same moment both pass here.
+    const isOverlap = bookings.some(b =>
       b.location === modalLocation &&
       b.roomId === modalRoomId &&
       b.date === modalDate &&
-      (
-        (modalStartTime >= b.startTime && modalStartTime < b.endTime) ||
-        (modalEndTime > b.startTime && modalEndTime <= b.endTime) ||
-        (modalStartTime <= b.startTime && modalEndTime >= b.endTime)
-      )
+      modalStartTime < b.endTime && modalEndTime > b.startTime
     );
 
     if (isOverlap) {
@@ -338,32 +255,42 @@ export default function RoomBookingPage() {
       return;
     }
 
-    const newBooking = {
-      id: `booking-${Date.now()}`,
-      location: modalLocation,
-      roomId: modalRoomId,
-      date: modalDate,
-      startTime: modalStartTime,
-      endTime: modalEndTime,
-      team: modalTeam.trim(),
-      bookerName: modalBookerName.trim(),
-      purpose: modalPurpose.trim() || t('roomBooking.defaultPurpose', 'Họp nhóm'),
-      importance: modalImportance
-    };
-
-    const updated = [...bookings, newBooking];
-    saveBookingsState(updated);
-    setIsModalOpen(false);
-    setIsSavingBooking(false);
-
-    Swal.fire({
-      icon: 'success',
-      title: t('common.success', 'Thành công'),
-      text: t('roomBooking.bookSuccess', 'Đặt phòng họp thành công!'),
-      confirmButtonColor: 'var(--primary-color)',
-      timer: 1800,
-      showConfirmButton: false
-    });
+    try {
+      await db.createRoomBooking({
+        location: modalLocation,
+        roomId: modalRoomId,
+        date: modalDate,
+        startTime: modalStartTime,
+        endTime: modalEndTime,
+        team: modalTeam.trim(),
+        bookerName: modalBookerName.trim(),
+        bookerId: currentUser?.id || null,
+        purpose: modalPurpose.trim() || t('roomBooking.defaultPurpose', 'Họp nhóm'),
+        importance: modalImportance
+      });
+      await loadBookings();
+      setIsModalOpen(false);
+      Swal.fire({
+        icon: 'success',
+        title: t('common.success', 'Thành công'),
+        text: t('roomBooking.bookSuccess', 'Đặt phòng họp thành công!'),
+        confirmButtonColor: 'var(--primary-color)',
+        timer: 1800,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      // A 409 means somebody else took the slot between this page loading and now, so
+      // refresh the schedule to show what actually happened.
+      await loadBookings();
+      Swal.fire({
+        icon: 'error',
+        title: t('common.error', 'Lỗi'),
+        text: err.message || t('roomBooking.slotTaken', 'Khung giờ này đã có nhóm khác đặt phòng. Vui lòng chọn khung giờ khác!'),
+        confirmButtonColor: 'var(--primary-color)'
+      });
+    } finally {
+      setIsSavingBooking(false);
+    }
   };
 
   // Delete booking
@@ -381,9 +308,10 @@ export default function RoomBookingPage() {
       cancelButtonColor: '#64748b'
     });
 
-    if (result.isConfirmed) {
-      const updated = bookings.filter(b => b.id !== bookingId);
-      saveBookingsState(updated);
+    if (!result.isConfirmed) return;
+    try {
+      await db.deleteRoomBooking(bookingId, currentUser?.id);
+      await loadBookings();
       setDetailBooking(null);
       Swal.fire({
         icon: 'success',
@@ -392,6 +320,9 @@ export default function RoomBookingPage() {
         timer: 1500,
         showConfirmButton: false
       });
+    } catch (err) {
+      await loadBookings();
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
     }
   };
 
@@ -628,7 +559,15 @@ export default function RoomBookingPage() {
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                        {dayBookings.length === 0 ? (
+                        {isLoadingBookings ? (
+                          <div style={{ textAlign: 'center', padding: '24px 4px', color: 'var(--neutral-muted)', fontSize: '12px', fontStyle: 'italic' }}>
+                            <i className="fa-solid fa-spinner fa-spin"></i> {t('common.loading', 'Đang tải...')}
+                          </div>
+                        ) : loadError ? (
+                          <div style={{ textAlign: 'center', padding: '24px 4px', color: '#f59e0b', fontSize: '12px' }}>
+                            <i className="fa-solid fa-triangle-exclamation"></i> {t('roomBooking.loadFailed', 'Không tải được lịch đặt phòng.')}
+                          </div>
+                        ) : dayBookings.length === 0 ? (
                           <div style={{ textAlign: 'center', padding: '24px 4px', color: 'var(--neutral-muted)', fontSize: '12px', fontStyle: 'italic' }}>
                             {t('roomBooking.emptyDay', 'Trống')}
                           </div>

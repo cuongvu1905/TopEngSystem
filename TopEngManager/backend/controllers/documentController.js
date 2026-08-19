@@ -114,21 +114,19 @@ exports.createDocumentFolder = async (req, res, next) => {
   }
 };
 
-// Called once from project creation (not exposed as its own route) to clone the
-// admin-designed default folder tree (see getFolderTemplates/etc. below, edited via
-// the "Thiết kế cây thư mục" admin modal) into real folders/slots for a brand new
-// project. A completely empty template (admin deleted everything) is a safe no-op.
-exports.createDefaultProjectFolderTree = async (projectId, createdBy) => {
-  const templateFolders = await prisma.foldertemplate.findMany();
-  if (templateFolders.length === 0) return;
-  const templateSlots = await prisma.foldertemplateslot.findMany();
+// Clones template nodes (and everything below them, including the required-file-prefix
+// rows of a file_slot_table folder) into real folders under parentRealFolderId.
+// Shared by project creation and by the "+" buttons in the Documents tree, so a tree
+// built by hand is identical to the one a new project is given.
+async function cloneTemplateNodes(nodes, parentRealFolderId, { projectId, createdBy, templateFolders, templateSlots }) {
+  let created = 0;
 
-  const cloneNode = async (templateNode, parentRealFolderId) => {
+  const cloneNode = async (templateNode, parentId) => {
     const realFolder = await prisma.documentfolder.create({
       data: {
         folder_id: 'fold-' + crypto.randomUUID(),
         name: templateNode.name,
-        parent_folder_id: parentRealFolderId,
+        parent_folder_id: parentId,
         project_id: projectId,
         created_by: createdBy || null,
         folder_type: templateNode.folder_type,
@@ -136,6 +134,7 @@ exports.createDefaultProjectFolderTree = async (projectId, createdBy) => {
         allowed_extensions: templateNode.allowed_extensions
       }
     });
+    created += 1;
 
     if (templateNode.folder_type === 'file_slot_table') {
       const slots = templateSlots
@@ -160,9 +159,71 @@ exports.createDefaultProjectFolderTree = async (projectId, createdBy) => {
     }
   };
 
+  for (const node of nodes) {
+    await cloneNode(node, parentRealFolderId);
+  }
+  return created;
+}
+
+async function loadTemplate() {
+  const templateFolders = await prisma.foldertemplate.findMany();
+  const templateSlots = templateFolders.length > 0
+    ? await prisma.foldertemplateslot.findMany()
+    : [];
+  return { templateFolders, templateSlots };
+}
+
+// Called once from project creation (not exposed as its own route) to clone the
+// admin-designed default folder tree (see getFolderTemplates/etc. below, edited via
+// the "Thiết kế cây thư mục" admin modal) into real folders/slots for a brand new
+// project. A completely empty template (admin deleted everything) is a safe no-op.
+exports.createDefaultProjectFolderTree = async (projectId, createdBy) => {
+  const { templateFolders, templateSlots } = await loadTemplate();
+  if (templateFolders.length === 0) return;
   const roots = templateFolders.filter(f => !f.parent_template_folder_id);
-  for (const root of roots) {
-    await cloneNode(root, null);
+  await cloneTemplateNodes(roots, null, { projectId, createdBy, templateFolders, templateSlots });
+};
+
+// The "+" buttons in the Documents tree. templateLevel 0 clones the template's own roots
+// (the whole designed tree); level 1 clones the children of those roots - which is what
+// "add another machine under this workshop" means. Deeper "+" buttons never come here:
+// they create a single empty folder as before.
+exports.createFolderTreeFromTemplate = async (req, res, next) => {
+  try {
+    const { projectId, parentFolderId, templateLevel, createdBy } = req.body || {};
+    const level = Number(templateLevel);
+    if (level !== 0 && level !== 1) {
+      return res.status(400).json({ error: 'templateLevel không hợp lệ (chỉ nhận 0 hoặc 1).' });
+    }
+
+    if (parentFolderId) {
+      const parent = await prisma.documentfolder.findUnique({ where: { folder_id: parentFolderId } });
+      if (!parent) {
+        return res.status(404).json({ error: 'Không tìm thấy thư mục cha.' });
+      }
+    }
+
+    const { templateFolders, templateSlots } = await loadTemplate();
+    const roots = templateFolders.filter(f => !f.parent_template_folder_id);
+    const nodes = level === 0
+      ? roots
+      : templateFolders.filter(f => roots.some(r => r.template_folder_id === f.parent_template_folder_id));
+
+    if (nodes.length === 0) {
+      // Nothing designed at this level; the caller falls back to creating a plain folder.
+      return res.json({ created: 0, names: [], empty: true });
+    }
+
+    const created = await cloneTemplateNodes(nodes, parentFolderId || null, {
+      projectId: projectId || null,
+      createdBy: createdBy || null,
+      templateFolders,
+      templateSlots
+    });
+
+    res.json({ created, names: nodes.map(n => n.name), empty: false });
+  } catch (err) {
+    next(err);
   }
 };
 

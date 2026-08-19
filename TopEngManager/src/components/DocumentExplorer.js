@@ -144,11 +144,100 @@ export default function DocumentExplorer({ projectId = null }) {
 
   const rootLabel = projectId ? t('documents.projectRoot', 'Tài liệu dự án') : t('documents.companyRoot', 'Tất cả tài liệu');
 
-  const handleCreateFolder = async (parentFolderId) => {
+  // Indented preview of what a template clone will produce, so the confirm dialog shows
+  // the actual tree instead of just a count.
+  const buildTemplatePreview = (templates, nodes, depth = 0, lines = []) => {
+    for (const node of nodes) {
+      lines.push('\u00a0'.repeat(depth * 4) + node.name);
+      const children = templates.filter(c => c.parent_template_folder_id === node.template_folder_id);
+      buildTemplatePreview(templates, children, depth + 1, lines);
+    }
+    return lines;
+  };
+
+  // Creates the Admin-designed tree instead of a single empty folder.
+  // templateLevel 0 = the whole designed tree (the "THƯ MỤC" header button);
+  // templateLevel 1 = the children of the template root, i.e. another <Tên_Máy> subtree
+  // with its subfolders and required-file-prefix rules (the button on a root folder).
+  // Returns false when the template has nothing at that level, so the caller can fall
+  // back to the normal "type a folder name" flow rather than the button doing nothing.
+  const createFromTemplate = async (parentFolderId, templateLevel) => {
+    let templates;
+    try {
+      templates = await db.getFolderTemplates();
+    } catch (err) {
+      return false;   // template unreadable: behave like before rather than blocking
+    }
+    if (!Array.isArray(templates) || templates.length === 0) return false;
+
+    const roots = templates.filter(f => !f.parent_template_folder_id);
+    const nodes = templateLevel === 0
+      ? roots
+      : templates.filter(f => roots.some(r => r.template_folder_id === f.parent_template_folder_id));
+    if (nodes.length === 0) return false;
+
+    const Swal = await getSwal();
+    const escapeHtml = (s) => String(s).replace(/[&<>"']/g, ch => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+    ));
+    const preview = buildTemplatePreview(templates, nodes)
+      .map(line => escapeHtml(line))
+      .join('<br/>');
+
+    const result = await Swal.fire({
+      title: t('documents.templateTreeTitle', 'Tạo thư mục theo mẫu'),
+      html: `<div style="text-align:left;font-size:13px;line-height:1.7">
+        <div style="margin-bottom:8px">${escapeHtml(t('documents.templateTreeConfirm', 'Sẽ tạo cây thư mục sau theo thiết kế của Admin:'))}</div>
+        <div style="font-family:monospace">${preview}</div>
+      </div>`,
+      showCancelButton: true,
+      confirmButtonText: t('common.create', 'Tạo mới'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--primary-color)'
+    });
+    if (!result.isConfirmed) return true;   // handled: the user chose not to
+
+    try {
+      const res = await db.createFolderTreeFromTemplate({
+        projectId, parentFolderId, templateLevel, createdBy: currentUser.id
+      });
+      await loadFolders();
+      const parentPath = parentFolderId ? getFolderPath(parentFolderId) : rootLabel;
+      await db.logActivity(
+        currentUser.id, 'CREATE_FOLDER', 'Document', parentFolderId || projectId || '',
+        `đã tạo ${res?.created || 0} thư mục theo mẫu trong '${parentPath}'`,
+        { project_id: projectId }
+      );
+      Swal.fire({
+        icon: 'success',
+        title: t('common.success', 'Thành công'),
+        text: t('documents.templateTreeCreated', 'Đã tạo {count} thư mục theo mẫu.')
+          .replace('{count}', String(res?.created || 0)),
+        timer: 1800,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+    return true;
+  };
+
+  const handleCreateFolder = async (parentFolderId, parentFolder) => {
     // SweetAlert2 restores focus to the triggering button on close, which in
     // some browsers re-fires a phantom keyboard "click" on it — blur it
     // first so that phantom click has no target and can't re-open the dialog.
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+
+    // Only the top two levels follow the Admin template: the tree header creates the whole
+    // designed tree, a root folder gets another <Tên_Máy> subtree. Anything deeper, and the
+    // company-wide Documents view (which has no project template), creates one plain folder.
+    if (projectId) {
+      const templateLevel = parentFolderId === null
+        ? 0
+        : (parentFolder && !parentFolder.parent_folder_id ? 1 : null);
+      if (templateLevel !== null && await createFromTemplate(parentFolderId, templateLevel)) return;
+    }
+
     const Swal = await getSwal();
     const { value: name } = await Swal.fire({
       title: t('documents.newFolderTitle', 'Thư mục mới'),
@@ -413,7 +502,7 @@ export default function DocumentExplorer({ projectId = null }) {
             <button
               type="button"
               title={t('documents.newSubfolder', 'Thư mục con mới')}
-              onClick={(e) => { e.stopPropagation(); handleCreateFolder(folder.folder_id); }}
+              onClick={(e) => { e.stopPropagation(); handleCreateFolder(folder.folder_id, folder); }}
             >
               <i className="fa-solid fa-plus"></i>
             </button>

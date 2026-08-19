@@ -51,6 +51,7 @@ router.post('/uploadDocumentFileSlot', (req, res, next) => {
     next();
   });
 }, documentController.uploadDocumentFileSlot);
+router.post('/createFolderTreeFromTemplate', documentController.createFolderTreeFromTemplate);
 router.post('/getFolderTemplates', documentController.getFolderTemplates);
 router.post('/createFolderTemplateFolder', documentController.createFolderTemplateFolder);
 router.post('/renameFolderTemplateFolder', documentController.renameFolderTemplateFolder);

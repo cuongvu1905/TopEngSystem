@@ -1006,7 +1006,11 @@ export const translations = {
     "roomBooking.teamPlaceholder": "VD: Team R&D",
     "roomBooking.nextWeek": "Tuần sau",
     "roomBooking.prevWeek": "Tuần trước",
-    "roomBooking.thisWeek": "Tuần này"
+    "roomBooking.thisWeek": "Tuần này",
+    "documents.templateTreeConfirm": "Sẽ tạo cây thư mục sau theo thiết kế của Admin:",
+    "documents.templateTreeCreated": "Đã tạo {count} thư mục theo mẫu.",
+    "documents.templateTreeTitle": "Tạo thư mục theo mẫu",
+    "roomBooking.loadFailed": "Không tải được lịch đặt phòng."
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2007,7 +2011,11 @@ export const translations = {
     "roomBooking.teamPlaceholder": "e.g. R&D Team",
     "roomBooking.nextWeek": "Next week",
     "roomBooking.prevWeek": "Previous week",
-    "roomBooking.thisWeek": "This week"
+    "roomBooking.thisWeek": "This week",
+    "documents.templateTreeConfirm": "The following folder tree will be created from the Admin design:",
+    "documents.templateTreeCreated": "Created {count} folders from the template.",
+    "documents.templateTreeTitle": "Create folders from the template",
+    "roomBooking.loadFailed": "Could not load the room schedule."
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -3008,7 +3016,11 @@ export const translations = {
     "roomBooking.teamPlaceholder": "예: R&D 팀",
     "roomBooking.nextWeek": "다음 주",
     "roomBooking.prevWeek": "지난주",
-    "roomBooking.thisWeek": "이번 주"
+    "roomBooking.thisWeek": "이번 주",
+    "documents.templateTreeConfirm": "관리자가 설계한 다음 폴더 구조가 생성됩니다:",
+    "documents.templateTreeCreated": "템플릿으로 {count}개의 폴더를 생성했습니다.",
+    "documents.templateTreeTitle": "템플릿으로 폴더 만들기",
+    "roomBooking.loadFailed": "회의실 일정을 불러올 수 없습니다."
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4009,7 +4021,11 @@ export const translations = {
     "roomBooking.teamPlaceholder": "例如：R&D 团队",
     "roomBooking.nextWeek": "下一周",
     "roomBooking.prevWeek": "上一周",
-    "roomBooking.thisWeek": "本周"
+    "roomBooking.thisWeek": "本周",
+    "documents.templateTreeConfirm": "将按管理员设计创建以下文件夹结构：",
+    "documents.templateTreeCreated": "已按模板创建 {count} 个文件夹。",
+    "documents.templateTreeTitle": "按模板创建文件夹",
+    "roomBooking.loadFailed": "无法加载会议室日程。"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5010,6 +5026,10 @@ export const translations = {
     "roomBooking.teamPlaceholder": "例: R&D チーム",
     "roomBooking.nextWeek": "次の週",
     "roomBooking.prevWeek": "前の週",
-    "roomBooking.thisWeek": "今週"
+    "roomBooking.thisWeek": "今週",
+    "documents.templateTreeConfirm": "管理者が設計した次のフォルダ構成を作成します:",
+    "documents.templateTreeCreated": "テンプレートから {count} 個のフォルダを作成しました。",
+    "documents.templateTreeTitle": "テンプレートからフォルダを作成",
+    "roomBooking.loadFailed": "会議室のスケジュールを読み込めませんでした。"
   }
 };

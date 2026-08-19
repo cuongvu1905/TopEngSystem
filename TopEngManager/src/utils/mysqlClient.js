@@ -180,6 +180,10 @@ export const MySQLAdapter = {
     return data;
   },
 
+  createFolderTreeFromTemplate: async function({ projectId, parentFolderId, templateLevel, createdBy }) {
+    return await callApi('createFolderTreeFromTemplate', { projectId, parentFolderId, templateLevel, createdBy });
+  },
+
   getFolderTemplates: async function() {
     return await callApi('getFolderTemplates', {});
   },
@@ -274,6 +278,18 @@ export const MySQLAdapter = {
   },
 
   // --- Project Manpower board (HR → "Nhân lực dự án" tab) ---
+  getRoomBookings: async function({ location, fromDate, toDate } = {}) {
+    return await callApi('getRoomBookings', { location, fromDate, toDate });
+  },
+
+  createRoomBooking: async function(booking) {
+    return await callApi('createRoomBooking', booking);
+  },
+
+  deleteRoomBooking: async function(bookingId, requesterId) {
+    return await callApi('deleteRoomBooking', { bookingId, requesterId });
+  },
+
   getManpowerProjects: async function(departmentIds) {
     return await callApi('getManpowerProjects', { departmentIds });
   },

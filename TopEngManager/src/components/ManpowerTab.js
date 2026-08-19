@@ -1445,10 +1445,9 @@ export default function ManpowerTab({ currentUser }) {
       lastSavedSignatureRef.current = signature;
       setSavedAt(new Date());
 
-      await db.logActivity(
-        currentUser.id, 'UPDATE', 'Manpower', selectedDate,
-        `đã cập nhật bảng nhân lực ngày ${formatDisplayDate(selectedDate)} của '${selectedScopeName}'`
-      ).catch(() => {});
+      // Deliberately not written to the activity log. The board auto-saves, so a save is
+      // not a deliberate user action: merely opening and closing a cell popup reloads the
+      // board and triggers one, which filled the log with UPDATE entries nobody performed.
 
       // A brand new day has to appear in the file combobox straight away.
       if (!savedFileName) await loadConfig();

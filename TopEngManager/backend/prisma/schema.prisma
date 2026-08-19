@@ -452,3 +452,24 @@ model manpowercellmember {
   @@unique([report_date, manpower_project_id, manpower_location_id, user_id], map: "unique_manpower_cell_member")
   @@index([report_date], map: "idx_manpowercellmember_date")
 }
+
+// Meeting-room bookings. Previously these lived only in each browser's localStorage, so a
+// booking was invisible to everybody except the person who made it.
+model roombooking {
+  id           Int      @id @default(autoincrement())
+  booking_id   String   @unique(map: "booking_id") @db.VarChar(50)
+  location     String   @db.VarChar(20)
+  room_id      String   @db.VarChar(30)
+  booking_date String   @db.VarChar(10)
+  start_time   String   @db.VarChar(5)
+  end_time     String   @db.VarChar(5)
+  team         String   @db.VarChar(150)
+  booker_name  String   @db.VarChar(150)
+  booker_id    String?  @db.VarChar(36)
+  purpose      String?  @db.Text
+  importance   String?  @db.VarChar(10)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([location, room_id, booking_date], map: "idx_roombooking_slot")
+  @@index([booking_date], map: "idx_roombooking_date")
+}

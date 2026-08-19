@@ -503,6 +503,38 @@ async function runMigrations() {
   } catch (err) {
     console.error('Error during user phone migration check:', err);
   }
+
+  // Meeting-room bookings used to be kept in each browser's localStorage, which meant a
+  // booking was only ever visible to the person who created it. They are a shared resource,
+  // so they belong in the database.
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'roombooking'`;
+    if (tables.length === 0) {
+      console.log('Creating roombooking table...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`roombooking\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`booking_id\` VARCHAR(50) NOT NULL UNIQUE,
+          \`location\` VARCHAR(20) NOT NULL,
+          \`room_id\` VARCHAR(30) NOT NULL,
+          \`booking_date\` VARCHAR(10) NOT NULL,
+          \`start_time\` VARCHAR(5) NOT NULL,
+          \`end_time\` VARCHAR(5) NOT NULL,
+          \`team\` VARCHAR(150) NOT NULL,
+          \`booker_name\` VARCHAR(150) NOT NULL,
+          \`booker_id\` VARCHAR(36) NULL,
+          \`purpose\` TEXT NULL,
+          \`importance\` VARCHAR(10) NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`idx_roombooking_slot\` (\`location\`, \`room_id\`, \`booking_date\`),
+          INDEX \`idx_roombooking_date\` (\`booking_date\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('roombooking table created.');
+    }
+  } catch (err) {
+    console.error('roombooking migration failed:', err.message);
+  }
 }
 
 runMigrations();
