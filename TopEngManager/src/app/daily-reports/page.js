@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { getSwal } from '@/utils/swal';
-import { getDepartmentDepth, getScopeDepartmentIds } from '@/utils/orgScope';
+import { getDepartmentDepth, getScopeDepartmentIds, getOwningTeamId } from '@/utils/orgScope';
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
 
@@ -146,13 +146,19 @@ export default function DailyReportsPage() {
     return () => { cancelled = true; };
   }, [currentUser?.id]);
 
+  // Manpower projects belong to the Team, not to individual Parts, so everyone in a Team
+  // resolves to that Team's whole subtree - a Part member included. Scoping a Part member
+  // to their own Part instead left them with an empty project list, because no project is
+  // ever stored against a Part. The subtree (rather than just the Team id) also keeps any
+  // legacy project still pointing at a Part selectable.
   const myManpowerScopeIds = useMemo(() => {
     const deptId = currentUser?.department_id;
     if (!deptId || departments.length === 0) return null;
     const depth = getDepartmentDepth(departments, deptId);
-    if (depth >= 2) return [deptId];                                  // inside a Part
-    if (depth === 1) return getScopeDepartmentIds(departments, deptId); // on the Team itself
-    return null;                                                      // root/admin → unrestricted
+    if (depth < 1) return null;                                       // root/admin → unrestricted
+    const teamId = depth === 1 ? deptId : getOwningTeamId(departments, deptId);
+    if (!teamId) return [deptId];    // orphaned department: fall back to its own projects
+    return getScopeDepartmentIds(departments, teamId);
   }, [departments, currentUser?.department_id]);
 
   useEffect(() => {
@@ -1059,7 +1065,7 @@ export default function DailyReportsPage() {
                       {projectsLoaded && manpowerProjects.length === 0 && (
                         <div style={{ fontSize: '11.5px', color: 'var(--warning-color)', marginTop: '6px' }}>
                           <i className="fa-solid fa-circle-info"></i>{' '}
-                          {t('reports.noManpowerProjects', 'Part/Team của bạn chưa có dự án nào. Vui lòng liên hệ quản lý để thêm trong "Quản lý Team → Nhân lực dự án".')}
+                          {t('reports.noManpowerProjects', 'Team của bạn chưa có dự án nào. Vui lòng liên hệ quản lý để thêm trong "Quản lý Team → Nhân lực dự án".')}
                         </div>
                       )}
                     </div>
