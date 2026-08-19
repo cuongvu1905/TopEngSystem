@@ -7,6 +7,7 @@ router.post('/createManpowerProject', manpowerController.createManpowerProject);
 router.post('/renameManpowerProject', manpowerController.renameManpowerProject);
 
 router.post('/setManpowerProjectScope', manpowerController.setManpowerProjectScope);
+router.post('/reorderManpowerProjects', manpowerController.reorderManpowerProjects);
 router.post('/deleteManpowerProject', manpowerController.deleteManpowerProject);
 
 router.post('/getManpowerLocations', manpowerController.getManpowerLocations);

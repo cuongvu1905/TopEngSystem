@@ -984,7 +984,10 @@ export const translations = {
     "roomBooking.noImportance": "Lịch này được đặt trước khi có mục mức độ quan trọng.",
     "roomBooking.noPurpose": "(Không có nội dung)",
     "roomBooking.roomLabel": "Phòng họp",
-    "roomBooking.viewDetailHint": "Nhấp đúp để xem chi tiết cuộc họp"
+    "roomBooking.viewDetailHint": "Nhấp đúp để xem chi tiết cuộc họp",
+    "manpower.dragToReorder": "Kéo để đổi thứ tự",
+    "manpower.moveDown": "Xuống dưới",
+    "manpower.moveUp": "Lên trên"
   },
   "en": {
     // "sidebar.roomBooking": "Meeting Rooms",
@@ -1963,7 +1966,10 @@ export const translations = {
     "roomBooking.noImportance": "This booking was made before the importance field existed.",
     "roomBooking.noPurpose": "(No content)",
     "roomBooking.roomLabel": "Meeting room",
-    "roomBooking.viewDetailHint": "Double-click to see the meeting details"
+    "roomBooking.viewDetailHint": "Double-click to see the meeting details",
+    "manpower.dragToReorder": "Drag to reorder",
+    "manpower.moveDown": "Move down",
+    "manpower.moveUp": "Move up"
   },
   "ko": {
     // "sidebar.roomBooking": "회의실 예약",
@@ -2942,7 +2948,10 @@ export const translations = {
     "roomBooking.noImportance": "이 예약은 중요도 항목이 추가되기 전에 등록되었습니다.",
     "roomBooking.noPurpose": "(내용 없음)",
     "roomBooking.roomLabel": "회의실",
-    "roomBooking.viewDetailHint": "두 번 클릭하면 회의 상세 정보를 볼 수 있습니다"
+    "roomBooking.viewDetailHint": "두 번 클릭하면 회의 상세 정보를 볼 수 있습니다",
+    "manpower.dragToReorder": "끌어서 순서 변경",
+    "manpower.moveDown": "아래로 이동",
+    "manpower.moveUp": "위로 이동"
   },
   "zh": {
     // "sidebar.roomBooking": "会议室预订",
@@ -3921,7 +3930,10 @@ export const translations = {
     "roomBooking.noImportance": "此预订是在新增重要程度字段之前登记的。",
     "roomBooking.noPurpose": "（无内容）",
     "roomBooking.roomLabel": "会议室",
-    "roomBooking.viewDetailHint": "双击可查看会议详情"
+    "roomBooking.viewDetailHint": "双击可查看会议详情",
+    "manpower.dragToReorder": "拖动以调整顺序",
+    "manpower.moveDown": "下移",
+    "manpower.moveUp": "上移"
   },
   "ja": {
     // "sidebar.roomBooking": "会議室予約",
@@ -4900,6 +4912,9 @@ export const translations = {
     "roomBooking.noImportance": "この予約は重要度の項目が追加される前に登録されました。",
     "roomBooking.noPurpose": "（内容なし）",
     "roomBooking.roomLabel": "会議室",
-    "roomBooking.viewDetailHint": "ダブルクリックで会議の詳細を表示します"
+    "roomBooking.viewDetailHint": "ダブルクリックで会議の詳細を表示します",
+    "manpower.dragToReorder": "ドラッグして並び替え",
+    "manpower.moveDown": "下へ移動",
+    "manpower.moveUp": "上へ移動"
   }
 };

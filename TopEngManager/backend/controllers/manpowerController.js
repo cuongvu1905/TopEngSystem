@@ -220,6 +220,46 @@ exports.renameManpowerProject = async (req, res, next) => {
   }
 };
 
+// Persists a hand-picked order for the project rows. The client sends the ids of one
+// Team's list in their new order; row_order is rewritten to match that sequence.
+// Rewriting the whole list in one transaction (rather than swapping two rows) keeps the
+// stored order consistent even when the rows started out sharing a row_order value.
+exports.reorderManpowerProjects = async (req, res, next) => {
+  try {
+    const { orderedIds } = req.body || {};
+    if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+      return res.status(400).json({ error: 'Thiếu danh sách thứ tự dự án.' });
+    }
+    if (orderedIds.length > 500) {
+      return res.status(400).json({ error: 'Danh sách dự án quá dài.' });
+    }
+    const ids = orderedIds.filter(id => typeof id === 'string' && id.trim());
+    if (ids.length !== orderedIds.length || new Set(ids).size !== ids.length) {
+      return res.status(400).json({ error: 'Danh sách thứ tự dự án không hợp lệ.' });
+    }
+
+    // Every id must exist, so a stale client cannot half-apply an order.
+    const found = await prisma.manpowerproject.findMany({
+      where: { manpower_project_id: { in: ids } },
+      select: { manpower_project_id: true }
+    });
+    if (found.length !== ids.length) {
+      return res.status(400).json({ error: 'Có dự án không còn tồn tại. Vui lòng tải lại danh sách.' });
+    }
+
+    await prisma.$transaction(
+      ids.map((id, index) => prisma.manpowerproject.update({
+        where: { manpower_project_id: id },
+        data: { row_order: index + 1 }
+      }))
+    );
+
+    res.json({ success: true, count: ids.length });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.deleteManpowerProject = async (req, res, next) => {
   try {
     const { manpowerProjectId } = req.body;

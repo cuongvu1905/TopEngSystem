@@ -290,6 +290,10 @@ export const MySQLAdapter = {
     return await callApi('setManpowerProjectScope', { manpowerProjectId, departmentId });
   },
 
+  reorderManpowerProjects: async function(orderedIds) {
+    return await callApi('reorderManpowerProjects', { orderedIds });
+  },
+
   deleteManpowerProject: async function(manpowerProjectId) {
     return await callApi('deleteManpowerProject', { manpowerProjectId });
   },

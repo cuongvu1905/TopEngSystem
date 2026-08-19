@@ -591,6 +591,12 @@ function ManpowerInfoModal({ isOpen, onClose, locations, onChanged, departments,
   const [modalScope, setModalScope] = useState(initialScope || '');
   const [scopedProjects, setScopedProjects] = useState([]);
 
+  // Drag-and-drop reordering of the project rows. dragIndex is the row being carried,
+  // dropIndex the gap it would land in, kept separate so the row under the cursor can be
+  // highlighted without committing anything until the drop.
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dropIndex, setDropIndex] = useState(null);
+
   useEffect(() => {
     if (isOpen) setModalScope(initialScope || '');
   }, [isOpen, initialScope]);
@@ -661,6 +667,34 @@ function ManpowerInfoModal({ isOpen, onClose, locations, onChanged, departments,
     runAction(() => db.setManpowerProjectScope(project.manpower_project_id, target));
   };
 
+  // Applied optimistically so the row follows the cursor immediately, then persisted.
+  // On failure the previous order is restored rather than leaving the screen showing an
+  // order the database does not have.
+  const applyReorder = async (nextOrder) => {
+    if (isBusy) return;
+    const previous = scopedProjects;
+    setScopedProjects(nextOrder);
+    setIsBusy(true);
+    try {
+      await db.reorderManpowerProjects(nextOrder.map(p => p.manpower_project_id));
+      await onChanged();
+    } catch (err) {
+      setScopedProjects(previous);
+      const Swal = await getSwal();
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const reorderTo = (from, to) => {
+    if (from === to || from < 0 || to < 0 || from >= scopedProjects.length || to >= scopedProjects.length) return;
+    const next = [...scopedProjects];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    applyReorder(next);
+  };
+
   const handleAddLocation = () => {
     if (!newLocationName.trim()) return;
     runAction(async () => {
@@ -722,28 +756,90 @@ function ManpowerInfoModal({ isOpen, onClose, locations, onChanged, departments,
   };
   const dangerBtn = { ...smallBtn, border: '1px solid #fecaca', color: '#ef4444' };
 
-  const renderList = (items, idKey, emptyText, onRename, onDelete, onMove, renderBadge) => (
+  const iconBtn = { ...smallBtn, padding: '4px 7px' };
+
+  // onReorder makes the list drag-and-droppable and adds the up/down buttons. The buttons
+  // are not a fallback afterthought: dragging is awkward for a single-step nudge, and it
+  // is the only way to reorder from a keyboard.
+  const renderList = (items, idKey, emptyText, onRename, onDelete, onMove, renderBadge, onReorder) => (
     <div style={{ border: '1px solid var(--neutral-border)', borderRadius: '6px', overflow: 'hidden', marginBottom: '12px' }}>
       {items.length === 0 ? (
         <div style={{ padding: '14px', textAlign: 'center', fontSize: '12.5px', color: 'var(--neutral-muted)' }}>{emptyText}</div>
       ) : (
-        items.map(item => (
-          <div key={item[idKey]} style={rowStyle}>
-            <span style={{ flex: 1, minWidth: 0, fontSize: '13.5px', fontWeight: 500, color: 'var(--neutral-dark)' }}>{item.name}</span>
-            {renderBadge && renderBadge(item)}
-            {onMove && (
-              <button type="button" style={smallBtn} disabled={isBusy} onClick={() => onMove(item)}>
-                <i className="fa-solid fa-right-left"></i> {t('manpower.moveScopeBtn', 'Chuyển')}
+        items.map((item, index) => {
+          const isDragging = onReorder && dragIndex === index;
+          const isDropTarget = onReorder && dropIndex === index && dragIndex !== index;
+          return (
+            <div
+              key={item[idKey]}
+              draggable={!!onReorder && !isBusy}
+              onDragStart={onReorder ? (e) => {
+                setDragIndex(index);
+                // Firefox will not start a drag without some payload on the event.
+                e.dataTransfer.effectAllowed = 'move';
+                try { e.dataTransfer.setData('text/plain', String(index)); } catch (err) { /* older browsers */ }
+              } : undefined}
+              onDragOver={onReorder ? (e) => { e.preventDefault(); setDropIndex(index); } : undefined}
+              onDragLeave={onReorder ? () => setDropIndex(prev => (prev === index ? null : prev)) : undefined}
+              onDrop={onReorder ? (e) => {
+                e.preventDefault();
+                if (dragIndex !== null) onReorder(dragIndex, index);
+                setDragIndex(null);
+                setDropIndex(null);
+              } : undefined}
+              onDragEnd={onReorder ? () => { setDragIndex(null); setDropIndex(null); } : undefined}
+              style={{
+                ...rowStyle,
+                opacity: isDragging ? 0.45 : 1,
+                backgroundColor: isDropTarget ? 'rgba(59, 130, 246, 0.16)' : undefined,
+                // shows which side of the row the dragged item will land on
+                borderTop: isDropTarget && dragIndex > index ? '2px solid var(--primary-color)' : undefined,
+                borderBottom: isDropTarget && dragIndex < index
+                  ? '2px solid var(--primary-color)'
+                  : '1px solid var(--neutral-border)'
+              }}
+            >
+              {onReorder && (
+                <i
+                  className="fa-solid fa-grip-vertical"
+                  title={t('manpower.dragToReorder', 'Kéo để đổi thứ tự')}
+                  style={{ color: 'var(--neutral-muted)', cursor: isBusy ? 'default' : 'grab', flexShrink: 0 }}
+                ></i>
+              )}
+              <span style={{ flex: 1, minWidth: 0, fontSize: '13.5px', fontWeight: 500, color: 'var(--neutral-dark)' }}>{item.name}</span>
+              {renderBadge && renderBadge(item)}
+              {onReorder && (
+                <>
+                  <button
+                    type="button" style={iconBtn} disabled={isBusy || index === 0}
+                    title={t('manpower.moveUp', 'Lên trên')}
+                    onClick={() => onReorder(index, index - 1)}
+                  >
+                    <i className="fa-solid fa-arrow-up"></i>
+                  </button>
+                  <button
+                    type="button" style={iconBtn} disabled={isBusy || index === items.length - 1}
+                    title={t('manpower.moveDown', 'Xuống dưới')}
+                    onClick={() => onReorder(index, index + 1)}
+                  >
+                    <i className="fa-solid fa-arrow-down"></i>
+                  </button>
+                </>
+              )}
+              {onMove && (
+                <button type="button" style={smallBtn} disabled={isBusy} onClick={() => onMove(item)}>
+                  <i className="fa-solid fa-right-left"></i> {t('manpower.moveScopeBtn', 'Chuyển')}
+                </button>
+              )}
+              <button type="button" style={smallBtn} disabled={isBusy} onClick={() => promptRename(item.name, (name) => onRename(item[idKey], name))}>
+                <i className="fa-solid fa-pen"></i> {t('manpower.renameBtn', 'Sửa tên')}
               </button>
-            )}
-            <button type="button" style={smallBtn} disabled={isBusy} onClick={() => promptRename(item.name, (name) => onRename(item[idKey], name))}>
-              <i className="fa-solid fa-pen"></i> {t('manpower.renameBtn', 'Sửa tên')}
-            </button>
-            <button type="button" style={dangerBtn} disabled={isBusy} onClick={() => confirmDelete(item.name, () => onDelete(item[idKey]))}>
-              <i className="fa-solid fa-trash-can"></i> {t('common.delete', 'Xóa')}
-            </button>
-          </div>
-        ))
+              <button type="button" style={dangerBtn} disabled={isBusy} onClick={() => confirmDelete(item.name, () => onDelete(item[idKey]))}>
+                <i className="fa-solid fa-trash-can"></i> {t('common.delete', 'Xóa')}
+              </button>
+            </div>
+          );
+        })
       )}
     </div>
   );
@@ -843,8 +939,12 @@ function ManpowerInfoModal({ isOpen, onClose, locations, onChanged, departments,
                 t('manpower.noProjectsYet', 'Chưa có dự án nào'),
                 (id, name) => db.renameManpowerProject(id, name),
                 (id) => db.deleteManpowerProject(id),
-                promptMoveScope,
-                null
+                // No "Chuyển" for a real Team: a project stays where it was created.
+                // The legacy bucket keeps it, because reassigning is the only way to rescue
+                // a project that predates scoping - without it those rows are unreachable.
+                modalScope === UNSCOPED_SCOPE_ID ? promptMoveScope : null,
+                null,
+                reorderTo
               )}
               {/* The legacy bucket is read-only: a new project must belong to a Team/Part */}
               {modalScope !== UNSCOPED_SCOPE_ID && addRow(
