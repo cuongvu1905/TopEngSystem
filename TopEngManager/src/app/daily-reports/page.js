@@ -6,8 +6,8 @@ import { useLanguage } from '@/context/LanguageContext';
 import { db } from '@/utils/db';
 import { getSwal } from '@/utils/swal';
 import { getDepartmentDepth, getScopeDepartmentIds, getOwningTeamId } from '@/utils/orgScope';
+import TimeField from '@/components/TimeField';
 
-const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
 
 // Default Timeframe per card position: card 1 = morning, card 2 = afternoon,
 // card 3 = late afternoon, card 4 = evening. Cards beyond this fall back to
@@ -210,135 +210,6 @@ export default function DailyReportsPage() {
     setReportCards(prev => prev.map(c => (
       c.id === cardId ? { ...c, locationId, locationName: picked?.name || '' } : c
     )));
-  };
-
-  // Which single time-dropdown (if any) is open, keyed as "<cardId>-startTime"/"<cardId>-endTime".
-  const [openTimeDropdown, setOpenTimeDropdown] = useState(null);
-  // In-progress manual hour/minute typed for the currently open time-dropdown, keyed the same way.
-  const [manualTimeDraft, setManualTimeDraft] = useState({});
-
-  useEffect(() => {
-    const handleDocClick = (e) => {
-      if (!e.target.closest('.time-dropdown-wrapper')) {
-        setOpenTimeDropdown(null);
-      }
-    };
-    document.addEventListener('click', handleDocClick);
-    return () => document.removeEventListener('click', handleDocClick);
-  }, []);
-
-  const renderTimeDropdown = (card, field) => {
-    const key = `${card.id}-${field}`;
-    const isOpen = openTimeDropdown === key;
-    const [currentHour, currentMinute] = card[field].split(':');
-    const draft = manualTimeDraft[key] || { hour: currentHour, minute: currentMinute };
-
-    const applyManualTime = () => {
-      const h = String(Math.min(23, Math.max(0, parseInt(draft.hour, 10) || 0))).padStart(2, '0');
-      const m = String(Math.min(59, Math.max(0, parseInt(draft.minute, 10) || 0))).padStart(2, '0');
-      updateCardField(card.id, field, `${h}:${m}`);
-      setOpenTimeDropdown(null);
-    };
-
-    return (
-      <div className="time-dropdown-wrapper" style={{ position: 'relative', flex: 1 }}>
-        <button
-          type="button"
-          onClick={() => {
-            if (!isOpen) {
-              setManualTimeDraft(prev => ({ ...prev, [key]: { hour: currentHour, minute: currentMinute } }));
-            }
-            setOpenTimeDropdown(isOpen ? null : key);
-          }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            width: '100%',
-            border: '1px solid var(--neutral-border)',
-            borderRadius: '4px',
-            padding: '8px',
-            backgroundColor: 'var(--neutral-bg-card)',
-            color: 'var(--neutral-dark)',
-            fontSize: '13.5px',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}
-        >
-          <i className="fa-regular fa-clock" style={{ color: 'var(--primary-color)', fontSize: '18px' }}></i>
-          {card[field]}
-        </button>
-        {isOpen && (
-          <div style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            ...(field === 'endTime' ? { right: 0 } : { left: 0 }),
-            minWidth: '220px',
-            maxHeight: '280px',
-            overflowY: 'auto',
-            backgroundColor: 'var(--neutral-bg-card)',
-            border: '1px solid var(--neutral-border)',
-            borderRadius: '6px',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)',
-            zIndex: 20
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', borderBottom: '1px solid var(--neutral-border)' }}>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={2}
-                value={draft.hour}
-                onChange={(e) => setManualTimeDraft(prev => ({ ...prev, [key]: { ...draft, hour: e.target.value.replace(/\D/g, '') } }))}
-                onKeyDown={(e) => { if (e.key === 'Enter') applyManualTime(); }}
-                style={{ width: '48px', textAlign: 'center', border: '1px solid var(--neutral-border)', borderRadius: '4px', padding: '8px 4px', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '17px', fontWeight: '600' }}
-              />
-              <span style={{ color: 'var(--neutral-dark)', fontWeight: '700', fontSize: '17px' }}>:</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={2}
-                value={draft.minute}
-                onChange={(e) => setManualTimeDraft(prev => ({ ...prev, [key]: { ...draft, minute: e.target.value.replace(/\D/g, '') } }))}
-                onKeyDown={(e) => { if (e.key === 'Enter') applyManualTime(); }}
-                style={{ width: '48px', textAlign: 'center', border: '1px solid var(--neutral-border)', borderRadius: '4px', padding: '8px 4px', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '17px', fontWeight: '600' }}
-              />
-              <button
-                type="button"
-                onClick={applyManualTime}
-                title={t('common.confirm', 'Xác nhận')}
-                style={{ flex: 1, border: 'none', borderRadius: '4px', padding: '8px 10px', backgroundColor: 'var(--primary-color)', color: '#fff', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
-              >
-                <i className="fa-solid fa-check"></i>
-              </button>
-            </div>
-            {HOUR_OPTIONS.map(hour => (
-              <button
-                type="button"
-                key={hour}
-                onClick={() => { updateCardField(card.id, field, hour); setOpenTimeDropdown(null); }}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'center',
-                  padding: '8px',
-                  border: 'none',
-                  backgroundColor: card[field] === hour ? 'var(--primary-color)' : 'transparent',
-                  color: card[field] === hour ? '#fff' : 'var(--neutral-dark)',
-                  fontSize: '13px',
-                  fontWeight: card[field] === hour ? '700' : '500',
-                  cursor: 'pointer'
-                }}
-              >
-                {hour}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
   };
 
   const handleAddReportCard = () => {
@@ -1032,9 +903,9 @@ export default function DailyReportsPage() {
                         {t('reports.timeframe', 'Khung giờ:')}
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {renderTimeDropdown(card, 'startTime')}
+                        <TimeField value={card.startTime} onChange={(v) => updateCardField(card.id, 'startTime', v)} />
                         <span style={{ fontWeight: '600' }}>-</span>
-                        {renderTimeDropdown(card, 'endTime')}
+                        <TimeField value={card.endTime} onChange={(v) => updateCardField(card.id, 'endTime', v)} align="right" />
                       </div>
                     </div>
 

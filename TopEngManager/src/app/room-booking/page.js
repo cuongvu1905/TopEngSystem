@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { db } from '@/utils/db';
+import TimeField, { normalizeTime, TIME_RE } from '@/components/TimeField';
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
@@ -223,7 +224,25 @@ export default function RoomBookingPage() {
       return;
     }
 
-    if (modalStartTime >= modalEndTime) {
+    // Free-typed times are normalised here rather than trusted: the string comparison below
+    // and the overlap check both rely on zero-padded HH:MM.
+    const startTime = normalizeTime(modalStartTime);
+    const endTime = normalizeTime(modalEndTime);
+    if (!startTime || !endTime || !TIME_RE.test(startTime) || !TIME_RE.test(endTime)) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('common.notice', 'Thông báo'),
+        text: t('roomBooking.invalidTime', 'Giờ không hợp lệ. Vui lòng nhập theo dạng HH:MM (ví dụ 09:30).'),
+        confirmButtonColor: 'var(--primary-color)'
+      });
+      setIsSavingBooking(false);
+      return;
+    }
+    // Show the user the cleaned-up values they are about to book.
+    setModalStartTime(startTime);
+    setModalEndTime(endTime);
+
+    if (startTime >= endTime) {
       Swal.fire({
         icon: 'warning',
         title: t('common.notice', 'Thông báo'),
@@ -241,7 +260,7 @@ export default function RoomBookingPage() {
       b.location === modalLocation &&
       b.roomId === modalRoomId &&
       b.date === modalDate &&
-      modalStartTime < b.endTime && modalEndTime > b.startTime
+      startTime < b.endTime && endTime > b.startTime
     );
 
     if (isOverlap) {
@@ -260,8 +279,8 @@ export default function RoomBookingPage() {
         location: modalLocation,
         roomId: modalRoomId,
         date: modalDate,
-        startTime: modalStartTime,
-        endTime: modalEndTime,
+        startTime,
+        endTime,
         team: modalTeam.trim(),
         bookerName: modalBookerName.trim(),
         bookerId: currentUser?.id || null,
@@ -738,30 +757,21 @@ export default function RoomBookingPage() {
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.startTime', 'Bắt đầu')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
-                      <select
+                      <TimeField
                         value={modalStartTime}
-                        onChange={(e) => setModalStartTime(e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
-                      >
-                        {['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'].map(t => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
+                        onChange={setModalStartTime}
+                      />
                     </div>
 
                     <div className="form-group">
                       <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.endTime', 'Kết thúc')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
-                      <select
+                      <TimeField
                         value={modalEndTime}
-                        onChange={(e) => setModalEndTime(e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
-                      >
-                        {['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map(t => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
+                        onChange={setModalEndTime}
+                        align="right"
+                      />
                     </div>
                   </div>
 

@@ -1010,7 +1010,8 @@ export const translations = {
     "documents.templateTreeConfirm": "Sẽ tạo cây thư mục sau theo thiết kế của Admin:",
     "documents.templateTreeCreated": "Đã tạo {count} thư mục theo mẫu.",
     "documents.templateTreeTitle": "Tạo thư mục theo mẫu",
-    "roomBooking.loadFailed": "Không tải được lịch đặt phòng."
+    "roomBooking.loadFailed": "Không tải được lịch đặt phòng.",
+    "roomBooking.invalidTime": "Giờ không hợp lệ. Vui lòng nhập theo dạng HH:MM (ví dụ 09:30)."
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2015,7 +2016,8 @@ export const translations = {
     "documents.templateTreeConfirm": "The following folder tree will be created from the Admin design:",
     "documents.templateTreeCreated": "Created {count} folders from the template.",
     "documents.templateTreeTitle": "Create folders from the template",
-    "roomBooking.loadFailed": "Could not load the room schedule."
+    "roomBooking.loadFailed": "Could not load the room schedule.",
+    "roomBooking.invalidTime": "Invalid time. Please enter it as HH:MM (for example 09:30)."
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -3020,7 +3022,8 @@ export const translations = {
     "documents.templateTreeConfirm": "관리자가 설계한 다음 폴더 구조가 생성됩니다:",
     "documents.templateTreeCreated": "템플릿으로 {count}개의 폴더를 생성했습니다.",
     "documents.templateTreeTitle": "템플릿으로 폴더 만들기",
-    "roomBooking.loadFailed": "회의실 일정을 불러올 수 없습니다."
+    "roomBooking.loadFailed": "회의실 일정을 불러올 수 없습니다.",
+    "roomBooking.invalidTime": "시간이 올바르지 않습니다. HH:MM 형식으로 입력하세요 (예: 09:30)."
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4025,7 +4028,8 @@ export const translations = {
     "documents.templateTreeConfirm": "将按管理员设计创建以下文件夹结构：",
     "documents.templateTreeCreated": "已按模板创建 {count} 个文件夹。",
     "documents.templateTreeTitle": "按模板创建文件夹",
-    "roomBooking.loadFailed": "无法加载会议室日程。"
+    "roomBooking.loadFailed": "无法加载会议室日程。",
+    "roomBooking.invalidTime": "时间无效。请按 HH:MM 格式输入（例如 09:30）。"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5030,6 +5034,7 @@ export const translations = {
     "documents.templateTreeConfirm": "管理者が設計した次のフォルダ構成を作成します:",
     "documents.templateTreeCreated": "テンプレートから {count} 個のフォルダを作成しました。",
     "documents.templateTreeTitle": "テンプレートからフォルダを作成",
-    "roomBooking.loadFailed": "会議室のスケジュールを読み込めませんでした。"
+    "roomBooking.loadFailed": "会議室のスケジュールを読み込めませんでした。",
+    "roomBooking.invalidTime": "時刻が正しくありません。HH:MM 形式で入力してください（例: 09:30）。"
   }
 };
