@@ -134,7 +134,7 @@ export const translations = {
     "reports.calSat": "T7",
     "reports.calSun": "CN",
     "reports.calMissingLegend": "Chưa làm báo cáo",
-    "reports.calReportedLegend": "Đã làm báo cáo",
+    "reports.calReportedLegend": "Đã gửi báo cáo",
     "reports.filterDepartment": "Tất cả phòng ban",
     "reports.filterUser": "Tất cả nhân viên",
     "reports.filterDate": "Tất cả ngày",
@@ -1011,7 +1011,8 @@ export const translations = {
     "documents.templateTreeCreated": "Đã tạo {count} thư mục theo mẫu.",
     "documents.templateTreeTitle": "Tạo thư mục theo mẫu",
     "roomBooking.loadFailed": "Không tải được lịch đặt phòng.",
-    "roomBooking.invalidTime": "Giờ không hợp lệ. Vui lòng nhập theo dạng HH:MM (ví dụ 09:30)."
+    "roomBooking.invalidTime": "Giờ không hợp lệ. Vui lòng nhập theo dạng HH:MM (ví dụ 09:30).",
+    "reports.calDraftLegend": "Mới lưu bản nháp"
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2017,7 +2018,8 @@ export const translations = {
     "documents.templateTreeCreated": "Created {count} folders from the template.",
     "documents.templateTreeTitle": "Create folders from the template",
     "roomBooking.loadFailed": "Could not load the room schedule.",
-    "roomBooking.invalidTime": "Invalid time. Please enter it as HH:MM (for example 09:30)."
+    "roomBooking.invalidTime": "Invalid time. Please enter it as HH:MM (for example 09:30).",
+    "reports.calDraftLegend": "Draft only"
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -2146,7 +2148,7 @@ export const translations = {
     "reports.calSat": "토",
     "reports.calSun": "일",
     "reports.calMissingLegend": "미작성",
-    "reports.calReportedLegend": "작성 완료",
+    "reports.calReportedLegend": "보고서 제출 완료",
     "reports.filterDepartment": "모든 부서",
     "reports.filterUser": "모든 직원",
     "reports.filterDate": "모든 일자",
@@ -3023,7 +3025,8 @@ export const translations = {
     "documents.templateTreeCreated": "템플릿으로 {count}개의 폴더를 생성했습니다.",
     "documents.templateTreeTitle": "템플릿으로 폴더 만들기",
     "roomBooking.loadFailed": "회의실 일정을 불러올 수 없습니다.",
-    "roomBooking.invalidTime": "시간이 올바르지 않습니다. HH:MM 형식으로 입력하세요 (예: 09:30)."
+    "roomBooking.invalidTime": "시간이 올바르지 않습니다. HH:MM 형식으로 입력하세요 (예: 09:30).",
+    "reports.calDraftLegend": "임시 저장만 됨"
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -3152,7 +3155,7 @@ export const translations = {
     "reports.calSat": "六",
     "reports.calSun": "日",
     "reports.calMissingLegend": "尚未汇报",
-    "reports.calReportedLegend": "已汇报",
+    "reports.calReportedLegend": "已提交汇报",
     "reports.filterDepartment": "所有部门",
     "reports.filterUser": "所有员工",
     "reports.filterDate": "所有日期",
@@ -4029,7 +4032,8 @@ export const translations = {
     "documents.templateTreeCreated": "已按模板创建 {count} 个文件夹。",
     "documents.templateTreeTitle": "按模板创建文件夹",
     "roomBooking.loadFailed": "无法加载会议室日程。",
-    "roomBooking.invalidTime": "时间无效。请按 HH:MM 格式输入（例如 09:30）。"
+    "roomBooking.invalidTime": "时间无效。请按 HH:MM 格式输入（例如 09:30）。",
+    "reports.calDraftLegend": "仅保存草稿"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -4158,7 +4162,7 @@ export const translations = {
     "reports.calSat": "土",
     "reports.calSun": "日",
     "reports.calMissingLegend": "未提出",
-    "reports.calReportedLegend": "提出済み",
+    "reports.calReportedLegend": "報告を提出済み",
     "reports.filterDepartment": "すべての部署",
     "reports.filterUser": "すべての従業員",
     "reports.filterDate": "すべての全日程",
@@ -5035,6 +5039,7 @@ export const translations = {
     "documents.templateTreeCreated": "テンプレートから {count} 個のフォルダを作成しました。",
     "documents.templateTreeTitle": "テンプレートからフォルダを作成",
     "roomBooking.loadFailed": "会議室のスケジュールを読み込めませんでした。",
-    "roomBooking.invalidTime": "時刻が正しくありません。HH:MM 形式で入力してください（例: 09:30）。"
+    "roomBooking.invalidTime": "時刻が正しくありません。HH:MM 形式で入力してください（例: 09:30）。",
+    "reports.calDraftLegend": "下書きのみ"
   }
 };

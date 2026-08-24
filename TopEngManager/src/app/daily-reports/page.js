@@ -629,6 +629,7 @@ export default function DailyReportsPage() {
   });
 
   const findReportForDate = (dateStr) => myReports.find(r => formatDateToYMD(r.created_at) === dateStr);
+  const findReportsForDate = (dateStr) => myReports.filter(r => formatDateToYMD(r.created_at) === dateStr);
 
   const handleSelectMissingDay = (dateStr) => {
     if (dateStr > getTodayDateString()) {
@@ -1117,7 +1118,13 @@ export default function DailyReportsPage() {
                   {week.map((day, di) => {
                     if (day === null) return <div key={di} />;
                     const dateStr = `${calendarMonthCursor.year}-${String(calendarMonthCursor.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const dayReport = findReportForDate(dateStr);
+                    // A day counts as done only once something was actually submitted. A day
+                    // holding nothing but a draft is still outstanding, so it must not look
+                    // identical to a finished one. If a day has both, the submitted row wins.
+                    const dayReports = findReportsForDate(dateStr);
+                    const submittedReport = dayReports.find(r => r.status !== 'Draft');
+                    const dayReport = submittedReport || dayReports[0] || null;
+                    const isDraftOnly = !!dayReport && !submittedReport;
                     const isSunday = di === 6;
                     const isPastOrToday = dateStr <= todayDateStr;
                     const isMissing = !dayReport && !isSunday && isPastOrToday;
@@ -1125,7 +1132,8 @@ export default function DailyReportsPage() {
 
                     let bg = 'transparent';
                     let color = 'var(--neutral-dark)';
-                    if (dayReport) { bg = 'var(--success-color, #16a34a)'; color = '#fff'; }
+                    if (isDraftOnly) { bg = 'var(--warning-color, #f59e0b)'; color = '#fff'; }
+                    else if (dayReport) { bg = 'var(--success-color, #16a34a)'; color = '#fff'; }
                     else if (isMissing) { bg = 'var(--danger-color, #ef4444)'; color = '#fff'; }
                     else if (isSunday) { color = 'var(--neutral-muted)'; }
                     if (isFuture) { color = 'var(--neutral-muted)'; }
@@ -1160,8 +1168,12 @@ export default function DailyReportsPage() {
                   {t('reports.calMissingLegend', 'Chưa làm báo cáo')}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--warning-color, #f59e0b)', display: 'inline-block' }}></span>
+                  {t('reports.calDraftLegend', 'Mới lưu bản nháp')}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--success-color, #16a34a)', display: 'inline-block' }}></span>
-                  {t('reports.calReportedLegend', 'Đã làm báo cáo')}
+                  {t('reports.calReportedLegend', 'Đã gửi báo cáo')}
                 </span>
               </div>
             </div>
