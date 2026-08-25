@@ -224,6 +224,17 @@ export default function RoomBookingPage() {
       return;
     }
 
+    if (modalDate < formatDateStr(getToday())) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('common.notice', 'Thông báo'),
+        text: t('roomBooking.pastDateBlocked', 'Không thể đặt phòng cho ngày đã qua.'),
+        confirmButtonColor: 'var(--primary-color)'
+      });
+      setIsSavingBooking(false);
+      return;
+    }
+
     // Free-typed times are normalised here rather than trusted: the string comparison below
     // and the overlap check both rely on zero-padded HH:MM.
     const startTime = normalizeTime(modalStartTime);
@@ -549,6 +560,9 @@ export default function RoomBookingPage() {
               >
                 {weekDays.map((dayDate, dayIdx) => {
                   const dayStr = formatDateStr(dayDate);
+                  // Comparing the YYYY-MM-DD strings is safe because both are built the same
+                  // way from local dates; today itself is bookable, only earlier days are not.
+                  const isPastDay = dayStr < formatDateStr(getToday());
                   const isCurrentDay = isToday(dayDate);
                   
                   const dayBookings = bookings
@@ -655,8 +669,12 @@ export default function RoomBookingPage() {
                         )}
                       </div>
 
+                      {/* A day that has already passed cannot be booked, so the button says so
+                          instead of opening a form that would be refused on submit. */}
                       <button
                         type="button"
+                        disabled={isPastDay}
+                        title={isPastDay ? t('roomBooking.pastDateBlocked', 'Không thể đặt phòng cho ngày đã qua.') : undefined}
                         onClick={() => openBookingModal(room.id, dayStr)}
                         style={{
                           marginTop: '10px',
@@ -668,10 +686,12 @@ export default function RoomBookingPage() {
                           color: 'var(--neutral-muted)',
                           fontSize: '11.5px',
                           fontWeight: '600',
-                          cursor: 'pointer',
+                          cursor: isPastDay ? 'not-allowed' : 'pointer',
+                          opacity: isPastDay ? 0.4 : 1,
                           transition: 'all 0.15s'
                         }}
                         onMouseEnter={(e) => {
+                          if (isPastDay) return;
                           e.currentTarget.style.borderColor = 'var(--primary-color)';
                           e.currentTarget.style.color = 'var(--primary-color)';
                         }}
@@ -680,7 +700,9 @@ export default function RoomBookingPage() {
                           e.currentTarget.style.color = 'var(--neutral-muted)';
                         }}
                       >
-                        + {t('roomBooking.bookThisSlot', 'Đặt giờ này')}
+                        {isPastDay
+                          ? t('roomBooking.pastDay', 'Đã qua')
+                          : `+ ${t('roomBooking.bookThisSlot', 'Đặt giờ này')}`}
                       </button>
                     </div>
                   );
@@ -747,6 +769,7 @@ export default function RoomBookingPage() {
                       <input
                         type="date"
                         value={modalDate}
+                        min={formatDateStr(getToday())}
                         onChange={(e) => setModalDate(e.target.value)}
                         required
                         style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}

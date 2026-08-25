@@ -1012,7 +1012,9 @@ export const translations = {
     "documents.templateTreeTitle": "Tạo thư mục theo mẫu",
     "roomBooking.loadFailed": "Không tải được lịch đặt phòng.",
     "roomBooking.invalidTime": "Giờ không hợp lệ. Vui lòng nhập theo dạng HH:MM (ví dụ 09:30).",
-    "reports.calDraftLegend": "Mới lưu bản nháp"
+    "reports.calDraftLegend": "Mới lưu bản nháp",
+    "roomBooking.pastDateBlocked": "Không thể đặt phòng cho ngày đã qua.",
+    "roomBooking.pastDay": "Đã qua"
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2019,7 +2021,9 @@ export const translations = {
     "documents.templateTreeTitle": "Create folders from the template",
     "roomBooking.loadFailed": "Could not load the room schedule.",
     "roomBooking.invalidTime": "Invalid time. Please enter it as HH:MM (for example 09:30).",
-    "reports.calDraftLegend": "Draft only"
+    "reports.calDraftLegend": "Draft only",
+    "roomBooking.pastDateBlocked": "A room cannot be booked for a day that has already passed.",
+    "roomBooking.pastDay": "Past"
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -3026,7 +3030,9 @@ export const translations = {
     "documents.templateTreeTitle": "템플릿으로 폴더 만들기",
     "roomBooking.loadFailed": "회의실 일정을 불러올 수 없습니다.",
     "roomBooking.invalidTime": "시간이 올바르지 않습니다. HH:MM 형식으로 입력하세요 (예: 09:30).",
-    "reports.calDraftLegend": "임시 저장만 됨"
+    "reports.calDraftLegend": "임시 저장만 됨",
+    "roomBooking.pastDateBlocked": "이미 지난 날짜는 예약할 수 없습니다.",
+    "roomBooking.pastDay": "지난 날짜"
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4033,7 +4039,9 @@ export const translations = {
     "documents.templateTreeTitle": "按模板创建文件夹",
     "roomBooking.loadFailed": "无法加载会议室日程。",
     "roomBooking.invalidTime": "时间无效。请按 HH:MM 格式输入（例如 09:30）。",
-    "reports.calDraftLegend": "仅保存草稿"
+    "reports.calDraftLegend": "仅保存草稿",
+    "roomBooking.pastDateBlocked": "无法预订已过去的日期。",
+    "roomBooking.pastDay": "已过去"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5040,6 +5048,8 @@ export const translations = {
     "documents.templateTreeTitle": "テンプレートからフォルダを作成",
     "roomBooking.loadFailed": "会議室のスケジュールを読み込めませんでした。",
     "roomBooking.invalidTime": "時刻が正しくありません。HH:MM 形式で入力してください（例: 09:30）。",
-    "reports.calDraftLegend": "下書きのみ"
+    "reports.calDraftLegend": "下書きのみ",
+    "roomBooking.pastDateBlocked": "過ぎた日付は予約できません。",
+    "roomBooking.pastDay": "過去"
   }
 };

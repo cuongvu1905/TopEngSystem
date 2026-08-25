@@ -16,6 +16,12 @@ function isValidDate(value) {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
 
+// Today in the server's local timezone, as the same YYYY-MM-DD the client sends.
+function todayStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
 // Mirrors authController/projectController: the role is read from the requester's own user
 // row rather than trusted from the request body.
 async function isRequesterAdmin(requesterId) {
@@ -76,6 +82,11 @@ exports.createRoomBooking = async (req, res, next) => {
     }
     if (!isValidDate(date)) {
       return res.status(400).json({ error: 'Ngày đặt không hợp lệ (định dạng YYYY-MM-DD).' });
+    }
+    // A room cannot be booked for a day that has already gone. Enforced here as well as in
+    // the form, because a disabled button is not a rule.
+    if (date < todayStr()) {
+      return res.status(400).json({ error: 'Không thể đặt phòng cho ngày đã qua.' });
     }
     if (!TIME_RE.test(startTime) || !TIME_RE.test(endTime)) {
       return res.status(400).json({ error: 'Giờ không hợp lệ (định dạng HH:MM).' });
