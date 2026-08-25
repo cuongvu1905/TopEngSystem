@@ -153,6 +153,12 @@ exports.deleteRoomBooking = async (req, res, next) => {
       return res.status(404).json({ error: 'Không tìm thấy lịch đặt phòng.' });
     }
 
+    // Past meetings are locked for everyone, Admin included: the schedule of what already
+    // happened should not be rewritable. Enforced here, not only by hiding the button.
+    if (booking.booking_date < todayStr()) {
+      return res.status(400).json({ error: 'Cuộc họp đã diễn ra, không thể huỷ.' });
+    }
+
     const admin = await isRequesterAdmin(requesterId);
     let isOwner = !!(requesterId && booking.booker_id && booking.booker_id === requesterId);
     if (!isOwner && requesterId && !booking.booker_id) {

@@ -926,7 +926,11 @@ export default function RoomBookingPage() {
       {detailBooking && (() => {
         const b = detailBooking;
         const lvl = getImportanceLevel(b.importance);
-        const canCancel = currentUser && (b.bookerName === currentUser.name || currentUser.system_role.includes('Admin'));
+        // A meeting that has already happened is a record, not a plan: it stays readable but
+        // can no longer be cancelled by anyone. Viewing the detail is never restricted.
+        const isPastBooking = b.date < formatDateStr(getToday());
+        const isOwnerOrAdmin = currentUser && (b.bookerName === currentUser.name || currentUser.system_role.includes('Admin'));
+        const canCancel = !!isOwnerOrAdmin && !isPastBooking;
         const room = ROOMS.find(r => r.id === b.roomId);
         const loc = LOCATIONS.find(l => l.id === b.location);
         const dayDate = parseDateStr(b.date);
@@ -1017,6 +1021,11 @@ export default function RoomBookingPage() {
                     >
                       <i className="fa-solid fa-trash-can"></i> {t('roomBooking.cancelMeeting', 'Huỷ cuộc họp')}
                     </button>
+                  ) : isPastBooking && isOwnerOrAdmin ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: 'var(--neutral-muted)' }}>
+                      <i className="fa-solid fa-lock"></i>
+                      {t('roomBooking.pastMeetingLocked', 'Cuộc họp đã diễn ra, không thể huỷ.')}
+                    </span>
                   ) : <span></span>}
                   <button type="button" className="btn btn-secondary" onClick={() => setDetailBooking(null)}>
                     {t('common.close', 'Đóng')}

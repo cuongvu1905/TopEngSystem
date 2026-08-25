@@ -1014,7 +1014,8 @@ export const translations = {
     "roomBooking.invalidTime": "Giờ không hợp lệ. Vui lòng nhập theo dạng HH:MM (ví dụ 09:30).",
     "reports.calDraftLegend": "Mới lưu bản nháp",
     "roomBooking.pastDateBlocked": "Không thể đặt phòng cho ngày đã qua.",
-    "roomBooking.pastDay": "Đã qua"
+    "roomBooking.pastDay": "Đã qua",
+    "roomBooking.pastMeetingLocked": "Cuộc họp đã diễn ra, không thể huỷ."
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2023,7 +2024,8 @@ export const translations = {
     "roomBooking.invalidTime": "Invalid time. Please enter it as HH:MM (for example 09:30).",
     "reports.calDraftLegend": "Draft only",
     "roomBooking.pastDateBlocked": "A room cannot be booked for a day that has already passed.",
-    "roomBooking.pastDay": "Past"
+    "roomBooking.pastDay": "Past",
+    "roomBooking.pastMeetingLocked": "This meeting has already taken place and can no longer be cancelled."
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -3032,7 +3034,8 @@ export const translations = {
     "roomBooking.invalidTime": "시간이 올바르지 않습니다. HH:MM 형식으로 입력하세요 (예: 09:30).",
     "reports.calDraftLegend": "임시 저장만 됨",
     "roomBooking.pastDateBlocked": "이미 지난 날짜는 예약할 수 없습니다.",
-    "roomBooking.pastDay": "지난 날짜"
+    "roomBooking.pastDay": "지난 날짜",
+    "roomBooking.pastMeetingLocked": "이미 진행된 회의여서 취소할 수 없습니다."
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4041,7 +4044,8 @@ export const translations = {
     "roomBooking.invalidTime": "时间无效。请按 HH:MM 格式输入（例如 09:30）。",
     "reports.calDraftLegend": "仅保存草稿",
     "roomBooking.pastDateBlocked": "无法预订已过去的日期。",
-    "roomBooking.pastDay": "已过去"
+    "roomBooking.pastDay": "已过去",
+    "roomBooking.pastMeetingLocked": "该会议已举行，无法取消。"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5050,6 +5054,7 @@ export const translations = {
     "roomBooking.invalidTime": "時刻が正しくありません。HH:MM 形式で入力してください（例: 09:30）。",
     "reports.calDraftLegend": "下書きのみ",
     "roomBooking.pastDateBlocked": "過ぎた日付は予約できません。",
-    "roomBooking.pastDay": "過去"
+    "roomBooking.pastDay": "過去",
+    "roomBooking.pastMeetingLocked": "この会議はすでに実施済みのため、キャンセルできません。"
   }
 };
