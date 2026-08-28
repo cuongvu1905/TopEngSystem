@@ -184,6 +184,10 @@ export const MySQLAdapter = {
     return await callApi('createFolderTreeFromTemplate', { projectId, parentFolderId, templateLevel, createdBy });
   },
 
+  getSelectableTemplateFolders: async function() {
+    return await callApi('getSelectableTemplateFolders', {});
+  },
+
   getFolderTemplates: async function() {
     return await callApi('getFolderTemplates', {});
   },

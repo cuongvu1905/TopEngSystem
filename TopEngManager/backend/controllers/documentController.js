@@ -177,11 +177,57 @@ async function loadTemplate() {
 // admin-designed default folder tree (see getFolderTemplates/etc. below, edited via
 // the "Thiết kế cây thư mục" admin modal) into real folders/slots for a brand new
 // project. A completely empty template (admin deleted everything) is a safe no-op.
-exports.createDefaultProjectFolderTree = async (projectId, createdBy) => {
+// The template folders a project creator gets to choose from: everything one level below
+// the second template level, i.e. <Tên_Xưởng>/<Tên_Máy>/*. The two levels above them are
+// structural and always created.
+function selectableTemplateFolders(templateFolders) {
+  const roots = templateFolders.filter(f => !f.parent_template_folder_id);
+  const second = templateFolders.filter(f => roots.some(r => r.template_folder_id === f.parent_template_folder_id));
+  return templateFolders.filter(f => second.some(x => x.template_folder_id === f.parent_template_folder_id));
+}
+
+exports.getSelectableTemplateFolders = async (req, res, next) => {
+  try {
+    const templateFolders = await prisma.foldertemplate.findMany({ orderBy: { name: 'asc' } });
+    res.json(selectableTemplateFolders(templateFolders).map(f => ({
+      template_folder_id: f.template_folder_id,
+      name: f.name,
+      folder_type: f.folder_type
+    })));
+  } catch (err) {
+    next(err);
+  }
+};
+
+// selectedFolderIds (optional) limits which of the <Tên_Máy>/* folders get created. Passing
+// null/undefined keeps the old behaviour of cloning the whole design, so a caller that does
+// not know about the choice still provisions a complete tree.
+exports.createDefaultProjectFolderTree = async (projectId, createdBy, selectedFolderIds) => {
   const { templateFolders, templateSlots } = await loadTemplate();
   if (templateFolders.length === 0) return;
-  const roots = templateFolders.filter(f => !f.parent_template_folder_id);
-  await cloneTemplateNodes(roots, null, { projectId, createdBy, templateFolders, templateSlots });
+
+  let effective = templateFolders;
+  if (Array.isArray(selectedFolderIds)) {
+    const selectable = selectableTemplateFolders(templateFolders);
+    const keep = new Set(selectedFolderIds);
+    // drop the unpicked branches: the folder itself and everything under it
+    const pruned = new Set();
+    const dropSubtree = (id) => {
+      pruned.add(id);
+      templateFolders
+        .filter(f => f.parent_template_folder_id === id)
+        .forEach(child => dropSubtree(child.template_folder_id));
+    };
+    selectable
+      .filter(f => !keep.has(f.template_folder_id))
+      .forEach(f => dropSubtree(f.template_folder_id));
+    effective = templateFolders.filter(f => !pruned.has(f.template_folder_id));
+  }
+
+  const roots = effective.filter(f => !f.parent_template_folder_id);
+  await cloneTemplateNodes(roots, null, {
+    projectId, createdBy, templateFolders: effective, templateSlots
+  });
 };
 
 // The "+" buttons in the Documents tree. templateLevel 0 clones the template's own roots

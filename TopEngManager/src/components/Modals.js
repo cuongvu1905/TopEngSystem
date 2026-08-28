@@ -75,6 +75,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
   const [startDate, setStartDate] = useState('2026-06-01');
   const [endDate, setEndDate] = useState('2026-12-31');
   const [visibility, setVisibility] = useState('Private');
+  // The <Tên_Xưởng>/<Tên_Máy>/* folders the Admin designed, and which of them this project wants.
+  const [templateFolderOptions, setTemplateFolderOptions] = useState([]);
+  const [selectedTemplateFolders, setSelectedTemplateFolders] = useState(() => new Set());
   const [customers, setCustomers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [systemUsers, setSystemUsers] = useState([]);
@@ -161,6 +164,32 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
     }));
   };
 
+  // Everything is ticked by default, so leaving this section alone provisions exactly the
+  // complete tree that projects got before the choice existed.
+  useEffect(() => {
+    if (!isOpen || projectId) return undefined;
+    let cancelled = false;
+    db.getSelectableTemplateFolders()
+      .then(list => {
+        if (cancelled) return;
+        const options = Array.isArray(list) ? list : [];
+        setTemplateFolderOptions(options);
+        setSelectedTemplateFolders(new Set(options.map(f => f.template_folder_id)));
+      })
+      .catch(() => {
+        if (!cancelled) { setTemplateFolderOptions([]); setSelectedTemplateFolders(new Set()); }
+      });
+    return () => { cancelled = true; };
+  }, [isOpen, projectId]);
+
+  const toggleTemplateFolder = (id) => {
+    setSelectedTemplateFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || isSubmitting) return;
@@ -178,7 +207,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
         end_date: endDate,
         visibility,
         create_by: currentUser.id,
-        created_by: currentUser.id
+        created_by: currentUser.id,
+        // Only meaningful on create; an update must not re-provision folders.
+        ...(projectId ? {} : { template_folder_ids: [...selectedTemplateFolders] })
       };
 
       const membersList = Object.keys(selectedMembers).map(userId => ({
@@ -282,6 +313,53 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
               </div>
             </div>
             
+          {/* Which of the Admin-designed <Tên_Xưởng>/<Tên_Máy>/* folders this project needs.
+              Only offered when creating: an existing project's folders are edited in its
+              Documents tab, and re-provisioning them here would duplicate what is there. */}
+          {!projectId && templateFolderOptions.length > 0 && (
+            <div className="form-group" style={{ marginBottom: '14px' }}>
+              <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                {t('project.templateFoldersLabel', 'Thư mục tài liệu cần tạo')}
+              </label>
+              <div style={{ fontSize: '11.5px', color: 'var(--neutral-muted)', marginBottom: '8px' }}>
+                {t('project.templateFoldersHint', 'Chỉ những thư mục được tích sẽ xuất hiện trong tài liệu của dự án. Thư mục con và quy định tên tệp bên trong vẫn theo thiết kế của Admin.')}
+              </div>
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px',
+                border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '10px',
+                backgroundColor: 'var(--neutral-bg-main)'
+              }}>
+                {templateFolderOptions.map(folder => {
+                  const checked = selectedTemplateFolders.has(folder.template_folder_id);
+                  return (
+                    <label
+                      key={folder.template_folder_id}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--neutral-dark)', cursor: 'pointer' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleTemplateFolder(folder.template_folder_id)}
+                        style={{ cursor: 'pointer', margin: 0, flexShrink: 0 }}
+                      />
+                      <i
+                        className={folder.folder_type === 'file_slot_table' ? 'fa-solid fa-table-list' : 'fa-solid fa-folder'}
+                        style={{ color: 'var(--neutral-muted)', fontSize: '12px' }}
+                      ></i>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {selectedTemplateFolders.size === 0 && (
+                <div style={{ fontSize: '11.5px', color: '#f59e0b', marginTop: '6px' }}>
+                  <i className="fa-solid fa-circle-info"></i>{' '}
+                  {t('project.templateFoldersNoneHint', 'Không tích thư mục nào: dự án sẽ chỉ có thư mục gốc, không có thư mục con.')}
+                </div>
+              )}
+            </div>
+          )}
+
             <div className="form-group">
               <label>{t('project.projectMembers', 'Thành viên dự án')}</label>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>

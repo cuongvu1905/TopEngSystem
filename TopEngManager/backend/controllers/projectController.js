@@ -99,7 +99,13 @@ exports.saveProject = async (req, res, next) => {
       `;
 
       try {
-        await createDefaultProjectFolderTree(id, proj.create_by || proj.created_by || null);
+        // The creator picks which <Tên_Máy>/* folders this project needs; an absent list
+        // means "everything", which is what callers that predate the choice send.
+        await createDefaultProjectFolderTree(
+          id,
+          proj.create_by || proj.created_by || null,
+          Array.isArray(proj.template_folder_ids) ? proj.template_folder_ids : undefined
+        );
       } catch (folderErr) {
         console.error('Failed to auto-provision default document folder tree for new project:', folderErr);
       }

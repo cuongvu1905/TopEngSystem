@@ -1015,7 +1015,10 @@ export const translations = {
     "reports.calDraftLegend": "Mới lưu bản nháp",
     "roomBooking.pastDateBlocked": "Không thể đặt phòng cho ngày đã qua.",
     "roomBooking.pastDay": "Đã qua",
-    "roomBooking.pastMeetingLocked": "Cuộc họp đã diễn ra, không thể huỷ."
+    "roomBooking.pastMeetingLocked": "Cuộc họp đã diễn ra, không thể huỷ.",
+    "project.templateFoldersHint": "Chỉ những thư mục được tích sẽ xuất hiện trong tài liệu của dự án. Thư mục con và quy định tên tệp bên trong vẫn theo thiết kế của Admin.",
+    "project.templateFoldersLabel": "Thư mục tài liệu cần tạo",
+    "project.templateFoldersNoneHint": "Không tích thư mục nào: dự án sẽ chỉ có thư mục gốc, không có thư mục con."
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2025,7 +2028,10 @@ export const translations = {
     "reports.calDraftLegend": "Draft only",
     "roomBooking.pastDateBlocked": "A room cannot be booked for a day that has already passed.",
     "roomBooking.pastDay": "Past",
-    "roomBooking.pastMeetingLocked": "This meeting has already taken place and can no longer be cancelled."
+    "roomBooking.pastMeetingLocked": "This meeting has already taken place and can no longer be cancelled.",
+    "project.templateFoldersHint": "Only the ticked folders will appear in this project’s documents. Their subfolders and file-name rules still follow the Admin design.",
+    "project.templateFoldersLabel": "Document folders to create",
+    "project.templateFoldersNoneHint": "Nothing ticked: the project will only get the top-level folders, with no subfolders."
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -3035,7 +3041,10 @@ export const translations = {
     "reports.calDraftLegend": "임시 저장만 됨",
     "roomBooking.pastDateBlocked": "이미 지난 날짜는 예약할 수 없습니다.",
     "roomBooking.pastDay": "지난 날짜",
-    "roomBooking.pastMeetingLocked": "이미 진행된 회의여서 취소할 수 없습니다."
+    "roomBooking.pastMeetingLocked": "이미 진행된 회의여서 취소할 수 없습니다.",
+    "project.templateFoldersHint": "체크한 폴더만 이 프로젝트의 문서에 표시됩니다. 하위 폴더와 파일명 규칙은 관리자 설계를 그대로 따릅니다.",
+    "project.templateFoldersLabel": "생성할 문서 폴더",
+    "project.templateFoldersNoneHint": "아무것도 선택하지 않으면 최상위 폴더만 생성되고 하위 폴더는 없습니다."
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4045,7 +4054,10 @@ export const translations = {
     "reports.calDraftLegend": "仅保存草稿",
     "roomBooking.pastDateBlocked": "无法预订已过去的日期。",
     "roomBooking.pastDay": "已过去",
-    "roomBooking.pastMeetingLocked": "该会议已举行，无法取消。"
+    "roomBooking.pastMeetingLocked": "该会议已举行，无法取消。",
+    "project.templateFoldersHint": "只有勾选的文件夹会出现在该项目的文档中。其子文件夹和文件名规则仍遵循管理员的设计。",
+    "project.templateFoldersLabel": "需要创建的文档文件夹",
+    "project.templateFoldersNoneHint": "未勾选任何项：项目将只有顶层文件夹，没有子文件夹。"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5055,6 +5067,9 @@ export const translations = {
     "reports.calDraftLegend": "下書きのみ",
     "roomBooking.pastDateBlocked": "過ぎた日付は予約できません。",
     "roomBooking.pastDay": "過去",
-    "roomBooking.pastMeetingLocked": "この会議はすでに実施済みのため、キャンセルできません。"
+    "roomBooking.pastMeetingLocked": "この会議はすでに実施済みのため、キャンセルできません。",
+    "project.templateFoldersHint": "チェックしたフォルダのみがこのプロジェクトのドキュメントに表示されます。サブフォルダとファイル名の規則は管理者の設計に従います。",
+    "project.templateFoldersLabel": "作成するドキュメントフォルダ",
+    "project.templateFoldersNoneHint": "何も選択しない場合、最上位のフォルダのみが作成され、サブフォルダはありません。"
   }
 };
