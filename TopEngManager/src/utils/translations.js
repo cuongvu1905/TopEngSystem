@@ -970,7 +970,7 @@ export const translations = {
     "report.loadErrorText": "Không thể tải báo cáo để sửa: ",
     "report.updateFailedText": "Lỗi cập nhật: ",
     "team.permissionsTitle": "Quyền hạn",
-    "manpower.partFilterHint": "Bỏ tick Part để ẩn dữ liệu của Part đó khỏi bảng.",
+    "manpower.partFilterHint": "Bỏ tick Part để ẩn dữ liệu của Part đó khỏi bảng. Bỏ tick \"All project\" để chỉ hiện những dự án có người nhập vào.",
     "roomBooking.importance": "Mức độ quan trọng",
     "roomBooking.importanceHighDesc": "Cuộc họp với TOPK, Khách hàng, Sếp Hàn. Lịch họp không thể thay đổi.",
     "roomBooking.importanceLowDesc": "Họp nội bộ Team (có thể thoả thuận với người đặt để thay đổi lịch họp).",
@@ -1018,7 +1018,9 @@ export const translations = {
     "roomBooking.pastMeetingLocked": "Cuộc họp đã diễn ra, không thể huỷ.",
     "project.templateFoldersHint": "Chỉ những thư mục được tích sẽ xuất hiện trong tài liệu của dự án. Thư mục con và quy định tên tệp bên trong vẫn theo thiết kế của Admin.",
     "project.templateFoldersLabel": "Thư mục tài liệu cần tạo",
-    "project.templateFoldersNoneHint": "Không tích thư mục nào: dự án sẽ chỉ có thư mục gốc, không có thư mục con."
+    "project.templateFoldersNoneHint": "Không tích thư mục nào: dự án sẽ chỉ có thư mục gốc, không có thư mục con.",
+    "manpower.allProjects": "All project",
+    "manpower.filteredNote": "DA có người nhập"
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -1983,7 +1985,7 @@ export const translations = {
     "report.loadErrorText": "Could not load the report for editing: ",
     "report.updateFailedText": "Update error: ",
     "team.permissionsTitle": "Permissions",
-    "manpower.partFilterHint": "Untick a Part to hide that Part’s data from the board.",
+    "manpower.partFilterHint": "Untick a Part to hide its data. Untick \"All projects\" to list only the projects somebody was entered into.",
     "roomBooking.importance": "Importance",
     "roomBooking.importanceHighDesc": "Meeting with TOPK, a customer, or a Korean executive. The schedule cannot be changed.",
     "roomBooking.importanceLowDesc": "Internal team meeting (the schedule can be rearranged by agreement with the person who booked it).",
@@ -2031,7 +2033,9 @@ export const translations = {
     "roomBooking.pastMeetingLocked": "This meeting has already taken place and can no longer be cancelled.",
     "project.templateFoldersHint": "Only the ticked folders will appear in this project’s documents. Their subfolders and file-name rules still follow the Admin design.",
     "project.templateFoldersLabel": "Document folders to create",
-    "project.templateFoldersNoneHint": "Nothing ticked: the project will only get the top-level folders, with no subfolders."
+    "project.templateFoldersNoneHint": "Nothing ticked: the project will only get the top-level folders, with no subfolders.",
+    "manpower.allProjects": "All projects",
+    "manpower.filteredNote": "entered projects only"
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -2996,7 +3000,7 @@ export const translations = {
     "team.permissionsTitle": "권한",
     "common.confirm": "확인",
     "issues.confirmDeleteText": "Issue {key}을(를) 삭제하시겠습니까?",
-    "manpower.partFilterHint": "체크를 해제하면 해당 Part의 데이터가 표에서 숨겨집니다.",
+    "manpower.partFilterHint": "체크를 해제하면 해당 Part의 데이터가 숨겨집니다. \"전체 프로젝트\"를 해제하면 실제로 입력된 프로젝트만 표시됩니다.",
     "roomBooking.importance": "중요도",
     "roomBooking.importanceHighDesc": "TOPK, 고객사 또는 한국 임원과의 회의입니다. 일정을 변경할 수 없습니다.",
     "roomBooking.importanceLowDesc": "팀 내부 회의입니다 (예약자와 협의하여 일정을 조정할 수 있습니다).",
@@ -3044,7 +3048,9 @@ export const translations = {
     "roomBooking.pastMeetingLocked": "이미 진행된 회의여서 취소할 수 없습니다.",
     "project.templateFoldersHint": "체크한 폴더만 이 프로젝트의 문서에 표시됩니다. 하위 폴더와 파일명 규칙은 관리자 설계를 그대로 따릅니다.",
     "project.templateFoldersLabel": "생성할 문서 폴더",
-    "project.templateFoldersNoneHint": "아무것도 선택하지 않으면 최상위 폴더만 생성되고 하위 폴더는 없습니다."
+    "project.templateFoldersNoneHint": "아무것도 선택하지 않으면 최상위 폴더만 생성되고 하위 폴더는 없습니다.",
+    "manpower.allProjects": "전체 프로젝트",
+    "manpower.filteredNote": "입력된 프로젝트만"
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4009,7 +4015,7 @@ export const translations = {
     "team.permissionsTitle": "权限",
     "common.confirm": "确认",
     "issues.confirmDeleteText": "确定要删除 Issue {key} 吗？",
-    "manpower.partFilterHint": "取消勾选某个 Part，即可将该 Part 的数据从表中隐藏。",
+    "manpower.partFilterHint": "取消勾选某个 Part 可隐藏其数据。取消勾选“全部项目”则只显示有人填写的项目。",
     "roomBooking.importance": "重要程度",
     "roomBooking.importanceHighDesc": "与 TOPK、客户或韩国高层的会议。会议时间不可更改。",
     "roomBooking.importanceLowDesc": "团队内部会议（可与预订人协商后调整时间）。",
@@ -4057,7 +4063,9 @@ export const translations = {
     "roomBooking.pastMeetingLocked": "该会议已举行，无法取消。",
     "project.templateFoldersHint": "只有勾选的文件夹会出现在该项目的文档中。其子文件夹和文件名规则仍遵循管理员的设计。",
     "project.templateFoldersLabel": "需要创建的文档文件夹",
-    "project.templateFoldersNoneHint": "未勾选任何项：项目将只有顶层文件夹，没有子文件夹。"
+    "project.templateFoldersNoneHint": "未勾选任何项：项目将只有顶层文件夹，没有子文件夹。",
+    "manpower.allProjects": "全部项目",
+    "manpower.filteredNote": "仅有人填写的项目"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5022,7 +5030,7 @@ export const translations = {
     "team.permissionsTitle": "権限",
     "common.confirm": "確認",
     "issues.confirmDeleteText": "Issue {key} を削除してもよろしいですか？",
-    "manpower.partFilterHint": "Part のチェックを外すと、その Part のデータが表から非表示になります。",
+    "manpower.partFilterHint": "Part のチェックを外すとそのデータが非表示になります。「すべてのプロジェクト」を外すと、入力があるプロジェクトのみ表示されます。",
     "roomBooking.importance": "重要度",
     "roomBooking.importanceHighDesc": "TOPK、顧客、または韓国側役員との会議です。日程は変更できません。",
     "roomBooking.importanceLowDesc": "チーム内部の会議です（予約者と相談して日程を変更できます）。",
@@ -5070,6 +5078,8 @@ export const translations = {
     "roomBooking.pastMeetingLocked": "この会議はすでに実施済みのため、キャンセルできません。",
     "project.templateFoldersHint": "チェックしたフォルダのみがこのプロジェクトのドキュメントに表示されます。サブフォルダとファイル名の規則は管理者の設計に従います。",
     "project.templateFoldersLabel": "作成するドキュメントフォルダ",
-    "project.templateFoldersNoneHint": "何も選択しない場合、最上位のフォルダのみが作成され、サブフォルダはありません。"
+    "project.templateFoldersNoneHint": "何も選択しない場合、最上位のフォルダのみが作成され、サブフォルダはありません。",
+    "manpower.allProjects": "すべてのプロジェクト",
+    "manpower.filteredNote": "入力済みのみ"
   }
 };

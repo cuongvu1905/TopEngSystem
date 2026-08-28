@@ -463,7 +463,7 @@ function CellDetailModal({ cell, onClose, onChanged, users, currentUser, exclude
 // The board's scope is always a Team (Parts are never selected on their own): clicking a
 // Team switches to it, and its Parts appear underneath as checkboxes that choose whose
 // data is shown. Unticking a Part hides that Part's rows from the board.
-function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartIds, onTogglePart, t }) {
+function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartIds, onTogglePart, showAllProjects, onToggleAllProjects, t }) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -489,10 +489,13 @@ function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartI
     : [];
   const includedCount = selectedTeamParts.filter(p => !excludedPartIds.has(p.department_id)).length;
 
+  // The label carries the filter state: with "All project" off the board shows a shorter
+  // list of rows, and without a marker here that looks like missing data.
+  const filterNote = showAllProjects ? '' : `, ${t('manpower.filteredNote', 'DA có người nhập')}`;
   const buttonLabel = !selected
     ? t('manpower.selectTeamPlaceholder', '-- Chọn Team --')
     : selectedTeamParts.length > 0
-      ? `${selected.name} (${includedCount}/${selectedTeamParts.length} Part)`
+      ? `${selected.name} (${includedCount}/${selectedTeamParts.length} Part${filterNote})`
       : selected.name;
 
   return (
@@ -542,6 +545,30 @@ function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartI
                   </span>
                 </div>
 
+                {/* "All project" sits above the Part ticks because it overrides them: with it
+                    on, every project of the Team is listed regardless of who filled anything in. */}
+                {partsOfThisTeam.length > 0 && (
+                  <div
+                    onClick={() => onToggleAllProjects()}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '6px 8px 6px 22px', borderRadius: '4px', cursor: 'pointer',
+                      color: 'var(--neutral-dark)', fontSize: '13px', fontWeight: 600
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={showAllProjects}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={() => onToggleAllProjects()}
+                      style={{ cursor: 'pointer', margin: 0, flexShrink: 0 }}
+                    />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {t('manpower.allProjects', 'All project')}
+                    </span>
+                  </div>
+                )}
+
                 {/* Parts of the active Team: tick boxes only, they never become the scope */}
                 {partsOfThisTeam.map(part => (
                   <div
@@ -571,7 +598,7 @@ function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartI
           {selectedTeamParts.length > 0 && (
             <div style={{ borderTop: '1px solid var(--neutral-border)', marginTop: '4px', padding: '8px', fontSize: '11.5px', color: 'var(--neutral-muted)' }}>
               <i className="fa-solid fa-circle-info"></i>{' '}
-              {t('manpower.partFilterHint', 'Bỏ tick Part để ẩn dữ liệu của Part đó khỏi bảng.')}
+              {t('manpower.partFilterHint', 'Bỏ tick Part để ẩn dữ liệu của Part đó khỏi bảng. Bỏ tick "All project" để chỉ hiện những dự án có người nhập vào.')}
             </div>
           )}
         </div>
@@ -998,6 +1025,12 @@ export default function ManpowerTab({ currentUser }) {
   // Parts of the selected Team whose data is hidden from the board. Stored as the
   // *excluded* set so a newly created Part is included by default (all ticked).
   const [excludedPartIds, setExcludedPartIds] = useState(() => new Set());
+  // "All project" on = show every project of the Team (how the board has always behaved).
+  // Off = show only the projects somebody from a ticked Part was actually entered into,
+  // whether by their own daily report or by a leader adding them to a cell by hand.
+  const [showAllProjects, setShowAllProjects] = useState(true);
+  // Project ids that have at least one occupant, after the Part filter has been applied.
+  const [occupiedProjectIds, setOccupiedProjectIds] = useState(() => new Set());
   // Rows exactly as they were read from the saved file, so a project that has dropped
   // out of the current view never loses its stored numbers when the board is saved.
   const loadedRowsRef = useRef([]);
@@ -1029,7 +1062,7 @@ export default function ManpowerTab({ currentUser }) {
 
   // Rectangular cell-range selection over the headcount columns, so a block of cells
   // can be copied out as Excel-compatible TSV (and an Excel block pasted back in).
-  // { anchor: {r, c}, focus: {r, c} } as indices into projects[] / locations[].
+  // { anchor: {r, c}, focus: {r, c} } as indices into visibleProjects[] / locations[].
   const [selection, setSelection] = useState(null);
   const isDraggingRef = useRef(false);
 
@@ -1085,7 +1118,7 @@ export default function ManpowerTab({ currentUser }) {
   }, [scopeOptions, selectedScope, departments, currentUser?.department_id]);
 
   // Switching Team starts again with every Part of that Team ticked.
-  useEffect(() => { setExcludedPartIds(new Set()); }, [selectedScope]);
+  useEffect(() => { setExcludedPartIds(new Set()); setShowAllProjects(true); }, [selectedScope]);
 
   const toggleExcludedPart = (partId) => {
     setExcludedPartIds(prev => {
@@ -1165,6 +1198,11 @@ export default function ManpowerTab({ currentUser }) {
 
       setAutoFilledCells(auto);
       setCellNames(names);
+      // Derived from the same headcount the numbers come from, so it already respects the
+      // un-ticked Parts: a project only counts as occupied if a ticked Part put someone in it.
+      setOccupiedProjectIds(new Set(Object.keys(headcount || {}).filter(
+        projectId => Object.values(headcount[projectId] || {}).some(cell => (cell?.count || 0) > 0)
+      )));
       setCells(next);
       setSavedFileName(res?.exists ? (res.file_name || '') : '');
     } catch (err) {
@@ -1172,6 +1210,7 @@ export default function ManpowerTab({ currentUser }) {
       loadedRowsRef.current = [];
       setAutoFilledCells({});
       setCellNames({});
+      setOccupiedProjectIds(new Set());
       setCells({});
       setSavedFileName('');
     } finally {
@@ -1189,10 +1228,19 @@ export default function ManpowerTab({ currentUser }) {
     });
   };
 
+  // The rows on screen. Everything that addresses a row by index - selection, copy, paste,
+  // and the rows written to the saved file - must go through this same array, or an index
+  // would point at a different project than the one the user sees.
+  const visibleProjects = useMemo(() => (
+    showAllProjects
+      ? projects
+      : projects.filter(p => occupiedProjectIds.has(p.manpower_project_id))
+  ), [projects, showAllProjects, occupiedProjectIds]);
+
   // Total headcount across every cell of the board, excluding the free-text detail column.
   const totalManpower = useMemo(() => {
     let sum = 0;
-    projects.forEach(p => {
+    visibleProjects.forEach(p => {
       const row = cells[p.manpower_project_id];
       if (!row) return;
       locations.forEach(loc => {
@@ -1201,7 +1249,7 @@ export default function ManpowerTab({ currentUser }) {
       });
     });
     return sum;
-  }, [cells, projects, locations]);
+  }, [cells, visibleProjects, locations]);
 
   useEffect(() => {
     const stopDragging = () => { isDraggingRef.current = false; };
@@ -1249,7 +1297,7 @@ export default function ManpowerTab({ currentUser }) {
   const totalCols = locations.length + 2;
 
   const readCell = (r, c) => {
-    const project = projects[r];
+    const project = visibleProjects[r];
     if (!project) return '';
     if (c === NAME_COL) return project.name || '';
     const row = cells[project.manpower_project_id];
@@ -1284,7 +1332,7 @@ export default function ManpowerTab({ currentUser }) {
     e.preventDefault();
     setSelection(prev => {
       const base = prev || { anchor: { r, c }, focus: { r, c } };
-      const nr = Math.min(projects.length - 1, Math.max(0, base.focus.r + delta[0]));
+      const nr = Math.min(visibleProjects.length - 1, Math.max(0, base.focus.r + delta[0]));
       const nc = Math.min(totalCols - 1, Math.max(0, base.focus.c + delta[1]));
       return { ...base, focus: { r: nr, c: nc } };
     });
@@ -1375,7 +1423,7 @@ export default function ManpowerTab({ currentUser }) {
     setCells(prev => {
       const next = { ...prev };
       matrix.forEach((cols, i) => {
-        const project = projects[r1 + i];
+        const project = visibleProjects[r1 + i];
         if (!project) return;
         const row = next[project.manpower_project_id] || { values: {}, detail: '' };
         let detail = row.detail || '';
@@ -1390,7 +1438,7 @@ export default function ManpowerTab({ currentUser }) {
       return next;
     });
 
-    const lastRow = Math.min(projects.length - 1, r1 + matrix.length - 1);
+    const lastRow = Math.min(visibleProjects.length - 1, r1 + matrix.length - 1);
     const lastCol = Math.min(totalCols - 1, c1 + Math.max(...matrix.map(m => m.length)) - 1);
     setSelection({ anchor: { r: r1, c: c1 }, focus: { r: lastRow, c: lastCol } });
   };
@@ -1398,13 +1446,13 @@ export default function ManpowerTab({ currentUser }) {
   // The rows that would be written for the current view. Un-ticked Parts are hidden from
   // the view, not deleted, so their previously saved rows are carried through untouched.
   const buildBoardRows = () => {
-    const rows = projects.map(p => ({
+    const rows = visibleProjects.map(p => ({
       manpower_project_id: p.manpower_project_id,
       project_name: p.name,
       values: cells[p.manpower_project_id]?.values || {},
       detail: cells[p.manpower_project_id]?.detail || ''
     }));
-    const visibleIds = new Set(projects.map(p => p.manpower_project_id));
+    const visibleIds = new Set(visibleProjects.map(p => p.manpower_project_id));
     loadedRowsRef.current.forEach(savedRow => {
       if (!visibleIds.has(savedRow.manpower_project_id)) rows.push(savedRow);
     });
@@ -1420,7 +1468,7 @@ export default function ManpowerTab({ currentUser }) {
   // data actually differs from what is already stored, and stays quiet otherwise, so
   // merely browsing dates never creates junk files or pointless writes.
   const persistBoard = useCallback(async () => {
-    if (!selectedScope || projects.length === 0) return;
+    if (!selectedScope || visibleProjects.length === 0) return;
 
     const rows = buildBoardRows();
     const signature = JSON.stringify(rows);
@@ -1458,7 +1506,7 @@ export default function ManpowerTab({ currentUser }) {
     }
     // buildBoardRows reads cells/projects/locations, which are already in the dep list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedScope, selectedScopeName, selectedDate, projects, locations, cells, savedFileName, currentUser?.id, loadConfig]);
+  }, [selectedScope, selectedScopeName, selectedDate, visibleProjects, locations, cells, savedFileName, currentUser?.id, loadConfig]);
 
   // Debounced so typing in the detail column does not fire a request per keystroke.
   useEffect(() => {
@@ -1532,6 +1580,8 @@ export default function ManpowerTab({ currentUser }) {
               onSelectScope={setSelectedScope}
               excludedPartIds={excludedPartIds}
               onTogglePart={toggleExcludedPart}
+              showAllProjects={showAllProjects}
+              onToggleAllProjects={() => setShowAllProjects(prev => !prev)}
               t={t}
             />
           </div>
@@ -1654,7 +1704,7 @@ export default function ManpowerTab({ currentUser }) {
             </span>
           </div>
 
-          {projects.length === 0 || locations.length === 0 ? (
+          {visibleProjects.length === 0 || locations.length === 0 ? (
             <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--neutral-muted)', fontSize: '13.5px' }}>
               <i className="fa-solid fa-table-list" style={{ fontSize: '28px', display: 'block', marginBottom: '10px' }}></i>
               {t('manpower.emptyConfigHint', 'Hãy dùng "Cập nhật thông tin dự án" để thêm danh sách dự án và địa điểm làm việc trước.')}
@@ -1688,7 +1738,7 @@ export default function ManpowerTab({ currentUser }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {projects.map((p, rowIndex) => (
+                    {visibleProjects.map((p, rowIndex) => (
                       <tr key={p.manpower_project_id}>
                         <td
                           onMouseDown={(e) => handleCellMouseDown(rowIndex, NAME_COL, e)}
