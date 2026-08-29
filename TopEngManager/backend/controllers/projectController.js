@@ -272,9 +272,9 @@ exports.deleteProject = async (req, res, next) => {
 };
 
 // Deleting a customer is Admin-only, and refused while any project still points at it.
-// Cascading would take real projects (and their tasks, issues, documents) with it, and
-// silently nulling the link would leave projects whose stored name still carries the
-// customer prefix - so the safe answer is to say what is in the way.
+// This guard is the ONLY protection: the fk_project_customer constraint is ON DELETE SET
+// NULL, so the database would happily blank the link and leave every affected project
+// still displaying the old "[customer code]" prefix baked into its stored name.
 exports.deleteCustomer = async (req, res, next) => {
   try {
     const { customerId, requesterId } = req.body || {};
@@ -293,14 +293,16 @@ exports.deleteCustomer = async (req, res, next) => {
     const linked = await prisma.project.findMany({
       where: { customer_id: customerId },
       select: { project_name: true },
-      take: 5
+      orderBy: [{ project_name: 'asc' }, { id: 'asc' }]
     });
-    const linkedCount = await prisma.project.count({ where: { customer_id: customerId } });
-    if (linkedCount > 0) {
-      const sample = linked.map(p => p.project_name).join(', ');
+    if (linked.length > 0) {
+      // The names go back as a list so the client can lay them out; the sentence is kept
+      // here too for any caller that just shows the error text.
+      const names = linked.map(row => row.project_name);
       return res.status(409).json({
-        error: `Khách hàng này đang gắn với ${linkedCount} dự án nên không thể xóa. Vui lòng chuyển hoặc xóa các dự án đó trước: ${sample}${linkedCount > linked.length ? '...' : ''}`,
-        projectCount: linkedCount
+        error: `Khách hàng "${customer.customer_name}" đã liên kết với dự án ${names.join(', ')} nên không thể xóa.`,
+        projectCount: names.length,
+        projectNames: names
       });
     }
 

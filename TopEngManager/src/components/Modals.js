@@ -1179,8 +1179,13 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
   const isAdmin = !!currentUser?.system_role?.includes('Admin');
 
   const handleDeleteCustomer = async () => {
-    const target = customers.find(c => c.customer_id === activeCustomerId);
-    if (!target) return;
+    // activeCustomerId is the numeric primary key as a string (that is what the list sets),
+    // NOT customer_id. Matching on the wrong field found nothing and the button did nothing.
+    const target = customers.find(c => c.id === parseInt(activeCustomerId, 10));
+    if (!target) {
+      setErrorMsg(t('customer.deleteError', 'Không thể xóa khách hàng.'));
+      return;
+    }
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     const Swal = await getSwal();
     const confirmed = await Swal.fire({
@@ -1215,8 +1220,35 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
       setSuccessMsg(t('customer.deleteSuccess', 'Đã xóa khách hàng.'));
       if (onSaved) onSaved();
     } catch (err) {
-      // The server refuses while projects still point at the customer, and says which.
-      setErrorMsg(err.message || t('customer.deleteError', 'Không thể xóa khách hàng.'));
+      // Being blocked by linked projects is the expected, actionable case, so it gets its
+      // own popup listing them rather than a one-line banner the user has to hunt for.
+      const linkedNames = Array.isArray(err.projectNames) ? err.projectNames : null;
+      if (linkedNames && linkedNames.length > 0) {
+        const escapeHtml = (v) => String(v).replace(/[&<>"']/g, ch => (
+          { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+        ));
+        await Swal.fire({
+          icon: 'warning',
+          title: t('customer.deleteBlockedTitle', 'Không thể xóa khách hàng'),
+          html: `<div style="text-align:left;font-size:13.5px;line-height:1.6">
+            <div>${escapeHtml(
+              t('customer.deleteBlockedText', 'Khách hàng "{name}" đã liên kết với {count} dự án nên không thể xóa:')
+                .replace('{name}', target.customer_name)
+                .replace('{count}', String(linkedNames.length))
+            )}</div>
+            <ul style="margin:10px 0 0 18px;padding:0">
+              ${linkedNames.map(n => `<li>${escapeHtml(n)}</li>`).join('')}
+            </ul>
+            <div style="margin-top:12px;color:#64748b;font-size:12.5px">${escapeHtml(
+              t('customer.deleteBlockedHint', 'Vui lòng xóa hoặc chuyển các dự án này sang khách hàng khác trước, rồi quay lại xóa khách hàng.')
+            )}</div>
+          </div>`,
+          confirmButtonText: t('common.close', 'Đóng'),
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      } else {
+        setErrorMsg(err.message || t('customer.deleteError', 'Không thể xóa khách hàng.'));
+      }
     } finally {
       setLoading(false);
     }

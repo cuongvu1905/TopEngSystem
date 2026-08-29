@@ -1025,7 +1025,10 @@ export const translations = {
     "customer.deleteConfirm": "Bạn có chắc chắn muốn xóa khách hàng \"{name}\"? Hành động này không thể hoàn tác.",
     "customer.deleteError": "Không thể xóa khách hàng.",
     "customer.deleteSuccess": "Đã xóa khách hàng.",
-    "customer.deleteTitle": "Xóa khách hàng"
+    "customer.deleteTitle": "Xóa khách hàng",
+    "customer.deleteBlockedHint": "Vui lòng xóa hoặc chuyển các dự án này sang khách hàng khác trước, rồi quay lại xóa khách hàng.",
+    "customer.deleteBlockedText": "Khách hàng \"{name}\" đã liên kết với {count} dự án nên không thể xóa:",
+    "customer.deleteBlockedTitle": "Không thể xóa khách hàng"
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2045,7 +2048,10 @@ export const translations = {
     "customer.deleteConfirm": "Are you sure you want to delete the customer \"{name}\"? This cannot be undone.",
     "customer.deleteError": "Could not delete the customer.",
     "customer.deleteSuccess": "The customer has been deleted.",
-    "customer.deleteTitle": "Delete customer"
+    "customer.deleteTitle": "Delete customer",
+    "customer.deleteBlockedHint": "Please delete these projects or move them to another customer first, then delete the customer.",
+    "customer.deleteBlockedText": "The customer \"{name}\" is linked to {count} project(s) and cannot be deleted:",
+    "customer.deleteBlockedTitle": "Cannot delete this customer"
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -3065,7 +3071,10 @@ export const translations = {
     "customer.deleteConfirm": "고객 \"{name}\"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
     "customer.deleteError": "고객을 삭제할 수 없습니다.",
     "customer.deleteSuccess": "고객이 삭제되었습니다.",
-    "customer.deleteTitle": "고객 삭제"
+    "customer.deleteTitle": "고객 삭제",
+    "customer.deleteBlockedHint": "먼저 해당 프로젝트를 삭제하거나 다른 고객으로 옮긴 뒤 고객을 삭제하세요.",
+    "customer.deleteBlockedText": "고객 \"{name}\"은(는) {count}개의 프로젝트와 연결되어 있어 삭제할 수 없습니다:",
+    "customer.deleteBlockedTitle": "고객을 삭제할 수 없습니다"
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4085,7 +4094,10 @@ export const translations = {
     "customer.deleteConfirm": "确定要删除客户 \"{name}\" 吗？此操作无法撤销。",
     "customer.deleteError": "无法删除客户。",
     "customer.deleteSuccess": "客户已删除。",
-    "customer.deleteTitle": "删除客户"
+    "customer.deleteTitle": "删除客户",
+    "customer.deleteBlockedHint": "请先删除这些项目或将其转移至其他客户，然后再删除该客户。",
+    "customer.deleteBlockedText": "客户 \"{name}\" 已关联 {count} 个项目，无法删除：",
+    "customer.deleteBlockedTitle": "无法删除该客户"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5105,6 +5117,9 @@ export const translations = {
     "customer.deleteConfirm": "顧客「{name}」を削除してもよろしいですか？この操作は取り消せません。",
     "customer.deleteError": "顧客を削除できませんでした。",
     "customer.deleteSuccess": "顧客を削除しました。",
-    "customer.deleteTitle": "顧客を削除"
+    "customer.deleteTitle": "顧客を削除",
+    "customer.deleteBlockedHint": "これらのプロジェクトを削除するか別の顧客に移してから、顧客を削除してください。",
+    "customer.deleteBlockedText": "顧客「{name}」は {count} 件のプロジェクトに紐付いているため削除できません:",
+    "customer.deleteBlockedTitle": "この顧客は削除できません"
   }
 };
