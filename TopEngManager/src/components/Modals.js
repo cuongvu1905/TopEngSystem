@@ -1174,6 +1174,54 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
     }
   };
 
+  // Deleting a customer is Admin-only. The server enforces it too: hiding the button is
+  // not a permission check, and this one removes a record other data can point at.
+  const isAdmin = !!currentUser?.system_role?.includes('Admin');
+
+  const handleDeleteCustomer = async () => {
+    const target = customers.find(c => c.customer_id === activeCustomerId);
+    if (!target) return;
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    const Swal = await getSwal();
+    const confirmed = await Swal.fire({
+      title: t('customer.deleteTitle', 'Xóa khách hàng'),
+      text: t('customer.deleteConfirm', 'Bạn có chắc chắn muốn xóa khách hàng "{name}"? Hành động này không thể hoàn tác.')
+        .replace('{name}', target.customer_name),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: t('common.confirm', 'Đồng ý'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b'
+    });
+    if (!confirmed.isConfirmed) return;
+
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await db.deleteCustomer(target.customer_id, currentUser.id);
+      await db.logActivity(
+        currentUser.id, 'DELETE', 'Customer', target.customer_id,
+        `đã xóa khách hàng '${target.customer_name}'`
+      ).catch(() => {});
+      await loadCustomers();
+      setActiveCustomerId('new');
+      setCustName('');
+      setCustCode('');
+      setAddress('');
+      setTaxCode('');
+      setIsEditing(true);
+      setSuccessMsg(t('customer.deleteSuccess', 'Đã xóa khách hàng.'));
+      if (onSaved) onSaved();
+    } catch (err) {
+      // The server refuses while projects still point at the customer, and says which.
+      setErrorMsg(err.message || t('customer.deleteError', 'Không thể xóa khách hàng.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderCustomerFormContent = () => (
     <>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: 'var(--neutral-dark)', borderBottom: '2px solid var(--primary-color)', paddingBottom: '8px', display: 'inline-block', width: 'fit-content' }}>
@@ -1281,6 +1329,18 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
               </table>
 
               <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--neutral-border)', paddingTop: '16px' }}>
+                {/* Sits apart from Save/Cancel so it cannot be hit by accident */}
+                {isAdmin && activeCustomerId !== 'new' && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={handleDeleteCustomer}
+                    disabled={loading}
+                    style={{ marginRight: 'auto', backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
+                  >
+                    <i className="fa-solid fa-trash-can"></i> {t('customer.deleteBtn', 'Xóa khách hàng')}
+                  </button>
+                )}
                 {isEditing ? (
                   <>
                     <button 

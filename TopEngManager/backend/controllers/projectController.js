@@ -271,6 +271,46 @@ exports.deleteProject = async (req, res, next) => {
   }
 };
 
+// Deleting a customer is Admin-only, and refused while any project still points at it.
+// Cascading would take real projects (and their tasks, issues, documents) with it, and
+// silently nulling the link would leave projects whose stored name still carries the
+// customer prefix - so the safe answer is to say what is in the way.
+exports.deleteCustomer = async (req, res, next) => {
+  try {
+    const { customerId, requesterId } = req.body || {};
+    if (!customerId) {
+      return res.status(400).json({ error: 'Thiếu mã khách hàng.' });
+    }
+    if (!(await isRequesterAdmin(requesterId))) {
+      return res.status(403).json({ error: 'Chỉ tài khoản Admin mới có quyền xóa khách hàng.' });
+    }
+
+    const customer = await prisma.customer.findUnique({ where: { customer_id: customerId } });
+    if (!customer) {
+      return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
+    }
+
+    const linked = await prisma.project.findMany({
+      where: { customer_id: customerId },
+      select: { project_name: true },
+      take: 5
+    });
+    const linkedCount = await prisma.project.count({ where: { customer_id: customerId } });
+    if (linkedCount > 0) {
+      const sample = linked.map(p => p.project_name).join(', ');
+      return res.status(409).json({
+        error: `Khách hàng này đang gắn với ${linkedCount} dự án nên không thể xóa. Vui lòng chuyển hoặc xóa các dự án đó trước: ${sample}${linkedCount > linked.length ? '...' : ''}`,
+        projectCount: linkedCount
+      });
+    }
+
+    await prisma.customer.delete({ where: { customer_id: customerId } });
+    res.json({ success: true, customer_name: customer.customer_name });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getCustomers = async (req, res, next) => {
   try {
     const customers = await prisma.customer.findMany({

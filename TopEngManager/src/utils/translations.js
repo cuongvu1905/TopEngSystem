@@ -1020,7 +1020,12 @@ export const translations = {
     "project.templateFoldersNoneHint": "Không tích thư mục nào: dự án sẽ chỉ có thư mục gốc, không có thư mục con.",
     "manpower.allProjects": "All project",
     "manpower.filteredNote": "DA có người nhập",
-    "documents.templateTreePick": "Chọn các thư mục cần tạo (theo thiết kế của Admin):"
+    "documents.templateTreePick": "Chọn các thư mục cần tạo (theo thiết kế của Admin):",
+    "customer.deleteBtn": "Xóa khách hàng",
+    "customer.deleteConfirm": "Bạn có chắc chắn muốn xóa khách hàng \"{name}\"? Hành động này không thể hoàn tác.",
+    "customer.deleteError": "Không thể xóa khách hàng.",
+    "customer.deleteSuccess": "Đã xóa khách hàng.",
+    "customer.deleteTitle": "Xóa khách hàng"
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2035,7 +2040,12 @@ export const translations = {
     "project.templateFoldersNoneHint": "Nothing ticked: the project will only get the top-level folders, with no subfolders.",
     "manpower.allProjects": "All projects",
     "manpower.filteredNote": "entered projects only",
-    "documents.templateTreePick": "Pick the folders to create (from the Admin design):"
+    "documents.templateTreePick": "Pick the folders to create (from the Admin design):",
+    "customer.deleteBtn": "Delete customer",
+    "customer.deleteConfirm": "Are you sure you want to delete the customer \"{name}\"? This cannot be undone.",
+    "customer.deleteError": "Could not delete the customer.",
+    "customer.deleteSuccess": "The customer has been deleted.",
+    "customer.deleteTitle": "Delete customer"
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -3050,7 +3060,12 @@ export const translations = {
     "project.templateFoldersNoneHint": "아무것도 선택하지 않으면 최상위 폴더만 생성되고 하위 폴더는 없습니다.",
     "manpower.allProjects": "전체 프로젝트",
     "manpower.filteredNote": "입력된 프로젝트만",
-    "documents.templateTreePick": "생성할 폴더를 선택하세요 (관리자 설계 기준):"
+    "documents.templateTreePick": "생성할 폴더를 선택하세요 (관리자 설계 기준):",
+    "customer.deleteBtn": "고객 삭제",
+    "customer.deleteConfirm": "고객 \"{name}\"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+    "customer.deleteError": "고객을 삭제할 수 없습니다.",
+    "customer.deleteSuccess": "고객이 삭제되었습니다.",
+    "customer.deleteTitle": "고객 삭제"
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4065,7 +4080,12 @@ export const translations = {
     "project.templateFoldersNoneHint": "未勾选任何项：项目将只有顶层文件夹，没有子文件夹。",
     "manpower.allProjects": "全部项目",
     "manpower.filteredNote": "仅有人填写的项目",
-    "documents.templateTreePick": "请选择要创建的文件夹（按管理员设计）："
+    "documents.templateTreePick": "请选择要创建的文件夹（按管理员设计）：",
+    "customer.deleteBtn": "删除客户",
+    "customer.deleteConfirm": "确定要删除客户 \"{name}\" 吗？此操作无法撤销。",
+    "customer.deleteError": "无法删除客户。",
+    "customer.deleteSuccess": "客户已删除。",
+    "customer.deleteTitle": "删除客户"
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5080,6 +5100,11 @@ export const translations = {
     "project.templateFoldersNoneHint": "何も選択しない場合、最上位のフォルダのみが作成され、サブフォルダはありません。",
     "manpower.allProjects": "すべてのプロジェクト",
     "manpower.filteredNote": "入力済みのみ",
-    "documents.templateTreePick": "作成するフォルダを選択してください（管理者の設計に基づく）:"
+    "documents.templateTreePick": "作成するフォルダを選択してください（管理者の設計に基づく）:",
+    "customer.deleteBtn": "顧客を削除",
+    "customer.deleteConfirm": "顧客「{name}」を削除してもよろしいですか？この操作は取り消せません。",
+    "customer.deleteError": "顧客を削除できませんでした。",
+    "customer.deleteSuccess": "顧客を削除しました。",
+    "customer.deleteTitle": "顧客を削除"
   }
 };

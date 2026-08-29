@@ -14,5 +14,6 @@ router.post('/getDepartments', projectController.getDepartments);
 router.post('/saveDepartment', projectController.saveDepartment);
 router.post('/deleteDepartment', projectController.deleteDepartment);
 router.post('/saveCustomer', projectController.saveCustomer);
+router.post('/deleteCustomer', projectController.deleteCustomer);
 
 module.exports = router;

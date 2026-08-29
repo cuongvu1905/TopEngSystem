@@ -589,6 +589,10 @@ export const MySQLAdapter = {
     return await callApi('getCustomers');
   },
 
+  deleteCustomer: async function(customerId, requesterId) {
+    return await callApi('deleteCustomer', { customerId, requesterId });
+  },
+
   saveCustomer: async function(customer) {
     return await callApi('saveCustomer', { customer });
   },
