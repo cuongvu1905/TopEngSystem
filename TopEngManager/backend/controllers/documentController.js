@@ -93,11 +93,32 @@ exports.getDocumentFolders = async (req, res, next) => {
   }
 };
 
+// Creating folders inside a project is limited to that project's PM, plus Admin. Enforced
+// here as well as in the tree, because a hidden button is not a permission check. A general
+// Team/Part Leader role does not count: the check is against THIS project's member row.
+async function canManageProjectFolders(projectId, requesterId) {
+  if (!projectId) return true;            // company-wide Documents stays open
+  if (!requesterId) return false;
+  const requester = await prisma.user.findUnique({
+    where: { user_id: requesterId },
+    select: { role: true }
+  });
+  if (requester && requester.role && requester.role.includes('Admin')) return true;
+  const membership = await prisma.projectmember.findFirst({
+    where: { project_id: projectId, userId: requesterId },
+    select: { role: true }
+  });
+  return !!(membership && membership.role === 'PM');
+}
+
 exports.createDocumentFolder = async (req, res, next) => {
   try {
     const { name, parentFolderId, projectId, createdBy } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Tên thư mục không được để trống' });
+    }
+    if (!(await canManageProjectFolders(projectId, createdBy))) {
+      return res.status(403).json({ error: 'Chỉ PM của dự án (hoặc Admin) mới có quyền tạo thư mục.' });
     }
     const folder = await prisma.documentfolder.create({
       data: {
@@ -239,6 +260,9 @@ exports.createFolderTreeFromTemplate = async (req, res, next) => {
     const level = Number(templateLevel);
     if (level !== 0 && level !== 1) {
       return res.status(400).json({ error: 'templateLevel không hợp lệ (chỉ nhận 0 hoặc 1).' });
+    }
+    if (!(await canManageProjectFolders(projectId, createdBy))) {
+      return res.status(403).json({ error: 'Chỉ PM của dự án (hoặc Admin) mới có quyền tạo thư mục.' });
     }
 
     if (parentFolderId) {

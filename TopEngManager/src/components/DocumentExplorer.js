@@ -68,6 +68,10 @@ export default function DocumentExplorer({ projectId = null }) {
     ? projectMembers.find(m => m.project_id === projectId && m.user_id === currentUser?.id)?.project_role
     : null;
   const canUploadDocuments = !projectId || hasPermission('upload_project_documents') || myProjectRole === 'PM';
+  // Creating folders inside a project is limited to its PM (and Admin). A Team/Part Leader
+  // who is not the PM of THIS project cannot, so a general role is not enough. The
+  // company-wide Documents page keeps its existing open behaviour.
+  const canCreateFolders = !projectId || isAdmin || myProjectRole === 'PM';
 
   const loadFolders = useCallback(async () => {
     try {
@@ -251,6 +255,7 @@ export default function DocumentExplorer({ projectId = null }) {
   };
 
   const handleCreateFolder = async (parentFolderId, parentFolder) => {
+    if (!canCreateFolders) return;
     // SweetAlert2 restores focus to the triggering button on close, which in
     // some browsers re-fires a phantom keyboard "click" on it — blur it
     // first so that phantom click has no target and can't re-open the dialog.
@@ -527,13 +532,15 @@ export default function DocumentExplorer({ projectId = null }) {
             <span>{folder.name}</span>
           </div>
           <div className="doc-folder-node-actions">
-            <button
-              type="button"
-              title={t('documents.newSubfolder', 'Thư mục con mới')}
-              onClick={(e) => { e.stopPropagation(); handleCreateFolder(folder.folder_id, folder); }}
-            >
-              <i className="fa-solid fa-plus"></i>
-            </button>
+            {canCreateFolders && (
+              <button
+                type="button"
+                title={t('documents.newSubfolder', 'Thư mục con mới')}
+                onClick={(e) => { e.stopPropagation(); handleCreateFolder(folder.folder_id, folder); }}
+              >
+                <i className="fa-solid fa-plus"></i>
+              </button>
+            )}
           </div>
         </div>
         {hasChildren && !isCollapsed && (
@@ -556,14 +563,16 @@ export default function DocumentExplorer({ projectId = null }) {
       <div className={`doc-folder-tree-panel ${mobileTreeOpen ? 'show' : ''}`}>
         <div className="doc-folder-tree-header">
           <span>{t('documents.folders', 'Thư mục')}</span>
-          <button
-            type="button"
-            className="doc-folder-add-root"
-            title={t('documents.newFolder', 'Thư mục mới')}
-            onClick={() => handleCreateFolder(null)}
-          >
-            <i className="fa-solid fa-folder-plus"></i>
-          </button>
+          {canCreateFolders && (
+            <button
+              type="button"
+              className="doc-folder-add-root"
+              title={t('documents.newFolder', 'Thư mục mới')}
+              onClick={() => handleCreateFolder(null)}
+            >
+              <i className="fa-solid fa-folder-plus"></i>
+            </button>
+          )}
         </div>
         <div className="doc-folder-tree-scroll">
           {rootFolders.length === 0 ? (
