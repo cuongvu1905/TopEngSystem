@@ -1007,7 +1007,6 @@ export const translations = {
     "roomBooking.nextWeek": "Tuần sau",
     "roomBooking.prevWeek": "Tuần trước",
     "roomBooking.thisWeek": "Tuần này",
-    "documents.templateTreeConfirm": "Sẽ tạo cây thư mục sau theo thiết kế của Admin:",
     "documents.templateTreeCreated": "Đã tạo {count} thư mục theo mẫu.",
     "documents.templateTreeTitle": "Tạo thư mục theo mẫu",
     "roomBooking.loadFailed": "Không tải được lịch đặt phòng.",
@@ -1020,7 +1019,8 @@ export const translations = {
     "project.templateFoldersLabel": "Thư mục tài liệu cần tạo",
     "project.templateFoldersNoneHint": "Không tích thư mục nào: dự án sẽ chỉ có thư mục gốc, không có thư mục con.",
     "manpower.allProjects": "All project",
-    "manpower.filteredNote": "DA có người nhập"
+    "manpower.filteredNote": "DA có người nhập",
+    "documents.templateTreePick": "Chọn các thư mục cần tạo (theo thiết kế của Admin):"
   },
   "en": {
     "sidebar.roomBooking": "Meeting Rooms",
@@ -2022,7 +2022,6 @@ export const translations = {
     "roomBooking.nextWeek": "Next week",
     "roomBooking.prevWeek": "Previous week",
     "roomBooking.thisWeek": "This week",
-    "documents.templateTreeConfirm": "The following folder tree will be created from the Admin design:",
     "documents.templateTreeCreated": "Created {count} folders from the template.",
     "documents.templateTreeTitle": "Create folders from the template",
     "roomBooking.loadFailed": "Could not load the room schedule.",
@@ -2035,7 +2034,8 @@ export const translations = {
     "project.templateFoldersLabel": "Document folders to create",
     "project.templateFoldersNoneHint": "Nothing ticked: the project will only get the top-level folders, with no subfolders.",
     "manpower.allProjects": "All projects",
-    "manpower.filteredNote": "entered projects only"
+    "manpower.filteredNote": "entered projects only",
+    "documents.templateTreePick": "Pick the folders to create (from the Admin design):"
   },
   "ko": {
     "sidebar.roomBooking": "회의실 예약",
@@ -3037,7 +3037,6 @@ export const translations = {
     "roomBooking.nextWeek": "다음 주",
     "roomBooking.prevWeek": "지난주",
     "roomBooking.thisWeek": "이번 주",
-    "documents.templateTreeConfirm": "관리자가 설계한 다음 폴더 구조가 생성됩니다:",
     "documents.templateTreeCreated": "템플릿으로 {count}개의 폴더를 생성했습니다.",
     "documents.templateTreeTitle": "템플릿으로 폴더 만들기",
     "roomBooking.loadFailed": "회의실 일정을 불러올 수 없습니다.",
@@ -3050,7 +3049,8 @@ export const translations = {
     "project.templateFoldersLabel": "생성할 문서 폴더",
     "project.templateFoldersNoneHint": "아무것도 선택하지 않으면 최상위 폴더만 생성되고 하위 폴더는 없습니다.",
     "manpower.allProjects": "전체 프로젝트",
-    "manpower.filteredNote": "입력된 프로젝트만"
+    "manpower.filteredNote": "입력된 프로젝트만",
+    "documents.templateTreePick": "생성할 폴더를 선택하세요 (관리자 설계 기준):"
   },
   "zh": {
     "sidebar.roomBooking": "会议室预订",
@@ -4052,7 +4052,6 @@ export const translations = {
     "roomBooking.nextWeek": "下一周",
     "roomBooking.prevWeek": "上一周",
     "roomBooking.thisWeek": "本周",
-    "documents.templateTreeConfirm": "将按管理员设计创建以下文件夹结构：",
     "documents.templateTreeCreated": "已按模板创建 {count} 个文件夹。",
     "documents.templateTreeTitle": "按模板创建文件夹",
     "roomBooking.loadFailed": "无法加载会议室日程。",
@@ -4065,7 +4064,8 @@ export const translations = {
     "project.templateFoldersLabel": "需要创建的文档文件夹",
     "project.templateFoldersNoneHint": "未勾选任何项：项目将只有顶层文件夹，没有子文件夹。",
     "manpower.allProjects": "全部项目",
-    "manpower.filteredNote": "仅有人填写的项目"
+    "manpower.filteredNote": "仅有人填写的项目",
+    "documents.templateTreePick": "请选择要创建的文件夹（按管理员设计）："
   },
   "ja": {
     "sidebar.roomBooking": "会議室予約",
@@ -5067,7 +5067,6 @@ export const translations = {
     "roomBooking.nextWeek": "次の週",
     "roomBooking.prevWeek": "前の週",
     "roomBooking.thisWeek": "今週",
-    "documents.templateTreeConfirm": "管理者が設計した次のフォルダ構成を作成します:",
     "documents.templateTreeCreated": "テンプレートから {count} 個のフォルダを作成しました。",
     "documents.templateTreeTitle": "テンプレートからフォルダを作成",
     "roomBooking.loadFailed": "会議室のスケジュールを読み込めませんでした。",
@@ -5080,6 +5079,7 @@ export const translations = {
     "project.templateFoldersLabel": "作成するドキュメントフォルダ",
     "project.templateFoldersNoneHint": "何も選択しない場合、最上位のフォルダのみが作成され、サブフォルダはありません。",
     "manpower.allProjects": "すべてのプロジェクト",
-    "manpower.filteredNote": "入力済みのみ"
+    "manpower.filteredNote": "入力済みのみ",
+    "documents.templateTreePick": "作成するフォルダを選択してください（管理者の設計に基づく）:"
   }
 };

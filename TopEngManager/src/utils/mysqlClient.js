@@ -180,8 +180,8 @@ export const MySQLAdapter = {
     return data;
   },
 
-  createFolderTreeFromTemplate: async function({ projectId, parentFolderId, templateLevel, createdBy }) {
-    return await callApi('createFolderTreeFromTemplate', { projectId, parentFolderId, templateLevel, createdBy });
+  createFolderTreeFromTemplate: async function({ projectId, parentFolderId, templateLevel, createdBy, selectedFolderIds }) {
+    return await callApi('createFolderTreeFromTemplate', { projectId, parentFolderId, templateLevel, createdBy, selectedFolderIds });
   },
 
   getSelectableTemplateFolders: async function() {

@@ -85,7 +85,7 @@ exports.getDocumentFolders = async (req, res, next) => {
     const { projectId } = req.body;
     const folders = await prisma.documentfolder.findMany({
       where: { project_id: projectId || null },
-      orderBy: { name: 'asc' }
+      orderBy: [{ name: 'asc' }, { id: 'asc' }]
     });
     res.json(folders);
   } catch (err) {
@@ -188,7 +188,7 @@ function selectableTemplateFolders(templateFolders) {
 
 exports.getSelectableTemplateFolders = async (req, res, next) => {
   try {
-    const templateFolders = await prisma.foldertemplate.findMany({ orderBy: { name: 'asc' } });
+    const templateFolders = await prisma.foldertemplate.findMany({ orderBy: [{ name: 'asc' }, { id: 'asc' }] });
     res.json(selectableTemplateFolders(templateFolders).map(f => ({
       template_folder_id: f.template_folder_id,
       name: f.name,
@@ -199,31 +199,30 @@ exports.getSelectableTemplateFolders = async (req, res, next) => {
   }
 };
 
-// selectedFolderIds (optional) limits which of the <Tên_Máy>/* folders get created. Passing
-// null/undefined keeps the old behaviour of cloning the whole design, so a caller that does
-// not know about the choice still provisions a complete tree.
+// Removes the <Tên_Máy>/* branches the caller did not pick, along with everything under
+// them. selectedFolderIds of null/undefined means "keep everything", so a caller that does
+// not know about the choice still gets the complete design.
+function pruneUnpickedBranches(templateFolders, selectedFolderIds) {
+  if (!Array.isArray(selectedFolderIds)) return templateFolders;
+  const keep = new Set(selectedFolderIds);
+  const pruned = new Set();
+  const dropSubtree = (id) => {
+    pruned.add(id);
+    templateFolders
+      .filter(f => f.parent_template_folder_id === id)
+      .forEach(child => dropSubtree(child.template_folder_id));
+  };
+  selectableTemplateFolders(templateFolders)
+    .filter(f => !keep.has(f.template_folder_id))
+    .forEach(f => dropSubtree(f.template_folder_id));
+  return templateFolders.filter(f => !pruned.has(f.template_folder_id));
+}
+
 exports.createDefaultProjectFolderTree = async (projectId, createdBy, selectedFolderIds) => {
   const { templateFolders, templateSlots } = await loadTemplate();
   if (templateFolders.length === 0) return;
 
-  let effective = templateFolders;
-  if (Array.isArray(selectedFolderIds)) {
-    const selectable = selectableTemplateFolders(templateFolders);
-    const keep = new Set(selectedFolderIds);
-    // drop the unpicked branches: the folder itself and everything under it
-    const pruned = new Set();
-    const dropSubtree = (id) => {
-      pruned.add(id);
-      templateFolders
-        .filter(f => f.parent_template_folder_id === id)
-        .forEach(child => dropSubtree(child.template_folder_id));
-    };
-    selectable
-      .filter(f => !keep.has(f.template_folder_id))
-      .forEach(f => dropSubtree(f.template_folder_id));
-    effective = templateFolders.filter(f => !pruned.has(f.template_folder_id));
-  }
-
+  const effective = pruneUnpickedBranches(templateFolders, selectedFolderIds);
   const roots = effective.filter(f => !f.parent_template_folder_id);
   await cloneTemplateNodes(roots, null, {
     projectId, createdBy, templateFolders: effective, templateSlots
@@ -236,7 +235,7 @@ exports.createDefaultProjectFolderTree = async (projectId, createdBy, selectedFo
 // they create a single empty folder as before.
 exports.createFolderTreeFromTemplate = async (req, res, next) => {
   try {
-    const { projectId, parentFolderId, templateLevel, createdBy } = req.body || {};
+    const { projectId, parentFolderId, templateLevel, createdBy, selectedFolderIds } = req.body || {};
     const level = Number(templateLevel);
     if (level !== 0 && level !== 1) {
       return res.status(400).json({ error: 'templateLevel không hợp lệ (chỉ nhận 0 hoặc 1).' });
@@ -249,7 +248,10 @@ exports.createFolderTreeFromTemplate = async (req, res, next) => {
       }
     }
 
-    const { templateFolders, templateSlots } = await loadTemplate();
+    const { templateFolders: allTemplateFolders, templateSlots } = await loadTemplate();
+    // The same branch pruning the project-creation dialog uses, so both "pick your folders"
+    // flows produce identical trees.
+    const templateFolders = pruneUnpickedBranches(allTemplateFolders, selectedFolderIds);
     const roots = templateFolders.filter(f => !f.parent_template_folder_id);
     const nodes = level === 0
       ? roots
@@ -275,7 +277,7 @@ exports.createFolderTreeFromTemplate = async (req, res, next) => {
 
 exports.getFolderTemplates = async (req, res, next) => {
   try {
-    const folders = await prisma.foldertemplate.findMany({ orderBy: { name: 'asc' } });
+    const folders = await prisma.foldertemplate.findMany({ orderBy: [{ name: 'asc' }, { id: 'asc' }] });
     res.json(folders);
   } catch (err) {
     next(err);

@@ -144,15 +144,32 @@ export default function DocumentExplorer({ projectId = null }) {
 
   const rootLabel = projectId ? t('documents.projectRoot', 'Tài liệu dự án') : t('documents.companyRoot', 'Tất cả tài liệu');
 
-  // Indented preview of what a template clone will produce, so the confirm dialog shows
-  // the actual tree instead of just a count.
-  const buildTemplatePreview = (templates, nodes, depth = 0, lines = []) => {
-    for (const node of nodes) {
-      lines.push('\u00a0'.repeat(depth * 4) + node.name);
-      const children = templates.filter(c => c.parent_template_folder_id === node.template_folder_id);
-      buildTemplatePreview(templates, children, depth + 1, lines);
-    }
-    return lines;
+  // Renders the tree to be created, with a checkbox on every <Tên_Máy>/* folder so the
+  // creator picks the same way they do in the new-project dialog. Levels above those are
+  // structural and always created, so they are plain text.
+  const buildTemplateDialogHtml = (templates, nodes, selectableIds) => {
+    const escapeHtml = (s) => String(s).replace(/[&<>"']/g, ch => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+    ));
+    const lines = [];
+    const walk = (list, depth) => {
+      list.forEach(node => {
+        const pad = '&nbsp;'.repeat(depth * 4);
+        if (selectableIds.has(node.template_folder_id)) {
+          lines.push(
+            `<label style="display:block;cursor:pointer">${pad}` +
+            `<input type="checkbox" class="tmpl-pick" value="${escapeHtml(node.template_folder_id)}" checked ` +
+            `style="vertical-align:middle;margin-right:6px" />` +
+            `<span style="vertical-align:middle">${escapeHtml(node.name)}</span></label>`
+          );
+        } else {
+          lines.push(`<div>${pad}${escapeHtml(node.name)}</div>`);
+        }
+        walk(templates.filter(c => c.parent_template_folder_id === node.template_folder_id), depth + 1);
+      });
+    };
+    walk(nodes, 0);
+    return lines.join('');
   };
 
   // Creates the Admin-designed tree instead of a single empty folder.
@@ -180,26 +197,37 @@ export default function DocumentExplorer({ projectId = null }) {
     const escapeHtml = (s) => String(s).replace(/[&<>"']/g, ch => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
     ));
-    const preview = buildTemplatePreview(templates, nodes)
-      .map(line => escapeHtml(line))
-      .join('<br/>');
+    // The pickable folders are always the same ones: the children of the template's second
+    // level, i.e. <Tên_Xưởng>/<Tên_Máy>/*, whichever level this button starts from.
+    let selectable;
+    try {
+      selectable = await db.getSelectableTemplateFolders();
+    } catch (err) {
+      selectable = [];
+    }
+    const selectableIds = new Set((selectable || []).map(f => f.template_folder_id));
+    const previewHtml = buildTemplateDialogHtml(templates, nodes, selectableIds);
 
     const result = await Swal.fire({
       title: t('documents.templateTreeTitle', 'Tạo thư mục theo mẫu'),
       html: `<div style="text-align:left;font-size:13px;line-height:1.7">
-        <div style="margin-bottom:8px">${escapeHtml(t('documents.templateTreeConfirm', 'Sẽ tạo cây thư mục sau theo thiết kế của Admin:'))}</div>
-        <div style="font-family:monospace">${preview}</div>
+        <div style="margin-bottom:8px">${escapeHtml(t('documents.templateTreePick', 'Chọn các thư mục cần tạo (theo thiết kế của Admin):'))}</div>
+        <div style="font-family:monospace">${previewHtml}</div>
       </div>`,
       showCancelButton: true,
       confirmButtonText: t('common.create', 'Tạo mới'),
       cancelButtonText: t('common.cancel', 'Hủy'),
-      confirmButtonColor: 'var(--primary-color)'
+      confirmButtonColor: 'var(--primary-color)',
+      preConfirm: () => Array.from(document.querySelectorAll('.tmpl-pick:checked')).map(el => el.value)
     });
     if (!result.isConfirmed) return true;   // handled: the user chose not to
+    const picked = Array.isArray(result.value) ? result.value : [];
 
     try {
       const res = await db.createFolderTreeFromTemplate({
-        projectId, parentFolderId, templateLevel, createdBy: currentUser.id
+        projectId, parentFolderId, templateLevel, createdBy: currentUser.id,
+        // only meaningful when the design actually offers a choice
+        selectedFolderIds: selectableIds.size > 0 ? picked : undefined
       });
       await loadFolders();
       const parentPath = parentFolderId ? getFolderPath(parentFolderId) : rootLabel;
