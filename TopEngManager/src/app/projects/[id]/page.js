@@ -207,7 +207,7 @@ export default function ProjectDetail({ params }) {
   const router = useRouter();
   const queryIssueId = searchParams.get('issueId');
   const queryTaskId = searchParams.get('taskId');
-  const { currentUser, projects, tasks, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission } = useApp();
+  const { currentUser, projects, tasks, projectMembers, users, chatRooms, chatRoomMembers, reloadAll, hasPermission, setHeaderActions, setHeaderTitle } = useApp();
   const { t } = useLanguage();
 
    const [activeSubTab, setActiveSubTab] = useState('kanban');
@@ -319,6 +319,7 @@ export default function ProjectDetail({ params }) {
   const [editIssueDesc, setEditIssueDesc] = useState('');
 
   const [departments, setDepartments] = useState([]);
+  const [expandedMemberId, setExpandedMemberId] = useState(null);
 
   // Modals state
   const [isProjModalOpen, setIsProjModalOpen] = useState(false);
@@ -1802,42 +1803,50 @@ export default function ProjectDetail({ params }) {
     return uniqueNames.length > 0 ? uniqueNames.join(', ') : 'Chưa có người thực hiện';
   };
 
+  useEffect(() => {
+    if (!project) return;
+    setHeaderTitle(
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, overflow: 'hidden' }}>
+        <Link href="/projects" style={{ color: 'var(--neutral-muted)', fontSize: '13px', display: 'inline-flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }} title={t('projects.backToList', 'Quay lại danh sách dự án')}>
+          <i className="fa-solid fa-arrow-left"></i>
+        </Link>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+          {project.name}
+        </span>
+      </span>
+    );
+    setHeaderActions(
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        {project.is_public && (
+          <Link href={`/public-projects/${projectId}`} target="_blank" className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <i className="fa-solid fa-globe"></i> {t('project.publicView', 'Xem trang công khai')}
+          </Link>
+        )}
+        {canManageProject && (
+          <button className="btn btn-secondary" onClick={() => setIsProjModalOpen(true)} style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <i className="fa-solid fa-pen"></i> {t('common.edit', 'Sửa')}
+          </button>
+        )}
+      </div>
+    );
+    return () => {
+      setHeaderActions(null);
+      setHeaderTitle(null);
+    };
+  }, [project, canManageProject, projectId, setHeaderActions, setHeaderTitle, t]);
+
   return (
     <div className="scrollable-view">
-      <div className="view-header" style={{ marginBottom: '12px' }}>
-        <div className="view-title-group">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Link href="/projects" style={{ fontSize: '18px', color: 'var(--neutral-muted)' }}>
-              <i className="fa-solid fa-arrow-left"></i>
-            </Link>
-            <h2>{t('common.project', 'Dự án')}: {project.name}</h2>
-          </div>
-          <p>{project.description || 'Không có mô tả.'}</p>
-        </div>
-        <div className="view-actions" style={{ display: 'flex', gap: '8px' }}>
-          {project.is_public && (
-            <Link href={`/public-projects/${projectId}`} target="_blank" className="btn btn-secondary">
-              <i className="fa-solid fa-globe"></i> {t('project.publicView', 'Xem trang công khai')}
-            </Link>
-          )}
-          {canManageProject && (
-            <button className="btn btn-secondary" onClick={() => setIsProjModalOpen(true)}>
-              <i className="fa-solid fa-pen"></i> {t('common.edit', 'Chỉnh sửa')}
-            </button>
-          )}
-        </div>
-      </div>
-
       <div className="project-meta-strip">
-        <div className="project-meta-item">
+        <div className="project-meta-item project-meta-col-type">
           <label>{t('project.classification', 'Phân loại')}</label>
           <span>
-            <span className={`badge ${project.visibility === 'Public' ? 'badge-info' : 'badge-secondary'}`} style={{ fontSize: '11px', padding: '3px 6px' }}>
+            <span className={`badge ${project.visibility === 'Public' ? 'badge-info' : 'badge-secondary'}`}>
               {project.visibility === 'Public' ? 'PUBLIC' : 'PRIVATE'}
             </span>
           </span>
         </div>
-        <div className="project-meta-item">
+        <div className="project-meta-item project-meta-col-status">
           <label>{t('common.status', 'Trạng thái')}</label>
           {canManageProject ? (
             <select
@@ -1850,11 +1859,10 @@ export default function ProjectDetail({ params }) {
                   await db.saveProject(updatedProj, membersList);
                   await reloadAll();
                 } catch (err) {
-                  Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật trạng thái: " + err.message });
+                  Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập trạng thái: " + err.message });
                 }
               }}
-              className="doc-select-filter"
-              style={{ padding: '2px 6px', borderRadius: '4px', height: '26px', fontSize: '12px', border: '1px solid var(--neutral-border)' }}
+              className="project-meta-select"
             >
               <option value="Khởi tạo">INITIATING</option>
               <option value="Lập kế hoạch">PLANNING</option>
@@ -1866,10 +1874,23 @@ export default function ProjectDetail({ params }) {
             <span><span className="badge badge-info">{project.status === 'Khởi tạo' ? 'INITIATING' : project.status === 'Lập kế hoạch' ? 'PLANNING' : project.status === 'Thực thi' ? 'EXECUTING' : project.status === 'Giám sát' ? 'MONITORING' : project.status === 'Kết thúc' ? 'CLOSED' : (project.status || 'EXECUTING')}</span></span>
           )}
         </div>
-        <div className="project-meta-item">
+        <div className="project-meta-item project-meta-col-count">
+          <label>{t('project.taskCount', 'Số lượng việc')}</label>
+          <span>{pTasks.length} {t('project.tasksSuffix', 'công việc')}</span>
+        </div>
+        <div className="project-meta-item project-meta-col-progress project-meta-progress-col">
+          <label>{t('project.progress', 'Tiến độ dự án')}</label>
+          <div className="project-meta-progress-row">
+            <div className="progress-bar-outer">
+              <div className="progress-bar-inner" style={{ width: `${progress}%` }}></div>
+            </div>
+            <span className="project-progress-percent">{progress}%</span>
+          </div>
+        </div>
+        <div className="project-meta-item project-meta-col-time">
           <label>{t('project.timeframe', 'Thời gian')}</label>
           {canManageProject ? (
-            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <div className="project-meta-date-group">
               <input
                 type="date"
                 value={formatDateForInput(project.start_date) || ''}
@@ -1884,9 +1905,9 @@ export default function ProjectDetail({ params }) {
                     Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật ngày bắt đầu: " + err.message });
                   }
                 }}
-                style={{ padding: '2px 4px', fontSize: '12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', outline: 'none' }}
+                className="project-meta-date-input"
               />
-              <span>~</span>
+              <span className="date-sep">~</span>
               <input
                 type="date"
                 value={formatDateForInput(project.end_date) || ''}
@@ -1901,51 +1922,68 @@ export default function ProjectDetail({ params }) {
                     Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi cập nhật ngày kết thúc: " + err.message });
                   }
                 }}
-                style={{ padding: '2px 4px', fontSize: '12px', border: '1px solid var(--neutral-border)', borderRadius: '4px', outline: 'none' }}
+                className="project-meta-date-input"
               />
             </div>
           ) : (
             <span>{project.start_date ? new Date(project.start_date).toLocaleDateString('vi-VN') : 'N/A'} ~ {project.end_date ? new Date(project.end_date).toLocaleDateString('vi-VN') : 'N/A'}</span>
           )}
         </div>
-        <div className="project-meta-item">
-          <label>{t('project.taskCount', 'Số lượng việc')}</label>
-          <span>{pTasks.length} {t('project.tasksSuffix', 'công việc')}</span>
-        </div>
-        <div className="project-meta-item" style={{ flex: 1, maxWidth: '250px' }}>
-          <label>{t('project.progress', 'Tiến độ dự án')}</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div className="progress-bar-outer" style={{ flex: 1, height: '6px' }}>
-              <div className="progress-bar-inner" style={{ width: `${progress}%` }}></div>
-            </div>
-            <span style={{ fontWeight: 600, fontSize: '12px' }}>{progress}%</span>
-          </div>
-        </div>
       </div>
 
-      <div className="project-tabs" style={{ marginTop: '20px' }}>
-        <button className={`tab-btn ${activeSubTab === 'kanban' ? 'active' : ''}`} onClick={() => setActiveSubTab('kanban')}><i className="fa-solid fa-cubes"></i> {t('project.kanban', 'Bảng Kanban')}</button>
-        <button className={`tab-btn ${activeSubTab === 'gantt' ? 'active' : ''}`} onClick={() => setActiveSubTab('gantt')}><i className="fa-solid fa-chart-gantt"></i> {t('project.gantt', 'Biểu đồ Gantt')}</button>
-        <button className={`tab-btn ${activeSubTab === 'issues' ? 'active' : ''}`} onClick={() => setActiveSubTab('issues')}><i className="fa-solid fa-triangle-exclamation"></i> {t('project.issues', 'Vấn đề (Issues)')}</button>
-        <button className={`tab-btn ${activeSubTab === 'members' ? 'active' : ''}`} onClick={() => setActiveSubTab('members')}><i className="fa-solid fa-users"></i> {t('project.members', 'Thành viên')}</button>
-        <button className={`tab-btn ${activeSubTab === 'documents' ? 'active' : ''}`} onClick={() => setActiveSubTab('documents')}><i className="fa-solid fa-file-invoice"></i> {t('project.documents', 'Tài liệu')}</button>
-        <button className={`tab-btn ${activeSubTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveSubTab('reports')}><i className="fa-solid fa-file-signature"></i> {t('project.reports', 'Báo cáo')}</button>
-        <button className={`tab-btn ${activeSubTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveSubTab('chat')}><i className="fa-solid fa-comments"></i> {t('project.chat', 'Kênh Thảo luận')}</button>
+      <div className="project-tabs-container">
+        <div className="project-tabs">
+          <button className={`tab-btn ${activeSubTab === 'kanban' ? 'active' : ''}`} onClick={() => setActiveSubTab('kanban')}><i className="fa-solid fa-cubes"></i> {t('project.taskAssignment', 'Phân công công việc')}</button>
+          <button className={`tab-btn ${activeSubTab === 'gantt' ? 'active' : ''}`} onClick={() => setActiveSubTab('gantt')}><i className="fa-solid fa-chart-gantt"></i> {t('project.ganttTimelineTitle', 'Timeline')}</button>
+          <button className={`tab-btn ${activeSubTab === 'issues' ? 'active' : ''}`} onClick={() => setActiveSubTab('issues')}><i className="fa-solid fa-triangle-exclamation"></i> {t('project.issues', 'Issues')}</button>
+          <button className={`tab-btn ${activeSubTab === 'members' ? 'active' : ''}`} onClick={() => setActiveSubTab('members')}><i className="fa-solid fa-users"></i> {t('project.members', 'Thành viên')}</button>
+          <button className={`tab-btn ${activeSubTab === 'documents' ? 'active' : ''}`} onClick={() => setActiveSubTab('documents')}><i className="fa-solid fa-file-invoice"></i> {t('project.documents', 'Tài liệu')}</button>
+          <button className={`tab-btn ${activeSubTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveSubTab('reports')}><i className="fa-solid fa-file-signature"></i> {t('project.reports', 'Báo cáo')}</button>
+          <button className={`tab-btn ${activeSubTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveSubTab('chat')}><i className="fa-solid fa-comments"></i> {t('project.chat', 'Kênh Thảo luận')}</button>
+        </div>
+
+        <div className="project-tabs-action">
+          {activeSubTab === 'kanban' && canManageTasks && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => { setActiveTaskId(null); setIsTaskModalOpen(true); }}
+            >
+              <i className="fa-solid fa-plus"></i> {t('project.assignNewTask', 'Giao việc mới')}
+            </button>
+          )}
+          {activeSubTab === 'issues' && canPostIssue && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                setIssueTitle('');
+                setIssueDesc('');
+                setIssueType('TASK');
+                setIssueStatus('TO_DO');
+                setIssuePriority('MEDIUM');
+                setIssueAssigneeId('');
+                setJiraCreateAssigneeIds([]);
+                setIssueAssigneesText('');
+                setProjectTasks([]);
+                setJiraCreateAssigneeSearchQuery('');
+                setJiraCreateAssigneeSelectedDept('');
+                setJiraCreateDeadline('');
+                setJiraCreateHienTrang('');
+                setJiraCreateNguyenNhan('');
+                setJiraCreateHuongGiaiQuyet('');
+                setJiraCreateKetQua('');
+                setIsIssueModalOpen(true);
+              }}
+            >
+              <i className="fa-solid fa-plus"></i> {t('project.createIssue', 'Tạo Issue mới')}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="project-tab-content">
         {/* ================= TABS: KANBAN ================= */}
         {activeSubTab === 'kanban' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600 }}>{t('project.taskAssignment', 'Phân công công việc')}</h3>
-              {canManageTasks && (
-                <button className="btn btn-primary btn-sm" onClick={() => { setActiveTaskId(null); setIsTaskModalOpen(true); }}>
-                  <i className="fa-solid fa-plus"></i> {t('project.assignNewTask', 'Giao việc mới')}
-                </button>
-              )}
-            </div>
-            
             <div className="kanban-board">
               {[
                 { id: "Todo", title: "TO DO", class: "todo" },
@@ -1972,10 +2010,21 @@ export default function ProjectDetail({ params }) {
                         const parsedTask = parseTaskDescription(taskItem.description);
                         const isOverdue = new Date(taskItem.due_date) < new Date() && taskItem.status !== "Done";
                         let pClass = "badge-info";
+                        let priorityCardClass = "priority-medium";
                         const pUpper = String(taskItem.priority || '').trim().toUpperCase();
-                        if (pUpper === "CAO" || pUpper === "HIGH" || pUpper === "CRITICAL" || pUpper === "KHẨN CẤP") pClass = "badge-danger";
-                        else if (pUpper === "TRUNG BÌNH" || pUpper === "MEDIUM") pClass = "badge-warning";
-                        else pClass = "badge-success";
+                        if (pUpper === "CRITICAL" || pUpper === "KHẨN CẤP") {
+                          pClass = "badge-danger";
+                          priorityCardClass = "priority-critical";
+                        } else if (pUpper === "CAO" || pUpper === "HIGH") {
+                          pClass = "badge-warning";
+                          priorityCardClass = "priority-high";
+                        } else if (pUpper === "TRUNG BÌNH" || pUpper === "MEDIUM") {
+                          pClass = "badge-info";
+                          priorityCardClass = "priority-medium";
+                        } else {
+                          pClass = "badge-success";
+                          priorityCardClass = "priority-low";
+                        }
 
                         let currentAssigneeIds = parsedTask.assigneeIds;
                         if (currentAssigneeIds.length === 0 && taskItem.assignee_id) {
@@ -1984,7 +2033,7 @@ export default function ProjectDetail({ params }) {
 
                         return (
                           <div 
-                            className="task-card" 
+                            className={`task-card ${priorityCardClass}`} 
                             draggable 
                             onDragStart={() => setDraggedTaskId(taskItem.id)} 
                             onClick={() => openTaskDetail(taskItem.id)}
@@ -2044,10 +2093,6 @@ export default function ProjectDetail({ params }) {
         {/* ================= TABS: GANTT ================= */}
         {activeSubTab === 'gantt' && (
           <div>
-            <div style={{ marginBottom: '12px' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>{t('project.ganttTimelineTitle', 'Timeline Tiến độ')}</h3>
-              <p className="text-muted" style={{ fontSize: '11.5px' }}>{t('project.ganttTimelineSubtitle', 'Phác họa thời hạn chót và trạng thái của từng đầu việc.')}</p>
-            </div>
             <div className="gantt-chart-wrapper">
               {pTasks.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '20px', color: 'var(--neutral-muted)' }}>{t('project.noTasksYet', 'Chưa có công việc nào.')}</div>
@@ -2080,37 +2125,10 @@ export default function ProjectDetail({ params }) {
         {/* ================= TABS: ISSUES ================= */}
         {activeSubTab === 'issues' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--neutral-dark)' }}>{t('project.issuesBoardTitle', 'Bảng Kanban Vấn đề (Issues Board)')}</h3>
-              {canPostIssue && (
-                <button className="btn btn-primary btn-sm" onClick={() => {
-                  setIssueTitle('');
-                  setIssueDesc('');
-                  setIssueType('TASK');
-                  setIssueStatus('TO_DO');
-                  setIssuePriority('MEDIUM');
-                  setIssueAssigneeId('');
-                  setJiraCreateAssigneeIds([]);
-                  setIssueAssigneesText('');
-                  setProjectTasks([]);
-                  setJiraCreateAssigneeSearchQuery('');
-                  setJiraCreateAssigneeSelectedDept('');
-                  setJiraCreateDeadline('');
-                  setJiraCreateHienTrang('');
-                  setJiraCreateNguyenNhan('');
-                  setJiraCreateHuongGiaiQuyet('');
-                  setJiraCreateKetQua('');
-                  setIsIssueModalOpen(true);
-                }}>
-                  <i className="fa-solid fa-plus"></i> {t('project.createIssue', 'Tạo Issue mới')}
-                </button>
-              )}
-            </div>
-
             {/* JIRA Filters Row */}
             <div className="doc-filters" style={{ marginBottom: '20px', padding: '12px', borderRadius: '6px', backgroundColor: 'var(--neutral-bg-card)', border: '1px solid var(--neutral-border)' }}>
               <div className="issue-filters-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: '200px' }}>
+                <div className="issue-search-box" style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: '200px' }}>
                   <i className="fa-solid fa-magnifying-glass" style={{ color: 'var(--neutral-muted)' }}></i>
                   <input
                     type="text"
@@ -2211,68 +2229,66 @@ export default function ProjectDetail({ params }) {
                         colIssues.map(iss => {
                           const assignee = users.find(u => u.id === iss.assignee_id);
                           
-                          // Styling priorities
-                          let priorityColor = '#64748b'; // LOW
-                          if (iss.priority === 'HIGH') priorityColor = '#f59e0b';
-                          else if (iss.priority === 'CRITICAL') priorityColor = '#ef4444';
-                          else if (iss.priority === 'MEDIUM') priorityColor = '#3b82f6';
-
-                          // Styling types
-                          let typeIcon = 'fa-square-check';
-                          let typeColor = '#3b82f6'; // TASK
-                          if (iss.type === 'BUG') {
-                            typeIcon = 'fa-circle-exclamation';
-                            typeColor = '#ef4444';
-                          } else if (iss.type === 'STORY') {
-                            typeIcon = 'fa-bookmark';
-                            typeColor = '#10b981';
-                          } else if (iss.type === 'EPIC') {
-                            typeIcon = 'fa-bolt';
-                            typeColor = '#a855f7';
+                          // Styling priorities matching dashboard exactly
+                          let priorityLabel = 'TRUNG BÌNH';
+                          let priorityClass = 'priority-medium';
+                          const rawP = (iss.priority || '').toUpperCase();
+                          if (rawP === 'CRITICAL' || rawP === 'KHẨN CẤP') {
+                            priorityLabel = t('tasks.priorityCritical', 'Khẩn cấp');
+                            priorityClass = 'priority-critical';
+                          } else if (rawP === 'HIGH' || rawP === 'CAO') {
+                            priorityLabel = t('tasks.priorityHigh', 'Cao');
+                            priorityClass = 'priority-high';
+                          } else if (rawP === 'MEDIUM' || rawP === 'TRUNG BÌNH') {
+                            priorityLabel = t('tasks.priorityMedium', 'Trung bình');
+                            priorityClass = 'priority-medium';
+                          } else if (rawP === 'LOW' || rawP === 'THẤP') {
+                            priorityLabel = t('tasks.priorityLow', 'Thấp');
+                            priorityClass = 'priority-low';
                           }
 
                           return (
                             <div 
-                              className="task-card" 
+                              className={`item-row-card ${priorityClass}`} 
                               onClick={() => handleOpenIssueDetail(iss.id)}
                               key={iss.id}
-                              style={{ padding: '12px', cursor: 'pointer', borderLeft: `4px solid ${typeColor}`, borderTop: '1px solid var(--neutral-border)', borderRight: '1px solid var(--neutral-border)', borderBottom: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}
+                              style={{ cursor: 'pointer' }}
                             >
-                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
-                                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--neutral-muted)', backgroundColor: 'var(--neutral-bg-hover)', padding: '2px 6px', borderRadius: '4px' }}>
-                                  {iss.issue_key}
+                              <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                                <span className={`dashboard-priority-tag ${priorityClass}`}>
+                                  {priorityLabel}
                                 </span>
-                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                                  <i className={`fa-solid ${typeIcon}`} style={{ color: typeColor, fontSize: '12px' }} title={iss.type}></i>
-                                  <span style={{ fontSize: '10px', fontWeight: '700', color: '#fff', backgroundColor: priorityColor, padding: '1px 5px', borderRadius: '3px' }}>
-                                    {formatPriorityLabel(iss.priority, t)}
-                                  </span>
-                                </div>
                               </div>
-                              <div className="task-card-title" style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--neutral-dark)', marginBottom: '8px', lineHeight: '1.4' }}>{iss.summary}</div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                                <span style={{ fontSize: '11px', color: 'var(--neutral-muted)' }}>
+                              
+                              <div className="item-title-text" style={{ margin: '4px 0 2px 0', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={iss.summary || iss.title || iss.issue_key}>
+                                {iss.summary || iss.title || iss.issue_key}
+                              </div>
+                              
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <i className="fa-solid fa-calendar-days" style={{ fontSize: '10px' }}></i>
                                   {new Date(iss.created_at).toLocaleDateString('vi-VN')}
                                 </span>
-                                <div 
-                                  className="task-card-assignee" 
-                                  style={{ 
-                                    width: '24px', 
-                                    height: '24px', 
-                                    borderRadius: '50%', 
-                                    backgroundColor: assignee ? assignee.color : '#94a3b8', 
-                                    color: '#fff', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center', 
-                                    fontSize: '10px', 
-                                    fontWeight: '700',
-                                    lineHeight: '24px'
-                                  }} 
-                                  title={assignee ? assignee.name : 'Chưa giao'}
-                                >
-                                  {assignee ? assignee.name.split(" ").pop().charAt(0) : '?'}
-                                </div>
+                                {iss.assignee_id && (
+                                  <div 
+                                    style={{ 
+                                      width: '22px', 
+                                      height: '22px', 
+                                      borderRadius: '50%', 
+                                      backgroundColor: 'var(--primary-color)', 
+                                      color: '#fff', 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center', 
+                                      fontWeight: 'bold', 
+                                      fontSize: '10px', 
+                                      flexShrink: 0 
+                                    }} 
+                                    title={`Người xử lý: ${users.find(u => u.id === iss.assignee_id)?.name || ''}`}
+                                  >
+                                    {(users.find(u => u.id === iss.assignee_id)?.name || 'U').split(' ').pop().charAt(0)}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );
@@ -2291,8 +2307,8 @@ export default function ProjectDetail({ params }) {
           <div>
             {(canManageProject || (project.visibility === 'Public' && isProjectMember)) && (
               <div className="doc-filters" style={{ marginBottom: '16px' }}>
-                <form onSubmit={handleAddMember} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ position: 'relative', width: '450px' }}>
+                <form onSubmit={handleAddMember} className="add-member-form" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
+                  <div className="add-member-search-wrap" style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
                     <input
                       type="text"
                       className="doc-select-filter"
@@ -2379,7 +2395,7 @@ export default function ProjectDetail({ params }) {
               </div>
             )}
             
-            <div className="data-table-wrapper">
+            <div className="data-table-wrapper project-members-desktop-table">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -2427,6 +2443,90 @@ export default function ProjectDetail({ params }) {
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Accordion Member List (Full Width, Tap to expand other details) */}
+            <div className="project-members-mobile-list">
+              {pMembers.map(m => {
+                const u = users.find(usr => usr.id === m.user_id);
+                if (!u) return null;
+                const isExpanded = expandedMemberId === m.id;
+                return (
+                  <div className={`mobile-member-card ${isExpanded ? 'active' : ''}`} key={m.id}>
+                    <div 
+                      className="mobile-member-card-header" 
+                      onClick={() => setExpandedMemberId(prev => prev === m.id ? null : m.id)}
+                    >
+                      <div className="mobile-member-name-wrap">
+                        <div className="mobile-member-avatar" style={{ backgroundColor: u.color || 'var(--primary-color)' }}>
+                          {u.name.split(" ").pop().charAt(0)}
+                        </div>
+                        <span className="mobile-member-name">{u.name}</span>
+                      </div>
+                      <div className="mobile-member-right-wrap">
+                        <span className={`badge ${m.project_role === 'PM' ? 'badge-info' : 'badge-success'} mobile-project-role-badge`}>
+                          {m.project_role}
+                        </span>
+                        <i className={`fa-solid fa-chevron-down mobile-member-chevron ${isExpanded ? 'rotated' : ''}`}></i>
+                      </div>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="mobile-member-card-details">
+                        <div className="mobile-member-detail-row">
+                          <span className="detail-label">{t('common.email', 'Email')}:</span>
+                          <span className="detail-value">{u.email || 'N/A'}</span>
+                        </div>
+                        <div className="mobile-member-detail-row">
+                          <span className="detail-label">{t('project.systemRole', 'Vai trò chung')}:</span>
+                          <span className="detail-value">{formatSystemRole(u.system_role, t)}</span>
+                        </div>
+                        {u.employee_id && (
+                          <div className="mobile-member-detail-row">
+                            <span className="detail-label">Mã nhân viên:</span>
+                            <span className="detail-value">#{u.employee_id}</span>
+                          </div>
+                        )}
+                        {u.department_name && (
+                          <div className="mobile-member-detail-row">
+                            <span className="detail-label">Phòng ban:</span>
+                            <span className="detail-value">{translateDepartmentName(u.department_name, t)}</span>
+                          </div>
+                        )}
+                        <div className="mobile-member-detail-row">
+                          <span className="detail-label">{t('common.status', 'Trạng thái')}:</span>
+                          <span className="detail-value">
+                            <span className={`badge ${m.status === 'PENDING' ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: '10.5px', padding: '2px 7px' }}>
+                              {m.status === 'PENDING' ? 'PENDING' : 'JOINED'}
+                            </span>
+                          </span>
+                        </div>
+                        {canManageProject && (
+                          <div className="mobile-member-detail-actions">
+                            {m.user_id !== currentUser.id ? (
+                              <button 
+                                type="button"
+                                className="btn btn-danger btn-sm" 
+                                style={{ width: '100%', justifyContent: 'center', marginTop: '4px' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveMember(m.user_id, u.name);
+                                }}
+                              >
+                                <i className="fa-solid fa-user-minus"></i> {t('project.removeMemberFromProject', 'Xóa khỏi dự án')}
+                              </button>
+                            ) : (
+                              <span className="text-muted" style={{ fontSize: '11.5px', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <i className="fa-solid fa-shield-halved"></i> {t('common.you', 'Bạn')} ({t('project.rolePM', 'Quản lý')})
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -3148,7 +3248,7 @@ export default function ProjectDetail({ params }) {
                     <label style={{ fontWeight: '600', fontSize: '13.5px', color: 'var(--neutral-muted)' }}>{t('issues.tasksTableTitle', 'Bảng chi tiết công việc')}</label>
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--neutral-border)', fontSize: '13px' }}>
                       <thead>
-                        <tr style={{ backgroundColor: '#135274', color: '#ffffff' }}>
+                        <tr style={{ backgroundColor: 'var(--neutral-bg-hover)', color: 'var(--foreground-color)' }}>
                           <th style={{ padding: '10px', border: '1px solid var(--neutral-border)', textAlign: 'left', width: '35%', fontWeight: '700' }}>{t('issues.taskNameColumn', 'Tên công việc')}</th>
                           <th style={{ padding: '10px', border: '1px solid var(--neutral-border)', textAlign: 'left', width: '20%', fontWeight: '700' }}>{t('issues.deadlineColumn', 'Deadline')}</th>
                           <th style={{ padding: '10px', border: '1px solid var(--neutral-border)', textAlign: 'left', width: '25%', fontWeight: '700' }}>{t('issues.assigneeColumn', 'Người thực hiện')}</th>
@@ -3249,7 +3349,16 @@ export default function ProjectDetail({ params }) {
             <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div className="modal-header" style={{ padding: '16px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', backgroundColor: '#e2e8f0', padding: '2px 8px', borderRadius: '4px' }}>
+                  <span style={{ 
+                    fontSize: '12.5px', 
+                    fontWeight: '700', 
+                    color: 'var(--primary-color, #38bdf8)', 
+                    backgroundColor: 'rgba(59, 130, 246, 0.14)', 
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    padding: '3px 9px', 
+                    borderRadius: '4px',
+                    fontFamily: 'monospace'
+                  }}>
                     {activeIssueDetail.issue_key}
                   </span>
                   <h3 style={{ margin: 0, fontSize: '18px' }}>{t('issues.issueDetail', 'Chi tiết Issue')}</h3>
@@ -3326,7 +3435,7 @@ export default function ProjectDetail({ params }) {
                     <label style={{ fontWeight: '600', fontSize: '13.5px', display: 'block', marginBottom: '10px', color: 'var(--neutral-dark)' }}>{t('issues.tasksTableTitle', 'Bảng chi tiết công việc')}</label>
                     <table className="mobile-stack-table" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid var(--neutral-border)', fontSize: '13px', marginBottom: '10px', color: 'var(--neutral-dark)' }}>
                       <thead>
-                        <tr style={{ backgroundColor: '#135274', color: '#ffffff' }}>
+                        <tr style={{ backgroundColor: 'var(--neutral-bg-hover)', color: 'var(--foreground-color)' }}>
                           <th style={{ padding: '10px', border: '1px solid var(--neutral-border)', textAlign: 'center', width: '35%', fontWeight: '700' }}>{t('issues.taskNameColumn', 'Tên công việc')}</th>
                           <th style={{ padding: '10px', border: '1px solid var(--neutral-border)', textAlign: 'center', width: '10%', fontWeight: '700' }}>{t('issues.deadlineColumn', 'Deadline')}</th>
                           <th style={{ padding: '10px', border: '1px solid var(--neutral-border)', textAlign: 'center', width: '25%', fontWeight: '700' }}>{t('issues.assignedColumn', 'Người được giao')}</th>
@@ -3573,12 +3682,27 @@ export default function ProjectDetail({ params }) {
                             <td data-label={t('issues.statusColumn', 'Trạng thái')} style={{ padding: '6px', border: '1px solid var(--neutral-border)', textAlign: 'center', verticalAlign: 'middle' }}>
                               <span style={{
                                 display: 'inline-block',
-                                padding: '4px 8px',
+                                padding: '3px 8px',
                                 borderRadius: '4px',
-                                fontSize: '12px',
+                                fontSize: '11.5px',
                                 fontWeight: '600',
-                                backgroundColor: row.status === 'Hoàn thành' ? '#e2fbe8' : row.status === 'Đang thực hiện' ? '#fff3cd' : '#f1f5f9',
-                                color: row.status === 'Hoàn thành' ? '#0f5132' : row.status === 'Đang thực hiện' ? '#664d03' : '#475569'
+                                backgroundColor: row.status === 'Hoàn thành' 
+                                  ? 'rgba(16, 185, 129, 0.14)' 
+                                  : row.status === 'Đang thực hiện' 
+                                    ? 'rgba(245, 158, 11, 0.14)' 
+                                    : 'rgba(148, 163, 184, 0.14)',
+                                color: row.status === 'Hoàn thành' 
+                                  ? '#10b981' 
+                                  : row.status === 'Đang thực hiện' 
+                                    ? '#fbbf24' 
+                                    : '#94a3b8',
+                                border: `1px solid ${
+                                  row.status === 'Hoàn thành' 
+                                    ? 'rgba(16, 185, 129, 0.3)' 
+                                    : row.status === 'Đang thực hiện' 
+                                      ? 'rgba(245, 158, 11, 0.3)' 
+                                      : 'rgba(148, 163, 184, 0.3)'
+                                }`
                               }}>
                                 {row.status === 'Hoàn thành' ? t('issues.done', 'Hoàn thành') : row.status === 'Đang thực hiện' ? t('issues.inprogress', 'Đang thực hiện') : t('issues.todo', 'Chưa thực hiện')}
                               </span>
@@ -3696,14 +3820,29 @@ export default function ProjectDetail({ params }) {
                     <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--neutral-muted)', display: 'block', marginBottom: '6px' }}>{t('common.status', 'Trạng thái')}</label>
                     <span style={{
                       display: 'inline-block',
-                      padding: '6px 12px',
-                      borderRadius: '4px',
-                      fontSize: '13px',
-                      fontWeight: '600',
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      letterSpacing: '0.04em',
                       textTransform: 'uppercase',
-                      backgroundColor: activeIssueDetail.status === 'DONE' ? '#dcfce7' : activeIssueDetail.status === 'IN_PROGRESS' ? '#dbeafe' : '#e2e8f0',
-                      color: activeIssueDetail.status === 'DONE' ? '#15803d' : activeIssueDetail.status === 'IN_PROGRESS' ? '#1d4ed8' : '#475569',
-                      border: `1px solid ${activeIssueDetail.status === 'DONE' ? '#bbf7d0' : activeIssueDetail.status === 'IN_PROGRESS' ? '#bfdbfe' : '#cbd5e1'}`
+                      backgroundColor: activeIssueDetail.status === 'DONE' 
+                        ? 'rgba(16, 185, 129, 0.15)' 
+                        : activeIssueDetail.status === 'IN_PROGRESS' 
+                          ? 'rgba(59, 130, 246, 0.16)' 
+                          : 'rgba(148, 163, 184, 0.15)',
+                      color: activeIssueDetail.status === 'DONE' 
+                        ? '#10b981' 
+                        : activeIssueDetail.status === 'IN_PROGRESS' 
+                          ? '#38bdf8' 
+                          : '#94a3b8',
+                      border: `1px solid ${
+                        activeIssueDetail.status === 'DONE' 
+                          ? 'rgba(16, 185, 129, 0.35)' 
+                          : activeIssueDetail.status === 'IN_PROGRESS' 
+                            ? 'rgba(56, 189, 248, 0.35)' 
+                            : 'rgba(148, 163, 184, 0.35)'
+                      }`
                     }}>
                       {activeIssueDetail.status === 'TO_DO' ? 'TO DO' : activeIssueDetail.status === 'IN_PROGRESS' ? 'IN PROGRESS' : 'DONE'}
                     </span>
@@ -3868,7 +4007,7 @@ export default function ProjectDetail({ params }) {
                     {/* Delete Issue Button */}
                     <button 
                       type="button" 
-                      className="btn btn-danger" 
+                      className="btn" 
                       disabled={isLockedByOther}
                       onClick={async () => {
                         if (isLockedByOther) return;
@@ -3892,7 +4031,17 @@ export default function ProjectDetail({ params }) {
                           Swal.fire({ icon: 'error', title: 'Thất bại', text: "Lỗi xóa issue: " + err.message });
                         }
                       }}
-                      style={{ width: '100%', padding: '8px 12px', fontSize: '13px' }}
+                      style={{ 
+                        width: '100%', 
+                        padding: '9px 14px', 
+                        fontSize: '13px',
+                        backgroundColor: 'rgba(244, 63, 94, 0.14)',
+                        color: '#f43f5e',
+                        border: '1px solid rgba(244, 63, 94, 0.35)',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: isLockedByOther ? 'not-allowed' : 'pointer'
+                      }}
                     >
                       <i className="fa-solid fa-trash"></i> {t('issues.deleteIssue', 'Xóa Issue này')}
                     </button>
@@ -3900,7 +4049,7 @@ export default function ProjectDetail({ params }) {
                     {activeIssueDetail.status !== 'DONE' && (
                       <button 
                         type="button" 
-                        className="btn btn-success" 
+                        className="btn" 
                         disabled={isLockedByOther}
                         onClick={() => {
                           if (!isLockedByOther) {
@@ -3911,7 +4060,23 @@ export default function ProjectDetail({ params }) {
                             setIsReportPopupOpen(true);
                           }
                         }}
-                        style={{ width: '100%', padding: '8px 12px', fontSize: '13px', marginTop: '10px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: isLockedByOther ? 'not-allowed' : 'pointer', fontWeight: '600', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: isLockedByOther ? 0.6 : 1 }}
+                        style={{ 
+                          width: '100%', 
+                          padding: '9px 14px', 
+                          fontSize: '13px', 
+                          marginTop: '10px', 
+                          backgroundColor: 'rgba(16, 185, 129, 0.16)', 
+                          color: '#10b981', 
+                          border: '1px solid rgba(16, 185, 129, 0.35)', 
+                          borderRadius: '6px', 
+                          cursor: isLockedByOther ? 'not-allowed' : 'pointer', 
+                          fontWeight: '600', 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          gap: '6px', 
+                          opacity: isLockedByOther ? 0.6 : 1 
+                        }}
                       >
                         <i className="fa-solid fa-circle-check"></i> {t('issues.finishIssue', 'Kết thúc issue')}
                       </button>

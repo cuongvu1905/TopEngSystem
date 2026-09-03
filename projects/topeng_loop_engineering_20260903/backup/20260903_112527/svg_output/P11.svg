@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">LỘ TRÌNH NÂNG CẤP TƯƠNG LAI (2026 - 2027)</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">4 Trụ cột chiến lược biến AI Chat thành Hệ điều hành Trợ lý Doanh nghiệp Đa tác tử</text>
+  </g>
+
+  <!-- 4 Pillars 2x2 Grid -->
+  <g id="future-pillars" data-pptx-bounds="56 160 1168 450">
+    <!-- Pillar 1: Enterprise RAG -->
+    <rect x="56" y="160" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="76" y="180" width="85" height="26" rx="6" fill="#075985"/>
+    <text x="118" y="198" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">Q4 / 2026</text>
+    <text x="175" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">1. Enterprise Knowledge RAG</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">
+      Số hóa toàn bộ tri thức kỹ thuật &amp; bản vẽ thiết kế công trình
+    </text>
+    <text x="76" y="265" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">• Xây dựng kho Vector DB cho tiêu chuẩn ISO và hồ sơ dự án.</tspan>
+      <tspan x="76" dy="24">• Tra cứu tức thời thông tin vật tư, thiết bị kỹ thuật qua câu hỏi chat.</tspan>
+      <tspan x="76" dy="24">• Trích xuất nội dung bản vẽ CAD / PDF lớn không cần mở phần mềm nặng.</tspan>
+    </text>
+
+    <!-- Pillar 2: Autonomous Multi-Agent -->
+    <rect x="656" y="160" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="676" y="180" width="85" height="26" rx="6" fill="#3730A3"/>
+    <text x="718" y="198" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC" text-anchor="middle">Q1 / 2027</text>
+    <text x="775" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">2. Autonomous Multi-Agent System</text>
+    <text x="676" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8">
+      Đưa Loop Engineering vào tự động giám sát dự án thi công
+    </text>
+    <text x="676" y="265" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="676" dy="0">• Đội ngũ Agent chuyên biệt: Tiến độ, Vật tư, An toàn lao động.</tspan>
+      <tspan x="676" dy="24">• Tự động phân tích dữ liệu, cảnh báo rủi ro chậm trễ trước 7 ngày.</tspan>
+      <tspan x="676" dy="24">• Tự đề xuất phương án điều phối nhân sự tối ưu khi có biến động.</tspan>
+    </text>
+
+    <!-- Pillar 3: Multimodal & Voice AI -->
+    <rect x="56" y="390" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="76" y="410" width="85" height="26" rx="6" fill="#064E3B"/>
+    <text x="118" y="428" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">Q2 / 2027</text>
+    <text x="175" y="429" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">3. Multimodal &amp; Voice AI Hiện Trường</text>
+    <text x="76" y="465" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981">
+      Hỗ trợ kỹ sư hiện trường qua Camera thị giác và Giọng nói
+    </text>
+    <text x="76" y="495" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">• Chụp ảnh kết cấu hiện trường, AI quét và bóc tách lỗi so với bản vẽ.</tspan>
+      <tspan x="76" dy="24">• Điều khiển ghi nhật ký công trường 100% bằng giọng nói Tiếng Việt.</tspan>
+      <tspan x="76" dy="24">• Cảnh báo vi phạm an toàn lao động qua nhận diện camera thời gian thực.</tspan>
+    </text>
+
+    <!-- Pillar 4: ERP/MES Intelligence -->
+    <rect x="656" y="390" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="676" y="410" width="85" height="26" rx="6" fill="#78350F"/>
+    <text x="718" y="428" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">Q3 / 2027</text>
+    <text x="775" y="429" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">4. Deep ERP / MES Intelligence</text>
+    <text x="676" y="465" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F59E0B">
+      Trí tuệ phân tích tài chính dự án và tự động hóa vận hành
+    </text>
+    <text x="676" y="495" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="676" dy="0">• Tự động đối soát khối lượng nghiệm thu với định mức vật tư dự toán.</tspan>
+      <tspan x="676" dy="24">• Dự báo dòng tiền dự án, cảnh báo vượt ngân sách theo từng hạng mục.</tspan>
+      <tspan x="676" dy="24">• Tự động sinh dự thảo hợp đồng thầu phụ và hóa đơn tài chính chuẩn.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.3 Lộ trình tương lai</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 11 / 12</text>
+  </g>
+</svg>

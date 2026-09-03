@@ -1,0 +1,74 @@
+{
+  "primary_language": "vi-VN",
+  "canvas": "ppt169",
+  "audience": "Ban Giám đốc, Trưởng bộ phận, Kỹ sư phần mềm và Toàn thể nhân sự TOPVSystem",
+  "communication_intent": "Giới thiệu bước nhảy vọt công nghệ từ AI Copilot sang Loop Engineering; phân tích so sánh các mô hình AI Agent tiêu biểu (Codex, Claude, Antigravity); và trình bày chi tiết năng lực hiện tại cùng tầm nhìn tương lai của AI Chat trong TOPVSystem.",
+  "audience_outcome": "Người xem hiểu rõ bản chất và giá trị của Loop Engineering, nhận diện được bức tranh tổng thể các AI Agent hàng đầu, đồng thời nắm bắt sâu sắc các tính năng AI Chat nội bộ đang vận hành và lộ trình nâng cấp sắp tới.",
+  "core_message": "Từ Prompting thụ động sang Loop Engineering tự chủ khép kín: TOPVSystem tiên phong ứng dụng AI Agent vào quản trị doanh nghiệp và kỹ thuật thực chiến.",
+  "delivery_context": "Bài trình chiếu chuyên đề công nghệ (30–45 phút) có người thuyết trình trực tiếp kết hợp thảo luận và demo thực tế.",
+  "artifact_afterlife": "Tài liệu chuẩn hóa kiến thức nội bộ, kim chỉ nam cho lộ trình R&D tính năng AI quý 4/2026 và năm 2027 của TOPVSystem.",
+  "content_divergence": "",
+  "delivery_purpose": "balanced",
+  "page_count": "35",
+  "mode": "custom",
+  "mode_behavior": "Engaging narrative flow: the journey from traditional engineering to autonomous loops and future breakthroughs.",
+  "visual_style": "sketch-notes",
+  "color": {
+    "name": "Cyber Engineering",
+    "palette": {
+      "background": "#0B1120",
+      "secondary_bg": "#1E293B",
+      "primary": "#38BDF8",
+      "accent": "#6366F1",
+      "secondary_accent": "#10B981",
+      "body_text": "#F1F5F9"
+    }
+  },
+  "icons": "tabler-outline",
+  "typography": {
+    "name": "Segoe UI + Inter",
+    "heading": {
+      "css": "sans-serif",
+      "english": "Segoe UI",
+      "primary": "Segoe UI",
+      "sample_primary": "",
+      "sample_english": ""
+    },
+    "body": {
+      "css": "sans-serif",
+      "english": "Segoe UI",
+      "primary": "Segoe UI",
+      "sample_primary": "",
+      "sample_english": ""
+    },
+    "body_size": 24,
+    "sizes": {
+      "title": 42,
+      "subtitle": 32,
+      "annotation": 18
+    },
+    "note": "",
+    "body_size_unit": "px"
+  },
+  "image_usage": [
+    "ai",
+    "provided"
+  ],
+  "image_notes": "Minh họa phong cách công nghệ kỹ nghệ khép kín (Loop Engineering), sơ đồ kiến trúc AI Agent và các tính năng thực tế của AI Chat TOPVSystem.",
+  "image_strategy": {
+    "name": "Ecosystem Intelligence Visuals",
+    "rendering": "custom",
+    "visual": "Neural network diagrams connecting TopEng components and n8n workflow automations.",
+    "mood": "Advanced, organic, agile, and robust.",
+    "behavior": "Sử dụng các hình khối kết nối mạng lưới, gradient ngọc lục bảo tinh tế và minh họa tính năng sinh động."
+  },
+  "image_ai_path": "auto",
+  "proactive_speaker_notes": true,
+  "proactive_custom_animations": false,
+  "proactive_narration_audio": false,
+  "generation_mode": "continuous",
+  "refine_spec": false,
+  "stage": "final",
+  "status": "confirmed",
+  "confirmed_at": "2026-09-03T11:17:35"
+}

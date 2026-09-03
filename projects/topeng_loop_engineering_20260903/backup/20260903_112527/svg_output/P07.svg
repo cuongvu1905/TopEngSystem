@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="220" height="26" rx="13" fill="#1E293B" stroke="#818CF8" stroke-width="1"/>
+    <text x="166" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">PHÂN TÍCH CHUYÊN SÂU CƠ CHẾ HOẠT ĐỘNG</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Đi sâu vào cơ chế thực thi, khả năng tự sửa lỗi và giới hạn của từng nền tảng</text>
+  </g>
+
+  <!-- 3 Horizontal Deep-dive Cards -->
+  <g id="deep-dive-rows" data-pptx-bounds="56 160 1168 450">
+    <!-- Row 1: OpenAI Codex / Operator -->
+    <rect x="56" y="160" width="1168" height="135" rx="14" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="175" width="200" height="32" rx="6" fill="#064E3B"/>
+    <text x="176" y="197" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#34D399" text-anchor="middle">OpenAI Codex &amp; Operator</text>
+    <text x="300" y="196" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F1F5F9">Cơ chế: Tool Calling &amp; Visual DOM Navigation</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0"><tspan fill="#34D399" font-weight="bold">✓ Ưu thế:</tspan> Tích hợp mượt mà với OpenAPI/JSON Schema; khả năng nhận diện hình ảnh và điều khiển trình duyệt web cực nhạy.</tspan>
+      <tspan x="76" dy="24"><tspan fill="#F87171" font-weight="bold">✗ Thách thức:</tspan> Dễ gặp bẫy ngữ cảnh khi refactor nhiều file trong codebase lớn; khó thiết lập các ranh giới an toàn nghiêm ngặt.</tspan>
+    </text>
+
+    <!-- Row 2: Anthropic Claude 3.7 -->
+    <rect x="56" y="310" width="1168" height="135" rx="14" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="325" width="200" height="32" rx="6" fill="#78350F"/>
+    <text x="176" y="347" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#FBBF24" text-anchor="middle">Claude 3.7 Sonnet</text>
+    <text x="300" y="346" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F1F5F9">Cơ chế: Extended Thinking &amp; Computer Use CLI</text>
+    <text x="76" y="385" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0"><tspan fill="#FBBF24" font-weight="bold">✓ Ưu thế:</tspan> Khả năng tự phản biện (Chain-of-thought) vượt trội trước khi viết code; đọc hiểu cấu trúc git repository cực sâu.</tspan>
+      <tspan x="76" dy="24"><tspan fill="#F87171" font-weight="bold">✗ Thách thức:</tspan> Mô hình đơn tác tử (Single-agent) có thể nghẽn hiệu năng khi đối mặt với khối lượng tác vụ song song khổng lồ.</tspan>
+    </text>
+
+    <!-- Row 3: Google DeepMind Antigravity -->
+    <rect x="56" y="460" width="1168" height="135" rx="14" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="475" width="200" height="32" rx="6" fill="#075985"/>
+    <text x="176" y="497" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#7DD3FC" text-anchor="middle">DeepMind Antigravity</text>
+    <text x="300" y="496" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F1F5F9">Cơ chế: Multi-Agent Parallelism &amp; Planning Governance</text>
+    <text x="76" y="535" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0"><tspan fill="#38BDF8" font-weight="bold">✓ Ưu thế:</tspan> Phân tách rõ Planning vs Execution; điều phối song song nhiều Sub-Agents (Research, Self); cơ chế kiểm chứng nghiêm ngặt.</tspan>
+      <tspan x="76" dy="24"><tspan fill="#F87171" font-weight="bold">✗ Yêu cầu:</tspan> Đòi hỏi bộ khung kỹ năng chuẩn hóa (Superpowers Skills) và hạ tầng lưu trữ trạng thái (Artifacts) liên tục.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.2 So sánh chuyên sâu</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 07 / 12</text>
+  </g>
+</svg>

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#FBBF24" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">CLAUDE CODE CLI: KỸ SƯ DÒNG LỆNH TRÊN REPOSITORY</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Công cụ lập trình terminal-native trực tiếp phân tích, sửa đổi mã nguồn và quản trị git</text>
+  </g>
+
+  <!-- 3 Analysis Panels -->
+  <g id="claude-code-panels" data-pptx-bounds="56 160 1168 450">
+    <!-- Panel 1 -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1"/>
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">TERMINAL NATIVE</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Làm Việc Trực Tiếp Code</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#FBBF24" font-weight="600">• Khởi chạy trực tiếp từ Terminal:</tspan>
+      <tspan x="96" dy="20">Gõ lệnh "claude" ngay trong thư mục dự án.</tspan>
+      <tspan x="76" dy="28" fill="#FBBF24" font-weight="600">• Tự động điều hướng repo:</tspan>
+      <tspan x="96" dy="20">Tìm kiếm file bằng glob, ripgrep và đọc code.</tspan>
+      <tspan x="76" dy="28" fill="#FBBF24" font-weight="600">• Chỉnh sửa mã chính xác:</tspan>
+      <tspan x="96" dy="20">Tạo diffs có cấu trúc, sửa đúng từng khối dòng mã.</tspan>
+    </text>
+
+    <!-- Panel 2 -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1"/>
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">TỰ ĐỘNG HÓA GIT</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Quy Trình Git Chuẩn Mực</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0" fill="#38BDF8" font-weight="600">• Tự động rẽ nhánh (Git Branch):</tspan>
+      <tspan x="497" dy="20">Tạo branch riêng biệt cho từng feature/bugfix.</tspan>
+      <tspan x="477" dy="28" fill="#38BDF8" font-weight="600">• Soạn commit message ngữ nghĩa:</tspan>
+      <tspan x="497" dy="20">Viết commit chuẩn conventional: feat, fix, refactor.</tspan>
+      <tspan x="477" dy="28" fill="#38BDF8" font-weight="600">• Tự mở Pull Request:</tspan>
+      <tspan x="497" dy="20">Tạo PR với đầy đủ bản tóm tắt thay đổi và kết quả test.</tspan>
+    </text>
+
+    <!-- Panel 3 -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">QUẢN TRỊ AN TOÀN</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Quyền Can Thiệp Rõ Ràng</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0" fill="#10B981" font-weight="600">• Kiểm soát lệnh nguy hiểm:</tspan>
+      <tspan x="899" dy="20">Hỏi xác nhận [y/n] trước khi</tspan>
+      <tspan x="899" dy="20">chạy lệnh rm, push, migrate.</tspan>
+      <tspan x="879" dy="26" fill="#10B981" font-weight="600">• Vòng lặp sửa test tự động:</tspan>
+      <tspan x="899" dy="20">Nếu test fail, tự đọc stderr</tspan>
+      <tspan x="899" dy="20">và tiếp tục sửa code khép kín.</tspan>
+      <tspan x="879" dy="26" fill="#10B981" font-weight="600">• Trải nghiệm dòng lệnh tối ưu:</tspan>
+      <tspan x="899" dy="20">Giữ kỹ sư ở nguyên môi trường</tspan>
+      <tspan x="899" dy="20">terminal quen thuộc hàng ngày.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.6 Claude Code CLI</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 21 / 35</text>
+  </g>
+</svg>

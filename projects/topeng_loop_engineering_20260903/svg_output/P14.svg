@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="260" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="186" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: KHÁI NIỆM &amp; NGUYÊN LÝ</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">SO SÁNH: HUMAN-IN-THE-LOOP VS AUTONOMOUS CLOSED-LOOP</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Sự chuyển dịch vai trò của kỹ sư: Từ thợ sửa lỗi vi mô sang kiến trúc sư phê duyệt chiến lược</text>
+  </g>
+
+  <!-- 2 Big Comparison Panels -->
+  <g id="comparison-panels" data-pptx-bounds="56 160 1168 450">
+    <!-- Left: Human-in-the-loop -->
+    <rect x="56" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#EF4444" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="200" height="28" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1"/>
+    <text x="176" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FCA5A5" text-anchor="middle">MÔ HÌNH THỦ CÔNG CŨ</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Human-in-the-Loop (Copilot)</text>
+
+    <line x1="76" y1="260" x2="604" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#EF4444" font-weight="600">• Can thiệp thủ công ở từng bước trung gian:</tspan>
+      <tspan x="96" dy="22">Copy code → dán vào IDE → chạy test → copy log → chat lại.</tspan>
+      <tspan x="76" dy="26" fill="#EF4444" font-weight="600">• Gây mệt mỏi nhận thức (Cognitive Fatigue):</tspan>
+      <tspan x="96" dy="22">Kỹ sư liên tục bị ngắt quãng luồng tư duy sâu.</tspan>
+      <tspan x="76" dy="26" fill="#EF4444" font-weight="600">• Tốc độ bị giới hạn bởi con người:</tspan>
+      <tspan x="96" dy="22">Không thể chạy tự động ban đêm hoặc khi kỹ sư rời máy.</tspan>
+    </text>
+
+    <rect x="76" y="455" width="528" height="120" rx="10" fill="#0B1120" stroke="#EF4444" stroke-width="1" stroke-opacity="0.3"/>
+    <text x="96" y="482" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#FCA5A5">Hậu quả thực tế:</text>
+    <text x="96" y="508" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="96" dy="0">Dưới áp lực deadline, con người thường bỏ qua các bước kiểm thử</tspan>
+      <tspan x="96" dy="20">chặt chẽ, dẫn đến mã nguồn sinh bởi AI mang lại nợ kỹ thuật lớn.</tspan>
+    </text>
+
+    <!-- Right: Autonomous Closed-Loop -->
+    <rect x="656" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="676" y="180" width="200" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="776" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">MÔ HÌNH TỰ CHỦ MỚI</text>
+    <text x="676" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Autonomous Closed-Loop</text>
+
+    <line x1="676" y1="260" x2="1204" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="676" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="676" dy="0" fill="#10B981" font-weight="600">• Con người chỉ đứng ở hai đầu quy trình (Bookends):</tspan>
+      <tspan x="696" dy="22">1. Giao mục tiêu/yêu cầu → 2. Phê duyệt kết quả hoàn tất.</tspan>
+      <tspan x="676" dy="26" fill="#10B981" font-weight="600">• AI tự vận hành toàn bộ chu trình giữa:</tspan>
+      <tspan x="696" dy="22">Tự viết mã, tự chạy test, tự vá bug cho đến khi pass 100%.</tspan>
+      <tspan x="676" dy="26" fill="#10B981" font-weight="600">• Hoạt động bền bỉ liên tục 24/7:</tspan>
+      <tspan x="696" dy="22">Giải quyết hàng chục bug/task xuyên đêm mà không cần người kèm.</tspan>
+    </text>
+
+    <rect x="676" y="455" width="528" height="120" rx="10" fill="#0B1120" stroke="#10B981" stroke-width="1" stroke-opacity="0.3"/>
+    <text x="696" y="482" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#34D399">Nâng tầm vị thế kỹ sư:</text>
+    <text x="696" y="508" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="696" dy="0">Kỹ sư không còn phải làm "thợ gõ và sửa lỗi", mà tập trung toàn bộ</tspan>
+      <tspan x="696" dy="20">trí tuệ vào thiết kế kiến trúc cấp cao và bài toán kinh doanh cốt lõi.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.10 So sánh chiều sâu mô hình</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 14 / 35</text>
+  </g>
+</svg>

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#818CF8" stroke-width="1" />
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">SO SÁNH: TƯƠNG TÁC OS &amp; KHẢ NĂNG TỰ SỬA LỖI</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Cách các tác tử tương tác với hệ điều hành và giải quyết các lỗi phát sinh trong vòng lặp</text>
+  </g>
+
+  
+  <g id="repair-panels" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="140" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1" />
+    <text x="146" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">OPENAI</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Web &amp; API Sandbox</text>
+    <text x="76" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#10B981">Tự sửa trên API &amp; Trình duyệt</text>
+
+    <line x1="76" y1="285" x2="396" y2="285" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="320">
+      <tspan fill="#34D399" font-weight="600">• Môi trường tương tác:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="340"><tspan>Máy chủ ảo Cloud, DOM trình duyệt, Python Sandbox.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="366"><tspan fill="#34D399" font-weight="600">• Cơ chế tự sửa lỗi:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="386"><tspan>Nhận lỗi HTTP code hoặc validation error,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="406"><tspan>tự sinh tham số mới gọi lại tool.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="432"><tspan fill="#FCA5A5" font-weight="600">• Điểm hạn chế:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="452"><tspan>Kém linh hoạt khi tương tác với shell terminal</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="472"><tspan>phức tạp cục bộ của nhà phát triển.</tspan>
+    </text><rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1" />
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">ANTHROPIC CLAUDE</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Native OS &amp; Terminal</text>
+    <text x="477" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#F59E0B">Sửa lỗi Codebase sâu sắc</text>
+
+    <line x1="477" y1="285" x2="797" y2="285" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="320">
+      <tspan fill="#FBBF24" font-weight="600">• Môi trường tương tác:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="340"><tspan>Trực tiếp OS Shell qua Claude Code CLI &amp; GUI chuột.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="366"><tspan fill="#FBBF24" font-weight="600">• Cơ chế tự sửa lỗi:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="386"><tspan>Tự đọc stack trace, phân tích dòng code gây lỗi,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="406"><tspan>thử nghiệm bản vá và chạy lại test liên tục.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="432"><tspan fill="#38BDF8" font-weight="600">• Tỷ lệ thành công:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="452"><tspan>Rất cao trên các bài toán đơn repo (Single-repo).</tspan>
+    </text><rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1" />
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">DEEPMIND ANTIGRAVITY</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Workspace &amp; MCP</text>
+    <text x="879" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#38BDF8">Kỷ luật Verification-First</text>
+
+    <line x1="879" y1="285" x2="1199" y2="285" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="320">
+      <tspan fill="#38BDF8" font-weight="600">• Môi trường tương tác:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="340"><tspan>Shell, Git Worktrees, MCP Tools.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="366"><tspan fill="#38BDF8" font-weight="600">• Cơ chế tự sửa lỗi:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="386"><tspan>Nguyên tắc "Evidence before assertions":</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="406"><tspan>Chạy terminal xác minh trước khi xong.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="432"><tspan fill="#38BDF8" font-weight="600">• Sub-agent tự phục hồi:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="452"><tspan>Ủy quyền sub-agent sửa bug an toàn.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.10 So sánh tương tác OS &amp; Tự sửa lỗi</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 25 / 35</text>
+  </g>
+</svg>

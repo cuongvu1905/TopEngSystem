@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="250" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1" />
+    <text x="181" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">KHUNG SUPERPOWERS &amp; MODEL CONTEXT PROTOCOL</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Hai chuẩn mực nền tảng giúp chuẩn hóa kỹ năng chuyên môn và mở rộng công cụ vô hạn</text>
+  </g>
+
+  
+  <g id="superpowers-mcp-grid" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="200" height="28" rx="6" fill="#3730A3" stroke="#6366F1" stroke-width="1" />
+    <text x="176" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC" text-anchor="middle">SUPERPOWERS FRAMEWORK</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Quy Chuẩn Kỹ Năng Tác Tử</text>
+
+    <line x1="76" y1="260" x2="604" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="295">
+      <tspan fill="#818CF8" font-weight="600">Đóng gói quy trình kỹ thuật thành "Skills":</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="319"><tspan>• brainstorming: Khảo sát thấu đáo nhu cầu trước khi làm.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="343"><tspan>• writing-plans: Lập kế hoạch có cấu trúc, phân tích rủi ro.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="367"><tspan>• systematic-debugging: Khử lỗi theo phương pháp khoa học.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="391"><tspan>• test-driven-development: Viết test kiểm chứng trước.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="415"><tspan>• verification-before-completion: Kiểm chứng trước khi xong.</tspan>
+    </text><rect x="76" y="475" width="528" height="100" rx="10" fill="#0B1120" stroke="#6366F1" stroke-width="1" stroke-opacity="0.3" />
+    <text x="96" y="502" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8">Mục đích tối thượng:</text>
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="528">
+      <tspan>Biến AI từ một "nhà thơ tự do" thành một kỹ sư phần mềm chuyên</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="548"><tspan>nghiệp, kỷ luật cao, luôn làm việc theo quy chuẩn bài bản nhất.</tspan>
+    </text><rect x="656" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="676" y="180" width="200" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1" />
+    <text x="776" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">MODEL CONTEXT PROTOCOL</text>
+    <text x="676" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Giao Thức Công Cụ Mở (MCP)</text>
+
+    <line x1="676" y1="260" x2="1204" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="295">
+      <tspan fill="#38BDF8" font-weight="600">Chuẩn kết nối công cụ toàn ngành:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="319"><tspan>• Chuẩn hóa giao tiếp giữa LLM và máy chủ cục bộ (Local Tools).</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="343"><tspan>• Đa dạng hóa nguồn dữ liệu:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="696" y="363"><tspan>Kết nối SQLite, PostgreSQL, GitHub, Slack, Figma qua MCP.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="389"><tspan>• Khả năng cắm rút linh hoạt (Plug-and-Play):</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="696" y="409"><tspan>Thêm hoặc bớt công cụ mà không cần cấu hình lại mô hình AI.</tspan>
+    </text><rect x="676" y="475" width="528" height="100" rx="10" fill="#0B1120" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.3" />
+    <text x="696" y="502" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">Ứng dụng tại TOPVSystem:</text>
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="528">
+      <tspan>Cho phép AI Chat kết nối an toàn với máy chủ cơ sở dữ liệu nội bộ,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="548"><tspan>bảo vệ dữ liệu công ty mà vẫn mở rộng tính năng không giới hạn.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.8 Superpowers &amp; MCP Protocol</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 23 / 35</text>
+  </g>
+</svg>

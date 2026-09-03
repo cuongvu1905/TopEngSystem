@@ -32,6 +32,8 @@ export const AppContextProvider = ({ children }) => {
   const [chatRoomMembers, setChatRoomMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [rolePermissions, setRolePermissions] = useState({});
+  const [headerActions, setHeaderActions] = useState(null);
+  const [headerTitle, setHeaderTitle] = useState(null);
 
   const reloadAll = async () => {
     if (!db.isEnabled()) {
@@ -267,6 +269,10 @@ export const AppContextProvider = ({ children }) => {
     chatRoomMembers,
     isLoading,
     rolePermissions,
+    headerActions,
+    setHeaderActions,
+    headerTitle,
+    setHeaderTitle,
     hasPermission,
     login,
     signup,

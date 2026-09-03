@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="240" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1" />
+    <text x="176" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">BỐI CẢNH DOANH NGHIỆP &amp; BÀI TOÁN THỰC TẾ TẠI TOPV</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Những thách thức vận hành đặc thù thúc đẩy sự phát triển của trợ lý AI Chat nội bộ</text>
+  </g>
+
+  
+  <g id="context-panels" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1" />
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">ĐẶC THÙ NGÀNH</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Cơ Điện &amp; Công Trình</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="295">
+      <tspan fill="#38BDF8" font-weight="600">• Quản lý nhiều dự án song song:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="315"><tspan>Các công trình nhà xưởng, cơ điện trải rộng nhiều tỉnh thành.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="343"><tspan fill="#38BDF8" font-weight="600">• Đội ngũ kỹ sư làm việc phân tán:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="363"><tspan>Văn phòng thiết kế, ban chỉ huy công trường, nhà thầu phụ.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="391"><tspan fill="#38BDF8" font-weight="600">• Áp lực bàn giao tiến độ:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="411"><tspan>Yêu cầu báo cáo nhật ký thi công khắt khe theo từng ngày.</tspan>
+    </text><rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#EF4444" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1" />
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FCA5A5" text-anchor="middle">ĐIỂM NGHẼN VẬN HÀNH</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Lãng Phí Nguồn Lực</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="295">
+      <tspan fill="#FCA5A5" font-weight="600">• Xung đột lịch phòng họp:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="315"><tspan>Nhắn tin Zalo/Chat nội bộ chồng chéo dẫn đến trùng phòng.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="343"><tspan fill="#FCA5A5" font-weight="600">• Trôi tin nhắn công việc:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="363"><tspan>Task vụn vặt giao qua chat dễ bị bỏ quên, thiếu người theo dõi.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="391"><tspan fill="#FCA5A5" font-weight="600">• Soạn báo cáo ngày thủ công:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="411"><tspan>Kỹ sư mất 45-60 phút mỗi cuối ngày chỉ để tổng hợp số liệu.</tspan>
+    </text><rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1" />
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">MỤC TIÊU ĐẶT RA</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Yêu Cầu Cho AI Chat</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="295">
+      <tspan fill="#34D399" font-weight="600">• Tác động Database thật:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="315"><tspan>Đặt phòng thật, tạo task thật</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="335"><tspan>trực tiếp trên cơ sở dữ liệu MySQL.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="361"><tspan fill="#34D399" font-weight="600">• Đa ngôn ngữ nghiêm ngặt:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="381"><tspan>Phục vụ nhân sự Việt, chuyên gia</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="401"><tspan>Hàn, Trung và Nhật Bản.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="427"><tspan fill="#34D399" font-weight="600">• Bảo mật &amp; tối ưu chi phí:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="447"><tspan>Hạ tầng kiểm soát được, không</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="467"><tspan>bị trói buộc vào một hãng AI.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.1 Bối cảnh &amp; Bài toán nghiệp vụ</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 28 / 35</text>
+  </g>
+</svg>

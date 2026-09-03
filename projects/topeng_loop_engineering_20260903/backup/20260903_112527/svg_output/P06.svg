@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="220" height="26" rx="13" fill="#1E293B" stroke="#818CF8" stroke-width="1"/>
+    <text x="166" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">TOÀN CẢNH CÁC MÔ HÌNH AI AGENT HÀNG ĐẦU</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">3 Triết lý kiến trúc đại diện cho bước chuyển dịch từ Chatbot sang Tác tử tự chủ</text>
+  </g>
+
+  <!-- 3 Brand Ecosystem Cards -->
+  <g id="ecosystem-cards" data-pptx-bounds="56 160 1168 450">
+    <!-- Card 1: OpenAI -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="76" y="180" width="100" height="26" rx="6" fill="#064E3B"/>
+    <text x="126" y="198" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">OPENAI</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Codex &amp; Operator</text>
+    <text x="76" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#10B981">Tiên phong Function Calling &amp; Browser GUI</text>
+
+    <line x1="76" y1="285" x2="396" y2="285" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="315" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#F1F5F9">Triết lý kiến trúc:</text>
+    <text x="76" y="340" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">Web &amp; API-First: Biến LLM thành bộ não</tspan>
+      <tspan x="76" dy="22">kết nối công cụ bên ngoài, chuẩn hóa</tspan>
+      <tspan x="76" dy="22">giao thức Tool-Calling toàn cầu.</tspan>
+    </text>
+
+    <text x="76" y="420" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#F1F5F9">Vũ khí công nghệ then chốt:</text>
+    <text x="76" y="445" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">• Structured Outputs JSON chuẩn xác</tspan>
+      <tspan x="76" dy="22">• Operator: Tự động điều khiển web browser</tspan>
+      <tspan x="76" dy="22">• Assistants API tích hợp sẵn File Search</tspan>
+      <tspan x="76" dy="22">• Hệ sinh thái developer &amp; API lớn nhất</tspan>
+    </text>
+
+    <rect x="76" y="545" width="325" height="34" rx="6" fill="#0B1120" stroke="#10B981" stroke-width="1"/>
+    <text x="238" y="567" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#10B981" text-anchor="middle">Điểm mạnh: Tự động hóa Web &amp; API linh hoạt</text>
+
+    <!-- Card 2: Anthropic Claude -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#D97706" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="477" y="180" width="110" height="26" rx="6" fill="#78350F"/>
+    <text x="532" y="198" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">ANTHROPIC</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Claude 3.7 Sonnet</text>
+    <text x="477" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#F59E0B">Extended Thinking &amp; Computer Use</text>
+
+    <line x1="477" y1="285" x2="797" y2="285" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="315" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#F1F5F9">Triết lý kiến trúc:</text>
+    <text x="477" y="340" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0">Reasoning-First &amp; OS-Native: Kết hợp</tspan>
+      <tspan x="477" dy="22">chuỗi suy nghĩ dài (Hybrid Extended Thinking)</tspan>
+      <tspan x="477" dy="22">với khả năng thao tác OS như con người.</tspan>
+    </text>
+
+    <text x="477" y="420" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#F1F5F9">Vũ khí công nghệ then chốt:</text>
+    <text x="477" y="445" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0">• Extended Thinking: Tự phản biện trước khi code</tspan>
+      <tspan x="477" dy="22">• Computer Use API: Thao tác chuột/phím OS</tspan>
+      <tspan x="477" dy="22">• Claude Code CLI: Agent lập trình trực tiếp repo</tspan>
+      <tspan x="477" dy="22">• Ngữ cảnh 200K token xử lý toàn diện file lớn</tspan>
+    </text>
+
+    <rect x="477" y="545" width="325" height="34" rx="6" fill="#0B1120" stroke="#F59E0B" stroke-width="1"/>
+    <text x="639" y="567" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">Điểm mạnh: Tư duy logic &amp; Viết code sâu sắc</text>
+
+    <!-- Card 3: Google DeepMind Antigravity -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="879" y="180" width="150" height="26" rx="6" fill="#075985"/>
+    <text x="954" y="198" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">GOOGLE DEEPMIND</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Antigravity</text>
+    <text x="879" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#38BDF8">Multi-Agent Swarm &amp; Governance</text>
+
+    <line x1="879" y1="285" x2="1199" y2="285" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="315" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#F1F5F9">Triết lý kiến trúc:</text>
+    <text x="879" y="340" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0">Orchestration &amp; Verification-First: Phân quyền</tspan>
+      <tspan x="879" dy="22">cho nhiều sub-agent chạy song song dưới sự</tspan>
+      <tspan x="879" dy="22">kiểm soát nghiêm ngặt của Planning Mode.</tspan>
+    </text>
+
+    <text x="879" y="420" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="bold" fill="#F1F5F9">Vũ khí công nghệ then chốt:</text>
+    <text x="879" y="445" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0">• Sub-Agent Dispatching (self, research...)</tspan>
+      <tspan x="879" dy="22">• Planning Mode: Nghiên cứu → Duyệt → Chạy</tspan>
+      <tspan x="879" dy="22">• MCP Protocol kết nối mọi công cụ ngoài</tspan>
+      <tspan x="879" dy="22">• Superpowers Framework: Quy chuẩn kỹ năng</tspan>
+    </text>
+
+    <rect x="879" y="545" width="325" height="34" rx="6" fill="#0B1120" stroke="#38BDF8" stroke-width="1"/>
+    <text x="1041" y="567" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8" text-anchor="middle">Điểm mạnh: Điều phối đa tác tử &amp; Quản trị quy trình</text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.1 Toàn cảnh hệ sinh thái</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 06 / 12</text>
+  </g>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#F59E0B" stroke-width="1" />
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#FBBF24" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">ANTHROPIC CLAUDE 3.7: TRIẾT LÝ EXTENDED THINKING</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Đột phá tư duy suy luận chuỗi ý nghĩ (Chain of Thought) kết hợp lập trình chuyên sâu</text>
+  </g>
+
+  
+  <g id="claude-panels" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1" />
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">CƠ CHẾ HYBRID</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Extended Thinking</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="295">
+      <tspan fill="#FBBF24" font-weight="600">• Suy nghĩ trước khi phản hồi:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="315"><tspan>AI tự viết ra chuỗi suy luận phân tích rủi ro trong khối hidden thinking.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="343"><tspan fill="#FBBF24" font-weight="600">• Linh hoạt ngân sách suy nghĩ:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="363"><tspan>Điều chỉnh Thinking Budget từ 1K đến hàng chục nghìn tokens tùy độ khó.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="391"><tspan fill="#FBBF24" font-weight="600">• Tự phản biện giả thuyết:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="411"><tspan>Tự tìm ra lỗ hổng trong phương án A để chuyển sang phương án B tối ưu.</tspan>
+    </text><rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1" />
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">ĐỈNH CAO CODING</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">SWE-bench Verified</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="295">
+      <tspan fill="#38BDF8" font-weight="600">• Dẫn đầu bài test kỹ thuật thực tế:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="315"><tspan>Giải quyết thành công hơn 70% các issue GitHub phức tạp ngoài đời thực.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="343"><tspan fill="#38BDF8" font-weight="600">• Bắt trọn các điều kiện biên (Edge cases):</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="363"><tspan>Cực kỳ cẩn trọng với các lỗi null pointer, race conditions, memory leaks.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="391"><tspan fill="#38BDF8" font-weight="600">• Phong cách code sạch (Clean Code):</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="411"><tspan>Viết code có cấu trúc chặt chẽ, chú thích sáng sủa và dễ bảo trì.</tspan>
+    </text><rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1" />
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">NGỮ CẢNH 200K</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Độ Chính Xác Tuyệt Đối</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="295">
+      <tspan fill="#10B981" font-weight="600">• Tiếp nhận toàn bộ repository:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="315"><tspan>Đọc hiểu hàng chục file mã nguồn</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="335"><tspan>mà không bị suy giảm trí nhớ.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="361"><tspan fill="#10B981" font-weight="600">• "Needle In A Haystack" 99%:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="381"><tspan>Tìm chính xác 1 dòng code ẩn sâu</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="401"><tspan>trong hàng nghìn trang tài liệu.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="427"><tspan fill="#10B981" font-weight="600">• Constitutional AI an toàn:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="447"><tspan>Hạn chế tối đa hành vi phá hoại</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="467"><tspan>hoặc tạo lỗ hổng bảo mật.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.4 Anthropic Claude 3.7</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 19 / 35</text>
+  </g>
+</svg>

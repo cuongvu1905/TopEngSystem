@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="260" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="186" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: TIẾN TRÌNH LỊCH SỬ SDLC</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">GIAI ĐOẠN 2021 - 2023: AI COPILOT — TRỢ LÝ SINH MÃ TỰ ĐỘNG</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Làn sóng LLM tham gia viết mã: GitHub Copilot, ChatGPT và cơ chế gợi ý mã nguồn thông minh</text>
+  </g>
+
+  <!-- 3 Analysis Cards -->
+  <g id="copilot-panels" data-pptx-bounds="56 160 1168 450">
+    <!-- Panel 1 -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#3730A3" stroke="#6366F1" stroke-width="1"/>
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC" text-anchor="middle">BƯỚC NHẢY VỌT AI</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Autocomplete Thế Hệ Mới</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#818CF8" font-weight="600">• Dự đoán chuỗi mã tiếp theo:</tspan>
+      <tspan x="96" dy="20">Next-token prediction áp dụng trên hàng tỷ dòng code nguồn mở.</tspan>
+      <tspan x="76" dy="28" fill="#818CF8" font-weight="600">• Sinh mã từ ngôn ngữ tự nhiên:</tspan>
+      <tspan x="96" dy="20">Viết comment mô tả hàm → AI tự động sinh thân hàm hoàn chỉnh.</tspan>
+      <tspan x="76" dy="28" fill="#818CF8" font-weight="600">• Tăng tốc boilerplate code:</tspan>
+      <tspan x="96" dy="20">Tạo form, regex, API handlers, CRUD interfaces cực nhanh.</tspan>
+    </text>
+
+    <!-- Panel 2 -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">LỢI ÍCH TRẢI NGHIỆM</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Pair Programmer Ảo</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0" fill="#34D399" font-weight="600">• Tăng tốc độ gõ phím 35% - 50%:</tspan>
+      <tspan x="497" dy="20">Kỹ sư không còn phải lặp đi lặp lại những cấu trúc hàm quen thuộc.</tspan>
+      <tspan x="477" dy="28" fill="#34D399" font-weight="600">• Giảm tra cứu StackOverflow:</tspan>
+      <tspan x="497" dy="20">Cú pháp thư viện mới được giải thích trực tiếp ngay trong IDE.</tspan>
+      <tspan x="477" dy="28" fill="#34D399" font-weight="600">• Phổ cập hóa AI cho mọi kỹ sư:</tspan>
+      <tspan x="497" dy="20">Biến việc sử dụng AI thành thói quen thường nhật của lập trình viên.</tspan>
+    </text>
+
+    <!-- Panel 3 -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1"/>
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">BẢN CHẤT CƠ HỌC</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Mô Hình One-Shot</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0" fill="#FBBF24" font-weight="600">• Tương tác 1 chiều thụ động:</tspan>
+      <tspan x="899" dy="20">Người dùng gõ prompt → AI trả lời</tspan>
+      <tspan x="899" dy="20">đoạn code → Kết thúc phiên.</tspan>
+      <tspan x="879" dy="26" fill="#FBBF24" font-weight="600">• Mù mờ về môi trường máy:</tspan>
+      <tspan x="899" dy="20">AI không biết mã có biên dịch</tspan>
+      <tspan x="899" dy="20">được không, có vi phạm linter không.</tspan>
+      <tspan x="879" dy="26" fill="#FBBF24" font-weight="600">• Gánh nặng dồn về con người:</tspan>
+      <tspan x="899" dy="20">Nếu code có bug, kỹ sư phải</tspan>
+      <tspan x="899" dy="20">tự copy log dán lại vào chat.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.4 AI Copilot (2021 - 2023)</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 08 / 35</text>
+  </g>
+</svg>

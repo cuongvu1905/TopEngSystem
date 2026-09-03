@@ -1,0 +1,29 @@
+{
+  "stage": "stage1",
+  "lang": "vi",
+  "primary_language": "vi-VN",
+  "recommend": {
+    "canvas": "ppt169"
+  },
+  "audience": {
+    "value": "Ban Giám đốc, Trưởng bộ phận, Kỹ sư phần mềm và Toàn thể nhân sự TOPVSystem"
+  },
+  "communication_intent": {
+    "value": "Giới thiệu bước nhảy vọt công nghệ từ AI Copilot sang Loop Engineering; phân tích so sánh các mô hình AI Agent tiêu biểu (Codex, Claude, Antigravity); và trình bày chi tiết năng lực hiện tại cùng tầm nhìn tương lai của AI Chat trong TOPVSystem."
+  },
+  "audience_outcome": {
+    "value": "Người xem hiểu rõ bản chất và giá trị của Loop Engineering, nhận diện được bức tranh tổng thể các AI Agent hàng đầu, đồng thời nắm bắt sâu sắc các tính năng AI Chat nội bộ đang vận hành và lộ trình nâng cấp sắp tới."
+  },
+  "core_message": {
+    "value": "Từ Prompting thụ động sang Loop Engineering tự chủ khép kín: TOPVSystem tiên phong ứng dụng AI Agent vào quản trị doanh nghiệp và kỹ thuật thực chiến."
+  },
+  "delivery_context": {
+    "value": "Bài trình chiếu chuyên đề công nghệ (30–45 phút) có người thuyết trình trực tiếp kết hợp thảo luận và demo thực tế."
+  },
+  "artifact_afterlife": {
+    "value": "Tài liệu chuẩn hóa kiến thức nội bộ, kim chỉ nam cho lộ trình R&D tính năng AI quý 4/2026 và năm 2027 của TOPVSystem."
+  },
+  "content_divergence": {
+    "value": ""
+  }
+}

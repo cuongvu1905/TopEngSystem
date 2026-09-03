@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="toc">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="120" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="116" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">MỤC LỤC</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">CẤU TRÚC CHUYÊN ĐỀ 35 TRANG</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Hành trình 3 phần: Từ lý luận tiến hóa kỹ nghệ đến đối sánh công nghệ và thực thi doanh nghiệp</text>
+  </g>
+
+  <!-- 3 Parts Summary Cards -->
+  <g id="agenda-parts" data-pptx-bounds="56 160 1168 450">
+    <!-- Part 1 -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <circle cx="96" cy="200" r="20" fill="#0B1120" stroke="#38BDF8" stroke-width="2"/>
+    <text x="96" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#38BDF8" text-anchor="middle">01</text>
+    <text x="130" y="205" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">PHẦN I: LOOP ENGINEERING</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">P04 - P14 (11 TRANG CHUYÊN SÂU)</text>
+
+    <line x1="76" y1="255" x2="396" y2="255" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="285" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#F1F5F9" font-weight="600">• Lịch sử 5 giai đoạn SDLC (P05-P08)</tspan>
+      <tspan x="96" dy="18">Waterfall → Agile → DevOps → AI Copilot</tspan>
+      <tspan x="76" dy="24" fill="#F1F5F9" font-weight="600">• Khủng hoảng "Prompt &amp; Hope" (P09)</tspan>
+      <tspan x="96" dy="18">Giới hạn của việc tương tác một lần</tspan>
+      <tspan x="76" dy="24" fill="#F1F5F9" font-weight="600">• Định nghĩa &amp; Ralph Closed-Loop (P10-P11)</tspan>
+      <tspan x="96" dy="18">Bản chất của vòng lặp phản hồi khép kín</tspan>
+      <tspan x="76" dy="24" fill="#F1F5F9" font-weight="600">• Chu trình 6 bước &amp; 4 Nguyên lý (P12-P13)</tspan>
+      <tspan x="96" dy="18">Goal, Verification, Self-healing, Artifacts</tspan>
+      <tspan x="76" dy="24" fill="#F1F5F9" font-weight="600">• So sánh Human vs Autonomous (P14)</tspan>
+    </text>
+
+    <!-- Part 2 -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4"/>
+    <circle cx="497" cy="200" r="20" fill="#0B1120" stroke="#6366F1" stroke-width="2"/>
+    <text x="497" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#818CF8" text-anchor="middle">02</text>
+    <text x="531" y="205" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">PHẦN II: CÁC MÔ HÌNH AGENT</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#818CF8">P15 - P26 (12 TRANG CHUYÊN SÂU)</text>
+
+    <line x1="477" y1="255" x2="797" y2="255" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="285" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="477" dy="0" fill="#F1F5F9" font-weight="600">• Kiến trúc Single vs Multi-Agent (P16)</tspan>
+      <tspan x="497" dy="18">So sánh ưu nhược điểm kiến trúc</tspan>
+      <tspan x="477" dy="24" fill="#F1F5F9" font-weight="600">• OpenAI Codex &amp; Operator (P17-P18)</tspan>
+      <tspan x="497" dy="18">Function Calling &amp; Browser GUI Action</tspan>
+      <tspan x="477" dy="24" fill="#F1F5F9" font-weight="600">• Anthropic Claude 3.7 (P19-P21)</tspan>
+      <tspan x="497" dy="18">Extended Thinking, Computer Use &amp; CLI</tspan>
+      <tspan x="477" dy="24" fill="#F1F5F9" font-weight="600">• DeepMind Antigravity (P22-P23)</tspan>
+      <tspan x="497" dy="18">Planning Mode, Superpowers &amp; MCP</tspan>
+      <tspan x="477" dy="24" fill="#F1F5F9" font-weight="600">• So sánh chuyên sâu &amp; Ma trận (P24-P26)</tspan>
+    </text>
+
+    <!-- Part 3 -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <circle cx="899" cy="200" r="20" fill="#0B1120" stroke="#10B981" stroke-width="2"/>
+    <text x="899" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#10B981" text-anchor="middle">03</text>
+    <text x="933" y="205" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#10B981">P27 - P35 (9 TRANG CHUYÊN SÂU)</text>
+
+    <line x1="879" y1="255" x2="1199" y2="255" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="285" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="879" dy="0" fill="#F1F5F9" font-weight="600">• Bối cảnh &amp; Thách thức thực tế (P28)</tspan>
+      <tspan x="899" dy="18">Bài toán quản trị dự án cơ điện TOPV</tspan>
+      <tspan x="879" dy="24" fill="#F1F5F9" font-weight="600">• Kiến trúc As-Is 3 Tầng (P29-P30)</tspan>
+      <tspan x="899" dy="18">UI Context → Multi-Brain Gateway</tspan>
+      <tspan x="879" dy="24" fill="#F1F5F9" font-weight="600">• Tool Plugins &amp; n8n Engine (P31-P32)</tspan>
+      <tspan x="899" dy="18">Booking, Task DB &amp; Báo cáo ngày tự động</tspan>
+      <tspan x="879" dy="24" fill="#F1F5F9" font-weight="600">• Đánh giá năng suất thực chiến (P33)</tspan>
+      <tspan x="879" dy="24" fill="#F1F5F9" font-weight="600">• Lộ trình 4 Trụ cột 2026-2027 &amp; Q&amp;A (P34-P35)</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Cấu trúc bài báo cáo | Mục lục 35 trang</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 03 / 35</text>
+  </g>
+</svg>

@@ -34,7 +34,7 @@ const isDescendant = (childId, parentId, depts) => {
 };
 
 export default function HRManagement() {
-  const { currentUser, users, projects, tasks, reloadAll, hasPermission } = useApp();
+  const { currentUser, users, projects, tasks, reloadAll, hasPermission, setHeaderActions } = useApp();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('users');
   const [roles, setRoles] = useState([]);
@@ -949,26 +949,26 @@ export default function HRManagement() {
   const results = getSearchResults();
   const totalResults = results.projects.length + results.tasks.length + results.users.length;
 
+  useEffect(() => {
+    setHeaderActions(
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        {activeTab === 'users' && hasPermission('create_employee_account') && (
+          <button className="btn btn-primary" onClick={() => { setIsOpen(true); setErrorMsg(''); setSuccessMsg(''); }} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', fontSize: '12px' }}>
+            <i className="fa-solid fa-user-plus"></i> {t('team.addUser', 'Cấp tài khoản mới')}
+          </button>
+        )}
+        {activeTab === 'departments' && hasPermission('manage_departments') && (
+          <button className="btn btn-primary" onClick={() => { handleOpenDeptModal(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', fontSize: '12px' }}>
+            <i className="fa-solid fa-plus"></i> {t('team.addDept', 'Thêm phòng ban mới')}
+          </button>
+        )}
+      </div>
+    );
+    return () => setHeaderActions(null);
+  }, [activeTab, t]);
+
   return (
     <div className="scrollable-view">
-      <div className="view-header" style={{ marginBottom: '12px' }}>
-        <div className="view-title-group">
-          <h2>{t('team.title', 'Quản trị Hệ thống & Nhân sự')}</h2>
-          <p>{t('team.subtitle', 'Cấp tài khoản mới, tra cứu thông tin dữ liệu chéo và quản trị ma trận phân quyền hệ thống.')}</p>
-        </div>
-        <div className="view-actions">
-          {activeTab === 'users' && hasPermission('create_employee_account') && (
-            <button className="btn btn-primary" onClick={() => { setIsOpen(true); setErrorMsg(''); setSuccessMsg(''); }}>
-              <i className="fa-solid fa-user-plus"></i> {t('team.addUser', 'Cấp tài khoản mới')}
-            </button>
-          )}
-          {activeTab === 'departments' && hasPermission('manage_departments') && (
-            <button className="btn btn-primary" onClick={() => { handleOpenDeptModal(null); }}>
-              <i className="fa-solid fa-plus"></i> {t('team.addDept', 'Thêm phòng ban mới')}
-            </button>
-          )}
-        </div>
-      </div>
 
       {(hasPermission('view_hr_members') || hasPermission('manage_role_permissions') || hasPermission('manage_departments') || isTeamLeader || isCurrentUserInRootDept || canManageManpower) && (
         <div className="project-tabs" style={{ marginTop: '16px', marginBottom: '16px' }}>

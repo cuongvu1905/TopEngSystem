@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="260" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="186" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: KHÁI NIỆM &amp; NGUYÊN LÝ</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">CƠ SỞ KHOA HỌC: CHU TRÌNH OODA &amp; RALPH LOOP</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Nền tảng lý thuyết điều khiển học của các hệ thống tự chủ thích ứng cao</text>
+  </g>
+
+  <!-- 2 Panels: OODA vs Ralph Loop -->
+  <g id="ooda-ralph-grid" data-pptx-bounds="56 160 1168 450">
+    <!-- Left: OODA Loop -->
+    <rect x="56" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="200" height="28" rx="6" fill="#3730A3" stroke="#6366F1" stroke-width="1"/>
+    <text x="176" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC" text-anchor="middle">CHU TRÌNH OODA (JOHN BOYD)</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Ứng Dụng Vào AI Agent</text>
+
+    <line x1="76" y1="260" x2="604" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <!-- 4 Steps of OODA -->
+    <g transform="translate(76, 280)">
+      <rect x="0" y="0" width="120" height="32" rx="6" fill="#0B1120" stroke="#38BDF8" stroke-width="1"/>
+      <text x="60" y="21" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8" text-anchor="middle">1. OBSERVE</text>
+      <text x="135" y="21" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F1F5F9">Quan sát: Đọc file, kiểm tra git status, log compiler.</text>
+
+      <rect x="0" y="45" width="120" height="32" rx="6" fill="#0B1120" stroke="#818CF8" stroke-width="1"/>
+      <text x="60" y="66" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#818CF8" text-anchor="middle">2. ORIENT</text>
+      <text x="135" y="66" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F1F5F9">Định vị: Phân tích nguyên nhân gốc (Root cause analysis).</text>
+
+      <rect x="0" y="90" width="120" height="32" rx="6" fill="#0B1120" stroke="#F59E0B" stroke-width="1"/>
+      <text x="60" y="111" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">3. DECIDE</text>
+      <text x="135" y="111" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F1F5F9">Quyết định: Lập kế hoạch bản vá (Implementation Plan).</text>
+
+      <rect x="0" y="135" width="120" height="32" rx="6" fill="#0B1120" stroke="#10B981" stroke-width="1"/>
+      <text x="60" y="156" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">4. ACT</text>
+      <text x="135" y="156" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F1F5F9">Hành động: Chỉnh sửa mã và chạy lệnh kiểm thử thật.</text>
+    </g>
+
+    <rect x="76" y="490" width="528" height="85" rx="10" fill="#0B1120" stroke="#6366F1" stroke-width="1"/>
+    <text x="96" y="515" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#818CF8">Nguyên lý cốt lõi của Boyd:</text>
+    <text x="96" y="538" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      Hệ thống nào vận hành chu trình OODA với tốc độ nhanh hơn và chất lượng phản hồi cao hơn sẽ luôn là hệ thống chiến thắng và thích ứng vượt trội.
+    </text>
+
+    <!-- Right: Ralph Closed Loop -->
+    <rect x="656" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="676" y="180" width="200" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="776" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">RALPH CLOSED LOOP</text>
+    <text x="676" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Cơ Chế Khử Sai Lệch (Delta → 0)</text>
+
+    <line x1="676" y1="260" x2="1204" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="676" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="676" dy="0" fill="#10B981" font-weight="600">Đo lường sai lệch giữa Mục tiêu và Thực tế:</tspan>
+      <tspan x="676" dy="24">• Trạng thái mong muốn (Desired State): Đạt 100% test criteria.</tspan>
+      <tspan x="676" dy="24">• Trạng thái thực tế (Actual State): Kết quả chạy test thực địa.</tspan>
+      <tspan x="676" dy="24">• Tín hiệu sai lệch (Δ Delta): Danh sách lỗi, exception, warnings.</tspan>
+    </text>
+
+    <rect x="676" y="400" width="528" height="175" rx="10" fill="#0B1120" stroke="#10B981" stroke-width="1"/>
+    <text x="696" y="430" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#34D399">
+      Thuật toán thu hẹp khoảng cách sai lệch:
+    </text>
+    <text x="696" y="460" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F1F5F9">
+      <tspan x="696" dy="0">While (Δ Delta &gt; 0):</tspan>
+      <tspan x="716" dy="22" fill="#94A3B8">1. Agent nhận tín hiệu lỗi từ Terminal/Compiler.</tspan>
+      <tspan x="716" dy="22" fill="#94A3B8">2. Tạo bản vá vi mô giải quyết nguyên nhân gốc.</tspan>
+      <tspan x="716" dy="22" fill="#94A3B8">3. Tái kiểm thử → Đo lường lại Δ mới.</tspan>
+      <tspan x="696" dy="24" fill="#34D399" font-weight="bold">Dừng khi: Δ Delta = 0 (Exit code 0 &amp; All tests passed)</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.7 Cơ sở OODA &amp; Ralph Loop</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 11 / 35</text>
+  </g>
+</svg>

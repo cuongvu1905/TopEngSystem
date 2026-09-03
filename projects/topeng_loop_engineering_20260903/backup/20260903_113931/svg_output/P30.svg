@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="240" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+    <text x="176" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">CƠ CHẾ DYNAMIC MULTI-BRAIN: ĐỘC LẬP &amp; TỐI ƯU</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Cách TOPVSystem luân chuyển linh hoạt giữa các nhà cung cấp AI để cân bằng chi phí và chất lượng</text>
+  </g>
+
+  <!-- 3 Strategy Panels -->
+  <g id="multibrain-panels" data-pptx-bounds="56 160 1168 450">
+    <!-- Panel 1 -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">CHIẾN LƯỢC ĐỘC LẬP</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Vendor-Agnostic Design</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#34D399" font-weight="600">• Không gắn cứng vào 1 hãng AI:</tspan>
+      <tspan x="96" dy="20">Mã nguồn route.js trừu tượng hóa tầng giao tiếp.</tspan>
+      <tspan x="76" dy="28" fill="#34D399" font-weight="600">• Cơ chế dự phòng nóng (Hot Failover):</tspan>
+      <tspan x="96" dy="20">Nếu OpenAI bị lỗi 503, tự động chuyển sang Claude hoặc Gemini.</tspan>
+      <tspan x="76" dy="28" fill="#34D399" font-weight="600">• Bảo đảm tính liên tục (High Availability):</tspan>
+      <tspan x="96" dy="20">Doanh nghiệp không bao giờ bị tê liệt khi 1 nhà cung cấp sập.</tspan>
+    </text>
+
+    <!-- Panel 2 -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1"/>
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">ĐIỀU HƯỚNG THÔNG MINH</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Phân Cấp Bài Toán</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0" fill="#38BDF8" font-weight="600">• Tác vụ nghiệp vụ nhanh (Booking, Tasks):</tspan>
+      <tspan x="497" dy="20">Định tuyến về DeepSeek / Gemini Flash (độ trễ &lt;1s, chi phí cực rẻ).</tspan>
+      <tspan x="477" dy="28" fill="#38BDF8" font-weight="600">• Tác vụ tổng hợp dữ liệu, báo cáo phức tạp:</tspan>
+      <tspan x="497" dy="20">Định tuyến về Claude 3.7 / GPT-4o để đảm bảo tính logic.</tspan>
+      <tspan x="477" dy="28" fill="#38BDF8" font-weight="600">• Tiết kiệm 75% chi phí API:</tspan>
+      <tspan x="497" dy="20">Không dùng "dao mổ trâu" cho các câu hỏi tra cứu đơn giản.</tspan>
+    </text>
+
+    <!-- Panel 3 -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#3730A3" stroke="#6366F1" stroke-width="1"/>
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC" text-anchor="middle">CỔNG TRUNG GIAN 9ROUTER</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Kiểm Soát &amp; Bảo Mật</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0" fill="#818CF8" font-weight="600">• Proxy kiểm soát nội bộ:</tspan>
+      <tspan x="899" dy="20">Quản lý hạn mức (Rate limit)</tspan>
+      <tspan x="899" dy="20">và phân bổ Quota theo người dùng.</tspan>
+      <tspan x="879" dy="26" fill="#818CF8" font-weight="600">• Lọc dữ liệu nhạy cảm:</tspan>
+      <tspan x="899" dy="20">Ẩn thông tin bí mật kinh doanh</tspan>
+      <tspan x="899" dy="20">trước khi gửi lên Cloud API.</tspan>
+      <tspan x="879" dy="26" fill="#818CF8" font-weight="600">• Caching thông minh:</tspan>
+      <tspan x="899" dy="20">Lưu đệm câu hỏi thường gặp,</tspan>
+      <tspan x="899" dy="20">trả lời ngay mà không tốn token.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.3 Cơ chế Dynamic Multi-Brain</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 30 / 35</text>
+  </g>
+</svg>

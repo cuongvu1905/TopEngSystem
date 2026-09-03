@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="260" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1" />
+    <text x="186" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: TIẾN TRÌNH LỊCH SỬ SDLC</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">GIAI ĐOẠN 2001 - 2014: AGILE &amp; SCRUM — THÍCH ỨNG LINH HOẠT</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Bước chuyển mang tính bước ngoặt: Thay thế chu kỳ năm bằng các vòng lặp phản hồi ngắn (Sprints)</text>
+  </g>
+
+  
+  <g id="agile-panels" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1" />
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">TUYÊN NGÔN AGILE (2001)</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">4 Giá Trị Cốt Lõi</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="295">
+      <tspan fill="#34D399" font-weight="600">1. Cá nhân &amp; tương tác</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="315"><tspan>hơn là quy trình và công cụ cứng nhắc.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="343"><tspan fill="#34D399" font-weight="600">2. Phần mềm chạy tốt</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="363"><tspan>hơn là tài liệu đặc tả đầy đủ đồ sộ.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="391"><tspan fill="#34D399" font-weight="600">3. Cộng tác với khách hàng</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="411"><tspan>hơn là đàm phán hợp đồng căng thẳng.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="439"><tspan fill="#34D399" font-weight="600">4. Thích ứng với thay đổi</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="459"><tspan>hơn là bám cứng vào kế hoạch ban đầu.</tspan>
+    </text><rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1" />
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">CƠ CHẾ VẬN HÀNH</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Vòng Lặp Scrum Sprint</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="295">
+      <tspan fill="#38BDF8" font-weight="600">• Chu kỳ lặp 2 - 4 tuần (Sprint):</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="315"><tspan>Bàn giao các tính năng nhỏ dùng được ngay.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="343"><tspan fill="#38BDF8" font-weight="600">• Nhận phản hồi người dùng sớm:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="363"><tspan>Giảm thiểu rủi ro xây sai yêu cầu thực tế.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="391"><tspan fill="#38BDF8" font-weight="600">• Sự minh bạch &amp; Tự quản:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="411"><tspan>Daily Standup, Sprint Review &amp; Retrospective.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="439"><tspan fill="#38BDF8" font-weight="600">• Đặt nền tảng cho khái niệm:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="459"><tspan>"Vòng lặp ngắn kiểm thử liên tục".</tspan>
+    </text><rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1" />
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">GIỚI HẠN TỒN TẠI</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Điểm Nghẽn Con Người</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="295">
+      <tspan fill="#FBBF24" font-weight="600">• Phụ thuộc 100% sức người:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="315"><tspan>Viết code, test, deploy vẫn là thao tác thủ công.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="343"><tspan fill="#FBBF24" font-weight="600">• Chi phí trao đổi (Meeting Overhead):</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="363"><tspan>Kỹ sư mất quá nhiều thời gian họp đồng bộ.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="391"><tspan fill="#FBBF24" font-weight="600">• Nghẽn ở khâu hạ tầng bàn giao:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="411"><tspan>Code xong nhưng chờ deploy môi trường production.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="439"><tspan fill="#FBBF24" font-weight="600">• Thúc đẩy làn sóng tiếp theo:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="459"><tspan>Sự ra đời của phong trào DevOps &amp; CI/CD.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.2 Agile &amp; Scrum (2001 - 2014)</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 06 / 35</text>
+  </g>
+</svg>

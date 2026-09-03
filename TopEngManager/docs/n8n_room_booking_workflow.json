@@ -1,0 +1,112 @@
+{
+  "name": "TopEng - AI Room Booking & Multi-Platform Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "topeng-room-booking",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "id": "webhook-topeng-booking",
+      "name": "TopEng Webhook (Room Booking)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract TopEng booking payload\nconst payload = $input.first().json.body || $input.first().json;\n\nconst roomName = payload.roomName || 'Phòng họp lớn';\nconst locationName = payload.locationName || 'Hà Nội';\nconst date = payload.date || payload.formattedDate;\nconst startTime = payload.startTime || '10:00';\nconst endTime = payload.endTime || '11:00';\nconst purpose = payload.purpose || 'Họp nội bộ TopEng';\nconst booker = payload.booker || {};\nconst bookerName = booker.name || payload.bookerName || 'Thành viên TopEng';\nconst team = booker.team || payload.team || 'R&D';\n\n// Construct message for Telegram / Slack\nconst telegramMessage = `🏢 *[TOPENG - LỊCH HỌP MỚI ĐƯỢC TẠO]*\\n\\n` +\n  `📍 *Phòng:* ${roomName} (${locationName})\\n` +\n  `📅 *Ngày họp:* ${date}\\n` +\n  `⏰ *Thời gian:* ${startTime} - ${endTime}\\n` +\n  `🎯 *Nội dung:* ${purpose}\\n` +\n  `👤 *Người đặt:* ${bookerName} (${team})\\n\\n` +\n  `⚡ _Tự động điều phối qua TopEng AI Assistant & n8n Workflow_`;\n\n// Construct event for Google Calendar\nreturn [{\n  json: {\n    ...payload,\n    summary: `[Họp TopEng] ${purpose} - ${roomName}`,\n    description: `Cuộc họp được đặt tự động qua Trợ lý AI TopEng.\\nNgười đặt: ${bookerName} (${team})\\nPhòng họp: ${roomName} - ${locationName}`,\n    startDateTime: `${payload.date || '2026-09-01'}T${startTime}:00+07:00`,\n    endDateTime: `${payload.date || '2026-09-01'}T${endTime}:00+07:00`,\n    location: `${roomName}, Văn phòng ${locationName}`,\n    telegramMessage: telegramMessage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "id": "format-booking-data",
+      "name": "Format Booking Data"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "start": "={{ $json.startDateTime }}",
+        "end": "={{ $json.endDateTime }}",
+        "additionalFields": {
+          "description": "={{ $json.description }}",
+          "location": "={{ $json.location }}",
+          "summary": "={{ $json.summary }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        200
+      ],
+      "id": "google-calendar-create",
+      "name": "Tạo Google Calendar Event",
+      "notes": "Cần cắm OAuth Credential Google Calendar của doanh nghiệp"
+    },
+    {
+      "parameters": {
+        "chatId": "-100123456789",
+        "text": "={{ $json.telegramMessage }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        400
+      ],
+      "id": "telegram-notification",
+      "name": "Bắn thông báo Telegram",
+      "notes": "Cần điền Telegram Bot Token và Chat ID nhóm công ty"
+    }
+  ],
+  "connections": {
+    "TopEng Webhook (Room Booking)": {
+      "main": [
+        [
+          {
+            "node": "Format Booking Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Booking Data": {
+      "main": [
+        [
+          {
+            "node": "Tạo Google Calendar Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Bắn thông báo Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#F59E0B" stroke-width="1" />
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#FBBF24" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">ANTHROPIC COMPUTER USE: THAO TÁC HỆ ĐIỀU HÀNH NATIVE</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Biến AI thành người dùng thực thụ điều khiển chuột và bàn phím trên desktop máy tính</text>
+  </g>
+
+  
+  <g id="computer-use-panels" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1" />
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">GIAO THỨC HÀNH ĐỘNG</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Bộ Lệnh Chuột &amp; Phím</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="295">
+      <tspan fill="#FBBF24" font-weight="600">• Bộ công cụ cơ bản:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="315"><tspan>mouse_move(x, y), left_click, right_click,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="335"><tspan>double_click, mouse_down, mouse_up.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="363"><tspan fill="#FBBF24" font-weight="600">• Tương tác bàn phím chuẩn:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="383"><tspan>type(text), key_combination("Ctrl+Alt+T").</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="411"><tspan fill="#FBBF24" font-weight="600">• Chụp màn hình thời gian thực:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="431"><tspan>take_screenshot() → phân tích ảnh → hành động tiếp.</tspan>
+    </text><rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1" />
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">VƯỢT TRỘI SO VỚI WEB</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Thao Tác Ứng Dụng Desktop</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="295">
+      <tspan fill="#38BDF8" font-weight="600">• Không phụ thuộc HTML DOM:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="315"><tspan>Điều khiển trực tiếp bất kỳ phần mềm nào hiển thị trên màn hình.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="343"><tspan fill="#38BDF8" font-weight="600">• Tương tác phần mềm kỹ thuật:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="363"><tspan>Mở AutoCAD xem bản vẽ, xuất file Excel, bật terminal chạy bash script.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="391"><tspan fill="#38BDF8" font-weight="600">• Chuyển đổi giữa các app:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="411"><tspan>Copy dữ liệu từ PDF dán vào phần mềm ERP nội bộ dễ dàng.</tspan>
+    </text><rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#EF4444" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1" />
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FCA5A5" text-anchor="middle">AN TOÀN &amp; BẢO MẬT</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Hàng Rào Sandbox Cô Lập</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="295">
+      <tspan fill="#FCA5A5" font-weight="600">• Rủi ro hành động ngoài ý muốn:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="315"><tspan>AI có thể click nhầm nút Xóa</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="335"><tspan>hoặc tắt file chưa lưu dữ liệu.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="361"><tspan fill="#FCA5A5" font-weight="600">• Bắt buộc chạy trong VM/Docker:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="381"><tspan>Cô lập hoàn toàn để bảo vệ</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="401"><tspan>dữ liệu nhạy cảm của hệ điều hành.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="427"><tspan fill="#FCA5A5" font-weight="600">• Đang ở giai đoạn thử nghiệm:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="447"><tspan>Cần xác nhận con người cho các</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="467"><tspan>hành động mang tính rủi ro cao.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.5 Anthropic Computer Use</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 20 / 35</text>
+  </g>
+</svg>

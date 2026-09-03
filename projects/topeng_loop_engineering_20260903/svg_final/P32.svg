@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="240" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1" />
+    <text x="176" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">TỰ ĐỘNG HÓA BÁO CÁO NGÀY &amp; WORKFLOW QUA N8N</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Cơ chế tự tổng hợp tiến độ thi công và kích hoạt tự động hóa quy trình liên phòng ban</text>
+  </g>
+
+  
+  <g id="report-n8n-grid" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="200" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1" />
+    <text x="176" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">SOẠN BÁO CÁO TỰ ĐỘNG</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">dailyReportPlugin.js</text>
+
+    <line x1="76" y1="260" x2="604" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="295">
+      <tspan fill="#FBBF24" font-weight="600">Quy trình tự động hóa báo cáo nhật ký:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="319"><tspan>• Quét toàn bộ task hoàn thành trong ngày của dự án.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="343"><tspan>• Thu thập khối lượng nghiệm thu và số lượng công nhân hiện trường.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="367"><tspan>• Tự động điền dữ liệu vào form chuẩn ISO 9001 của công ty.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="391"><tspan>• Lưu trực tiếp vào Database → Sẵn sàng cho Chỉ huy trưởng duyệt.</tspan>
+    </text><rect x="76" y="440" width="528" height="135" rx="10" fill="#0B1120" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.3" />
+    <text x="96" y="468" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#FBBF24">Giá trị đo lường được:</text>
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="495">
+      <tspan>• Rút ngắn thời gian lập báo cáo từ 45 phút xuống dưới 5 giây.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="517"><tspan>• Số liệu chuẩn xác 100%, không bị sai sót do nhập liệu thủ công.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="539"><tspan>• Giúp Ban Giám đốc nắm bắt tình hình các công trường trước 18h00.</tspan>
+    </text><rect x="656" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#EC4899" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="676" y="180" width="200" height="28" rx="6" fill="#831843" stroke="#EC4899" stroke-width="1" />
+    <text x="776" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#F472B6" text-anchor="middle">WORKFLOW AUTOMATION</text>
+    <text x="676" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Engine n8n Webhook</text>
+
+    <line x1="676" y1="260" x2="1204" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="295">
+      <tspan fill="#F472B6" font-weight="600">Kích hoạt luồng quy trình liên phòng ban:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="319"><tspan>• Tích hợp Webhook thời gian thực từ AI Chat.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="343"><tspan>• Tự động gửi thông báo lịch họp qua Email &amp; Google Calendar.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="367"><tspan>• Bắn tin nhắn tóm tắt sự cố khẩn cấp vào kênh Telegram/Zalo.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="391"><tspan>• Cập nhật số liệu đồng bộ sang hệ thống kế toán và ERP.</tspan>
+    </text><rect x="676" y="440" width="528" height="135" rx="10" fill="#0B1120" stroke="#EC4899" stroke-width="1" stroke-opacity="0.3" />
+    <text x="696" y="468" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F472B6">Sức mạnh mở rộng không giới hạn:</text>
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="495">
+      <tspan>• Kết nối hơn 400 dịch vụ đám mây thông qua giao diện no-code.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="517"><tspan>• Không làm nặng mã nguồn core của TopEngManager.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="539"><tspan>• Đội ngũ vận hành có thể tự điều chỉnh luồng gửi tin mà không cần code.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.5 Báo cáo &amp; Tự động hóa n8n</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 32 / 35</text>
+  </g>
+</svg>

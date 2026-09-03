@@ -57,7 +57,7 @@ const formatPriorityLabel = (priority, translateFn) => {
 };
 
 export default function Tasks() {
-  const { currentUser, projects, tasks, projectMembers, users, reloadAll } = useApp();
+  const { currentUser, projects, tasks, projectMembers, users, reloadAll, setHeaderActions } = useApp();
   const { t } = useLanguage();
 
   const [selectedProj, setSelectedProj] = useState('all');
@@ -68,6 +68,25 @@ export default function Tasks() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(null);
   const [draggedTaskId, setDraggedTaskId] = useState(null);
+  const [activeMobileCol, setActiveMobileCol] = useState(0);
+  const kanbanBoardRef = React.useRef(null);
+
+  const handleKanbanScroll = (e) => {
+    if (!e.target || window.innerWidth > 768) return;
+    const scrollLeft = e.target.scrollLeft;
+    const width = e.target.offsetWidth;
+    if (width > 0) {
+      const colIdx = Math.round(scrollLeft / width);
+      setActiveMobileCol(colIdx);
+    }
+  };
+
+  const scrollToCol = (idx) => {
+    setActiveMobileCol(idx);
+    if (kanbanBoardRef.current && kanbanBoardRef.current.children[idx]) {
+      kanbanBoardRef.current.children[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
+  };
 
   if (!currentUser) {
     return (
@@ -161,16 +180,30 @@ export default function Tasks() {
     setIsModalOpen(true);
   };
 
-  return (
-    <div className="scrollable-view">
-      <div className="view-header">
-        <div className="view-title-group">
-          <h2>{t('tasks.boardTitle', 'Bảng Quản lý Công việc')}</h2>
-          <p>{t('tasks.boardSubtitle', 'Lọc công việc theo dự án và cập nhật trạng thái trực quan.')}</p>
-        </div>
+  React.useEffect(() => {
+    setHeaderActions(
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <button className={`btn btn-secondary btn-sm ${viewMode === 'kanban' ? 'active' : ''}`} onClick={() => setViewMode('kanban')} style={{ padding: '6px 12px', fontSize: '12px' }}>
+          <i className="fa-solid fa-cubes"></i> Kanban
+        </button>
+        <button className={`btn btn-secondary btn-sm ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} style={{ padding: '6px 12px', fontSize: '12px' }}>
+          <i className="fa-solid fa-list"></i> {t('tasks.listView', 'Danh sách')}
+        </button>
       </div>
-      
-      <div className="doc-filters" style={{ marginBottom: '20px' }}>
+    );
+    return () => setHeaderActions(null);
+  }, [viewMode, t]);
+
+  const kanbanCols = [
+    { id: "Todo", title: "TO DO", class: "todo" },
+    { id: "InProgress", title: "IN PROGRESS", class: "inprogress" },
+    { id: "Review", title: "REVIEW", class: "review" },
+    { id: "Done", title: "DONE", class: "done" }
+  ];
+
+  return (
+    <div className={`scrollable-view ${viewMode === 'kanban' ? 'kanban-fullscreen-view' : ''}`}>
+      <div className="doc-filters" style={{ marginBottom: '10px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <label style={{ fontWeight: 500 }}>{t('common.projectLabel', 'Dự án:')}</label>
@@ -189,22 +222,30 @@ export default function Tasks() {
               <option value="me">{t('tasks.myTasksFilter', 'Chỉ mình tôi')}</option>
             </select>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
-            <button className={`btn btn-secondary btn-sm ${viewMode === 'kanban' ? 'active' : ''}`} onClick={() => setViewMode('kanban')}><i className="fa-solid fa-cubes"></i> Kanban</button>
-            <button className={`btn btn-secondary btn-sm ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}><i className="fa-solid fa-list"></i> {t('tasks.listView', 'Danh sách')}</button>
-          </div>
         </div>
       </div>
 
+      {viewMode === 'kanban' && (
+        <div className="mobile-kanban-tabs">
+          {kanbanCols.map((col, idx) => {
+            const count = filteredTasks.filter(t => t.status === col.id).length;
+            return (
+              <button 
+                key={col.id} 
+                className={`mobile-kanban-tab-btn ${activeMobileCol === idx ? 'active' : ''}`}
+                onClick={() => scrollToCol(idx)}
+              >
+                <span>{col.title}</span>
+                <span className="mobile-tab-count">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {viewMode === 'kanban' ? (
-        <div className="kanban-board">
-          {[
-            { id: "Todo", title: "TO DO", class: "todo" },
-            { id: "InProgress", title: "IN PROGRESS", class: "inprogress" },
-            { id: "Review", title: "REVIEW", class: "review" },
-            { id: "Done", title: "DONE", class: "done" }
-          ].map(col => {
+        <div className="kanban-board" ref={kanbanBoardRef} onScroll={handleKanbanScroll}>
+          {kanbanCols.map(col => {
             const colTasks = filteredTasks.filter(t => t.status === col.id);
             return (
               <div className="kanban-col" key={col.id}>
@@ -224,10 +265,21 @@ export default function Tasks() {
                     const parsedTask = parseTaskDescription(taskItem.description);
                     const isOverdue = taskItem.due_date && !isNaN(new Date(taskItem.due_date).getTime()) && new Date(taskItem.due_date) < new Date() && taskItem.status !== "Done";
                     let pClass = "badge-info";
+                    let priorityCardClass = "priority-medium";
                     const pUpper = String(taskItem.priority || '').trim().toUpperCase();
-                    if (pUpper === "CAO" || pUpper === "HIGH" || pUpper === "CRITICAL" || pUpper === "KHẨN CẤP") pClass = "badge-danger";
-                    else if (pUpper === "TRUNG BÌNH" || pUpper === "MEDIUM") pClass = "badge-warning";
-                    else pClass = "badge-success";
+                    if (pUpper === "CRITICAL" || pUpper === "KHẨN CẤP") {
+                      pClass = "badge-danger";
+                      priorityCardClass = "priority-critical";
+                    } else if (pUpper === "CAO" || pUpper === "HIGH") {
+                      pClass = "badge-warning";
+                      priorityCardClass = "priority-high";
+                    } else if (pUpper === "TRUNG BÌNH" || pUpper === "MEDIUM") {
+                      pClass = "badge-info";
+                      priorityCardClass = "priority-medium";
+                    } else {
+                      pClass = "badge-success";
+                      priorityCardClass = "priority-low";
+                    }
 
                     let currentAssigneeIds = Array.isArray(parsedTask.assigneeIds) ? parsedTask.assigneeIds : [];
                     if (currentAssigneeIds.length === 0 && taskItem.assignee_id) {
@@ -236,7 +288,7 @@ export default function Tasks() {
 
                     return (
                       <div 
-                        className="task-card" 
+                        className={`task-card ${priorityCardClass}`} 
                         draggable 
                         onDragStart={() => setDraggedTaskId(taskItem.id)} 
                         onClick={() => openTaskDetail(taskItem.id)}

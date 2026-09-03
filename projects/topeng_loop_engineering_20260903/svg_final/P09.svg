@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="260" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1" />
+    <text x="186" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: TIẾN TRÌNH LỊCH SỬ SDLC</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">GIỚI HẠN CỦA PROMPTING: VÌ SAO CẦN VÒNG LẶP TỰ CHỦ?</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">3 Khiếm khuyết chí tử của phương thức "Prompt &amp; Hope" kìm hãm năng suất thực tế</text>
+  </g>
+
+  
+  <g id="flaws-panels" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#EF4444" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1" />
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FCA5A5" text-anchor="middle">KHIÊM KHUYẾT 1</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Zero-Execution Feedback</text>
+    <text x="76" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#EF4444">Hoàn toàn không có phản hồi máy tính</text>
+
+    <line x1="76" y1="285" x2="396" y2="285" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="320">
+      <tspan>• Ảo giác mã nguồn (Hallucination):</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="342"><tspan>Tự bịa ra hàm hoặc thư viện không tồn tại.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="368"><tspan>• Con người làm "máy chạy thử":</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="390"><tspan>Lập trình viên phải copy code vào IDE,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="410"><tspan>chạy thử, thấy lỗi rồi copy log quay lại hỏi.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="436"><tspan>• Đứt gãy luồng tư duy liên tục:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="96" y="458"><tspan>Lãng phí thời gian chuyển đổi ngữ cảnh liên tục.</tspan>
+    </text><rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1" />
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">KHIÊM KHUYẾT 2</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Context Drift &amp; Amnesia</text>
+    <text x="477" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#F59E0B">Trôi dạt ngữ cảnh &amp; Mất trí nhớ tạm thời</text>
+
+    <line x1="477" y1="285" x2="797" y2="285" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="320">
+      <tspan>• Càng chat nhiều càng dễ hỏng:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="342"><tspan>Sau 5-7 lượt trao đổi sửa lỗi, mô hình bắt đầu</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="362"><tspan>quên các ràng buộc kỹ thuật đặt ra ban đầu.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="388"><tspan>• Vấn đề "Sửa lỗi A, sinh lỗi B":</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="410"><tspan>Sửa được bug hiện tại thì vô tình làm gãy</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="430"><tspan>một logic đã chạy đúng trước đó.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="456"><tspan>• Thiếu tài liệu lưu vết bền vững:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="497" y="478"><tspan>Không có kế hoạch dài hạn được khóa chặt.</tspan>
+    </text><rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1" />
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">HỆ QUẢ TẤT YẾU</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">The Productivity Paradox</text>
+    <text x="879" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#38BDF8">Nghịch lý năng suất &amp; Nhu cầu Loop</text>
+
+    <line x1="879" y1="285" x2="1199" y2="285" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="320">
+      <tspan>• Nghịch lý thời gian:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="342"><tspan>Nếu mất 15 phút chat qua lại chỉ để fix 1 bug nhỏ,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="362"><tspan>kỹ sư tự viết code từ đầu còn nhanh hơn.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="388"><tspan>• Nhu cầu về một cuộc cách mạng:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="410"><tspan>Cần trao quyền cho AI tự chạy terminal,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="430"><tspan>tự đọc log, tự sửa lỗi khép kín tuần hoàn.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="456"><tspan>• Điểm khởi đầu của kỷ nguyên:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="899" y="478"><tspan>Loop Engineering chính thức ra đời!</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.5 Giới hạn của Prompting</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 09 / 35</text>
+  </g>
+</svg>

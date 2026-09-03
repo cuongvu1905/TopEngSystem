@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="cover">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+
+    <!-- Accent Glow Gradient -->
+    <linearGradient id="cyanIndigoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#6366F1"/>
+    </linearGradient>
+
+    <!-- Card Background Gradient -->
+    <linearGradient id="cardBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Decorative Engineering Grid Elements -->
+  <circle cx="200" cy="150" r="320" fill="none" stroke="#38BDF8" stroke-width="1" stroke-dasharray="4,6" stroke-opacity="0.2"/>
+  <circle cx="200" cy="150" r="220" fill="none" stroke="#6366F1" stroke-width="1" stroke-opacity="0.2"/>
+  <circle cx="1080" cy="560" r="280" fill="none" stroke="#10B981" stroke-width="1" stroke-dasharray="6,6" stroke-opacity="0.15"/>
+  <line x1="56" y1="48" x2="1224" y2="48" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.25"/>
+  <line x1="56" y1="672" x2="1224" y2="672" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.25"/>
+
+  <!-- Top System Badge & Header -->
+  <g id="header-brand" data-pptx-bounds="56 70 380 40">
+    <rect x="56" y="70" width="170" height="36" rx="18" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <circle cx="76" cy="88" r="6" fill="#10B981"/>
+    <text x="92" y="94" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" letter-spacing="1">TOPV SYSTEM</text>
+    <text x="242" y="94" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">| TECH BRIEFING 2026</text>
+  </g>
+
+  <!-- Hero Main Title Box -->
+  <g id="hero-title-group" data-pptx-bounds="56 140 1168 260">
+    <!-- Category Tag -->
+    <rect x="56" y="140" width="310" height="32" rx="6" fill="#1E293B" stroke="#6366F1" stroke-width="1"/>
+    <text x="70" y="162" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#A5B4FC">KỸ NGHỆ PHẦN MỀM TỰ CHỦ THẾ HỆ MỚI</text>
+
+    <!-- Main Title Lines -->
+    <text x="56" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="44" font-weight="800" fill="#F1F5F9">
+      KỶ NGUYÊN LOOP ENGINEERING
+    </text>
+    <text x="56" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="800" fill="url(#cyanIndigoGrad)">
+      &amp; MÔ HÌNH AI AGENT TỰ CHỦ
+    </text>
+
+    <!-- Subtitle -->
+    <text x="56" y="350" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">
+      <tspan x="56" dy="0">Hành trình tiến hóa từ Prompting sang Vòng lặp tự sửa lỗi khép kín, so sánh Codex – Claude – Antigravity</tspan>
+      <tspan x="56" dy="26">và kiến trúc hiện thực hóa Trợ lý AI Chat trong hệ sinh thái quản trị TOPVSystem.</tspan>
+    </text>
+  </g>
+
+  <!-- 3 Pillar Highlights Cards -->
+  <g id="pillars-group" data-pptx-bounds="56 430 1143 170">
+    <!-- Pillar 1 -->
+    <rect x="56" y="430" width="365" height="160" rx="14" fill="url(#cardBgGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.3"/>
+    <rect x="76" y="450" width="36" height="36" rx="8" fill="#0B1120" stroke="#38BDF8" stroke-width="1"/>
+    <text x="88" y="474" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#38BDF8">01</text>
+    <text x="124" y="474" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Loop Engineering</text>
+    <text x="76" y="515" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">Tiến trình tiến hóa SDLC &amp; bản chất</tspan>
+      <tspan x="76" dy="22">vòng lặp Closed-Loop tự sửa lỗi.</tspan>
+    </text>
+
+    <!-- Pillar 2 -->
+    <rect x="445" y="430" width="365" height="160" rx="14" fill="url(#cardBgGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.3"/>
+    <rect x="465" y="450" width="36" height="36" rx="8" fill="#0B1120" stroke="#6366F1" stroke-width="1"/>
+    <text x="477" y="474" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#818CF8">02</text>
+    <text x="513" y="474" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">AI Agent Toàn Cầu</text>
+    <text x="465" y="515" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="465" dy="0">So sánh Codex (OpenAI), Claude (Anthropic)</tspan>
+      <tspan x="465" dy="22">&amp; Antigravity (Google DeepMind).</tspan>
+    </text>
+
+    <!-- Pillar 3 -->
+    <rect x="834" y="430" width="365" height="160" rx="14" fill="url(#cardBgGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.3"/>
+    <rect x="854" y="450" width="36" height="36" rx="8" fill="#0B1120" stroke="#10B981" stroke-width="1"/>
+    <text x="866" y="474" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#10B981">03</text>
+    <text x="902" y="474" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">AI Chat TOPVSystem</text>
+    <text x="854" y="515" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="854" dy="0">Multi-Brain, Tool Plugins thực chiến</tspan>
+      <tspan x="854" dy="22">&amp; Lộ trình 4 trụ cột tương lai 2026-2027.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Metadata -->
+  <g id="footer-meta" data-pptx-bounds="56 640 1168 30">
+    <text x="56" y="655" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">
+      Báo cáo bởi: <tspan fill="#94A3B8" font-weight="600">Ban Công nghệ &amp; R&amp;D TOPVSystem</tspan>
+    </text>
+    <text x="1224" y="655" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">
+      SLIDE 01 / 12
+    </text>
+  </g>
+</svg>

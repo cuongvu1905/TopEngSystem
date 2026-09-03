@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#818CF8" stroke-width="1"/>
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">MA TRẬN ĐỐI SÁNH 6 CHIỀU &amp; CHIẾN LƯỢC ĐA MÔ HÌNH</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Bảng tổng kết kỹ thuật đa chiều định hướng giải pháp công nghệ tối ưu cho TOPVSystem</text>
+  </g>
+
+  <!-- 6-Dimensional Matrix Table -->
+  <g id="matrix-table-6d" data-pptx-bounds="56 160 1168 360">
+    <rect x="56" y="160" width="1168" height="350" rx="14" fill="url(#cardGrad)" stroke="#334155" stroke-width="1"/>
+
+    <!-- Table Header Row -->
+    <rect x="56" y="160" width="1168" height="48" rx="14" fill="#0B1120"/>
+    <text x="80" y="191" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#94A3B8">TIÊU CHÍ KỸ THUẬT</text>
+    <text x="320" y="191" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981">OPENAI CODEX / OPERATOR</text>
+    <text x="620" y="191" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F59E0B">CLAUDE 3.7 SONNET</text>
+    <text x="920" y="191" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">DEEPMIND ANTIGRAVITY</text>
+
+    <line x1="56" y1="208" x2="1224" y2="208" stroke="#334155" stroke-width="1"/>
+
+    <!-- Row 1: Suy luận -->
+    <text x="80" y="238" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#F1F5F9">1. Suy luận &amp; Lập kế hoạch</text>
+    <text x="320" y="238" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">Rất tốt (Fast / Function Calling)</text>
+    <text x="620" y="238" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24">★★★ Xuất sắc (Extended Thinking)</text>
+    <text x="920" y="238" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">★★★ Xuất sắc (Planning Mode)</text>
+    <line x1="56" y1="258" x2="1224" y2="258" stroke="#1E293B" stroke-width="1"/>
+
+    <!-- Row 2: Tương tác OS -->
+    <text x="80" y="288" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#F1F5F9">2. Tương tác Môi trường</text>
+    <text x="320" y="288" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#34D399">★★☆ Web DOM &amp; HTTP APIs</text>
+    <text x="620" y="288" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24">★★★ Computer Use &amp; CLI</text>
+    <text x="920" y="288" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">★★★ Shell, Terminal &amp; MCP</text>
+    <line x1="56" y1="308" x2="1224" y2="308" stroke="#1E293B" stroke-width="1"/>
+
+    <!-- Row 3: Kiến trúc tác tử -->
+    <text x="80" y="338" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#F1F5F9">3. Kiến trúc Tác tử</text>
+    <text x="320" y="338" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">★☆☆ Single-Agent / Thread API</text>
+    <text x="620" y="338" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">★★☆ Single-Agent với Subtools</text>
+    <text x="920" y="338" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">★★★ Native Parallel Sub-Agents</text>
+    <line x1="56" y1="358" x2="1224" y2="358" stroke="#1E293B" stroke-width="1"/>
+
+    <!-- Row 4: Quản trị an toàn -->
+    <text x="80" y="388" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#F1F5F9">4. Quản trị An toàn</text>
+    <text x="320" y="388" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">System Prompt &amp; OpenAI Policy</text>
+    <text x="620" y="388" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#FBBF24">Constitutional AI &amp; Caution</text>
+    <text x="920" y="388" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">★★★ Verification-First &amp; Locks</text>
+    <line x1="56" y1="408" x2="1224" y2="408" stroke="#1E293B" stroke-width="1"/>
+
+    <!-- Row 5: Chi phí & Độ trễ -->
+    <text x="80" y="438" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#F1F5F9">5. Chi phí &amp; Độ trễ</text>
+    <text x="320" y="438" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#10B981">Tối ưu chi phí, độ trễ thấp</text>
+    <text x="620" y="438" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F59E0B">Chi phí cao hơn (Thinking tokens)</text>
+    <text x="920" y="438" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#38BDF8">Cân bằng tối ưu theo vai trò sub-agent</text>
+    <line x1="56" y1="458" x2="1224" y2="458" stroke="#1E293B" stroke-width="1"/>
+
+    <!-- Row 6: Vai trò đề xuất -->
+    <text x="80" y="488" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#F1F5F9">6. Vai trò Khuyến nghị</text>
+    <text x="320" y="488" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#10B981">Tác vụ Web &amp; Tự động hóa API</text>
+    <text x="620" y="488" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F59E0B">Lập trình viên tư duy sâu từng file</text>
+    <text x="920" y="488" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#38BDF8">Kỹ nghệ tự chủ hệ thống doanh nghiệp</text>
+  </g>
+
+  <!-- Takeaway Banner -->
+  <g id="takeaway-banner-6d" data-pptx-bounds="56 530 1168 95">
+    <rect x="56" y="530" width="1168" height="90" rx="12" fill="#1E293B" stroke="#6366F1" stroke-width="1"/>
+    <text x="80" y="555" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8">ĐỊNH HƯỚNG CHIẾN LƯỢC CHO TOPVSYSTEM:</text>
+    <text x="80" y="580" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#F1F5F9">
+      <tspan x="80" dy="0">Xây dựng kiến trúc <tspan fill="#38BDF8" font-weight="bold">Dynamic Multi-Brain Gateway</tspan> độc lập:</tspan>
+      <tspan x="80" dy="22">Tận dụng sức mạnh suy luận của Claude, giao tiếp của Codex và kỷ luật tự chủ an toàn của Antigravity.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.11 Ma trận đối sánh 6 chiều</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 26 / 35</text>
+  </g>
+</svg>

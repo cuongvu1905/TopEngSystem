@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="ending">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="cyanIndigoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#6366F1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="200" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="156" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">KẾT LUẬN &amp; HÀNH ĐỘNG</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">TỔNG KẾT &amp; TẦM NHÌN CHIẾN LƯỢC</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Làm chủ công nghệ Loop Engineering và AI nội bộ để kiến tạo đột phá năng suất</text>
+  </g>
+
+  <!-- 3 Strategic Takeaways Cards -->
+  <g id="takeaways-group" data-pptx-bounds="56 160 1168 330">
+    <!-- Takeaway 1 -->
+    <rect x="56" y="160" width="365" height="320" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.35"/>
+    <circle cx="96" cy="200" r="20" fill="#0B1120" stroke="#38BDF8" stroke-width="2"/>
+    <text x="96" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#38BDF8" text-anchor="middle">1</text>
+    <text x="130" y="207" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Loop Engineering Tất Yếu</text>
+
+    <line x1="76" y1="235" x2="396" y2="235" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">• Chuyển từ "Prompting thủ công" sang</tspan>
+      <tspan x="76" dy="24">vòng lặp tự chủ khép kín có kiểm chứng.</tspan>
+      <tspan x="76" dy="24">• Chuẩn hóa nguyên tắc "Verification-First":</tspan>
+      <tspan x="76" dy="24">Bằng chứng log thực tế trước khi xác nhận.</tspan>
+      <tspan x="76" dy="24">• Loại bỏ 80% lặp lại thủ công trong debug.</tspan>
+    </text>
+
+    <!-- Takeaway 2 -->
+    <rect x="457" y="160" width="365" height="320" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.35"/>
+    <circle cx="497" cy="200" r="20" fill="#0B1120" stroke="#6366F1" stroke-width="2"/>
+    <text x="497" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#818CF8" text-anchor="middle">2</text>
+    <text x="531" y="207" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Sức Mạnh Hợp Lực</text>
+
+    <line x1="477" y1="235" x2="797" y2="235" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0">• Phối hợp đa mô hình thông minh:</tspan>
+      <tspan x="477" dy="24">Tư duy sâu (Claude) + Giao tiếp API (Codex)</tspan>
+      <tspan x="477" dy="24">+ Điều phối đa tác tử an toàn (Antigravity).</tspan>
+      <tspan x="477" dy="24">• Tránh phụ thuộc độc quyền một hãng,</tspan>
+      <tspan x="477" dy="24">tối ưu hóa chi phí và tốc độ vận hành.</tspan>
+    </text>
+
+    <!-- Takeaway 3 -->
+    <rect x="859" y="160" width="365" height="320" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.35"/>
+    <circle cx="899" cy="200" r="20" fill="#0B1120" stroke="#10B981" stroke-width="2"/>
+    <text x="899" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#10B981" text-anchor="middle">3</text>
+    <text x="933" y="207" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">TOPVSystem Tiên Phong</text>
+
+    <line x1="879" y1="235" x2="1199" y2="235" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0">• Đưa AI Chat từ module tiện ích trở thành</tspan>
+      <tspan x="879" dy="24">Hệ điều hành trợ lý doanh nghiệp cốt lõi.</tspan>
+      <tspan x="879" dy="24">• Lộ trình 4 trụ cột rõ ràng 2026 - 2027:</tspan>
+      <tspan x="879" dy="24">RAG Tri thức → Multi-Agent → Voice/Vision</tspan>
+      <tspan x="879" dy="24">→ Tự động hóa sâu ERP &amp; Quản trị.</tspan>
+    </text>
+  </g>
+
+  <!-- Q&A and Closing Action Banner -->
+  <g id="closing-action" data-pptx-bounds="56 505 1168 115">
+    <rect x="56" y="505" width="1168" height="110" rx="14" fill="#1E293B" stroke="url(#cyanIndigoGrad)" stroke-width="1.5"/>
+
+    <text x="86" y="542" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#38BDF8">
+      XIN TRÂN TRỌNG CẢM ƠN!
+    </text>
+    <text x="86" y="572" font-family="'Segoe UI', Arial, sans-serif" font-size="15" fill="#F1F5F9">
+      Chào đón các câu hỏi thảo luận từ Ban Giám đốc và toàn thể các Kỹ sư TOPVSystem (Q&amp;A Session).
+    </text>
+
+    <rect x="960" y="530" width="230" height="58" rx="10" fill="#0B1120" stroke="#38BDF8" stroke-width="1"/>
+    <text x="1075" y="555" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8" text-anchor="middle">HỆ THỐNG TOPVSYSTEM</text>
+    <text x="1075" y="575" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8" text-anchor="middle">R&amp;D &amp; AI Engineering 2026</text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần Kết | Tổng kết &amp; Định hướng chiến lược</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 12 / 12</text>
+  </g>
+</svg>

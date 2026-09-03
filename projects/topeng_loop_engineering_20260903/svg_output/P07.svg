@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="260" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="186" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: TIẾN TRÌNH LỊCH SỬ SDLC</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">GIAI ĐOẠN 2015 - 2020: DEVOPS &amp; CI/CD — TỰ ĐỘNG HÓA TÍCH HỢP</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Phá vỡ bức tường ngăn cách giữa Phát triển (Dev) và Vận hành (Ops) bằng đường ống tự động liên tục</text>
+  </g>
+
+  <!-- 3 Analysis Cards -->
+  <g id="devops-panels" data-pptx-bounds="56 160 1168 450">
+    <!-- Panel 1 -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1"/>
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">ĐƯỜNG ỐNG CI/CD</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Tự Động Hóa Vận Hành</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#38BDF8" font-weight="600">• Continuous Integration (CI):</tspan>
+      <tspan x="96" dy="20">Mỗi commit tự động build, chạy linter và unit test.</tspan>
+      <tspan x="76" dy="28" fill="#38BDF8" font-weight="600">• Continuous Delivery/Deployment:</tspan>
+      <tspan x="96" dy="20">Đóng gói Docker/Kubernetes và phát hành tự động.</tspan>
+      <tspan x="76" dy="28" fill="#38BDF8" font-weight="600">• Phát hiện lỗi hồi quy tức thời:</tspan>
+      <tspan x="96" dy="20">Không còn cảnh "chạy được ở máy tôi nhưng chết ở production".</tspan>
+    </text>
+
+    <!-- Panel 2 -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">CHUẨN ĐO LƯỜNG DORA</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Tăng Tốc Chu Kỳ</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0" fill="#34D399" font-weight="600">• Deployment Frequency:</tspan>
+      <tspan x="497" dy="20">Từ vài tháng 1 lần nâng lên nhiều lần/ngày.</tspan>
+      <tspan x="477" dy="28" fill="#34D399" font-weight="600">• Lead Time for Changes:</tspan>
+      <tspan x="497" dy="20">Rút ngắn thời gian từ commit đến production dưới 1 giờ.</tspan>
+      <tspan x="477" dy="28" fill="#34D399" font-weight="600">• Mean Time to Restore (MTTR):</tspan>
+      <tspan x="497" dy="20">Tự động rollback phiên bản lỗi trong vài phút.</tspan>
+    </text>
+
+    <!-- Panel 3 -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#3730A3" stroke="#6366F1" stroke-width="1"/>
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC" text-anchor="middle">GIỚI HẠN CỐT TỬ</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Mã Nguồn Vẫn Thủ Công</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0" fill="#818CF8" font-weight="600">• Máy móc chỉ tự động khâu hạ tầng:</tspan>
+      <tspan x="899" dy="20">Viết mã, thuật toán và sửa bug</tspan>
+      <tspan x="899" dy="20">vẫn hoàn toàn là 100% con người.</tspan>
+      <tspan x="879" dy="26" fill="#818CF8" font-weight="600">• Nút thắt cổ chai về nguồn lực:</tspan>
+      <tspan x="899" dy="20">Tốc độ bị giới hạn bởi số giờ làm việc</tspan>
+      <tspan x="899" dy="20">và năng lượng của kỹ sư.</tspan>
+      <tspan x="879" dy="26" fill="#818CF8" font-weight="600">• Mở ra câu hỏi lớn:</tspan>
+      <tspan x="899" dy="20">Liệu AI có thể tham gia viết</tspan>
+      <tspan x="899" dy="20">và tự sửa mã nguồn hay không?</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.3 DevOps &amp; CI/CD (2015 - 2020)</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 07 / 35</text>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="240" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+    <text x="176" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">ĐÁNH GIÁ NĂNG SUẤT THỰC CHIẾN TẠI TOPVSYSTEM</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Những con số định lượng chứng minh giá trị kinh tế và hiệu quả vận hành thực tế</text>
+  </g>
+
+  <!-- 4 Stat Metric Cards (2x2 Grid) -->
+  <g id="metrics-grid" data-pptx-bounds="56 160 1168 450">
+    <!-- Stat 1 -->
+    <rect x="56" y="160" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="86" y="230" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="bold" fill="#10B981">-45 Phút</text>
+    <text x="86" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Tiết Kiệm Thời Gian Mỗi Ngày / Nhân Sự</text>
+    <line x1="86" y1="290" x2="580" y2="290" stroke="#334155" stroke-width="1"/>
+    <text x="86" y="320" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="86" dy="0">Giải phóng kỹ sư và chỉ huy trưởng khỏi gánh nặng tổng hợp số liệu</tspan>
+      <tspan x="86" dy="22">báo cáo ngày và cập nhật trạng thái tiến độ thi công thủ công.</tspan>
+    </text>
+
+    <!-- Stat 2 -->
+    <rect x="656" y="160" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="686" y="230" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="bold" fill="#38BDF8">-90%</text>
+    <text x="686" y="270" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Giảm Thiểu Tình Trạng Trùng Lịch Họp</text>
+    <line x1="686" y1="290" x2="1180" y2="290" stroke="#334155" stroke-width="1"/>
+    <text x="686" y="320" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="686" dy="0">Xóa bỏ hoàn toàn xung đột đặt trùng phòng họp nhờ cơ chế khóa lịch</tspan>
+      <tspan x="686" dy="22">và kiểm tra thời gian thực chính xác trực tiếp trên cơ sở dữ liệu MySQL.</tspan>
+    </text>
+
+    <!-- Stat 3 -->
+    <rect x="56" y="390" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="86" y="460" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="bold" fill="#818CF8">&lt; 2.0s</text>
+    <text x="86" y="500" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Tốc Độ Phản Hồi Tức Thời</text>
+    <line x1="86" y1="520" x2="580" y2="520" stroke="#334155" stroke-width="1"/>
+    <text x="86" y="550" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="86" dy="0">Thời gian phản hồi nghiệp vụ qua Dynamic Multi-Brain cực kỳ nhanh mượt,</tspan>
+      <tspan x="86" dy="22">mang lại trải nghiệm liền mạch không độ trễ cho nhân viên nội bộ.</tspan>
+    </text>
+
+    <!-- Stat 4 -->
+    <rect x="656" y="390" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="686" y="460" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="bold" fill="#FBBF24">100%</text>
+    <text x="686" y="500" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Bảo Mật Dữ Liệu Theo Vai Trò (RBAC)</text>
+    <line x1="686" y1="520" x2="1180" y2="520" stroke="#334155" stroke-width="1"/>
+    <text x="686" y="550" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="686" dy="0">Phân quyền nghiêm ngặt dựa theo hồ sơ người dùng (currentUser),</tspan>
+      <tspan x="686" dy="22">không xảy ra bất kỳ sự cố rò rỉ thông tin mật hay vượt quyền truy cập.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.6 Đánh giá năng suất thực chiến</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 33 / 35</text>
+  </g>
+</svg>

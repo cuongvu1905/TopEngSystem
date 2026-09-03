@@ -87,25 +87,22 @@ const parseDateStr = (str) => {
   return new Date(y, m - 1, d);
 };
 
-// Get array of 7 dates for the week containing referenceDate (Monday to Sunday)
+// Get array of 7 dates centered around referenceDate (index 3 is referenceDate: 3 days before, 3 days after)
+// Ensures "today" (or the selected reference date) is always in the exact horizontal center of the screen
 const getWeekDays = (referenceDate) => {
-  const curr = new Date(referenceDate);
-  const day = curr.getDay(); // 0 is Sun, 1 is Mon
-  const diffToMon = curr.getDate() - day + (day === 0 ? -6 : 1);
-  
-  const monday = new Date(curr.setDate(diffToMon));
+  const center = new Date(referenceDate);
   const week = [];
   
-  for (let i = 0; i < 7; i++) {
-    const nextDay = new Date(monday);
-    nextDay.setDate(monday.getDate() + i);
+  for (let i = -3; i <= 3; i++) {
+    const nextDay = new Date(center);
+    nextDay.setDate(center.getDate() + i);
     week.push(nextDay);
   }
   return week;
 };
 
 export default function RoomBookingPage() {
-  const { currentUser } = useApp();
+  const { currentUser, setHeaderActions } = useApp();
   const { t } = useLanguage();
 
   const [selectedLocation, setSelectedLocation] = useState('HN');
@@ -356,7 +353,7 @@ export default function RoomBookingPage() {
     }
   };
 
-  const getDayLabel = (idx) => {
+  const getDayLabel = (dateOrIdx) => {
     const labels = [
       t('calendar.mon', 'Thứ 2'),
       t('calendar.tue', 'Thứ 3'),
@@ -366,7 +363,11 @@ export default function RoomBookingPage() {
       t('calendar.sat', 'Thứ 7'),
       t('calendar.sun', 'CN')
     ];
-    return labels[idx];
+    if (dateOrIdx instanceof Date) {
+      const d = dateOrIdx.getDay();
+      return labels[d === 0 ? 6 : d - 1];
+    }
+    return labels[dateOrIdx];
   };
 
   const isToday = (dateObj) => {
@@ -376,59 +377,87 @@ export default function RoomBookingPage() {
       dateObj.getFullYear() === today.getFullYear();
   };
 
+  // Automatically center today's column in the viewport/wrapper when scrolling is needed
+  const centerTodayColumn = useCallback((behavior = 'auto') => {
+    const wrappers = document.querySelectorAll('.room-week-grid-wrapper');
+    wrappers.forEach(wrapper => {
+      const targetCol = wrapper.querySelector('.room-day-col.is-today') || wrapper.querySelector('.room-day-col:nth-child(4)');
+      if (!targetCol) return;
+
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const targetRect = targetCol.getBoundingClientRect();
+      const currentRelativeLeft = targetRect.left - wrapperRect.left;
+      const desiredRelativeLeft = (wrapper.clientWidth - targetCol.clientWidth) / 2;
+      const delta = currentRelativeLeft - desiredRelativeLeft;
+
+      if (Math.abs(delta) > 1) {
+        wrapper.scrollTo({
+          left: wrapper.scrollLeft + delta,
+          behavior
+        });
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    centerTodayColumn('auto');
+    const t1 = setTimeout(() => centerTodayColumn('auto'), 50);
+    const t2 = setTimeout(() => centerTodayColumn('auto'), 200);
+    const t3 = setTimeout(() => centerTodayColumn('smooth'), 500);
+
+    const handleResize = () => centerTodayColumn('auto');
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [currentDate, selectedLocation, isLoadingBookings, centerTodayColumn]);
+
+  useEffect(() => {
+    setHeaderActions(
+      <div className="desktop-header-actions">
+        <button 
+          type="button" 
+          className="btn btn-primary" 
+          onClick={() => openBookingModal('room-large')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', fontSize: '12px', fontWeight: '700' }}
+        >
+          <i className="fa-solid fa-plus-circle"></i>
+          {t('roomBooking.bookBtn', 'Đặt phòng họp')}
+        </button>
+      </div>
+    );
+    return () => setHeaderActions(null);
+  }, [t]);
+
   return (
-    <div className="scrollable-view" style={{ padding: '24px' }}>
-      <div className="view-header" style={{ marginBottom: '20px' }}>
-        <div className="view-title-group">
-          <h2>{t('roomBooking.title', 'Đặt phòng họp')}</h2>
-          <p>{t('roomBooking.subtitle', 'Theo dõi lịch và đặt thời gian sử dụng phòng họp')}</p>
-        </div>
-        <div className="view-actions">
-          <button 
-            type="button" 
-            className="btn btn-primary" 
-            onClick={() => openBookingModal('room-large')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <i className="fa-solid fa-plus-circle"></i>
-            {t('roomBooking.bookBtn', 'Đặt phòng họp')}
-          </button>
-        </div>
+    <div className="scrollable-view room-booking-view">
+
+      {/* Mobile-only Action Bar */}
+      <div className="mobile-room-booking-action-bar">
+        <button 
+          type="button" 
+          className="btn btn-primary mobile-btn-create" 
+          onClick={() => openBookingModal('room-large')}
+        >
+          <i className="fa-solid fa-plus-circle"></i>
+          <span>{t('roomBooking.bookBtn', 'Đặt phòng họp')}</span>
+        </button>
       </div>
 
-      <div 
-        style={{ 
-          backgroundColor: 'var(--neutral-bg-card)', 
-          border: '1px solid var(--neutral-border)', 
-          borderRadius: '8px', 
-          padding: '16px 20px', 
-          marginBottom: '24px',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label style={{ fontWeight: '600', fontSize: '13.5px', color: 'var(--neutral-dark)' }}>
+      {/* Top Filter & Week Navigation Toolbar */}
+      <div className="room-booking-toolbar">
+        <div className="room-booking-toolbar-inputs">
+          <div className="room-booking-toolbar-item">
+            <label>
               {t('roomBooking.location', 'Địa điểm:')}
             </label>
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="doc-select-filter"
-              style={{
-                minWidth: '160px',
-                padding: '7px 12px',
-                fontSize: '13.5px',
-                fontWeight: '600',
-                borderRadius: '6px',
-                border: '1px solid var(--neutral-border)',
-                backgroundColor: 'var(--neutral-bg-main)',
-                color: 'var(--neutral-dark)'
-              }}
+              className="room-booking-select"
             >
               {LOCATIONS.map(loc => (
                 <option key={loc.id} value={loc.id}>{loc.name}</option>
@@ -436,8 +465,8 @@ export default function RoomBookingPage() {
             </select>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label style={{ fontWeight: '600', fontSize: '13.5px', color: 'var(--neutral-dark)' }}>
+          <div className="room-booking-toolbar-item">
+            <label>
               {t('roomBooking.date', 'Ngày:')}
             </label>
             <input
@@ -448,120 +477,70 @@ export default function RoomBookingPage() {
                   setCurrentDate(parseDateStr(e.target.value));
                 }
               }}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '6px',
-                border: '1px solid var(--neutral-border)',
-                backgroundColor: 'var(--neutral-bg-main)',
-                color: 'var(--neutral-dark)',
-                fontSize: '13.5px',
-                outline: 'none'
-              }}
+              className="room-booking-date-input"
             />
           </div>
-
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={handleTodayWeek}
-            style={{ fontSize: '12.5px' }}
-          >
-            <i className="fa-solid fa-calendar-day" style={{ marginRight: '4px' }}></i> {t('roomBooking.thisWeek', 'Tuần này')}
-          </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--neutral-dark)' }}>
-            {formatDateShort(weekStart)} ~ {formatDateShort(weekEnd)}
-          </span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              type="button"
-              onClick={handlePrevWeek}
-              title={t('roomBooking.prevWeek', 'Tuần trước')}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '6px',
-                border: '1px solid var(--neutral-border)',
-                backgroundColor: 'var(--neutral-bg-hover)',
-                color: 'var(--neutral-dark)',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
-              }}
-            >
-              &lt;
-            </button>
-            <button
-              type="button"
-              onClick={handleNextWeek}
-              title={t('roomBooking.nextWeek', 'Tuần sau')}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '6px',
-                border: '1px solid var(--neutral-border)',
-                backgroundColor: 'var(--neutral-bg-hover)',
-                color: 'var(--neutral-dark)',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
-              }}
-            >
-              &gt;
-            </button>
+        <div className="room-booking-toolbar-controls">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm room-booking-today-btn"
+            onClick={handleTodayWeek}
+          >
+            <i className="fa-solid fa-calendar-day" style={{ marginRight: '6px' }}></i> {t('roomBooking.thisWeek', 'Tuần này')}
+          </button>
+
+          <div className="room-booking-toolbar-nav">
+            <span className="room-booking-range-badge">
+              {formatDateShort(weekStart)} ~ {formatDateShort(weekEnd)}
+            </span>
+            <div className="room-booking-nav-group">
+              <button
+                type="button"
+                onClick={handlePrevWeek}
+                title={t('roomBooking.prevWeek', 'Tuần trước')}
+                className="room-booking-nav-btn"
+              >
+                <i className="fa-solid fa-chevron-left"></i>
+              </button>
+              <button
+                type="button"
+                onClick={handleNextWeek}
+                title={t('roomBooking.nextWeek', 'Tuần sau')}
+                className="room-booking-nav-btn"
+              >
+                <i className="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      {/* Room Grids */}
+      <div className="room-sections-list">
         {ROOMS.map(room => (
-          <div key={room.id} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div 
-              style={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '2px 0 4px 4px'
-              }}
-            >
-              <i className="fa-solid fa-door-open" style={{ fontSize: '18px', color: 'var(--primary-color)' }}></i>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
-                {roomName(room, t)}
-              </h3>
+          <div key={room.id} className="room-section-block">
+            <div className="room-section-header">
+              <div className="room-title-wrapper">
+                <i className="fa-solid fa-door-open room-title-icon"></i>
+                <h3 className="room-title-text">
+                  {roomName(room, t)}
+                </h3>
+              </div>
+              <span className="room-capacity-badge">
+                {room.id === 'room-large' ? (
+                  <><i className="fa-solid fa-users"></i> {t('roomBooking.largeRoomCapacity', 'Sức chứa 12-16 người • Máy chiếu • Tivi')}</>
+                ) : (
+                  <><i className="fa-solid fa-user-group"></i> {t('roomBooking.smallRoomCapacity', 'Sức chứa 4-8 người • Bảng kính')}</>
+                )}
+              </span>
             </div>
 
-            <div 
-              style={{ 
-                border: '1px solid var(--neutral-border)', 
-                borderRadius: '12px', 
-                padding: '16px',
-                backgroundColor: 'var(--neutral-bg-card)',
-                boxShadow: 'var(--shadow-sm)',
-                overflowX: 'auto'
-              }}
-            >
-              <div 
-                style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(7, minmax(130px, 1fr))', 
-                  gap: '12px',
-                  minWidth: '950px'
-                }}
-              >
+            <div className="room-week-grid-wrapper">
+              <div className="room-week-grid">
                 {weekDays.map((dayDate, dayIdx) => {
                   const dayStr = formatDateStr(dayDate);
-                  // Comparing the YYYY-MM-DD strings is safe because both are built the same
-                  // way from local dates; today itself is bookable, only earlier days are not.
                   const isPastDay = dayStr < formatDateStr(getToday());
                   const isCurrentDay = isToday(dayDate);
                   
@@ -572,95 +551,56 @@ export default function RoomBookingPage() {
                   return (
                     <div 
                       key={dayStr} 
-                      style={{ 
-                        border: isCurrentDay ? '2px solid var(--primary-color)' : '2px solid var(--neutral-border)',
-                        borderRadius: '16px',
-                        backgroundColor: 'var(--neutral-bg-card)',
-                        padding: '12px 8px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        minHeight: '380px'
-                      }}
+                      className={`room-day-col ${isCurrentDay ? 'is-today' : ''} ${isPastDay ? 'is-past' : ''}`}
                     >
-                      <div style={{ textAlign: 'center', marginBottom: '12px', borderBottom: '1px solid var(--neutral-border)', paddingBottom: '8px' }}>
-                        <div style={{ fontWeight: '700', fontSize: '15px', color: isCurrentDay ? 'var(--primary-color)' : 'var(--neutral-dark)' }}>
-                          {getDayLabel(dayIdx)}
+                      <div className="room-day-col-header">
+                        <div className="day-name">
+                          {getDayLabel(dayDate)}
                         </div>
-                        <div style={{ fontSize: '12px', color: 'var(--neutral-muted)', marginTop: '2px' }}>
+                        <div className="day-date">
                           {formatDateShort(dayDate)}
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+                      <div className="room-day-col-body">
                         {isLoadingBookings ? (
-                          <div style={{ textAlign: 'center', padding: '24px 4px', color: 'var(--neutral-muted)', fontSize: '12px', fontStyle: 'italic' }}>
+                          <div className="room-col-empty-msg">
                             <i className="fa-solid fa-spinner fa-spin"></i> {t('common.loading', 'Đang tải...')}
                           </div>
                         ) : loadError ? (
-                          <div style={{ textAlign: 'center', padding: '24px 4px', color: '#f59e0b', fontSize: '12px' }}>
-                            <i className="fa-solid fa-triangle-exclamation"></i> {t('roomBooking.loadFailed', 'Không tải được lịch đặt phòng.')}
+                          <div className="room-col-error-msg">
+                            <i className="fa-solid fa-triangle-exclamation"></i> {t('roomBooking.loadFailed', 'Lỗi tải')}
                           </div>
                         ) : dayBookings.length === 0 ? (
-                          <div style={{ textAlign: 'center', padding: '24px 4px', color: 'var(--neutral-muted)', fontSize: '12px', fontStyle: 'italic' }}>
+                          <div className="room-col-empty-msg">
                             {t('roomBooking.emptyDay', 'Trống')}
                           </div>
                         ) : (
                           dayBookings.map(b => {
-                            // Bookings saved before the importance field existed have no level:
-                            // they keep the original neutral look instead of being relabelled.
                             const lvl = getImportanceLevel(b.importance);
+                            const impClass = lvl ? `imp-${lvl.id.toLowerCase()}` : '';
                             return (
                               <div
                                 key={b.id}
                                 onDoubleClick={() => setDetailBooking(b)}
                                 title={t('roomBooking.viewDetailHint', 'Nhấp đúp để xem chi tiết cuộc họp')}
-                                style={{
-                                  border: `1.5px solid ${lvl ? lvl.border : 'rgba(56, 189, 248, 0.65)'}`,
-                                  borderRadius: '10px',
-                                  padding: '10px 8px',
-                                  backgroundColor: 'var(--neutral-bg-main)',
-                                  textAlign: 'center',
-                                  position: 'relative',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.15s ease'
-                                }}
+                                className={`room-meeting-card ${impClass}`}
                               >
-                                {/* Importance as a dot in the corner the × used to occupy: it costs no
-                                    row height, and the colour alone carries the level. */}
                                 {lvl && (
                                   <span
                                     title={`${lvl.id} — ${t(lvl.descKey, lvl.descFallback)}`}
-                                    style={{
-                                      position: 'absolute',
-                                      top: '7px',
-                                      right: '7px',
-                                      width: '9px',
-                                      height: '9px',
-                                      borderRadius: '50%',
-                                      backgroundColor: lvl.color,
-                                      border: `1px solid ${lvl.border}`,
-                                      boxShadow: `0 0 5px ${lvl.color}`
-                                    }}
+                                    className={`meeting-imp-dot imp-${lvl.id.toLowerCase()}`}
+                                    style={{ backgroundColor: lvl.color, borderColor: lvl.border, boxShadow: `0 0 5px ${lvl.color}` }}
                                   ></span>
                                 )}
-                                <div style={{ fontWeight: '700', fontSize: '12.5px', color: 'var(--neutral-dark)', marginBottom: '2px' }}>
+                                <div className="meeting-team-title">
                                   {b.team}
                                 </div>
-                                <div style={{ fontSize: '11.5px', color: '#cbd5e1', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div className="meeting-booker-name">
                                   &lt;{b.bookerName}&gt;
                                 </div>
-                                <div 
-                                  style={{ 
-                                    display: 'inline-block',
-                                    fontSize: '11px', 
-                                    fontWeight: '700', 
-                                    color: '#38bdf8', 
-                                    backgroundColor: 'rgba(56, 189, 248, 0.18)',
-                                    border: '1px solid rgba(56, 189, 248, 0.45)',
-                                    padding: '2.5px 8px',
-                                    borderRadius: '6px'
-                                  }}
-                                >
+                                <div className="meeting-time-badge">
+                                  <i className="fa-regular fa-clock" style={{ marginRight: '4px', fontSize: '10px' }}></i>
                                   {b.startTime} ~ {b.endTime}
                                 </div>
                               </div>
@@ -669,36 +609,12 @@ export default function RoomBookingPage() {
                         )}
                       </div>
 
-                      {/* A day that has already passed cannot be booked, so the button says so
-                          instead of opening a form that would be refused on submit. */}
                       <button
                         type="button"
                         disabled={isPastDay}
                         title={isPastDay ? t('roomBooking.pastDateBlocked', 'Không thể đặt phòng cho ngày đã qua.') : undefined}
                         onClick={() => openBookingModal(room.id, dayStr)}
-                        style={{
-                          marginTop: '10px',
-                          width: '100%',
-                          padding: '6px',
-                          border: '1.5px dashed var(--neutral-border)',
-                          borderRadius: '8px',
-                          backgroundColor: 'transparent',
-                          color: 'var(--neutral-muted)',
-                          fontSize: '11.5px',
-                          fontWeight: '600',
-                          cursor: isPastDay ? 'not-allowed' : 'pointer',
-                          opacity: isPastDay ? 0.4 : 1,
-                          transition: 'all 0.15s'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (isPastDay) return;
-                          e.currentTarget.style.borderColor = 'var(--primary-color)';
-                          e.currentTarget.style.color = 'var(--primary-color)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = 'var(--neutral-border)';
-                          e.currentTarget.style.color = 'var(--neutral-muted)';
-                        }}
+                        className={`room-book-slot-btn ${isPastDay ? 'is-disabled' : ''}`}
                       >
                         {isPastDay
                           ? t('roomBooking.pastDay', 'Đã qua')
@@ -713,13 +629,14 @@ export default function RoomBookingPage() {
         ))}
       </div>
 
+      {/* Booking Form Modal */}
       {isModalOpen && (
-        <div className="modal show" style={{ display: 'flex', zIndex: 1000 }}>
+        <div className="modal show room-booking-modal" style={{ display: 'flex', zIndex: 1000 }}>
           <div className="modal-dialog" style={{ maxWidth: '660px', width: '95%' }}>
             <div className="modal-content">
               <div className="modal-header">
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
-                  <i className="fa-solid fa-door-open" style={{ marginRight: '8px', color: 'var(--primary-color)' }}></i>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <i className="fa-solid fa-door-open" style={{ color: 'var(--primary-color)' }}></i>
                   {t('roomBooking.newBookingTitle', 'Đặt phòng họp mới')}
                 </h3>
                 <button className="btn-close-modal" onClick={() => setIsModalOpen(false)}>
@@ -731,13 +648,13 @@ export default function RoomBookingPage() {
                 <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '20px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div className="form-group">
-                      <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.locationLabel', 'Địa điểm')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <select
                         value={modalLocation}
                         onChange={(e) => setModalLocation(e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
+                        className="room-modal-input"
                       >
                         {LOCATIONS.map(loc => (
                           <option key={loc.id} value={loc.id}>{loc.name}</option>
@@ -746,13 +663,13 @@ export default function RoomBookingPage() {
                     </div>
 
                     <div className="form-group">
-                      <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.roomLabel', 'Phòng họp')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <select
                         value={modalRoomId}
                         onChange={(e) => setModalRoomId(e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
+                        className="room-modal-input"
                       >
                         {ROOMS.map(r => (
                           <option key={r.id} value={r.id}>{roomName(r, t)}</option>
@@ -763,7 +680,7 @@ export default function RoomBookingPage() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '10px' }}>
                     <div className="form-group">
-                      <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.bookingDate', 'Ngày đặt')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
@@ -772,12 +689,12 @@ export default function RoomBookingPage() {
                         min={formatDateStr(getToday())}
                         onChange={(e) => setModalDate(e.target.value)}
                         required
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
+                        className="room-modal-input"
                       />
                     </div>
 
                     <div className="form-group">
-                      <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.startTime', 'Bắt đầu')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <TimeField
@@ -787,7 +704,7 @@ export default function RoomBookingPage() {
                     </div>
 
                     <div className="form-group">
-                      <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.endTime', 'Kết thúc')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <TimeField
@@ -800,7 +717,7 @@ export default function RoomBookingPage() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div className="form-group">
-                      <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.team', 'Team / Bộ phận')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
@@ -809,12 +726,12 @@ export default function RoomBookingPage() {
                         onChange={(e) => setModalTeam(e.target.value)}
                         placeholder={t('roomBooking.teamPlaceholder', 'VD: Team R&D')}
                         required
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
+                        className="room-modal-input"
                       />
                     </div>
 
                     <div className="form-group">
-                      <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                         {t('roomBooking.bookerName', 'Tên người đặt')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
@@ -823,13 +740,13 @@ export default function RoomBookingPage() {
                         onChange={(e) => setModalBookerName(e.target.value)}
                         placeholder={t('roomBooking.bookerPlaceholder', 'VD: Nguyễn Văn A')}
                         required
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none' }}
+                        className="room-modal-input"
                       />
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                    <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                       {t('roomBooking.purposeLabel', 'Nội dung / Mục đích cuộc họp')}
                     </label>
                     <textarea
@@ -837,13 +754,13 @@ export default function RoomBookingPage() {
                       value={modalPurpose}
                       onChange={(e) => setModalPurpose(e.target.value)}
                       placeholder={t('roomBooking.purposePlaceholder', 'Nhập nội dung hoặc mục đích cuộc họp...')}
-                      style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)', color: 'var(--neutral-dark)', outline: 'none', resize: 'vertical' }}
+                      className="room-modal-input"
                     />
                   </div>
-                  {/* Importance: the level badge on the left, what it commits you to on the
-                      right, so the choice is made against its meaning rather than a bare word. */}
+
+                  {/* Importance selector */}
                   <div className="form-group">
-                    <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '6px', display: 'block' }}>
+                    <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '6px', display: 'block' }}>
                       {t('roomBooking.importance', 'Mức độ quan trọng')} <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -852,18 +769,7 @@ export default function RoomBookingPage() {
                         return (
                           <label
                             key={lvl.id}
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: 'auto 88px 1fr',
-                              alignItems: 'center',
-                              gap: '10px',
-                              padding: '9px 11px',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              border: `1.5px solid ${isPicked ? lvl.border : 'var(--neutral-border)'}`,
-                              backgroundColor: isPicked ? lvl.bg : 'var(--neutral-bg-main)',
-                              transition: 'all 0.15s ease'
-                            }}
+                            className={`room-importance-option ${isPicked ? 'is-selected' : ''} imp-${lvl.id.toLowerCase()}`}
                           >
                             <input
                               type="radio"
@@ -873,22 +779,10 @@ export default function RoomBookingPage() {
                               onChange={() => setModalImportance(lvl.id)}
                               style={{ cursor: 'pointer', margin: 0, accentColor: lvl.color }}
                             />
-                            <span
-                              style={{
-                                fontSize: '11.5px',
-                                fontWeight: '800',
-                                letterSpacing: '0.04em',
-                                textAlign: 'center',
-                                color: lvl.color,
-                                backgroundColor: lvl.bg,
-                                border: `1px solid ${lvl.border}`,
-                                borderRadius: '6px',
-                                padding: '3px 0'
-                              }}
-                            >
+                            <span className={`importance-badge-tag imp-${lvl.id.toLowerCase()}`}>
                               {lvl.id}
                             </span>
-                            <span style={{ fontSize: '12px', lineHeight: 1.45, color: isPicked ? 'var(--neutral-dark)' : 'var(--neutral-muted)' }}>
+                            <span className="importance-desc-text">
                               {t(lvl.descKey, lvl.descFallback)}
                             </span>
                           </label>
@@ -921,13 +815,11 @@ export default function RoomBookingPage() {
           </div>
         </div>
       )}
-      {/* Meeting detail. Opened by double-clicking a booking; readable by everyone, and the
-          place the cancel action now lives so it can never be hit by a stray single click. */}
+
+      {/* Meeting detail Modal */}
       {detailBooking && (() => {
         const b = detailBooking;
         const lvl = getImportanceLevel(b.importance);
-        // A meeting that has already happened is a record, not a plan: it stays readable but
-        // can no longer be cancelled by anyone. Viewing the detail is never restricted.
         const isPastBooking = b.date < formatDateStr(getToday());
         const isOwnerOrAdmin = currentUser && (b.bookerName === currentUser.name || currentUser.system_role.includes('Admin'));
         const canCancel = !!isOwnerOrAdmin && !isPastBooking;
@@ -937,18 +829,18 @@ export default function RoomBookingPage() {
         const rows = [
           [t('roomBooking.locationLabel', 'Địa điểm'), loc ? loc.name : b.location],
           [t('roomBooking.roomLabel', 'Phòng họp'), room ? roomName(room, t) : b.roomId],
-          [t('roomBooking.dateLabel', 'Ngày họp'), `${getDayLabel(dayDate.getDay() === 0 ? 6 : dayDate.getDay() - 1)}, ${formatDateShort(dayDate)}`],
+          [t('roomBooking.dateLabel', 'Ngày họp'), `${getDayLabel(dayDate)}, ${formatDateShort(dayDate)}`],
           [t('roomBooking.time', 'Khung giờ'), `${b.startTime} ~ ${b.endTime}`],
           [t('roomBooking.team', 'Team / Bộ phận'), b.team],
           [t('roomBooking.booker', 'Người đặt'), b.bookerName]
         ];
 
         return (
-          <div className="modal show" style={{ display: 'flex', zIndex: 1001 }}>
+          <div className="modal show room-booking-modal" style={{ display: 'flex', zIndex: 1001 }}>
             <div className="modal-dialog" style={{ maxWidth: '560px', width: '95%' }}>
               <div className="modal-content">
                 <div className="modal-header">
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <i className="fa-solid fa-circle-info" style={{ color: 'var(--primary-color)' }}></i>
                     {t('roomBooking.detailTitle', 'Chi tiết cuộc họp')}
                   </h3>
@@ -958,35 +850,25 @@ export default function RoomBookingPage() {
                 </div>
 
                 <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '20px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '132px 1fr', rowGap: '10px', columnGap: '12px', fontSize: '13px' }}>
+                  <div className="room-detail-info-grid">
                     {rows.map(([label, value]) => (
                       <React.Fragment key={label}>
-                        <span style={{ color: 'var(--neutral-muted)', fontWeight: '600' }}>{label}</span>
-                        <span style={{ color: 'var(--neutral-dark)', fontWeight: '600' }}>{value}</span>
+                        <span className="room-detail-label">{label}</span>
+                        <span className="room-detail-value">{value}</span>
                       </React.Fragment>
                     ))}
                   </div>
 
-                  {/* The level is shown with its meaning, not just its name: what a viewer needs
-                      to know is whether this slot can be moved. */}
                   <div>
-                    <div style={{ color: 'var(--neutral-muted)', fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>
+                    <div style={{ color: 'var(--neutral-muted)', fontWeight: '700', fontSize: '12.5px', marginBottom: '6px' }}>
                       {t('roomBooking.importance', 'Mức độ quan trọng')}
                     </div>
                     {lvl ? (
-                      <div style={{
-                        display: 'flex', alignItems: 'flex-start', gap: '10px',
-                        padding: '10px 12px', borderRadius: '8px',
-                        border: `1.5px solid ${lvl.border}`, backgroundColor: lvl.bg
-                      }}>
-                        <span style={{
-                          fontSize: '11.5px', fontWeight: '800', letterSpacing: '0.04em',
-                          color: lvl.color, border: `1px solid ${lvl.border}`,
-                          borderRadius: '6px', padding: '3px 8px', flexShrink: 0
-                        }}>
+                      <div className={`room-importance-display imp-${lvl.id.toLowerCase()}`}>
+                        <span className={`importance-badge-tag imp-${lvl.id.toLowerCase()}`}>
                           {lvl.id}
                         </span>
-                        <span style={{ fontSize: '12.5px', lineHeight: 1.45, color: 'var(--neutral-dark)' }}>
+                        <span className="importance-desc-text">
                           {t(lvl.descKey, lvl.descFallback)}
                         </span>
                       </div>
@@ -998,14 +880,10 @@ export default function RoomBookingPage() {
                   </div>
 
                   <div>
-                    <div style={{ color: 'var(--neutral-muted)', fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>
+                    <div style={{ color: 'var(--neutral-muted)', fontWeight: '700', fontSize: '12.5px', marginBottom: '6px' }}>
                       {t('roomBooking.purpose', 'Mục đích sử dụng')}
                     </div>
-                    <div style={{
-                      fontSize: '12.5px', lineHeight: 1.5, color: 'var(--neutral-dark)',
-                      whiteSpace: 'pre-wrap', padding: '10px 12px', borderRadius: '8px',
-                      border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)'
-                    }}>
+                    <div className="room-detail-purpose-box">
                       {b.purpose || t('roomBooking.noPurpose', '(Không có nội dung)')}
                     </div>
                   </div>
@@ -1017,7 +895,7 @@ export default function RoomBookingPage() {
                       type="button"
                       className="btn"
                       onClick={() => handleDeleteBooking(b.id, b.team, `${b.startTime}~${b.endTime}`)}
-                      style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
+                      style={{ backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff', fontWeight: '700' }}
                     >
                       <i className="fa-solid fa-trash-can"></i> {t('roomBooking.cancelMeeting', 'Huỷ cuộc họp')}
                     </button>

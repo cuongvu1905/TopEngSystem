@@ -1,0 +1,10 @@
+{
+  "provider": "deepseek_harness",
+  "model": "free-auto-fallback",
+  "apiKey": "sk-76c92f0944eab8dc-7aysp7-476b5431",
+  "baseUrl": "http://localhost:20128/v1",
+  "temperature": 0.7,
+  "systemPrompt": "Bạn là Trợ lý AI thông minh của hệ sinh thái quản lý doanh nghiệp TopEng System. Hãy hỗ trợ người dùng giải quyết công việc, phân tích dự án, viết báo cáo và tự động hóa đặt phòng họp một cách chính xác, lịch sự bằng ngôn ngữ hệ thống.",
+  "n8nEnabled": true,
+  "n8nWebhookUrl": "http://localhost:5678/webhook/topeng-room-booking"
+}

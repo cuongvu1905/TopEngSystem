@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="240" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+    <text x="176" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">KIẾN TRÚC AS-IS: MÔ HÌNH 3 TẦNG TRONG TOPENGMANAGER</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Sơ đồ chi tiết từ ngữ cảnh người dùng đến bộ não AI Gateway và các Tool Plugins thực thi</text>
+  </g>
+
+  <!-- 3 Layer Stack -->
+  <g id="stack-layers" data-pptx-bounds="56 160 1168 450">
+    <!-- Layer 1 -->
+    <rect x="56" y="160" width="1168" height="130" rx="14" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="175" width="230" height="28" rx="6" fill="#075985"/>
+    <text x="191" y="194" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8" text-anchor="middle">TẦNG 1: GIAO DIỆN &amp; NGỮ CẢNH</text>
+    <text x="325" y="195" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#F1F5F9">TopEngManager Client UI &amp; Real-time Context</text>
+
+    <g transform="translate(76, 215)">
+      <rect x="0" y="0" width="350" height="55" rx="8" fill="#0B1120" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">Nhận diện Danh tính (Auth Profile)</text>
+      <text x="15" y="44" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">currentUser (ID, Name, Role, Department)</text>
+
+      <rect x="370" y="0" width="350" height="55" rx="8" fill="#0B1120" stroke="#334155" stroke-width="1"/>
+      <text x="385" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">Thời Gian Thực (System Clock)</text>
+      <text x="385" y="44" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">Thứ, ngày, giờ chính xác phục vụ đặt phòng/lịch</text>
+
+      <rect x="740" y="0" width="370" height="55" rx="8" fill="#0B1120" stroke="#334155" stroke-width="1"/>
+      <text x="755" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">Đa Ngôn Ngữ Nghiêm Ngặt</text>
+      <text x="755" y="44" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">Tự phát hiện và phản hồi theo ngôn ngữ của người dùng</text>
+    </g>
+
+    <!-- Layer 2 -->
+    <rect x="56" y="305" width="1168" height="135" rx="14" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="320" width="250" height="28" rx="6" fill="#3730A3"/>
+    <text x="201" y="339" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#A5B4FC" text-anchor="middle">TẦNG 2: MULTI-BRAIN GATEWAY</text>
+    <text x="345" y="340" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#F1F5F9">Dynamic AI Router (/api/ai-chat/route.js)</text>
+
+    <g transform="translate(76, 360)">
+      <rect x="0" y="0" width="210" height="60" rx="8" fill="#0B1120" stroke="#10B981" stroke-width="1"/>
+      <text x="15" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#34D399">DeepSeek Harness</text>
+      <text x="15" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">Local Reasoning độ trễ thấp</text>
+
+      <rect x="225" y="0" width="210" height="60" rx="8" fill="#0B1120" stroke="#38BDF8" stroke-width="1"/>
+      <text x="240" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">9Router Gateway</text>
+      <text x="240" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">Proxy định tuyến tối ưu tải</text>
+
+      <rect x="450" y="0" width="210" height="60" rx="8" fill="#0B1120" stroke="#60A5FA" stroke-width="1"/>
+      <text x="465" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#60A5FA">Google Gemini 3.7</text>
+      <text x="465" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">Flash tốc độ cao &amp; Multimodal</text>
+
+      <rect x="675" y="0" width="210" height="60" rx="8" fill="#0B1120" stroke="#F59E0B" stroke-width="1"/>
+      <text x="690" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#FBBF24">Anthropic Claude</text>
+      <text x="690" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">Suy luận logic chuyên sâu</text>
+
+      <rect x="900" y="0" width="210" height="60" rx="8" fill="#0B1120" stroke="#10B981" stroke-width="1"/>
+      <text x="915" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#34D399">OpenAI GPT-4o</text>
+      <text x="915" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">Tool Calling đa tác vụ</text>
+    </g>
+
+    <!-- Layer 3 -->
+    <rect x="56" y="455" width="1168" height="145" rx="14" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="470" width="250" height="28" rx="6" fill="#064E3B"/>
+    <text x="201" y="489" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">TẦNG 3: TOOL PLUGINS &amp; N8N</text>
+    <text x="345" y="490" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#F1F5F9">Hành Động Nghiệp Vụ Thật &amp; Tự Động Hóa</text>
+
+    <g transform="translate(76, 510)">
+      <rect x="0" y="0" width="265" height="70" rx="8" fill="#0B1120" stroke="#10B981" stroke-width="1"/>
+      <text x="15" y="25" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981">roomBookingPlugin</text>
+      <text x="15" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">
+        <tspan x="15" dy="0">Đặt phòng, hủy phòng,</tspan>
+        <tspan x="15" dy="16">kiểm tra lịch phòng họp MySQL.</tspan>
+      </text>
+
+      <rect x="280" y="0" width="265" height="70" rx="8" fill="#0B1120" stroke="#38BDF8" stroke-width="1"/>
+      <text x="295" y="25" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">taskPlugin</text>
+      <text x="295" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">
+        <tspan x="295" dy="0">Truy vấn task cá nhân,</tspan>
+        <tspan x="295" dy="16">tạo task mới trực tiếp Database.</tspan>
+      </text>
+
+      <rect x="560" y="0" width="265" height="70" rx="8" fill="#0B1120" stroke="#F59E0B" stroke-width="1"/>
+      <text x="575" y="25" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#FBBF24">dailyReportPlugin</text>
+      <text x="575" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">
+        <tspan x="575" dy="0">Tự tổng hợp dữ liệu thi công,</tspan>
+        <tspan x="575" dy="16">xuất báo cáo ngày chuẩn mẫu.</tspan>
+      </text>
+
+      <rect x="840" y="0" width="270" height="70" rx="8" fill="#0B1120" stroke="#EC4899" stroke-width="1"/>
+      <text x="855" y="25" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F472B6">n8n Automation Engine</text>
+      <text x="855" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#94A3B8">
+        <tspan x="855" dy="0">Bắn webhook gửi email,</tspan>
+        <tspan x="855" dy="16">lịch Google &amp; tin nhắn Zalo.</tspan>
+      </text>
+    </g>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.2 Kiến trúc As-Is 3 tầng</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 29 / 35</text>
+  </g>
+</svg>

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#FBBF24" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">ANTHROPIC CLAUDE 3.7: TRIẾT LÝ EXTENDED THINKING</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Đột phá tư duy suy luận chuỗi ý nghĩ (Chain of Thought) kết hợp lập trình chuyên sâu</text>
+  </g>
+
+  <!-- 3 Analysis Panels -->
+  <g id="claude-panels" data-pptx-bounds="56 160 1168 450">
+    <!-- Panel 1 -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1"/>
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">CƠ CHẾ HYBRID</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Extended Thinking</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#FBBF24" font-weight="600">• Suy nghĩ trước khi phản hồi:</tspan>
+      <tspan x="96" dy="20">AI tự viết ra chuỗi suy luận phân tích rủi ro trong khối hidden thinking.</tspan>
+      <tspan x="76" dy="28" fill="#FBBF24" font-weight="600">• Linh hoạt ngân sách suy nghĩ:</tspan>
+      <tspan x="96" dy="20">Điều chỉnh Thinking Budget từ 1K đến hàng chục nghìn tokens tùy độ khó.</tspan>
+      <tspan x="76" dy="28" fill="#FBBF24" font-weight="600">• Tự phản biện giả thuyết:</tspan>
+      <tspan x="96" dy="20">Tự tìm ra lỗ hổng trong phương án A để chuyển sang phương án B tối ưu.</tspan>
+    </text>
+
+    <!-- Panel 2 -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1"/>
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">ĐỈNH CAO CODING</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">SWE-bench Verified</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0" fill="#38BDF8" font-weight="600">• Dẫn đầu bài test kỹ thuật thực tế:</tspan>
+      <tspan x="497" dy="20">Giải quyết thành công hơn 70% các issue GitHub phức tạp ngoài đời thực.</tspan>
+      <tspan x="477" dy="28" fill="#38BDF8" font-weight="600">• Bắt trọn các điều kiện biên (Edge cases):</tspan>
+      <tspan x="497" dy="20">Cực kỳ cẩn trọng với các lỗi null pointer, race conditions, memory leaks.</tspan>
+      <tspan x="477" dy="28" fill="#38BDF8" font-weight="600">• Phong cách code sạch (Clean Code):</tspan>
+      <tspan x="497" dy="20">Viết code có cấu trúc chặt chẽ, chú thích sáng sủa và dễ bảo trì.</tspan>
+    </text>
+
+    <!-- Panel 3 -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">NGỮ CẢNH 200K</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Độ Chính Xác Tuyệt Đối</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0" fill="#10B981" font-weight="600">• Tiếp nhận toàn bộ repository:</tspan>
+      <tspan x="899" dy="20">Đọc hiểu hàng chục file mã nguồn</tspan>
+      <tspan x="899" dy="20">mà không bị suy giảm trí nhớ.</tspan>
+      <tspan x="879" dy="26" fill="#10B981" font-weight="600">• "Needle In A Haystack" 99%:</tspan>
+      <tspan x="899" dy="20">Tìm chính xác 1 dòng code ẩn sâu</tspan>
+      <tspan x="899" dy="20">trong hàng nghìn trang tài liệu.</tspan>
+      <tspan x="879" dy="26" fill="#10B981" font-weight="600">• Constitutional AI an toàn:</tspan>
+      <tspan x="899" dy="20">Hạn chế tối đa hành vi phá hoại</tspan>
+      <tspan x="899" dy="20">hoặc tạo lỗ hổng bảo mật.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.4 Anthropic Claude 3.7</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 19 / 35</text>
+  </g>
+</svg>

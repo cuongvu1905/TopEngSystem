@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOPVSystem - Loop Engineering Presentation (35 Slides)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #070B14;
+      color: #F1F5F9;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Sidebar */
+    #sidebar {
+      width: 320px;
+      background: #0B1120;
+      border-right: 1px solid #1E293B;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid #1E293B;
+      background: #0F172A;
+    }
+    .sidebar-header h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #38BDF8;
+      letter-spacing: 0.5px;
+    }
+    .sidebar-header p {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-top: 4px;
+    }
+    .download-bar {
+      padding: 12px 16px;
+      background: #0B1120;
+      border-bottom: 1px solid #1E293B;
+    }
+    .btn-download {
+      display: block;
+      width: 100%;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .btn-download:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+    }
+    .slide-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 10px;
+    }
+    .slide-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .slide-item:hover {
+      background: #1E293B;
+    }
+    .slide-item.active {
+      background: #1E293B;
+      border-color: #38BDF8;
+    }
+    .slide-num {
+      width: 32px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #38BDF8;
+    }
+    .slide-info {
+      flex: 1;
+      overflow: hidden;
+    }
+    .slide-title {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #E2E8F0;
+    }
+    /* Main Viewport */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #070B14;
+    }
+    .top-toolbar {
+      height: 56px;
+      background: #0B1120;
+      border-bottom: 1px solid #1E293B;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+    .slide-counter {
+      font-size: 14px;
+      font-weight: 600;
+      color: #94A3B8;
+    }
+    .slide-counter span {
+      color: #38BDF8;
+    }
+    .nav-controls {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 16px;
+      background: #1E293B;
+      border: 1px solid #334155;
+      color: #F1F5F9;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #334155;
+      border-color: #38BDF8;
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .stage-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+    }
+    .slide-frame {
+      width: 100%;
+      max-width: 1060px;
+      aspect-ratio: 16 / 9;
+      background: #0F172A;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      border: 1px solid #1E293B;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slide-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    /* Notes Panel */
+    .notes-drawer {
+      height: 140px;
+      background: #0B1120;
+      border-top: 1px solid #1E293B;
+      padding: 16px 24px;
+      overflow-y: auto;
+    }
+    .notes-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #10B981;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .notes-body {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #CBD5E1;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <h1>TOPVSYSTEM AI PRESENTATION</h1>
+      <p>Kỹ Nghệ Loop Engineering (35 Trang)</p>
+    </div>
+    <div class="download-bar">
+      <a class="btn-download" href="exports/topeng_loop_engineering_20260903_113931.pptx" download>
+        ⬇ Tải File PPTX (35 Slide Hoàn Chỉnh)
+      </a>
+    </div>
+    <div class="slide-list" id="slideList"></div>
+  </div>
+
+  <div id="main">
+    <div class="top-toolbar">
+      <div class="slide-counter" id="counter">Trang <span>1</span> / 35</div>
+      <div class="nav-controls">
+        <button class="btn" id="btnPrev" onclick="navigate(-1)">← Trang Trước</button>
+        <button class="btn" id="btnNext" onclick="navigate(1)">Trang Sau →</button>
+        <button class="btn" onclick="openFullscreen()">⛶ Toàn Màn Hình</button>
+      </div>
+    </div>
+    <div class="stage-container">
+      <div class="slide-frame" id="slideFrame">
+        <iframe id="svgViewer" src="svg_output/P01.svg"></iframe>
+      </div>
+    </div>
+    <div class="notes-drawer">
+      <div class="notes-header">🎤 Lời thoại diễn thuyết (Speaker Notes):</div>
+      <div class="notes-body" id="notesBody">Đang tải...</div>
+    </div>
+  </div>
+
+  <script>
+    const slides = [{"id": "P01", "filename": "P01.svg", "title": "P01", "note": "Kính chào Ban Lãnh đạo, Quý đối tác và toàn thể các đồng nghiệp kỹ sư. Hôm nay, chúng tôi vinh dự trình bày báo cáo chuyên sâu về một trong những bước chuyển dịch công nghệ mang tính cách mạng nhất của ngành kỹ nghệ phần mềm hiện đại: Loop Engineering. Bài trình bày không chỉ làm sáng tỏ tiến trình phát triển từ các mô hình truyền thống đến AI tự chủ, mà còn phân tích chi tiết các mô hình Agent hàng đầu thế giới như Codex, Claude, Antigravity và đặc biệt là cách chúng tôi hiện thực hóa, làm chủ công nghệ này ngay tại hệ thống nội bộ TOPVSystem."}, {"id": "P02", "filename": "P02.svg", "title": "P02", "note": "Để quý vị có bức tranh tổng thể, bài thuyết trình được cấu trúc thành 3 trụ cột chiến lược. Thứ nhất: Lịch sử và bản chất của Loop Engineering – giải thích vì sao phương thức 'Prompt & Hope' đã chạm trần giới hạn và vòng lặp đóng phản hồi thực tế là tất yếu. Thứ hai: Toàn cảnh các mô hình AI Agent hàng đầu thế giới – so sánh chuyên sâu giữa OpenAI, Anthropic Claude và DeepMind Antigravity trên 6 chiều kỹ thuật. Thứ ba: Thực chứng tại TOPVSystem – cách TopEngManager ứng dụng Dynamic Multi-Brain và các tool plugin thực tế để nâng cao năng suất doanh nghiệp, cùng lộ trình 4 trụ cột 2026 - 2027."}, {"id": "P03", "filename": "P03.svg", "title": "P03", "note": "Trên màn hình là cấu trúc chi tiết 35 trang của buổi báo cáo hôm nay. Chúng ta sẽ cùng đi qua từng chặng đường: từ cuộc khủng hoảng phần mềm thập niên 1970, bước chuyển Agile, DevOps, AI Copilot, đến định nghĩa học thuật và cơ sở điều khiển học của Loop Engineering; tiếp đó là 12 chuyên đề phân tích các mô hình AI Agent tiên tiến nhất thế giới; và cuối cùng là 8 chuyên đề thực chứng giải pháp AI Chat tại TOPVSystem cùng định hướng tương lai."}, {"id": "P04", "filename": "P04.svg", "title": "P04", "note": "Chúng ta chính thức bước vào Phần thứ nhất: Tiến trình lịch sử phát triển lên Loop Engineering và bản chất kỹ nghệ của vòng lặp tự chủ khép kín. Phần này gồm 11 chuyên đề, làm rõ nền tảng ra đời của phương pháp luận mới này."}, {"id": "P05", "filename": "P05.svg", "title": "P05", "note": "Nhìn lại giai đoạn 1970 đến 2000, mô hình Thác nước (Waterfall) chiếm lĩnh toàn bộ ngành công nghệ. Với đặc trưng tuyến tính tuần tự qua 5 giai đoạn cứng nhắc và tài liệu hóa cồng kềnh, Waterfall giả định rằng yêu cầu của khách hàng là bất biến suốt 2-3 năm. Hậu quả là theo báo cáo Chaos Report của Standish Group, hơn 68% dự án thất bại hoặc đội vốn. Quy luật chi phí sửa lỗi của Boehm chỉ ra rằng: lỗi phát hiện muộn ở khâu kiểm thử tốn chi phí gấp 50 đến 100 lần so với lúc phân tích ban đầu, đặt ra nhu cầu cấp thiết phải rút ngắn chu kỳ phản hồi."}, {"id": "P06", "filename": "P06.svg", "title": "P06", "note": "Năm 2001, 17 chuyên gia phần mềm đã công bố Tuyên ngôn Agile, mở ra cuộc cách mạng mới. Agile ưu tiên cá nhân và sự tương tác, phần mềm chạy tốt, sự cộng tác với khách hàng và khả năng thích ứng linh hoạt hơn là bám cứng vào kế hoạch. Mô hình Scrum với các vòng lặp Sprint 2 đến 4 tuần đã giúp bàn giao sản phẩm tăng dần và nhận phản hồi sớm. Tuy nhiên, mọi khâu từ viết mã, kiểm thử đến triển khai vẫn phụ thuộc 100% vào tốc độ thủ công của con người và phát sinh chi phí họp hành lớn."}, {"id": "P07", "filename": "P07.svg", "title": "P07", "note": "Giai đoạn 2015 đến 2020 chứng kiến sự bùng nổ của phong trào DevOps và đường ống CI/CD. Máy móc đã bắt đầu tiếp quản việc tự động build, kiểm tra linter, chạy unit test và triển khai tự động qua Docker, Kubernetes. Các chỉ số đo lường DORA ghi nhận tần suất phát hành tăng vọt từ vài tháng một lần lên nhiều lần trong ngày. Nhưng điểm nghẽn chí tử vẫn nằm ở nguồn sinh mã: mọi dòng code, thuật toán và logic nghiệp vụ vẫn hoàn toàn do con người gõ bằng tay."}, {"id": "P08", "filename": "P08.svg", "title": "P08", "note": "Giai đoạn 2021 đến 2023, làn sóng Large Language Models tham gia viết mã với các đại diện như GitHub Copilot và ChatGPT. Dựa trên cơ chế dự đoán token tiếp theo, AI có thể sinh thân hàm, biểu thức chính quy hay boilerplate code cực nhanh từ ghi chú bằng ngôn ngữ tự nhiên, giúp tăng 35% đến 50% tốc độ gõ phím. Tuy nhiên, bản chất của Copilot vẫn là tương tác một chiều 'One-shot Autocomplete': AI hoàn toàn không biết code mình viết ra có chạy được trong môi trường máy tính thật hay không."}, {"id": "P09", "filename": "P09.svg", "title": "P09", "note": "Thực tế đã phơi bày 3 khiếm khuyết chết người của phương thức 'Prompt & Hope'. Thứ nhất là Zero-Execution Feedback: AI không có phản hồi từ máy tính, dẫn đến ảo giác sinh mã và kỹ sư phải làm 'máy chạy thử' cho AI. Thứ hai là Context Drift: sau vài lượt chat sửa lỗi, AI bắt đầu quên quy tắc ban đầu, sửa được lỗi này thì làm hỏng tính năng khác. Thứ ba là Nghịch lý năng suất: nếu mất 15 phút copy-paste log lỗi qua lại chỉ để sửa một bug nhỏ, kỹ sư tự viết code từ đầu còn nhanh hơn. Đó chính là lý do Loop Engineering ra đời."}, {"id": "P10", "filename": "P10.svg", "title": "P10", "note": "Vậy Loop Engineering là gì? Dưới góc nhìn học thuật điều khiển học (Cybernetics), Loop Engineering là kỹ nghệ tích hợp các mô hình nền tảng vào các vòng lặp phản hồi đóng (Closed-Loop), nơi Agent tự quan sát trạng thái môi trường, ra quyết định hành động và nhận phản hồi thực tế để tự hoàn thành mục tiêu. Dưới góc nhìn thực tiễn, Loop Engineering trao cho Agent công cụ máy tính thật (Terminal, File System, Git) và giao Mục tiêu nghiệm thu (Goal Spec) thay vì chỉ giao prompt. Vòng lặp chỉ dừng lại khi lệnh kiểm thử thực tế trả về Exit Code = 0."}, {"id": "P11", "filename": "P11.svg", "title": "P11", "note": "Nền tảng khoa học của Loop Engineering bắt nguồn từ Chu trình OODA của Đại tá John Boyd trong lý thuyết quân sự: Observe (Quan sát trạng thái), Orient (Định vị nguyên nhân gốc), Decide (Quyết định kế hoạch sửa) và Act (Hành động sửa và kiểm thử). Kết hợp với chu trình Ralph Closed Loop, hệ thống liên tục đo lường sai lệch delta giữa Trạng thái mong muốn (100% test pass) và Trạng thái thực tế. Khi delta còn lớn hơn 0, Agent tự động phân tích log lỗi, tạo bản vá vi mô và kiểm thử lại cho đến khi sai lệch triệt tiêu hoàn toàn."}, {"id": "P12", "filename": "P12.svg", "title": "P12", "note": "Quy trình 6 bước khép kín của Loop Engineering bao gồm: 1. Analyze – Tiếp nhận issue, rà soát codebase và xác định phạm vi tác động. 2. Plan – Lập Implementation Plan chi tiết, xác định kế hoạch kiểm chứng trước khi chạm vào mã nguồn. 3. Act – Trực tiếp chỉnh sửa các khối mã chính xác. 4. Verify – Chạy lệnh kiểm thử terminal thật (pytest, npm test, linter). 5. Observe – Phân tích stdout/stderr và stack trace. 6. Refine – Nếu có lỗi, tự động khoanh vùng nguyên nhân và sửa tiếp; khi pass 100%, tạo báo cáo Walkthrough và hoàn thành task."}, {"id": "P13", "filename": "P13.svg", "title": "P13", "note": "Có 4 nguyên lý kỹ thuật cốt lõi bảo đảm AI Agent hoạt động an toàn và không ảo giác: Thứ nhất là Goal-Driven Autonomy – kiên trì bám sát mục tiêu tổng thể, tự chủ điều hướng mà không làm phiền kỹ sư ở việc vụn vặt. Thứ hai là Verification-First – 'Evidence before assertions', mọi kết luận hoàn thành phải có bằng chứng log kiểm thử thật. Thứ ba là Self-Healing – tự đọc thông báo lỗi và tạo bản vá khép kín ngay trong vòng lặp. Thứ tư là Persistent Artifacts – lưu trữ kế hoạch và ngữ cảnh vào file ổ đĩa có cấu trúc để duy trì bộ nhớ dài hạn."}, {"id": "P14", "filename": "P14.svg", "title": "P14", "note": "So sánh chiều sâu giữa hai mô hình: Trong Human-in-the-Loop cũ, kỹ sư phải can thiệp thủ công ở từng bước trung gian, gây mệt mỏi nhận thức và dễ bỏ qua khâu test khi chịu áp lực tiến độ. Ngược lại, trong Autonomous Closed-Loop, con người chỉ đứng ở hai đầu quy trình: xác định mục tiêu và nghiệm thu kết quả cuối cùng. Toàn bộ chu trình giữa do AI tự vận hành bền bỉ 24/7. Điều này nâng tầm vị thế kỹ sư từ 'thợ sửa code' thành 'kiến trúc sư trưởng phê duyệt chiến lược'."}, {"id": "P15", "filename": "P15.svg", "title": "P15", "note": "Chúng ta bước sang Phần thứ hai: Toàn cảnh các mô hình AI Agent hàng đầu thế giới. Phần này gồm 12 chuyên đề, tập trung phân tích sâu kiến trúc kỹ thuật của OpenAI Codex & Operator, Anthropic Claude 3.7 và Google DeepMind Antigravity."}, {"id": "P16", "filename": "P16.svg", "title": "P16", "note": "Về mặt kiến trúc, thế giới AI Agent chia thành hai trường phái chính. Single-Agent (Đơn tác tử) sử dụng một mô hình duy nhất gánh vác mọi việc; ưu điểm là đơn giản, độ trễ thấp, nhưng nhược điểm là dễ nghẽn cửa sổ ngữ cảnh khi codebase lớn. Ngược lại, Multi-Agent Swarm (Bầy đàn đa tác tử) phân vai chuyên biệt hóa mạng lưới: Lead Planner lập kế hoạch, Research Agents tra cứu và Execution Agents sửa mã. Khả năng chạy song song nhiều luồng giúp giải quyết các hệ thống doanh nghiệp quy mô lớn mà không bị suy giảm trí nhớ."}, {"id": "P17", "filename": "P17.svg", "title": "P17", "note": "OpenAI là người tiên phong với mô hình Codex năm 2021 – nền tảng của GitHub Copilot, nay đã tiến hóa thành GPT-4o đa phương thức. Đóng góp lớn nhất của OpenAI là chuẩn hóa cơ chế Function Calling qua JSON Schema và Structured Outputs, giúp loại bỏ hoàn toàn lỗi cú pháp JSON và biến LLM thành bộ điều khiển API an toàn. Cùng với đó, Assistants API cung cấp khả năng quản trị luồng Threads & Runs trên Cloud, tích hợp sẵn Code Interpreter và File Search RAG."}, {"id": "P18", "filename": "P18.svg", "title": "P18", "note": "Bước đột phá tiếp theo của OpenAI là Operator – tác tử tự động hóa trình duyệt web thông qua Visual GUI. Bằng cách kết hợp ảnh chụp màn hình độ phân giải cao và phân tích cây DOM, Operator nhìn thấy trang web như mắt người và tự thao tác chuột, bàn phím để đặt vé, điền form, thanh toán. Đối với doanh nghiệp, Operator mở ra khả năng tự động hóa các phần mềm nghiệp vụ kế thừa (Legacy Systems) không có API, thay thế các kịch bản RPA truyền thống vốn rất dễ gãy vỡ."}, {"id": "P19", "filename": "P19.svg", "title": "P19", "note": "Anthropic Claude 3.7 Sonnet mang đến triết lý Extended Thinking (Tư duy chuỗi ý nghĩ mở rộng). Mô hình được cấp một ngân sách suy nghĩ linh hoạt, tự viết ra chuỗi phân tích ẩn và tự phản biện các phương án trước khi đưa ra quyết định chính thức. Khả năng này giúp Claude 3.7 dẫn đầu bảng xếp hạng SWE-bench Verified, giải quyết hơn 70% các issue GitHub phức tạp ngoài đời thực, đặc biệt xuất sắc trong việc bắt trọn các điều kiện biên và duy trì ngữ cảnh 200K token với độ chính xác tuyệt đối."}, {"id": "P20", "filename": "P20.svg", "title": "P20", "note": "Đi xa hơn phạm vi trình duyệt web, Anthropic tiên phong giới thiệu Computer Use API. AI được trang bị bộ lệnh hành động native của hệ điều hành như di chuyển chuột đến tọa độ pixel, click chuột trái/phải, gõ phím tắt và chụp ảnh màn hình. Nhờ đó, Claude có thể tương tác trực tiếp với các phần mềm desktop chuyên dụng của ngành xây dựng và kỹ nghệ như AutoCAD, Revit, Excel. Để bảo đảm an toàn, toàn bộ môi trường thực thi bắt buộc phải được cô lập trong máy ảo Docker/VM."}, {"id": "P21", "filename": "P21.svg", "title": "P21", "note": "Một sản phẩm đột phá khác của Anthropic là Claude Code CLI – trợ lý lập trình terminal-native. Chạy trực tiếp qua dòng lệnh 'claude' ngay trong thư mục dự án, công cụ này tự tìm kiếm file, đọc code, tạo diffs chỉnh sửa chính xác và tự chạy lệnh shell kiểm thử. Claude Code tích hợp sâu vào quy trình Git: tự tạo branch, soạn commit message ngữ nghĩa và mở Pull Request hoàn chỉnh, trong khi vẫn duy trì quyền kiểm soát an toàn của kỹ sư trước các lệnh can thiệp hệ thống."}, {"id": "P22", "filename": "P22.svg", "title": "P22", "note": "Google DeepMind Antigravity đại diện cho đỉnh cao của trường phái Multi-Agent Swarm kết hợp kỷ luật quản trị Planning Governance. Hệ thống cho phép điều phối song song các sub-agents chuyên trách mà không làm tràn ngữ cảnh của tác tử mẹ. Điểm đặc biệt của Antigravity là cơ chế khóa an toàn: tuyệt đối cấm sửa code trong giai đoạn nghiên cứu, bắt buộc phải xuất Implementation Plan xin phê duyệt từ con người, và duy trì ngữ cảnh bền vững qua các tài liệu Artifacts và nhật ký Transcript JSONL."}, {"id": "P23", "filename": "P23.svg", "title": "P23", "note": "Hai trụ cột công nghệ giúp Antigravity vượt trội là Khung kỹ năng Superpowers và Giao thức Model Context Protocol (MCP). Superpowers đóng gói các quy trình kỹ thuật chuẩn (Brainstorming, Writing-plans, Systematic-debugging, TDD, Verification) thành các skill bắt buộc AI phải tuân thủ nghiêm ngặt. Trong khi đó, chuẩn MCP do Anthropic đề xuất cho phép kết nối an toàn với các máy chủ công cụ microservices (Database, Git, Terminal, Browser) theo mô hình cắm rút linh hoạt (Plug-and-Play)."}, {"id": "P24", "filename": "P24.svg", "title": "P24", "note": "So sánh về năng lực tư duy logic và phân rã bài toán: OpenAI tiếp cận theo hướng phản xạ trực tiếp và gọi tool nhanh, tối ưu cho các tác vụ API và web nhưng dễ gặp giới hạn ở các bài toán suy luận trừu tượng đa tầng. Claude 3.7 sở hữu năng lực tư duy sâu vượt trội nhờ Extended Thinking, tối ưu nhất cho việc khử lỗi hóc búa và thiết kế thuật toán đơn module. Trong khi đó, Antigravity nổi bật ở khả năng phân rã bài toán lớn thành mạng lưới nhiệm vụ con cho bầy đàn tác tử thực thi song song có kiểm duyệt."}, {"id": "P25", "filename": "P25.svg", "title": "P25", "note": "Về mặt tương tác môi trường và tự sửa lỗi: OpenAI hoạt động mạnh trong môi trường Sandbox Cloud và Web DOM, tự sửa lỗi tham số API hiệu quả. Claude tương tác trực tiếp với OS Shell và GUI máy tính, có tỷ lệ tự sửa lỗi mã nguồn đơn repo rất cao nhờ bám sát stack trace. Antigravity vận hành theo nguyên tắc Verification-First: bắt buộc phải có Exit Code 0 từ terminal mới nghiệm thu, đồng thời có thể ủy quyền cho sub-agent sửa bug độc lập để giữ an toàn tuyệt đối cho tiến trình mẹ."}, {"id": "P26", "filename": "P26.svg", "title": "P26", "note": "Bảng ma trận đối sánh 6 chiều cho thấy mỗi hệ sinh thái đều có thế mạnh riêng biệt: Claude vượt trội về suy luận sâu và code chi tiết; OpenAI dẫn đầu về hệ sinh thái công cụ và tương tác web; Antigravity xuất sắc nhất về điều phối bầy đàn và kỷ luật an toàn. Từ bức tranh toàn cảnh này, chúng tôi rút ra định hướng chiến lược cho TOPVSystem: không phụ thuộc vào bất kỳ một hãng công nghệ nào, mà xây dựng kiến trúc Dynamic Multi-Brain Gateway để tích hợp tinh hoa của cả ba trường phái."}, {"id": "P27", "filename": "P27.svg", "title": "P27", "note": "Bây giờ, chúng ta bước vào Phần thứ ba – trọng tâm thực tiễn của buổi báo cáo: AI Chat trong TOPVSystem. Phần này gồm 8 chuyên đề, chia sẻ hiện trạng kiến trúc As-Is, các công cụ thực chiến trong TopEngManager và lộ trình 4 trụ cột 2026 - 2027."}, {"id": "P28", "filename": "P28.svg", "title": "P28", "note": "TOPVSystem là doanh nghiệp hoạt động trong lĩnh vực kỹ nghệ cơ điện và thi công công trình với hàng chục dự án trải rộng nhiều tỉnh thành và đội ngũ kỹ sư làm việc phân tán. Chúng tôi đối mặt với 3 điểm nghẽn lớn: Xung đột lịch phòng họp nội bộ do chat nhóm chồng chéo; Trôi tin nhắn giao việc dẫn đến quên task; và kỹ sư mất 45 đến 60 phút mỗi cuối ngày để soạn báo cáo nhật ký thi công thủ công. Yêu cầu đặt ra cho AI Chat là phải thao tác dữ liệu thật trên MySQL, hỗ trợ đa ngôn ngữ và bảo mật tuyệt đối."}, {"id": "P29", "filename": "P29.svg", "title": "P29", "note": "Kiến trúc As-Is của hệ thống AI Chat trong TopEngManager được thiết kế theo mô hình 3 tầng phân tách rõ ràng. Tầng 1: Client UI và Context Provider – nhận diện danh tính người dùng, thời gian thực và tự động phát hiện ngôn ngữ. Tầng 2: Dynamic Multi-Brain Gateway – bộ định tuyến API thông minh hỗ trợ đồng thời DeepSeek, 9Router, Gemini 3.7, Claude và GPT-4o. Tầng 3: Hệ sinh thái Tool Plugins thao tác trực tiếp với cơ sở dữ liệu và engine n8n webhook để tự động hóa quy trình."}, {"id": "P30", "filename": "P30.svg", "title": "P30", "note": "Cơ chế Dynamic Multi-Brain mang lại cho TOPVSystem sự độc lập công nghệ hoàn toàn (Vendor-Agnostic). Hệ thống có cơ chế Hot Failover: nếu một nhà cung cấp AI gặp sự cố mạng, gateway tự động chuyển hướng sang nhà cung cấp dự phòng trong tích tắc. Chúng tôi phân cấp bài toán thông minh: tác vụ nghiệp vụ nhanh chuyển về DeepSeek hoặc Gemini Flash với chi phí gần như bằng 0; chỉ các tác vụ phân tích phức tạp mới điều hướng về Claude hay GPT-4o, giúp tiết kiệm tới 75% chi phí vận hành API. Cổng trung gian 9Router còn đảm nhận việc ẩn dữ liệu nhạy cảm trước khi gửi lên đám mây."}, {"id": "P31", "filename": "P31.svg", "title": "P31", "note": "Hai plugin nghiệp vụ cốt lõi đang phục vụ hằng ngày tại TOPVSystem là roomBookingPlugin và taskPlugin. Plugin đặt phòng cung cấp các hàm tra cứu phòng trống, đặt phòng và hủy phòng với cơ chế kiểm tra xung đột thời gian thực trực tiếp trên bảng room_bookings của MySQL. Plugin công việc cho phép kỹ sư hỏi việc cần làm trong ngày, tạo task mới hoặc cập nhật tiến độ hoàn thành bằng ngôn ngữ tự nhiên. Toàn bộ các thao tác đều tự động gắn chặt với ID người dùng đăng nhập, bảo đảm phân quyền dữ liệu nghiêm ngặt."}, {"id": "P32", "filename": "P32.svg", "title": "P32", "note": "Plugin dailyReportPlugin tự động quét các đầu việc hoàn thành trong ngày, số lượng công nhân và khối lượng nghiệm thu tại công trường để tự động điền vào biểu mẫu báo cáo chuẩn ISO của công ty, rút ngắn thời gian lập báo cáo từ 45 phút xuống dưới 5 giây. Đồng thời, hệ thống phát tín hiệu webhook sang engine n8n để kích hoạt song song chuỗi tự động hóa: gửi thông báo lịch họp qua Email và Google Calendar, bắn tin nhắn cảnh báo vào Telegram của Ban Điều Hành và đồng bộ dữ liệu vào hệ thống quản trị."}, {"id": "P33", "filename": "P33.svg", "title": "P33", "note": "Những con số định lượng thực chiến tại TOPVSystem đã chứng minh hiệu quả vượt bậc: Tiết kiệm trung bình 45 phút mỗi ngày cho mỗi kỹ sư; Giảm hơn 90% tình trạng trùng lịch phòng họp; Tốc độ phản hồi nghiệp vụ đạt dưới 2 giây mang lại trải nghiệm mượt mà; và 100% dữ liệu dự án được bảo vệ an toàn theo cơ chế phân quyền Role-Based Access Control, không xảy ra bất kỳ sự cố rò rỉ thông tin nào."}, {"id": "P34", "filename": "P34.svg", "title": "P34", "note": "Trong giai đoạn 2026 - 2027, TOPVSystem triển khai Lộ trình nâng cấp 4 trụ cột chiến lược: Trụ cột 1 (Quý 3/2026) – Vector RAG đọc hiểu trực tiếp bản vẽ kỹ thuật CAD (DWG/DXF), mô hình Revit BIM và tra cứu quy chuẩn TCVN. Trụ cột 2 (Quý 4/2026) – Bầy đàn Multi-Agent giám sát an toàn lao động qua camera hiện trường và cảnh báo chậm tiến độ. Trụ cột 3 (Quý 1/2027) – Trợ lý Voice AI công trường giao tiếp hai chiều qua bộ đàm và phiên dịch song ngữ tức thời. Trụ cột 4 (Quý 2/2027) – Tích hợp sâu vào ERP/MES dự báo nhu cầu vật tư và tối ưu hóa chi phí thi công thời gian thực."}, {"id": "P35", "filename": "P35.svg", "title": "P35", "note": "Để tổng kết buổi báo cáo hôm nay: Loop Engineering chính là tương lai tất yếu của ngành kỹ nghệ phần mềm – đưa AI từ công cụ gõ code thụ động thành tác tử tự chủ có kiểm chứng. TOPVSystem tự hào đã làm chủ công nghệ này, kết hợp linh hoạt tinh hoa của các mô hình hàng đầu thế giới để tạo ra giá trị kinh tế thực tiễn cho doanh nghiệp. Chúng tôi xin chân thành cảm ơn Ban Lãnh đạo, Quý đối tác và đồng nghiệp. Sau đây, xin kính mời Quý vị cùng bước vào phiên Hỏi & Đáp (Q&A) chuyên sâu."}];
+    let currentIndex = 0;
+
+    function renderSidebar() {
+      const list = document.getElementById('slideList');
+      list.innerHTML = '';
+      slides.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.className = 'slide-item' + (idx === currentIndex ? ' active' : '');
+        item.onclick = () => selectSlide(idx);
+        item.innerHTML = `
+          <div class="slide-num">P${String(idx + 1).padStart(2, '0')}</div>
+          <div class="slide-info">
+            <div class="slide-title">${s.title}</div>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function selectSlide(idx) {
+      if (idx < 0 || idx >= slides.length) return;
+      currentIndex = idx;
+      const s = slides[idx];
+      document.getElementById('svgViewer').src = 'svg_output/' + s.filename;
+      document.getElementById('counter').innerHTML = `Trang <span>${idx + 1}</span> / ${slides.length}`;
+      
+      let noteClean = s.note;
+      if (noteClean.startsWith('#')) {
+        const lines = noteClean.split('\n');
+        lines.shift();
+        noteClean = lines.join('\n').trim();
+      }
+      document.getElementById('notesBody').innerText = noteClean || '(Không có ghi chú diễn thuyết)';
+
+      document.getElementById('btnPrev').disabled = (idx === 0);
+      document.getElementById('btnNext').disabled = (idx === slides.length - 1);
+
+      document.querySelectorAll('.slide-item').forEach((el, i) => {
+        el.className = 'slide-item' + (i === idx ? ' active' : '');
+        if (i === idx) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+    }
+
+    function navigate(delta) {
+      selectSlide(currentIndex + delta);
+    }
+
+    function openFullscreen() {
+      const viewer = document.getElementById('svgViewer');
+      window.open(viewer.src, '_blank');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') navigate(1);
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') navigate(-1);
+    });
+
+    renderSidebar();
+    selectSlide(0);
+  </script>
+</body>
+</html>

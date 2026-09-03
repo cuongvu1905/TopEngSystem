@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="220" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="166" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: LOOP ENGINEERING</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">4 NGUYÊN LÝ CỐT LÕI CỦA LOOP ENGINEERING</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Bộ quy chuẩn kỹ thuật bảo đảm AI Agent hoạt động chính xác, an toàn và có kiểm chứng</text>
+  </g>
+
+  <!-- 2x2 Grid of Principles -->
+  <g id="grid-principles" data-pptx-bounds="56 160 1168 450">
+    <!-- Box 1: Goal-Driven Autonomy -->
+    <rect x="56" y="160" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="76" y="180" width="36" height="36" rx="8" fill="#0B1120" stroke="#38BDF8" stroke-width="1.5"/>
+    <text x="94" y="204" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#38BDF8" text-anchor="middle">01</text>
+    <text x="126" y="205" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Goal-Driven Autonomy (Tự Chủ Hướng Đích)</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#38BDF8" font-weight="600">
+      Kiên trì giải quyết mục tiêu tổng thể thay vì phản ứng thụ động từng câu lệnh.
+    </text>
+    <text x="76" y="265" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">• Tiếp nhận bài toán phức tạp, tự động phân rã thành các task khả thi.</tspan>
+      <tspan x="76" dy="24">• Tự chủ điều hướng giải pháp mà không hỏi xin ý kiến ở việc vụn vặt.</tspan>
+      <tspan x="76" dy="24">• Chỉ dừng vòng lặp khi tiêu chuẩn nghiệm thu được thỏa mãn trọn vẹn.</tspan>
+    </text>
+
+    <!-- Box 2: Verification-First -->
+    <rect x="656" y="160" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="676" y="180" width="36" height="36" rx="8" fill="#0B1120" stroke="#10B981" stroke-width="1.5"/>
+    <text x="694" y="204" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#10B981" text-anchor="middle">02</text>
+    <text x="726" y="205" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Verification-First (Kiểm Chứng Trước Hết)</text>
+    <text x="676" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#10B981" font-weight="600">
+      "Evidence before assertions" — Bằng chứng log thật trước khi kết luận.
+    </text>
+    <text x="676" y="265" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="676" dy="0">• Tuyệt đối không phỏng đoán hay giả định mã nguồn đã chạy đúng.</tspan>
+      <tspan x="676" dy="24">• Chạy linter, unit tests, integration test thu thập log thật.</tspan>
+      <tspan x="676" dy="24">• Khử ảo giác hoàn toàn qua phản hồi khách quan từ máy tính.</tspan>
+    </text>
+
+    <!-- Box 3: Self-Healing -->
+    <rect x="56" y="390" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="76" y="410" width="36" height="36" rx="8" fill="#0B1120" stroke="#6366F1" stroke-width="1.5"/>
+    <text x="94" y="434" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#818CF8" text-anchor="middle">03</text>
+    <text x="126" y="435" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Self-Healing &amp; Repair (Tự Phục Hồi Khép Kín)</text>
+    <text x="76" y="465" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#818CF8" font-weight="600">
+      Phân tích nguyên nhân gốc rễ và tự tạo bản vá ngay trong vòng lặp hiện tại.
+    </text>
+    <text x="76" y="495" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">• Tự đọc error trace, exception log từ runtime hoặc trình biên dịch.</tspan>
+      <tspan x="76" dy="24">• Tự động khoanh vùng dòng code gây lỗi và phân tích nguyên nhân gốc.</tspan>
+      <tspan x="76" dy="24">• Tái lặp quy trình sửa và test nhiều vòng mà không làm phiền kỹ sư.</tspan>
+    </text>
+
+    <!-- Box 4: Persistent Context & Artifacts -->
+    <rect x="656" y="390" width="568" height="210" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="676" y="410" width="36" height="36" rx="8" fill="#0B1120" stroke="#F59E0B" stroke-width="1.5"/>
+    <text x="694" y="434" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#F59E0B" text-anchor="middle">04</text>
+    <text x="726" y="435" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Persistent Artifacts (Ngữ Cảnh Bền Vững)</text>
+    <text x="676" y="465" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#F59E0B" font-weight="600">
+      Duy trì bộ nhớ dài hạn qua file tài liệu, kế hoạch có cấu trúc.
+    </text>
+    <text x="676" y="495" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="676" dy="0">• Khắc phục nhược điểm tràn cửa sổ ngữ cảnh (Context Overflow).</tspan>
+      <tspan x="676" dy="24">• Ghi nhận kế hoạch vào Artifacts để các sub-agent cùng tham chiếu.</tspan>
+      <tspan x="676" dy="24">• Giữ vững kim chỉ nam xuyên suốt toàn bộ dự án dài hạn.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.3 Bốn nguyên lý cốt lõi</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 05 / 12</text>
+  </g>
+</svg>

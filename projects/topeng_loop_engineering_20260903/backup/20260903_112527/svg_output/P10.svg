@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">TRẢI NGHIỆM NGHIỆP VỤ THỰC CHIẾN</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">AI Chat không dừng ở văn bản mà trực tiếp tương tác dữ liệu và tự động hóa quy trình</text>
+  </g>
+
+  <!-- 3 Use Cases Columns -->
+  <g id="usecases-columns" data-pptx-bounds="56 160 1168 440">
+    <!-- Use Case 1: Room Booking -->
+    <rect x="56" y="160" width="365" height="430" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="76" y="180" width="325" height="32" rx="6" fill="#075985"/>
+    <text x="238" y="202" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">USE CASE 1: ĐẶT PHÒNG HỌP TỰ ĐỘNG</text>
+
+    <!-- Chat Prompt Box -->
+    <rect x="76" y="225" width="325" height="60" rx="8" fill="#0B1120" stroke="#334155" stroke-width="1"/>
+    <text x="90" y="246" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#38BDF8">Yêu cầu người dùng:</text>
+    <text x="90" y="268" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F1F5F9">"Đặt phòng họp lớn lúc 14h cho team R&amp;D"</text>
+
+    <!-- Function Executed -->
+    <rect x="76" y="300" width="325" height="65" rx="8" fill="#0F172A" stroke="#38BDF8" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="90" y="322" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#38BDF8">Agent Tool Calling:</text>
+    <text x="90" y="342" font-family="Consolas, monospace" font-size="12" fill="#A5B4FC">book_meeting_room({ room_id: 1, ... })</text>
+    <text x="90" y="358" font-family="Consolas, monospace" font-size="12" fill="#10B981">HTTP POST /api/room-bookings [OK 200]</text>
+
+    <!-- Real Impact -->
+    <text x="76" y="395" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F1F5F9">Hành động hệ thống thực tế:</text>
+    <text x="76" y="422" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="76" dy="0">• Kiểm tra xung đột lịch trong MySQL</tspan>
+      <tspan x="76" dy="22">• Khóa lịch phòng họp trên cơ sở dữ liệu</tspan>
+      <tspan x="76" dy="22">• Trigger Webhook n8n gửi email &amp; lịch</tspan>
+      <tspan x="76" dy="22">• Thời gian hoàn thành: dưới 2 giây</tspan>
+    </text>
+
+    <!-- Use Case 2: Task Management -->
+    <rect x="457" y="160" width="365" height="430" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="477" y="180" width="325" height="32" rx="6" fill="#3730A3"/>
+    <text x="639" y="202" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#A5B4FC" text-anchor="middle">USE CASE 2: ĐIỀU PHỐI CÔNG VIỆC</text>
+
+    <!-- Chat Prompt Box -->
+    <rect x="477" y="225" width="325" height="60" rx="8" fill="#0B1120" stroke="#334155" stroke-width="1"/>
+    <text x="491" y="246" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#818CF8">Yêu cầu người dùng:</text>
+    <text x="491" y="268" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F1F5F9">"Hôm nay tôi có những task nào cần xong?"</text>
+
+    <!-- Function Executed -->
+    <rect x="477" y="300" width="325" height="65" rx="8" fill="#0F172A" stroke="#6366F1" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="491" y="322" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#818CF8">Agent Tool Calling:</text>
+    <text x="491" y="342" font-family="Consolas, monospace" font-size="12" fill="#A5B4FC">list_my_tasks({ user_id, status: 'open' })</text>
+    <text x="491" y="358" font-family="Consolas, monospace" font-size="12" fill="#10B981">Trả về 4 tasks ưu tiên từ Task Service</text>
+
+    <!-- Real Impact -->
+    <text x="477" y="395" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F1F5F9">Hành động hệ thống thực tế:</text>
+    <text x="477" y="422" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="477" dy="0">• Lọc theo danh tính currentUser</tspan>
+      <tspan x="477" dy="22">• Phân loại mức độ khẩn cấp theo deadline</tspan>
+      <tspan x="477" dy="22">• Đề xuất thứ tự ưu tiên xử lý thông minh</tspan>
+      <tspan x="477" dy="22">• Cho phép tạo task mới tức thì bằng voice/text</tspan>
+    </text>
+
+    <!-- Use Case 3: Daily Report -->
+    <rect x="859" y="160" width="365" height="430" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.35"/>
+    <rect x="879" y="180" width="325" height="32" rx="6" fill="#064E3B"/>
+    <text x="1041" y="202" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#34D399" text-anchor="middle">USE CASE 3: SOẠN BÁO CÁO NGÀY</text>
+
+    <!-- Chat Prompt Box -->
+    <rect x="879" y="225" width="325" height="60" rx="8" fill="#0B1120" stroke="#334155" stroke-width="1"/>
+    <text x="893" y="246" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#34D399">Yêu cầu người dùng:</text>
+    <text x="893" y="268" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#F1F5F9">"Soạn báo cáo ngày hôm nay cho dự án A"</text>
+
+    <!-- Function Executed -->
+    <rect x="879" y="300" width="325" height="65" rx="8" fill="#0F172A" stroke="#10B981" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="893" y="322" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#34D399">Agent Tool Calling:</text>
+    <text x="893" y="342" font-family="Consolas, monospace" font-size="12" fill="#A5B4FC">generate_daily_report({ project_id: 'A' })</text>
+    <text x="893" y="358" font-family="Consolas, monospace" font-size="12" fill="#10B981">Tổng hợp dữ liệu thi công &amp; nhân sự</text>
+
+    <!-- Real Impact -->
+    <text x="879" y="395" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#F1F5F9">Hành động hệ thống thực tế:</text>
+    <text x="879" y="422" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="879" dy="0">• Tự quét tiến độ thi công trong ngày</tspan>
+      <tspan x="879" dy="22">• Điền biểu mẫu chuẩn ISO của doanh nghiệp</tspan>
+      <tspan x="879" dy="22">• Báo cáo tự động lưu vào module Daily Report</tspan>
+      <tspan x="879" dy="22">• Tiết kiệm 45 phút soạn thảo mỗi ngày</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.2 Nghiệp vụ thực chiến</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 10 / 12</text>
+  </g>
+</svg>

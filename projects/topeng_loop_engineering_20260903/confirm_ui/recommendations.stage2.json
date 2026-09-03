@@ -1,0 +1,182 @@
+{
+  "stage": "stage2",
+  "lang": "vi",
+  "recommend": {
+    "delivery_purpose": "balanced",
+    "mode": "custom",
+    "visual_style": "custom",
+    "image_strategy": "custom",
+    "image_usage": ["ai", "provided"],
+    "image_ai_path": "auto",
+    "generation_mode": "continuous"
+  },
+  "page_count": { "value": "10-12" },
+  "image_notes": {
+    "value": "Minh họa phong cách công nghệ kỹ nghệ khép kín (Loop Engineering), sơ đồ kiến trúc AI Agent và các tính năng thực tế của AI Chat TOPVSystem."
+  },
+  "proactive_speaker_notes": { "value": true },
+  "proactive_custom_animations": { "value": false },
+  "proactive_narration_audio": { "value": false },
+  "refine_spec": { "value": false },
+  "design_directions": {
+    "selected": 0,
+    "candidates": [
+      {
+        "id": "tech-loop-modern",
+        "name": "Kỹ thuật Công nghệ Hiện đại (Dark Tech & Cyber Blue)",
+        "name_en": "Modern Tech Loop (Dark Tech & Cyber Blue)",
+        "name_zh": "现代工程科技",
+        "note": "Phong cách công nghệ cao nền tối, làm nổi bật chu trình vòng lặp kỹ thuật và kiến trúc AI với màu nhấn Cyan và Electric Blue.",
+        "note_en": "High-tech dark theme highlighting closed-loop engineering and AI architectures with bright Cyan and Electric Blue accents.",
+        "note_zh": "深色高科技基调，突出闭环工程与AI智能体架构，辅以青蓝与电光蓝点缀。",
+        "mode": "custom",
+        "mode_behavior": "Thiết kế mạch lạc 3 phần theo chuẩn kim tự tháp Minto: từ bối cảnh lịch sử Loop Engineering, đến đối sánh AI Agent và hiện thực hóa AI Chat TOPVSystem.",
+        "mode_behavior_en": "Structured in 3 clear acts: Loop Engineering evolution, AI Agent landscape, and TOPVSystem AI Chat implementation.",
+        "mode_behavior_zh": "三段式结构：Loop Engineering 演进、AI Agent 全景对比与 TOPVSystem AI Chat 落地实践。",
+        "visual_style": "custom",
+        "visual_style_behavior": "Nền tối hiện đại (#0A0F1D) kết hợp khối card bán trong suốt, đường viền phát sáng nhẹ, typography rõ ràng và icon kỹ thuật chuẩn xác.",
+        "visual_style_behavior_en": "Dark theme (#0A0F1D) with subtle glassmorphic containers, glowing accent borders, crisp typography, and technical icons.",
+        "visual_style_behavior_zh": "深色技术基底搭配微发光容器与高对比度文字排版，突出现代工程感。",
+        "icons": "tabler-outline",
+        "color": {
+          "name": "Cyber Engineering",
+          "name_en": "Cyber Engineering",
+          "name_zh": "赛博工程蓝",
+          "palette": {
+            "background": "#0B1120",
+            "secondary_bg": "#1E293B",
+            "primary": "#38BDF8",
+            "accent": "#6366F1",
+            "secondary_accent": "#10B981",
+            "body_text": "#F1F5F9"
+          }
+        },
+        "typography": {
+          "name": "Segoe UI + Inter",
+          "name_en": "Segoe UI + Inter",
+          "name_zh": "Segoe UI + Inter",
+          "heading": { "primary": "Segoe UI", "english": "Segoe UI", "css": "sans-serif" },
+          "body": { "primary": "Segoe UI", "english": "Segoe UI", "css": "sans-serif" },
+          "body_size": 24
+        },
+        "image_strategy": {
+          "name": "Kỹ thuật Trực quan Hiện đại",
+          "name_en": "Modern Technical Visuals",
+          "name_zh": "现代技术可视化",
+          "rendering": "custom",
+          "visual": "Sơ đồ kiến trúc phát sáng, mô hình agent tương tác và infographic vòng lặp OODA/Ralph khép kín.",
+          "visual_en": "Glowing architecture diagrams, agent interaction models, and closed-loop Ralph/OODA infographics.",
+          "visual_zh": "发光架构图、智能体交互拓扑与闭环工程信息图表。",
+          "mood": "Đổi mới, chính xác, tương lai và công nghệ cao.",
+          "mood_en": "Innovative, precise, futuristic, and high-tech.",
+          "mood_zh": "创新、精密、未来感与工程信赖。",
+          "behavior": "Sử dụng hình ảnh vector tinh gọn, sơ đồ khối công nghệ và giao diện minh họa sạch sẽ, không dùng ảnh trang trí rườm rà."
+        }
+      },
+      {
+        "id": "enterprise-clarity",
+        "name": "Doanh nghiệp Tối giản & Tinh chuẩn (Swiss Clean)",
+        "name_en": "Enterprise Clarity (Swiss Clean)",
+        "name_zh": "瑞士极简商务",
+        "note": "Phong cách nền sáng trang nhã, phân chia lưới rõ ràng, độ tin cậy cao, phù hợp cho báo cáo chiến lược doanh nghiệp.",
+        "note_en": "Clean light theme with precise Swiss grid alignment and high readability, ideal for enterprise strategy presentations.",
+        "note_zh": "明亮整洁基调，严谨的瑞士网格排版，适合企业高管汇报与技术战略分享。",
+        "mode": "custom",
+        "mode_behavior": "Cấu trúc luận điểm chặt chẽ, mỗi slide tập trung vào 1 thông điệp lớn với bằng chứng định lượng và bảng so sánh trực quan.",
+        "mode_behavior_en": "Rigorous thesis structure; each slide focuses on one core takeaway backed by structured comparisons.",
+        "mode_behavior_zh": "严密论证结构，每页承载明确判断并配以结构化对比表。",
+        "visual_style": "custom",
+        "visual_style_behavior": "Nền trắng ngà và xám thanh lịch, điểm nhấn xanh Cobalt và Amber, viền mỏng tinh tế và khoảng trống thở thoáng đãng.",
+        "visual_style_behavior_en": "Off-white and clean slate tones with Cobalt Blue and Amber accents, refined thin borders, and generous breathing room.",
+        "visual_style_behavior_zh": "纯净白底与板岩灰，钴蓝与琥珀金点缀，细腻微边框与充沛留白。",
+        "icons": "tabler-outline",
+        "color": {
+          "name": "Swiss Corporate",
+          "name_en": "Swiss Corporate",
+          "name_zh": "瑞士商务蓝",
+          "palette": {
+            "background": "#FFFFFF",
+            "secondary_bg": "#F8FAFC",
+            "primary": "#0F172A",
+            "accent": "#2563EB",
+            "secondary_accent": "#0D9488",
+            "body_text": "#1E293B"
+          }
+        },
+        "typography": {
+          "name": "Arial + Segoe UI",
+          "name_en": "Arial + Segoe UI",
+          "name_zh": "Arial + Segoe UI",
+          "heading": { "primary": "Segoe UI", "english": "Arial", "css": "sans-serif" },
+          "body": { "primary": "Segoe UI", "english": "Arial", "css": "sans-serif" },
+          "body_size": 24
+        },
+        "image_strategy": {
+          "name": "Minh họa Biên tập Sạch",
+          "name_en": "Editorial Clean Graphics",
+          "name_zh": "编辑风格图表",
+          "rendering": "custom",
+          "visual": "Biểu đồ phẳng tinh gọn, bảng so sánh đa tiêu chí và mô hình phân tầng hệ thống.",
+          "visual_en": "Minimalist flat charts, multi-criteria comparison matrices, and clean layered system diagrams.",
+          "visual_zh": "极简扁平图表、多维度对比矩阵与清晰分层架构图。",
+          "mood": "Đáng tin cậy, khách quan, chuyên nghiệp và chuẩn mực.",
+          "mood_en": "Authoritative, objective, professional, and trustworthy.",
+          "mood_zh": "严谨、客观、专业且值得信赖。",
+          "behavior": "Ưu tiên bảng biểu số liệu, icon đơn sắc và sơ đồ luồng dữ liệu rõ nét."
+        }
+      },
+      {
+        "id": "emerald-intelligent",
+        "name": "Trí tuệ Nhân tạo & Bền vững (Deep Emerald & Mint)",
+        "name_en": "Intelligent AI & Vitality (Deep Emerald & Mint)",
+        "name_zh": "智慧翡翠绿",
+        "note": "Tông màu xanh ngọc lục bảo và bạc hà tượng trưng cho sự tiến hóa thông minh, sinh động và tràn đầy năng lượng.",
+        "note_en": "Deep Emerald and fresh Mint palette symbolizing intelligent evolution, vitality, and engineering sustainability.",
+        "note_zh": "翡翠绿与薄荷绿基调，象征智能进化、蓬勃活力与工程可持续性。",
+        "mode": "custom",
+        "mode_behavior": "Kể chuyện hấp dẫn (Narrative Flow): hành trình từ quá khứ đến hiện tại và mở ra tương lai đột phá của AI TOPVSystem.",
+        "mode_behavior_en": "Engaging narrative flow: the journey from traditional engineering to autonomous loops and future breakthroughs.",
+        "mode_behavior_zh": "叙事性动线：从传统软件工程到闭环自治再到 TOPVSystem 突破性未来。",
+        "visual_style": "custom",
+        "visual_style_behavior": "Nền xanh đen đậm quý phái (#061A14) kết hợp màu nhấn Emerald phát sáng (#10B981) và vàng ánh kim sang trọng (#F59E0B).",
+        "visual_style_behavior_en": "Deep dark green canvas (#061A14) with glowing Emerald accents (#10B981) and warm amber highlights (#F59E0B).",
+        "visual_style_behavior_zh": "深墨绿底色，翠绿高亮与琥珀色对比，富有生机与科技纵深。",
+        "icons": "tabler-outline",
+        "color": {
+          "name": "Intelligent Emerald",
+          "name_en": "Intelligent Emerald",
+          "name_zh": "智慧翡翠",
+          "palette": {
+            "background": "#061A14",
+            "secondary_bg": "#0D2E24",
+            "primary": "#10B981",
+            "accent": "#34D399",
+            "secondary_accent": "#F59E0B",
+            "body_text": "#ECFDF5"
+          }
+        },
+        "typography": {
+          "name": "Segoe UI + Calibri",
+          "name_en": "Segoe UI + Calibri",
+          "name_zh": "Segoe UI + Calibri",
+          "heading": { "primary": "Segoe UI", "english": "Segoe UI", "css": "sans-serif" },
+          "body": { "primary": "Segoe UI", "english": "Segoe UI", "css": "sans-serif" },
+          "body_size": 24
+        },
+        "image_strategy": {
+          "name": "Đồ họa Sinh thái Trí tuệ",
+          "name_en": "Ecosystem Intelligence Visuals",
+          "name_zh": "生态智能图景",
+          "rendering": "custom",
+          "visual": "Sơ đồ mạng lưới nơ-ron kết nối các thành phần hệ thống TopEng và luồng tự động hóa n8n.",
+          "visual_en": "Neural network diagrams connecting TopEng components and n8n workflow automations.",
+          "visual_zh": "连接 TopEng 模块与 n8n 自动化流的网络拓扑图。",
+          "mood": "Tiên tiến, sinh thái, linh hoạt và mạnh mẽ.",
+          "mood_en": "Advanced, organic, agile, and robust.",
+          "mood_zh": "前沿、有机、敏捷且生动。",
+          "behavior": "Sử dụng các hình khối kết nối mạng lưới, gradient ngọc lục bảo tinh tế và minh họa tính năng sinh động."
+        }
+      }
+    ]
+  }
+}

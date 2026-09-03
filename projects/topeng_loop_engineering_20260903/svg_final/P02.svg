@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="200" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1" />
+    <text x="156" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">TỔNG QUAN CHIẾN LƯỢC</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">TÓM TẮT ĐIỀU HÀNH (EXECUTIVE SUMMARY)</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">3 Thông điệp then chốt định hình bước chuyển đổi năng suất kỹ nghệ tại TOPVSystem</text>
+  </g>
+
+  
+  <g id="exec-takeaways" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="40" height="40" rx="10" fill="#0B1120" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="96" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#38BDF8" text-anchor="middle">01</text>
+    <text x="130" y="205" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Bước Chuyển Dịch</text>
+    <text x="76" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#38BDF8">
+      Từ Prompt Thụ Động sang Tự Chủ Khép Kín
+    </text>
+
+    <line x1="76" y1="265" x2="396" y2="265" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="300">
+      <tspan>• Copilot chỉ dừng ở gợi ý code một lần,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="324"><tspan>lập trình viên vẫn phải tự test và sửa lỗi.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="348"><tspan>• Loop Engineering trao cho Agent khả năng</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="372"><tspan>chạy lệnh terminal, đọc log và tự vá lỗi.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="396"><tspan>• Chuẩn hóa văn hóa "Verification-First":</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="420"><tspan>Mọi tính năng phải có bằng chứng log thật.</tspan>
+    </text><rect x="76" y="535" width="325" height="40" rx="8" fill="#0B1120" stroke="#38BDF8" stroke-width="1" />
+    <text x="238" y="560" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8" text-anchor="middle">Hiệu quả: Giảm 80% thời gian debug lặp lại</text>
+
+    
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="477" y="180" width="40" height="40" rx="10" fill="#0B1120" stroke="#6366F1" stroke-width="1.5" />
+    <text x="497" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#818CF8" text-anchor="middle">02</text>
+    <text x="531" y="205" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Hệ Sinh Thái Agent</text>
+    <text x="477" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#818CF8">
+      Hợp Lực Đa Mô Hình (Multi-Brain)
+    </text>
+
+    <line x1="477" y1="265" x2="797" y2="265" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="300">
+      <tspan>• Codex/Operator: Xuất sắc kết nối API &amp;</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="324"><tspan>thao tác trình duyệt web tự động.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="348"><tspan>• Claude 3.7: Dẫn đầu tư duy suy luận sâu</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="372"><tspan>(Extended Thinking) &amp; thao tác CLI.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="396"><tspan>• DeepMind Antigravity: Đỉnh cao điều phối</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="477" y="420"><tspan>đa tác tử song song và quản trị an toàn.</tspan>
+    </text><rect x="477" y="535" width="325" height="40" rx="8" fill="#0B1120" stroke="#6366F1" stroke-width="1" />
+    <text x="639" y="560" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#818CF8" text-anchor="middle">Chiến lược: Không bị trói buộc vào một hãng</text>
+
+    
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="879" y="180" width="40" height="40" rx="10" fill="#0B1120" stroke="#10B981" stroke-width="1.5" />
+    <text x="899" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#10B981" text-anchor="middle">03</text>
+    <text x="933" y="205" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">AI Chat TOPVSystem</text>
+    <text x="879" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#10B981">
+      Trợ Lý Doanh Nghiệp Thực Chiến
+    </text>
+
+    <line x1="879" y1="265" x2="1199" y2="265" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="300">
+      <tspan>• Đang vận hành trong TopEngManager:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="324"><tspan>Đặt phòng, điều phối task, tạo báo cáo ngày.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="348"><tspan>• Tích hợp n8n webhook liên kết email, lịch.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="372"><tspan>• Lộ trình 2026-2027: 4 Trụ cột chiến lược</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="879" y="396"><tspan>RAG bản vẽ → Multi-Agent → Voice → ERP.</tspan>
+    </text><rect x="879" y="535" width="325" height="40" rx="8" fill="#0B1120" stroke="#10B981" stroke-width="1" />
+    <text x="1041" y="560" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#10B981" text-anchor="middle">Thực tiễn: Tiết kiệm 45 phút/ngày cho kỹ sư</text>
+  </g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Tổng quan chuyên đề | Tóm tắt điều hành</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 02 / 35</text>
+  </g>
+</svg>

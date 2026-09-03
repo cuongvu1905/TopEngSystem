@@ -89,7 +89,7 @@ const formatReportContentHtml = (content, projects) => {
 };
 
 export default function DailyReportsPage() {
-  const { currentUser, users, projects, projectMembers } = useApp();
+  const { currentUser, users, projects, projectMembers, setHeaderActions } = useApp();
   const { t, currentLang } = useLanguage();
   
   const systemRole = currentUser?.system_role || '';
@@ -686,68 +686,55 @@ export default function DailyReportsPage() {
     );
   }
 
+  useEffect(() => {
+    setHeaderActions(
+      <div className="desktop-header-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={() => setIsStatusCalendarOpen(true)}
+          style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        >
+          <i className="fa-solid fa-calendar-days"></i> {t('reports.statusCalendar', 'Trạng thái báo cáo')}
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={() => setIsHistoryOpen(true)}
+          style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        >
+          <i className="fa-solid fa-clock-rotate-left"></i> {t('reports.history', 'Lịch sử báo cáo')}
+        </button>
+      </div>
+    );
+    return () => setHeaderActions(null);
+  }, [t]);
+
   return (
     <div className="scrollable-view">
-      {/* Header section with Trigger Button */}
-      <div className="page-header" style={{ marginBottom: '24px', borderBottom: '1px solid var(--neutral-border)', paddingBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--neutral-dark)' }}>
-            <i className="fa-solid fa-file-invoice" style={{ marginRight: '10px', color: 'var(--primary-color)' }}></i>
-            {t('reports.title', 'Báo Cáo Hàng Ngày')}
-          </h1>
-          <p style={{ fontSize: '14px', color: 'var(--neutral-muted)', marginTop: '4px' }}>
-            {t('reports.subtitle', 'Gửi báo cáo tiến độ công việc hàng ngày và quản lý danh sách báo cáo của cá nhân.')}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setIsStatusCalendarOpen(true)}
-            style={{
-              backgroundColor: 'var(--neutral-bg-card)',
-              color: 'var(--neutral-dark)',
-              border: '1px solid var(--neutral-border)',
-              padding: '10px 18px',
-              borderRadius: '6px',
-              fontSize: '13.5px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-            }}
-          >
-            <i className="fa-solid fa-calendar-days"></i> {t('reports.statusCalendar', 'Trạng thái báo cáo')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setIsHistoryOpen(true)}
-            style={{
-              backgroundColor: 'var(--neutral-bg-card)',
-              color: 'var(--neutral-dark)',
-              border: '1px solid var(--neutral-border)',
-              padding: '10px 18px',
-              borderRadius: '6px',
-              fontSize: '13.5px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-            }}
-          >
-            <i className="fa-solid fa-clock-rotate-left"></i> {t('reports.history', 'Lịch sử báo cáo đã gửi')}
-          </button>
-        </div>
+      {/* Mobile-Only Action Buttons Bar (Sits cleanly below header on mobile) */}
+      <div className="mobile-daily-reports-action-bar">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => setIsStatusCalendarOpen(true)}
+        >
+          <i className="fa-solid fa-calendar-days"></i>
+          <span>{t('reports.statusCalendar', 'Trạng thái báo cáo')}</span>
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => setIsHistoryOpen(true)}
+        >
+          <i className="fa-solid fa-clock-rotate-left"></i>
+          <span>{t('reports.history', 'Lịch sử báo cáo')}</span>
+        </button>
       </div>
 
       {/* Main write daily report form centered */}
       <div style={{ width: '100%', maxWidth: '100%', margin: '0 auto' }}>
-        <div className="card" style={{ padding: '24px', borderRadius: '8px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+        <div className="card" style={{ padding: '24px', borderRadius: '0px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--neutral-dark)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="fa-solid fa-pen-nib" style={{ color: 'var(--primary-color)' }}></i>
@@ -1051,7 +1038,7 @@ export default function DailyReportsPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
             backdropFilter: 'blur(4px)',
             zIndex: 1000,
             position: 'fixed',
@@ -1063,64 +1050,70 @@ export default function DailyReportsPage() {
           onClick={() => setIsStatusCalendarOpen(false)}
         >
           <div
+            className="daily-report-calendar-modal"
             style={{
-              width: '420px',
+              width: '440px',
               maxWidth: '92vw',
               backgroundColor: 'var(--neutral-bg-card)',
-              border: '1.5px solid #cbd5e1',
-              borderRadius: '12px',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              border: '1.5px solid var(--neutral-border)',
+              borderRadius: 'var(--border-radius)',
+              boxShadow: 'var(--shadow-lg)',
               overflow: 'hidden'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Modal Header */}
+            <div className="daily-report-modal-header" style={{ padding: '14px 20px', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <i className="fa-solid fa-calendar-days" style={{ color: 'var(--primary-color)' }}></i> {t('reports.statusCalendarTitle', 'Trạng thái báo cáo')}
               </h3>
-              <button type="button" onClick={() => setIsStatusCalendarOpen(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>
+              <button 
+                type="button" 
+                onClick={() => setIsStatusCalendarOpen(false)} 
+                className="daily-report-modal-close-btn"
+              >
                 <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
 
             <div style={{ padding: '18px 20px' }}>
+              {/* Month Navigation */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <button
                   type="button"
                   onClick={() => changeCalendarMonth(-1)}
-                  style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', cursor: 'pointer' }}
+                  className="daily-report-month-nav-btn"
                 >
                   <i className="fa-solid fa-chevron-left"></i>
                 </button>
-                <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--neutral-dark)' }}>
+                <span style={{ fontWeight: 700, fontSize: '14.5px', color: 'var(--neutral-dark)' }}>
                   {t('reports.statusCalendarMonthTitle', 'Tháng {month}, {year}').replace('{month}', calendarMonthCursor.month + 1).replace('{year}', calendarMonthCursor.year)}
                 </span>
                 <button
                   type="button"
                   onClick={() => changeCalendarMonth(1)}
-                  style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', cursor: 'pointer' }}
+                  className="daily-report-month-nav-btn"
                 >
                   <i className="fa-solid fa-chevron-right"></i>
                 </button>
               </div>
 
+              {/* Day Labels */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', marginBottom: '8px' }}>
                 {[
-                  t('reports.calMon', 'Mon'), t('reports.calTue', 'Tue'), t('reports.calWed', 'Wed'), t('reports.calThu', 'Thu'),
-                  t('reports.calFri', 'Fri'), t('reports.calSat', 'Sat'), t('reports.calSun', 'Sun')
+                  t('reports.calMon', 'T2'), t('reports.calTue', 'T3'), t('reports.calWed', 'T4'), t('reports.calThu', 'T5'),
+                  t('reports.calFri', 'T6'), t('reports.calSat', 'T7'), t('reports.calSun', 'CN')
                 ].map((d, i) => (
                   <div key={i} style={{ textAlign: 'center', fontSize: '11.5px', fontWeight: 700, color: 'var(--neutral-muted)' }}>{d}</div>
                 ))}
               </div>
 
+              {/* Calendar Grid */}
               {buildCalendarWeeks().map((week, wi) => (
                 <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', marginBottom: '6px' }}>
                   {week.map((day, di) => {
                     if (day === null) return <div key={di} />;
                     const dateStr = `${calendarMonthCursor.year}-${String(calendarMonthCursor.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    // A day counts as done only once something was actually submitted. A day
-                    // holding nothing but a draft is still outstanding, so it must not look
-                    // identical to a finished one. If a day has both, the submitted row wins.
                     const dayReports = findReportsForDate(dateStr);
                     const submittedReport = dayReports.find(r => r.status !== 'Draft');
                     const dayReport = submittedReport || dayReports[0] || null;
@@ -1130,30 +1123,15 @@ export default function DailyReportsPage() {
                     const isMissing = !dayReport && !isSunday && isPastOrToday;
                     const isFuture = !dayReport && dateStr > todayDateStr;
 
-                    let bg = 'transparent';
-                    let color = 'var(--neutral-dark)';
-                    if (isDraftOnly) { bg = 'var(--warning-color, #f59e0b)'; color = '#fff'; }
-                    else if (dayReport) { bg = 'var(--success-color, #16a34a)'; color = '#fff'; }
-                    else if (isMissing) { bg = 'var(--danger-color, #ef4444)'; color = '#fff'; }
-                    else if (isSunday) { color = 'var(--neutral-muted)'; }
-                    if (isFuture) { color = 'var(--neutral-muted)'; }
+                    const statusClass = isDraftOnly ? 'day-draft' : dayReport ? 'day-reported' : isMissing ? 'day-missing' : isSunday ? 'day-weekend' : 'day-normal';
 
                     return (
                       <button
                         key={di}
                         type="button"
                         onClick={() => { if (dayReport) handleSelectReportedDay(dayReport); else handleSelectMissingDay(dateStr); }}
-                        style={{
-                          aspectRatio: '1',
-                          border: 'none',
-                          borderRadius: '6px',
-                          backgroundColor: bg,
-                          color,
-                          fontSize: '13px',
-                          fontWeight: dayReport || isMissing ? 700 : 500,
-                          cursor: isFuture ? 'not-allowed' : 'pointer',
-                          opacity: isFuture ? 0.5 : 1
-                        }}
+                        className={`daily-report-calendar-day-btn ${statusClass} ${isFuture ? 'day-future' : ''}`}
+                        disabled={isFuture}
                       >
                         {day}
                       </button>
@@ -1162,17 +1140,18 @@ export default function DailyReportsPage() {
                 </div>
               ))}
 
-              <div style={{ display: 'flex', gap: '16px', marginTop: '14px', fontSize: '11.5px', color: 'var(--neutral-muted)' }}>
+              {/* Legend Bar */}
+              <div className="daily-report-calendar-legend" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '14px', fontSize: '11px', color: 'var(--neutral-muted)', borderTop: '1px solid var(--neutral-border)', paddingTop: '10px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--danger-color, #ef4444)', display: 'inline-block' }}></span>
+                  <span className="legend-box day-missing" style={{ width: '10px', height: '10px', display: 'inline-block' }}></span>
                   {t('reports.calMissingLegend', 'Chưa làm báo cáo')}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--warning-color, #f59e0b)', display: 'inline-block' }}></span>
+                  <span className="legend-box day-draft" style={{ width: '10px', height: '10px', display: 'inline-block' }}></span>
                   {t('reports.calDraftLegend', 'Mới lưu bản nháp')}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '3px', backgroundColor: 'var(--success-color, #16a34a)', display: 'inline-block' }}></span>
+                  <span className="legend-box day-reported" style={{ width: '10px', height: '10px', display: 'inline-block' }}></span>
                   {t('reports.calReportedLegend', 'Đã gửi báo cáo')}
                 </span>
               </div>
@@ -1181,7 +1160,7 @@ export default function DailyReportsPage() {
         </div>
       )}
 
-      {/* History Modal Popup (75% Width, 75% Height) */}
+      {/* History Modal Popup */}
       {isHistoryOpen && (
         <div 
           className="modal show" 
@@ -1189,7 +1168,7 @@ export default function DailyReportsPage() {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
-            backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+            backgroundColor: 'rgba(0, 0, 0, 0.65)', 
             backdropFilter: 'blur(4px)', 
             zIndex: 1000,
             position: 'fixed',
@@ -1201,13 +1180,15 @@ export default function DailyReportsPage() {
           onClick={() => setIsHistoryOpen(false)}
         >
           <div 
+            className="daily-report-history-modal"
             style={{ 
-              width: '75vw', 
-              height: '75vh', 
+              width: '80vw', 
+              maxWidth: '1080px',
+              height: '80vh', 
               backgroundColor: 'var(--neutral-bg-card)', 
-              border: '1.5px solid #cbd5e1', 
-              borderRadius: '12px', 
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              border: '1.5px solid var(--neutral-border)', 
+              borderRadius: 'var(--border-radius)', 
+              boxShadow: 'var(--shadow-lg)', 
               display: 'flex', 
               flexDirection: 'column', 
               overflow: 'hidden' 
@@ -1215,50 +1196,47 @@ export default function DailyReportsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="daily-report-modal-header" style={{ padding: '14px 20px', borderBottom: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <i className="fa-solid fa-clock-rotate-left" style={{ color: 'var(--primary-color)' }}></i> {t('report.historyTitle', 'Lịch sử báo cáo đã gửi')}
               </h3>
               <button 
                 type="button" 
                 onClick={() => setIsHistoryOpen(false)} 
-                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}
+                className="daily-report-modal-close-btn"
               >
                 <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
 
             {/* Date Filters Row */}
-            <div style={{ padding: '12px 24px', borderBottom: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
+            <div className="daily-report-history-filter-row" style={{ padding: '12px 20px', borderBottom: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--neutral-dark)' }}>{t('report.fromDate', 'Từ ngày:')}</label>
+                <label style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--neutral-dark)' }}>{t('report.fromDate', 'Từ ngày:')}</label>
                 <input 
                   type="date" 
                   value={startDateFilter} 
                   onChange={(e) => setStartDateFilter(e.target.value)} 
-                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13px', outline: 'none' }} 
+                  className="daily-report-date-input"
                 />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--neutral-dark)' }}>{t('report.toDate', 'Đến ngày:')}</label>
+                <label style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--neutral-dark)' }}>{t('report.toDate', 'Đến ngày:')}</label>
                 <input 
                   type="date" 
                   value={endDateFilter} 
                   onChange={(e) => setEndDateFilter(e.target.value)} 
-                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-card)', color: 'var(--neutral-dark)', fontSize: '13px', outline: 'none' }} 
+                  className="daily-report-date-input"
                 />
               </div>
               {(startDateFilter || endDateFilter) && (
                 <button 
                   type="button" 
                   onClick={() => { setStartDateFilter(''); setEndDateFilter(''); }}
+                  className="btn btn-sm btn-secondary"
                   style={{ 
                     padding: '6px 12px', 
-                    borderRadius: '6px', 
-                    border: 'none', 
-                    backgroundColor: '#fee2e2', 
-                    color: '#ef4444', 
-                    fontSize: '12px', 
+                    fontSize: '11.5px', 
                     fontWeight: '600', 
                     cursor: 'pointer',
                     display: 'flex',
@@ -1269,55 +1247,34 @@ export default function DailyReportsPage() {
                   <i className="fa-solid fa-trash-can"></i> {t('report.clearFilters', 'Xóa bộ lọc')}
                 </button>
               )}
-              <span style={{ marginLeft: 'auto', fontSize: '12.5px', color: '#64748b', fontWeight: '500' }}>
-                {t('report.foundReportsCountBefore', 'Tìm thấy')} <strong>{reportsFilteredByDate.length}</strong> {t('report.foundReportsCountAfter', 'báo cáo của bạn')}
+              <span style={{ marginLeft: 'auto', fontSize: '12.5px', color: 'var(--neutral-muted)', fontWeight: '500' }}>
+                {t('report.foundReportsCountBefore', 'Tìm thấy')} <strong style={{ color: 'var(--primary-color)' }}>{reportsFilteredByDate.length}</strong> {t('report.foundReportsCountAfter', 'báo cáo của bạn')}
               </span>
             </div>
 
-            {/* Modal Body (Scrollable Grid of Cards) */}
-            <div style={{ flex: 1, padding: '24px', overflowY: 'auto', backgroundColor: 'var(--neutral-bg-main)' }}>
+            {/* Modal Body */}
+            <div style={{ flex: 1, padding: '20px', overflowY: 'auto', backgroundColor: 'var(--neutral-bg-main)' }}>
               {isLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--neutral-muted)' }}>
                   <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '32px', marginBottom: '12px', color: 'var(--primary-color)' }}></i>
-                  <p style={{ fontSize: '14px', margin: 0 }}>Đang tải dữ liệu...</p>
+                  <p style={{ fontSize: '13px', margin: 0 }}>Đang tải dữ liệu...</p>
                 </div>
               ) : reportsFilteredByDate.length === 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b' }}>
-                  <i className="fa-solid fa-folder-open" style={{ fontSize: '48px', marginBottom: '12px', color: '#94a3b8' }}></i>
-                  <p style={{ fontSize: '14px', margin: 0 }}>{t('report.noReportsFound', 'Không tìm thấy báo cáo nào trong khoảng thời gian này.')}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--neutral-muted)' }}>
+                  <i className="fa-solid fa-folder-open" style={{ fontSize: '42px', marginBottom: '12px', color: 'var(--neutral-muted)' }}></i>
+                  <p style={{ fontSize: '13.5px', margin: 0 }}>{t('report.noReportsFound', 'Không tìm thấy báo cáo nào trong khoảng thời gian này.')}</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
                   {reportsFilteredByDate.map(report => {
-                    const userColor = users.find(u => u.id === report.user_id)?.color || '#3b82f6';
+                    const userColor = users.find(u => u.id === report.user_id)?.color || 'var(--primary-color)';
                     const proj = projects.find(p => p.id === report.project_id);
                     
                     return (
                       <div 
                         key={report.id} 
-                        style={{ 
-                          border: '1.5px solid var(--neutral-border)', 
-                          borderRadius: '8px', 
-                          padding: '16px', 
-                          background: 'var(--neutral-bg-card)', 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          gap: '12px', 
-                          cursor: 'pointer', 
-                          transition: 'all 0.2s',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                        }}
+                        className="daily-report-history-card"
                         onClick={() => showReportDetailPopup(report)}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-                          e.currentTarget.style.borderColor = 'var(--primary-color)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                          e.currentTarget.style.borderColor = 'var(--neutral-border)';
-                        }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1325,26 +1282,22 @@ export default function DailyReportsPage() {
                               {report.user_name.split(' ').pop().charAt(0)}
                             </div>
                             <div>
-                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--neutral-dark)', margin: 0 }}>{report.user_name}</h4>
-                              <span style={{ fontSize: '9px', color: 'var(--neutral-muted)', display: 'block', marginTop: '-2px' }}>{report.user_role}</span>
+                              <h4 style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--neutral-dark)', margin: 0 }}>{report.user_name}</h4>
+                              <span style={{ fontSize: '10px', color: 'var(--neutral-muted)', display: 'block', marginTop: '1px' }}>{report.user_role}</span>
                             </div>
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                            <span style={{ fontSize: '9.5px', color: 'var(--neutral-muted)' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--neutral-muted)' }}>
                               {new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US')}
                             </span>
-                            <span style={{
-                              fontSize: '9px',
-                              color: report.status === 'Approved' ? 'var(--success-color)' : report.status === 'Rejected' ? 'var(--danger-color)' : report.status === 'Draft' ? 'var(--neutral-muted)' : 'var(--warning-color)',
-                              fontWeight: 'bold'
-                            }}>
-                              {report.status === 'Approved' ? t('report.approvedStatus', 'Đã duyệt') : report.status === 'Rejected' ? t('report.rejectedStatus', 'Từ chối') : report.status === 'Draft' ? t('report.draftStatus', 'Nháp') : 'Pending'}
+                            <span className={`badge ${report.status === 'Approved' ? 'badge-success' : report.status === 'Rejected' ? 'badge-danger' : report.status === 'Draft' ? 'badge-secondary' : 'badge-warning'}`} style={{ fontSize: '9.5px', padding: '1px 6px', fontWeight: 'bold' }}>
+                              {report.status === 'Approved' ? t('report.approvedStatus', 'ĐÃ DUYỆT') : report.status === 'Rejected' ? t('report.rejectedStatus', 'TỪ CHỐI') : report.status === 'Draft' ? t('report.draftStatus', 'NHÁP') : 'PENDING'}
                             </span>
                           </div>
                         </div>
 
                         {report.project_id && (
-                          <span style={{ display: 'inline-block', alignSelf: 'flex-start', fontSize: '9.5px', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '8px', fontWeight: '600', marginTop: '2px' }}>
+                          <span className="badge badge-info" style={{ display: 'inline-block', alignSelf: 'flex-start', fontSize: '10px', padding: '1px 6px', fontWeight: '700' }}>
                             {proj?.name || 'Dự án'}
                           </span>
                         )}

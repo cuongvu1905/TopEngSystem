@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="260" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="186" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: TIẾN TRÌNH LỊCH SỬ SDLC</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">GIAI ĐOẠN 1970 - 2000: WATERFALL &amp; KHỦNG HOẢNG PHẦN MỀM</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Kỷ nguyên phát triển tuyến tính và bài học về chi phí sửa lỗi muộn màng</text>
+  </g>
+
+  <!-- 3 Analysis Cards -->
+  <g id="waterfall-panels" data-pptx-bounds="56 160 1168 450">
+    <!-- Panel 1 -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#334155" stroke-width="1"/>
+    <rect x="76" y="180" width="160" height="28" rx="6" fill="#0B1120" stroke="#64748B" stroke-width="1"/>
+    <text x="156" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#94A3B8" text-anchor="middle">MÔ HÌNH THÁC NƯỚC</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Đặc Trưng Cốt Lõi</text>
+
+    <line x1="76" y1="260" x2="396" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#F1F5F9" font-weight="600">• Quy trình tuyến tính 5 giai đoạn:</tspan>
+      <tspan x="96" dy="20">Yêu cầu → Thiết kế → Mã hóa → Kiểm thử → Triển khai.</tspan>
+      <tspan x="76" dy="28" fill="#F1F5F9" font-weight="600">• Tài liệu hóa nặng nề (Heavy Spec):</tspan>
+      <tspan x="96" dy="20">Mất hàng tháng viết tài liệu trước khi viết dòng code đầu tiên.</tspan>
+      <tspan x="76" dy="28" fill="#F1F5F9" font-weight="600">• Giả định môi trường tĩnh:</tspan>
+      <tspan x="96" dy="20">Coi yêu cầu của khách hàng không đổi suốt 2-3 năm dự án.</tspan>
+    </text>
+
+    <!-- Panel 2 -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#EF4444" stroke-width="1" stroke-opacity="0.5"/>
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1"/>
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FCA5A5" text-anchor="middle">HỆ QUẢ NGHIÊM TRỌNG</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">"Khủng Hoảng Phần Mềm"</text>
+
+    <line x1="477" y1="260" x2="797" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0" fill="#FCA5A5" font-weight="600">• Báo cáo Chaos Report (Standish Group):</tspan>
+      <tspan x="497" dy="20">Trên 68% dự án phần mềm thất bại, quá hạn hoặc đội ngân sách.</tspan>
+      <tspan x="477" dy="28" fill="#FCA5A5" font-weight="600">• Sản phẩm lỗi thời khi bàn giao:</tspan>
+      <tspan x="497" dy="20">Sau 2-3 năm phát triển, nhu cầu thị trường đã thay đổi hoàn toàn.</tspan>
+      <tspan x="477" dy="28" fill="#FCA5A5" font-weight="600">• "Thảm họa tích hợp" (Big Bang):</tspan>
+      <tspan x="497" dy="20">Ghép nối các module ở giai đoạn cuối gây đổ vỡ toàn hệ thống.</tspan>
+    </text>
+
+    <!-- Panel 3 -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1"/>
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">BÀI HỌC KỸ THUẬT</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Quy Luật Chi Phí Lỗi</text>
+
+    <line x1="879" y1="260" x2="1199" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0" fill="#38BDF8" font-weight="600">• Đường cong sửa lỗi Boehm:</tspan>
+      <tspan x="899" dy="20">Phát hiện lỗi ở khâu kiểm thử</tspan>
+      <tspan x="899" dy="20">tốn chi phí gấp 50-100 lần.</tspan>
+      <tspan x="879" dy="26" fill="#38BDF8" font-weight="600">• Nhu cầu vòng lặp ngắn:</tspan>
+      <tspan x="899" dy="20">Chia nhỏ chu kỳ bàn giao</tspan>
+      <tspan x="899" dy="20">để kiểm chứng liên tục.</tspan>
+      <tspan x="879" dy="26" fill="#38BDF8" font-weight="600">• Đặt nền tảng ra đời:</tspan>
+      <tspan x="899" dy="20">Mở đường cho sự bùng nổ</tspan>
+      <tspan x="899" dy="20">của Tuyên ngôn Agile 2001.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.1 Lịch sử SDLC (1970 - 2000)</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 05 / 35</text>
+  </g>
+</svg>

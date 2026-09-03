@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="240" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1" />
+    <text x="176" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">ENTERPRISE TOOL PLUGINS: ROOM BOOKING &amp; TASKS</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Cơ chế tương tác an toàn với cơ sở dữ liệu MySQL qua các plugin chuyên biệt</text>
+  </g>
+
+  
+  <g id="plugins-panels" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="76" y="180" width="180" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1" />
+    <text x="166" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">PLUGIN ĐẶT PHÒNG</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">roomBookingPlugin.js</text>
+
+    <line x1="76" y1="260" x2="604" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="295">
+      <tspan fill="#38BDF8" font-weight="600">3 Hàm nghiệp vụ then chốt:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="319"><tspan>• list_available_rooms: Tra cứu phòng họp còn trống.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="343"><tspan>• book_meeting_room: Đặt lịch kèm tiêu đề, thời lượng.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="76" y="367"><tspan>• cancel_room_booking: Hủy lịch họp đã đặt trước đó.</tspan>
+    </text><rect x="76" y="400" width="528" height="175" rx="10" fill="#0B1120" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.3" />
+    <text x="96" y="428" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">Quy trình xử lý khép kín:</text>
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="455">
+      <tspan>1. Người dùng: "Đặt phòng họp lớn lúc 14h chiều nay 1 tiếng".</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="477"><tspan>2. AI trích xuất tham số: room_id: 1, date: today, time: 14:00, duration: 60.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="499"><tspan>3. Backend kiểm tra xung đột thời gian trong MySQL Database.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="96" y="521"><tspan>4. Khóa lịch thành công → Bắn Webhook n8n gửi email cho đại biểu.</tspan>
+    </text><rect x="656" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="676" y="180" width="180" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1" />
+    <text x="766" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">PLUGIN CÔNG VIỆC</text>
+    <text x="676" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">taskPlugin.js</text>
+
+    <line x1="676" y1="260" x2="1204" y2="260" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="295">
+      <tspan fill="#10B981" font-weight="600">3 Hàm quản trị task thông minh:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="319"><tspan>• list_my_tasks: Lọc danh sách công việc cá nhân.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="343"><tspan>• create_new_task: Tạo công việc mới trực tiếp vào hệ thống.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8" x="676" y="367"><tspan>• update_task_status: Cập nhật tiến độ hoàn thành.</tspan>
+    </text><rect x="676" y="400" width="528" height="175" rx="10" fill="#0B1120" stroke="#10B981" stroke-width="1" stroke-opacity="0.3" />
+    <text x="696" y="428" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981">Bảo mật danh tính người dùng:</text>
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="455">
+      <tspan>• Tự động bind ID người dùng từ session đăng nhập.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="477"><tspan>• Nhân viên thông thường không thể xem trộm task mật của lãnh đạo.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="499"><tspan>• Tự động phân loại mức độ khẩn cấp theo deadline công việc.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="696" y="521"><tspan>• Cho phép giao việc cho đồng nghiệp bằng câu lệnh ngôn ngữ tự nhiên.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.4 Plugins Đặt phòng &amp; Task</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 31 / 35</text>
+  </g>
+</svg>

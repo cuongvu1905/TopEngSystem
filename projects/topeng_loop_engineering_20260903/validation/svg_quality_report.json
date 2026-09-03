@@ -1,0 +1,3079 @@
+{
+  "schema": "ppt-master.svg-quality-report.v1",
+  "stage": "final",
+  "target": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903",
+  "source_fingerprint": {
+    "algorithm": "sha256",
+    "digest": "7e5f5bcef3b5b67e43eff0914fd0a281f2e74f25a0c092ba0244ce6917de37d1",
+    "file_count": 35,
+    "files": [
+      {
+        "file": "P01.svg",
+        "sha256": "b4d77ea7778ae55247c6d1060f3dc94d6ea6ead773a87e7867be6442121d28d7"
+      },
+      {
+        "file": "P02.svg",
+        "sha256": "a1b92f454b3a770559f47564651c7e9bd9ad4b761b911c139056c740f76857e3"
+      },
+      {
+        "file": "P03.svg",
+        "sha256": "f8808fcb84a121cf7aad8a123012d731b5b736a2d5d4ec6f918e43a805872fe1"
+      },
+      {
+        "file": "P04.svg",
+        "sha256": "a8d24836d34fb205d5decd818e1e9a8b3442c2e0463dc1025d5ed7efb6e24a01"
+      },
+      {
+        "file": "P05.svg",
+        "sha256": "975781df9b01639d2f5329aad6fe51400a8c78f13272bbfdbb2a0c3032beaf3f"
+      },
+      {
+        "file": "P06.svg",
+        "sha256": "bea8f5a392344ff1ac633df3f6f87705dccbd00fec4b6c2bf86e764c2c2d5e60"
+      },
+      {
+        "file": "P07.svg",
+        "sha256": "e462d96af0fd8f2e0ff33e277b4c769d6f90e9f823d0d1f9ba600be64b533663"
+      },
+      {
+        "file": "P08.svg",
+        "sha256": "450a310fb7e839fb6d0ee730e333d7585d98ae5a852dc6ccb92e6a2d658380c3"
+      },
+      {
+        "file": "P09.svg",
+        "sha256": "864650bee28feab46fac08de6bfce64b47c81c9bf232242b3184f7e589a2d96a"
+      },
+      {
+        "file": "P10.svg",
+        "sha256": "2861ad29acf2ba77a180c400d7a1cf7304cf58ecfca500db01c7a699c7a6d484"
+      },
+      {
+        "file": "P11.svg",
+        "sha256": "741c389d39d87f2aed5f06e7a90a7fcd99982b07f394138d58b9b0bcae70c7f1"
+      },
+      {
+        "file": "P12.svg",
+        "sha256": "104c5cb0a785ccb14177a77b455c0b9258402f2b118a370473618b6ea5a13050"
+      },
+      {
+        "file": "P13.svg",
+        "sha256": "7a1bcf5546103449eca36e2780d0a8968e01038d16bff3f34048dc8b8fcd1553"
+      },
+      {
+        "file": "P14.svg",
+        "sha256": "5402748c15278470b03149ea1ee5cee162f0bfd99cdf328b73ec7fabcb4af8cc"
+      },
+      {
+        "file": "P15.svg",
+        "sha256": "08f4db78c8f2d94330adb636e77e55b519ecbafb26d44759bf5565d1b00cf3e7"
+      },
+      {
+        "file": "P16.svg",
+        "sha256": "2c3299cce74e0d3eadfded4d2178f5131a90aaebeb9b834c70a6a4f0d785de93"
+      },
+      {
+        "file": "P17.svg",
+        "sha256": "4fe089eb435a32cf6847e45136e67c850187cc9653e0c6f3d637d354473100c9"
+      },
+      {
+        "file": "P18.svg",
+        "sha256": "ce7a30ad66c3f843e0a193a4674b4aaab43bb3936a4ee28e00a4837833220366"
+      },
+      {
+        "file": "P19.svg",
+        "sha256": "4ec671a384e727616a22fa7fa512261f0a4240b65b5a325ca9b68344fc460dc5"
+      },
+      {
+        "file": "P20.svg",
+        "sha256": "219b024082b5de7ac809bc0ebeb89df30820aa9487cb2dc01c6bda964db5aa16"
+      },
+      {
+        "file": "P21.svg",
+        "sha256": "f7791f3a5c2e8845c7f7da87fa688c85edea8eef23da60fe69a855469f87ab13"
+      },
+      {
+        "file": "P22.svg",
+        "sha256": "bfe2088e6c43ee08abd5c4085d95b7e4959097419d5e4c6e4fd4f7e0d3896208"
+      },
+      {
+        "file": "P23.svg",
+        "sha256": "94129a1d506a1b2d3f7c72fca005c7e4a4f85cdca985434a65495ee31d015861"
+      },
+      {
+        "file": "P24.svg",
+        "sha256": "7ee7326554e2829551ed057e6d6f2e06a5b62bfddd3e503dc5a7aeaae14f9520"
+      },
+      {
+        "file": "P25.svg",
+        "sha256": "527f75c79308361fa3e67245d465d3ce2eab9c0fbb136ed250105588c5ba9b6d"
+      },
+      {
+        "file": "P26.svg",
+        "sha256": "7abd1f358af89705bc4708c25f80a708d946608b7969cddea3dbd7c94f243bde"
+      },
+      {
+        "file": "P27.svg",
+        "sha256": "c131e6e3e8be05fb987af6f81169f71e8f8e3b527d58e64739911d14e9f28061"
+      },
+      {
+        "file": "P28.svg",
+        "sha256": "1c3661b21cc272f6f19569cee04ffd6f6f64080800b0e1383a8c19536d259b1f"
+      },
+      {
+        "file": "P29.svg",
+        "sha256": "c317e760a3a944a24818380d2ec98a1639d679de3aa7df183c099d23a3583add"
+      },
+      {
+        "file": "P30.svg",
+        "sha256": "80b8ba669c16580a88aac77807b5fb09dd95d405d44e41d3df319373ef133a7e"
+      },
+      {
+        "file": "P31.svg",
+        "sha256": "ef1a21d3b435e353fcc1b763edec305f4873f1757f0cf02c42bbb210d34ab2a9"
+      },
+      {
+        "file": "P32.svg",
+        "sha256": "4047e8648251a030f316a28eeb1e1fa1bc5b09c0ada68377b1c8c72cc3563c70"
+      },
+      {
+        "file": "P33.svg",
+        "sha256": "eeeb97357a40d0dbc89402fe1f8061ec011af94e4ad595c0a37d951638300745"
+      },
+      {
+        "file": "P34.svg",
+        "sha256": "5ac24d5ff1d2c9259476174133b87a37e9da1c60744a930a10cdf106433050e5"
+      },
+      {
+        "file": "P35.svg",
+        "sha256": "a64627031452e789a63b89ca1a9703958f5c5d1fad236b97c5b9312ff38b4974"
+      }
+    ]
+  },
+  "summary": {
+    "total": 35,
+    "passed": 30,
+    "warnings": 5,
+    "errors": 0
+  },
+  "issue_types": {},
+  "categories": {
+    "blocking": {
+      "count": 0,
+      "issues": []
+    },
+    "introduced": {
+      "count": 5,
+      "issues": [
+        {
+          "file": "P01.svg",
+          "message": "5 ungrouped top-level Slide-local element(s) in svg_output (<circle> #2, <circle> #3, <circle> #4, ...); group only logical content units in a top-level <g id=\"...\">. Keep genuine static page framing as a root primitive and declare a supported data-pptx-role such as \"background\" or \"decoration\""
+        },
+        {
+          "file": "P06.svg",
+          "message": "<text> (x=879, y=295; text='• Phụ thuộc 100% sức…') exceeds <g id=\"agile-panels\"> data-pptx-bounds on the horizontal axis: content (879.0, 283.1)-(1244.1, 463.9), container (56.0, 160.0)-(1224.0, 610.0), overflow horizontal 1.7%, vertical 0.0%; expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+        },
+        {
+          "file": "P09.svg",
+          "message": "<text> (x=879, y=320; text='• Nghịch lý thời gia…') exceeds <g id=\"flaws-panels\"> data-pptx-bounds on the horizontal axis: content (879.0, 308.1)-(1234.3, 482.9), container (56.0, 160.0)-(1224.0, 610.0), overflow horizontal 0.9%, vertical 0.0%; expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+        },
+        {
+          "file": "P12.svg",
+          "message": "<text> (x=879, y=255; text='• Trực tiếp can thiệ…') exceeds <g id=\"six-steps-grid\"> data-pptx-bounds on the horizontal axis: content (879.0, 243.9)-(1245.5, 303.6), container (56.0, 160.0)-(1224.0, 610.0), overflow horizontal 1.8%, vertical 0.0%; expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+        },
+        {
+          "file": "P24.svg",
+          "message": "<text> (x=879, y=320; text='• Phong cách tư duy:…') exceeds <g id=\"logic-panels\"> data-pptx-bounds on the horizontal axis: content (879.0, 308.1)-(1249.0, 456.9), container (56.0, 160.0)-(1224.0, 610.0), overflow horizontal 2.1%, vertical 0.0%; expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+        }
+      ]
+    },
+    "inherited": {
+      "count": 0,
+      "issues": []
+    },
+    "source-import": {
+      "count": 0,
+      "summary": {
+        "warning_count": 0,
+        "by_code": {}
+      }
+    }
+  },
+  "drift": {
+    "colors": {
+      "#0284C7": [
+        "P04.svg"
+      ],
+      "#064E3B": [
+        "P06.svg",
+        "P07.svg",
+        "P08.svg",
+        "P10.svg",
+        "P11.svg",
+        "P14.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P21.svg",
+        "P22.svg",
+        "P24.svg",
+        "P25.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#070B14": [
+        "P01.svg",
+        "P02.svg",
+        "P03.svg",
+        "P04.svg",
+        "P05.svg",
+        "P06.svg",
+        "P07.svg",
+        "P08.svg",
+        "P09.svg",
+        "P10.svg",
+        "P11.svg",
+        "P12.svg",
+        "P13.svg",
+        "P14.svg",
+        "P15.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P27.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P32.svg",
+        "P33.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#075985": [
+        "P05.svg",
+        "P06.svg",
+        "P07.svg",
+        "P09.svg",
+        "P10.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#0D1527": [
+        "P01.svg",
+        "P02.svg",
+        "P03.svg",
+        "P04.svg",
+        "P05.svg",
+        "P06.svg",
+        "P07.svg",
+        "P08.svg",
+        "P09.svg",
+        "P10.svg",
+        "P11.svg",
+        "P12.svg",
+        "P13.svg",
+        "P14.svg",
+        "P15.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P27.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P32.svg",
+        "P33.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#0F172A": [
+        "P01.svg",
+        "P02.svg",
+        "P03.svg",
+        "P04.svg",
+        "P05.svg",
+        "P06.svg",
+        "P07.svg",
+        "P08.svg",
+        "P09.svg",
+        "P10.svg",
+        "P11.svg",
+        "P12.svg",
+        "P13.svg",
+        "P14.svg",
+        "P15.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P27.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P32.svg",
+        "P33.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#334155": [
+        "P02.svg",
+        "P03.svg",
+        "P04.svg",
+        "P05.svg",
+        "P06.svg",
+        "P07.svg",
+        "P08.svg",
+        "P09.svg",
+        "P10.svg",
+        "P11.svg",
+        "P12.svg",
+        "P14.svg",
+        "P15.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P27.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P32.svg",
+        "P33.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#34D399": [
+        "P06.svg",
+        "P07.svg",
+        "P08.svg",
+        "P10.svg",
+        "P11.svg",
+        "P14.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P21.svg",
+        "P22.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P27.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#3730A3": [
+        "P07.svg",
+        "P08.svg",
+        "P11.svg",
+        "P17.svg",
+        "P18.svg",
+        "P22.svg",
+        "P23.svg",
+        "P29.svg",
+        "P30.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#60A5FA": [
+        "P29.svg"
+      ],
+      "#64748B": [
+        "P01.svg",
+        "P02.svg",
+        "P03.svg",
+        "P04.svg",
+        "P05.svg",
+        "P06.svg",
+        "P07.svg",
+        "P08.svg",
+        "P09.svg",
+        "P10.svg",
+        "P11.svg",
+        "P12.svg",
+        "P13.svg",
+        "P14.svg",
+        "P15.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P27.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P32.svg",
+        "P33.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#78350F": [
+        "P06.svg",
+        "P08.svg",
+        "P09.svg",
+        "P16.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P24.svg",
+        "P25.svg",
+        "P32.svg",
+        "P34.svg"
+      ],
+      "#7DD3FC": [
+        "P05.svg",
+        "P06.svg",
+        "P07.svg",
+        "P09.svg",
+        "P10.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P28.svg",
+        "P30.svg",
+        "P31.svg",
+        "P35.svg"
+      ],
+      "#7F1D1D": [
+        "P05.svg",
+        "P09.svg",
+        "P14.svg",
+        "P20.svg",
+        "P28.svg"
+      ],
+      "#818CF8": [
+        "P01.svg",
+        "P02.svg",
+        "P03.svg",
+        "P07.svg",
+        "P08.svg",
+        "P11.svg",
+        "P12.svg",
+        "P13.svg",
+        "P15.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P30.svg",
+        "P33.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#831843": [
+        "P32.svg"
+      ],
+      "#94A3B8": [
+        "P01.svg",
+        "P02.svg",
+        "P03.svg",
+        "P04.svg",
+        "P05.svg",
+        "P06.svg",
+        "P07.svg",
+        "P08.svg",
+        "P09.svg",
+        "P10.svg",
+        "P11.svg",
+        "P12.svg",
+        "P13.svg",
+        "P14.svg",
+        "P15.svg",
+        "P16.svg",
+        "P17.svg",
+        "P18.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P22.svg",
+        "P23.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P27.svg",
+        "P28.svg",
+        "P29.svg",
+        "P30.svg",
+        "P31.svg",
+        "P32.svg",
+        "P33.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#A5B4FC": [
+        "P01.svg",
+        "P07.svg",
+        "P08.svg",
+        "P11.svg",
+        "P17.svg",
+        "P18.svg",
+        "P22.svg",
+        "P23.svg",
+        "P29.svg",
+        "P30.svg",
+        "P34.svg",
+        "P35.svg"
+      ],
+      "#EC4899": [
+        "P12.svg",
+        "P29.svg",
+        "P32.svg"
+      ],
+      "#EF4444": [
+        "P05.svg",
+        "P09.svg",
+        "P14.svg",
+        "P20.svg",
+        "P28.svg"
+      ],
+      "#F472B6": [
+        "P12.svg",
+        "P29.svg",
+        "P32.svg"
+      ],
+      "#F59E0B": [
+        "P06.svg",
+        "P08.svg",
+        "P09.svg",
+        "P11.svg",
+        "P12.svg",
+        "P13.svg",
+        "P15.svg",
+        "P16.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P29.svg",
+        "P32.svg",
+        "P33.svg",
+        "P34.svg"
+      ],
+      "#FBBF24": [
+        "P06.svg",
+        "P08.svg",
+        "P09.svg",
+        "P11.svg",
+        "P12.svg",
+        "P16.svg",
+        "P19.svg",
+        "P20.svg",
+        "P21.svg",
+        "P24.svg",
+        "P25.svg",
+        "P26.svg",
+        "P29.svg",
+        "P32.svg",
+        "P33.svg",
+        "P34.svg"
+      ],
+      "#FCA5A5": [
+        "P05.svg",
+        "P09.svg",
+        "P14.svg",
+        "P20.svg",
+        "P24.svg",
+        "P25.svg",
+        "P28.svg"
+      ]
+    },
+    "fonts": {},
+    "sizes": {}
+  },
+  "carrier_receipt": {
+    "scope": "informational-not-a-quota",
+    "pages": 35,
+    "totals": {
+      "text_elements": 574,
+      "image_placements": 0,
+      "icons": 0,
+      "svg_geometry_elements": 431,
+      "preset_shapes": 0,
+      "page_frame_elements": 0,
+      "marker_uses": 0
+    },
+    "pages_with": {
+      "images": 0,
+      "icons": 0,
+      "presets": 0,
+      "charts": 0,
+      "tables": 0,
+      "formulas": 0
+    },
+    "geometry_elements": {
+      "circle": 22,
+      "ellipse": 0,
+      "line": 124,
+      "path": 0,
+      "polygon": 0,
+      "polyline": 0,
+      "rect": 285
+    },
+    "preset_names": {},
+    "native_objects": {
+      "chart": 0,
+      "formula_block": 0,
+      "formula_inline": 0,
+      "other": 0,
+      "table": 0
+    },
+    "image_page_max_frame_share_range": []
+  },
+  "project_issues": {
+    "template": [],
+    "animation": [],
+    "illustration": [],
+    "communication_trace": [],
+    "pptx_structure": []
+  },
+  "files": [
+    {
+      "file": "P01.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P01.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [
+        "5 ungrouped top-level Slide-local element(s) in svg_output (<circle> #2, <circle> #3, <circle> #4, ...); group only logical content units in a top-level <g id=\"...\">. Keep genuine static page framing as a root primitive and declare a supported data-pptx-role such as \"background\" or \"decoration\""
+      ],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 17,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 9,
+              "circle": 4,
+              "ellipse": 0,
+              "line": 2,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 17,
+        "tspan_elements": 9,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "b4d77ea7778ae55247c6d1060f3dc94d6ea6ead773a87e7867be6442121d28d7"
+    },
+    {
+      "file": "P02.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P02.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 20,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 11,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 20,
+        "tspan_elements": 17,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "a1b92f454b3a770559f47564651c7e9bd9ad4b761b911c139056c740f76857e3"
+    },
+    {
+      "file": "P03.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P03.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 17,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 5,
+              "circle": 3,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 17,
+        "tspan_elements": 26,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "f8808fcb84a121cf7aad8a123012d731b5b736a2d5d4ec6f918e43a805872fe1"
+    },
+    {
+      "file": "P04.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P04.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 7,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 4,
+              "circle": 3,
+              "ellipse": 0,
+              "line": 1,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 7,
+        "tspan_elements": 4,
+        "contextual_values": {
+          "colors": [
+            "#0284C7",
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#94A3B8"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "a8d24836d34fb205d5decd818e1e9a8b3442c2e0463dc1025d5ed7efb6e24a01"
+    },
+    {
+      "file": "P05.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P05.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#7DD3FC",
+            "#7F1D1D",
+            "#94A3B8",
+            "#EF4444",
+            "#FCA5A5"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "975781df9b01639d2f5329aad6fe51400a8c78f13272bbfdbb2a0c3032beaf3f"
+    },
+    {
+      "file": "P06.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P06.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [
+        "<text> (x=879, y=295; text='• Phụ thuộc 100% sức…') exceeds <g id=\"agile-panels\"> data-pptx-bounds on the horizontal axis: content (879.0, 283.1)-(1244.1, 463.9), container (56.0, 160.0)-(1224.0, 610.0), overflow horizontal 1.7%, vertical 0.0%; expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+      ],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 24,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#78350F",
+            "#7DD3FC",
+            "#94A3B8",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "bea8f5a392344ff1ac633df3f6f87705dccbd00fec4b6c2bf86e764c2c2d5e60"
+    },
+    {
+      "file": "P07.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P07.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "e462d96af0fd8f2e0ff33e277b4c769d6f90e9f823d0d1f9ba600be64b533663"
+    },
+    {
+      "file": "P08.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P08.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#78350F",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "450a310fb7e839fb6d0ee730e333d7585d98ae5a852dc6ccb92e6a2d658380c3"
+    },
+    {
+      "file": "P09.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P09.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [
+        "<text> (x=879, y=320; text='• Nghịch lý thời gia…') exceeds <g id=\"flaws-panels\"> data-pptx-bounds on the horizontal axis: content (879.0, 308.1)-(1234.3, 482.9), container (56.0, 160.0)-(1224.0, 610.0), overflow horizontal 0.9%, vertical 0.0%; expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+      ],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 17,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 17,
+        "tspan_elements": 23,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#78350F",
+            "#7DD3FC",
+            "#7F1D1D",
+            "#94A3B8",
+            "#EF4444",
+            "#F59E0B",
+            "#FBBF24",
+            "#FCA5A5"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "864650bee28feab46fac08de6bfce64b47c81c9bf232242b3184f7e589a2d96a"
+    },
+    {
+      "file": "P10.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P10.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 15,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 15,
+        "tspan_elements": 18,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#7DD3FC",
+            "#94A3B8"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "2861ad29acf2ba77a180c400d7a1cf7304cf58ecfca500db01c7a699c7a6d484"
+    },
+    {
+      "file": "P11.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P11.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 22,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 12,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 22,
+        "tspan_elements": 9,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "741c389d39d87f2aed5f06e7a90a7fcd99982b07f394138d58b9b0bcae70c7f1"
+    },
+    {
+      "file": "P12.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P12.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [
+        "<text> (x=879, y=255; text='• Trực tiếp can thiệ…') exceeds <g id=\"six-steps-grid\"> data-pptx-bounds on the horizontal axis: content (879.0, 243.9)-(1245.5, 303.6), container (56.0, 160.0)-(1224.0, 610.0), overflow horizontal 1.8%, vertical 0.0%; expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+      ],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 23,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 6,
+              "ellipse": 0,
+              "line": 7,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 23,
+        "tspan_elements": 18,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8",
+            "#EC4899",
+            "#F472B6",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "104c5cb0a785ccb14177a77b455c0b9258402f2b118a370473618b6ea5a13050"
+    },
+    {
+      "file": "P13.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P13.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 21,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 10,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 1,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 21,
+        "tspan_elements": 12,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8",
+            "#F59E0B"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "7a1bcf5546103449eca36e2780d0a8968e01038d16bff3f34048dc8b8fcd1553"
+    },
+    {
+      "file": "P14.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P14.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 15,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 15,
+        "tspan_elements": 16,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#7F1D1D",
+            "#94A3B8",
+            "#EF4444",
+            "#FCA5A5"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "5402748c15278470b03149ea1ee5cee162f0bfd99cdf328b73ec7fabcb4af8cc"
+    },
+    {
+      "file": "P15.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P15.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 7,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 4,
+              "circle": 3,
+              "ellipse": 0,
+              "line": 1,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 7,
+        "tspan_elements": 4,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8",
+            "#F59E0B"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "08f4db78c8f2d94330adb636e77e55b519ecbafb26d44759bf5565d1b00cf3e7"
+    },
+    {
+      "file": "P16.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P16.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 15,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 15,
+        "tspan_elements": 16,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#78350F",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "2c3299cce74e0d3eadfded4d2178f5131a90aaebeb9b834c70a6a4f0d785de93"
+    },
+    {
+      "file": "P17.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P17.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "4fe089eb435a32cf6847e45136e67c850187cc9653e0c6f3d637d354473100c9"
+    },
+    {
+      "file": "P18.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P18.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "ce7a30ad66c3f843e0a193a4674b4aaab43bb3936a4ee28e00a4837833220366"
+    },
+    {
+      "file": "P19.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P19.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#78350F",
+            "#7DD3FC",
+            "#94A3B8",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "4ec671a384e727616a22fa7fa512261f0a4240b65b5a325ca9b68344fc460dc5"
+    },
+    {
+      "file": "P20.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P20.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 22,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#78350F",
+            "#7DD3FC",
+            "#7F1D1D",
+            "#94A3B8",
+            "#EF4444",
+            "#F59E0B",
+            "#FBBF24",
+            "#FCA5A5"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "219b024082b5de7ac809bc0ebeb89df30820aa9487cb2dc01c6bda964db5aa16"
+    },
+    {
+      "file": "P21.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P21.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#78350F",
+            "#7DD3FC",
+            "#94A3B8",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "f7791f3a5c2e8845c7f7da87fa688c85edea8eef23da60fe69a855469f87ab13"
+    },
+    {
+      "file": "P22.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P22.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "bfe2088e6c43ee08abd5c4085d95b7e4959097419d5e4c6e4fd4f7e0d3896208"
+    },
+    {
+      "file": "P23.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P23.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 15,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 15,
+        "tspan_elements": 16,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#3730A3",
+            "#64748B",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "94129a1d506a1b2d3f7c72fca005c7e4a4f85cdca985434a65495ee31d015861"
+    },
+    {
+      "file": "P24.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P24.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [
+        "<text> (x=879, y=320; text='• Phong cách tư duy:…') exceeds <g id=\"logic-panels\"> data-pptx-bounds on the horizontal axis: content (879.0, 308.1)-(1249.0, 456.9), container (56.0, 160.0)-(1224.0, 610.0), overflow horizontal 2.1%, vertical 0.0%; expand the root module bounds into available non-overlapping space; otherwise reflow the text"
+      ],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 17,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 17,
+        "tspan_elements": 23,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#78350F",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#F59E0B",
+            "#FBBF24",
+            "#FCA5A5"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "7ee7326554e2829551ed057e6d6f2e06a5b62bfddd3e503dc5a7aeaae14f9520"
+    },
+    {
+      "file": "P25.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P25.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 17,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 17,
+        "tspan_elements": 22,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#78350F",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#F59E0B",
+            "#FBBF24",
+            "#FCA5A5"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "527f75c79308361fa3e67245d465d3ce2eab9c0fbb136ed250105588c5ba9b6d"
+    },
+    {
+      "file": "P26.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P26.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 35,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 5,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 7,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 35,
+        "tspan_elements": 3,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "7abd1f358af89705bc4708c25f80a708d946608b7969cddea3dbd7c94f243bde"
+    },
+    {
+      "file": "P27.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P27.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 7,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 4,
+              "circle": 3,
+              "ellipse": 0,
+              "line": 1,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 7,
+        "tspan_elements": 4,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#94A3B8"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "c131e6e3e8be05fb987af6f81169f71e8f8e3b527d58e64739911d14e9f28061"
+    },
+    {
+      "file": "P28.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P28.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#7DD3FC",
+            "#7F1D1D",
+            "#94A3B8",
+            "#EF4444",
+            "#FCA5A5"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "1c3661b21cc272f6f19569cee04ffd6f6f64080800b0e1383a8c19536d259b1f"
+    },
+    {
+      "file": "P29.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P29.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 35,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 20,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 1,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 35,
+        "tspan_elements": 8,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#60A5FA",
+            "#64748B",
+            "#94A3B8",
+            "#A5B4FC",
+            "#EC4899",
+            "#F472B6",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "c317e760a3a944a24818380d2ec98a1639d679de3aa7df183c099d23a3583add"
+    },
+    {
+      "file": "P30.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P30.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "80b8ba669c16580a88aac77807b5fb09dd95d405d44e41d3df319373ef133a7e"
+    },
+    {
+      "file": "P31.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P31.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 15,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 15,
+        "tspan_elements": 16,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#64748B",
+            "#7DD3FC",
+            "#94A3B8"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "ef1a21d3b435e353fcc1b763edec305f4873f1757f0cf02c42bbb210d34ab2a9"
+    },
+    {
+      "file": "P32.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P32.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 15,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 15,
+        "tspan_elements": 16,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#78350F",
+            "#831843",
+            "#94A3B8",
+            "#EC4899",
+            "#F472B6",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "4047e8648251a030f316a28eeb1e1fa1bc5b09c0ada68377b1c8c72cc3563c70"
+    },
+    {
+      "file": "P33.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P33.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 17,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 6,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 5,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 17,
+        "tspan_elements": 8,
+        "contextual_values": {
+          "colors": [
+            "#070B14",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#64748B",
+            "#818CF8",
+            "#94A3B8",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "eeeb97357a40d0dbc89402fe1f8061ec011af94e4ad595c0a37d951638300745"
+    },
+    {
+      "file": "P34.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P34.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 21,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 10,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 5,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 21,
+        "tspan_elements": 27,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#78350F",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC",
+            "#F59E0B",
+            "#FBBF24"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "5ac24d5ff1d2c9259476174133b87a37e9da1c60744a930a10cdf106433050e5"
+    },
+    {
+      "file": "P35.svg",
+      "path": "C:\\Users\\TOPV.LAPTOP.130\\Documents\\TOPVSystem\\projects\\topeng_loop_engineering_20260903\\svg_output\\P35.svg",
+      "exists": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 16,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 9,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 4,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "'Segoe UI', Arial, sans-serif"
+        ],
+        "text_elements": 16,
+        "tspan_elements": 19,
+        "contextual_values": {
+          "colors": [
+            "#064E3B",
+            "#070B14",
+            "#075985",
+            "#0D1527",
+            "#0F172A",
+            "#334155",
+            "#34D399",
+            "#3730A3",
+            "#64748B",
+            "#7DD3FC",
+            "#818CF8",
+            "#94A3B8",
+            "#A5B4FC"
+          ]
+        }
+      },
+      "passed": true,
+      "source_sha256": "a64627031452e789a63b89ca1a9703958f5c5d1fad236b97c5b9312ff38b4974"
+    }
+  ]
+}

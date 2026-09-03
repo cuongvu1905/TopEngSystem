@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'next/navigation';
@@ -67,14 +67,14 @@ const getReportSnippet = (content) => {
     if (Array.isArray(parsed)) {
       const texts = parsed.map(card => card.content).filter(Boolean);
       const joined = texts.join(' | ');
-      return joined.length > 80 ? joined.slice(0, 80) + '...' : joined || 'Không có nội dung';
+      return joined || 'Không có nội dung';
     }
     if (parsed && typeof parsed === 'object') {
       const text = parsed.text || parsed.hientrang || parsed.workDone || parsed.content || '';
-      return text.length > 80 ? text.slice(0, 80) + '...' : text || 'Không có nội dung';
+      return text || 'Không có nội dung';
     }
   } catch (e) { }
-  return content.length > 80 ? content.slice(0, 80) + '...' : content;
+  return content;
 };
 
 // Helper to render report content visually with cards/time/project/attachment info
@@ -238,6 +238,27 @@ export default function Dashboard() {
   });
   const [showConfigDropdown, setShowConfigDropdown] = useState(false);
 
+  // Mobile horizontal swipeable tabs state
+  const [activeMobileWidgetTab, setActiveMobileWidgetTab] = useState(0);
+  const widgetsGridRef = useRef(null);
+
+  const handleWidgetsScroll = (e) => {
+    if (!e.target || window.innerWidth > 768) return;
+    const scrollLeft = e.target.scrollLeft;
+    const width = e.target.offsetWidth;
+    if (width > 0) {
+      const tabIdx = Math.round(scrollLeft / width);
+      setActiveMobileWidgetTab(tabIdx);
+    }
+  };
+
+  const scrollToWidget = (idx) => {
+    setActiveMobileWidgetTab(idx);
+    if (widgetsGridRef.current && widgetsGridRef.current.children[idx]) {
+      widgetsGridRef.current.children[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
+  };
+
   // Data states
   const [allIssues, setAllIssues] = useState([]);
   const [allReports, setAllReports] = useState([]);
@@ -315,18 +336,28 @@ export default function Dashboard() {
   const canAccessProjects = true;
   const canAccessReports = true;
 
-  // Load configuration from localstorage on mount
+  // Load configuration from localstorage on mount and sync on change
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('dashboard_visible_sections');
-      if (saved) {
-        try {
-          setVisibleSections(JSON.parse(saved));
-        } catch (e) {
-          // ignore
+    const syncSections = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('dashboard_visible_sections');
+        if (saved) {
+          try {
+            setVisibleSections(JSON.parse(saved));
+          } catch (e) {
+            // ignore
+          }
         }
       }
-    }
+    };
+
+    syncSections();
+    window.addEventListener('dashboard_sections_changed', syncSections);
+    window.addEventListener('storage', syncSections);
+    return () => {
+      window.removeEventListener('dashboard_sections_changed', syncSections);
+      window.removeEventListener('storage', syncSections);
+    };
   }, []);
 
   // Fetch Issues and Reports from Database
@@ -1202,11 +1233,11 @@ export default function Dashboard() {
           <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}><i className="fa-solid fa-circle-notch fa-spin fa-2x"></i></div>
         ) : selectedIssueDetail ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+            <div style={{ borderBottom: '1px solid var(--neutral-border)', paddingBottom: '12px' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-hover)', backgroundColor: 'var(--primary-light)', padding: '2px 8px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.35)', padding: '2px 8px', borderRadius: '0px', fontFamily: 'monospace' }}>
                       {t('common.projectLabel', 'DỰ ÁN:')} {issueProj?.name || 'Chung'}
                     </span>
                     {issueProj && (
@@ -1214,15 +1245,16 @@ export default function Dashboard() {
                         href={`/projects/${issueProj.id}?issueId=${selectedIssueDetail.issue.id}`}
                         style={{
                           fontSize: '11px',
-                          color: 'var(--primary-color)',
+                          color: '#10b981',
                           textDecoration: 'none',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '4px',
-                          fontWeight: '500',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          border: '1.5px solid var(--primary-color)',
+                          fontWeight: '600',
+                          padding: '2px 8px',
+                          borderRadius: '0px',
+                          border: '1px solid rgba(16, 185, 129, 0.45)',
+                          backgroundColor: 'rgba(16, 185, 129, 0.06)',
                           cursor: 'pointer'
                         }}
                         title="Đi tới chi tiết vướng mắc trong dự án"
@@ -1390,7 +1422,7 @@ export default function Dashboard() {
 
             {/* Metadata */}
             <div style={{ borderTop: '1px solid var(--neutral-border)', paddingTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
-              <div>{t('issues.priority', 'Độ ưu tiên:')} <strong>{selectedIssueDetail.issue.priority}</strong></div>
+              <div>{t('issues.priority', 'Độ ưu tiên:')} <strong style={{ color: selectedIssueDetail.issue.priority === 'CRITICAL' ? '#f43f5e' : selectedIssueDetail.issue.priority === 'HIGH' ? '#fb923c' : selectedIssueDetail.issue.priority === 'MEDIUM' ? '#10b981' : '#94a3b8' }}>{selectedIssueDetail.issue.priority === 'CRITICAL' ? 'KHẨN CẤP' : selectedIssueDetail.issue.priority === 'HIGH' ? 'CAO' : selectedIssueDetail.issue.priority === 'MEDIUM' ? 'TRUNG BÌNH' : (selectedIssueDetail.issue.priority === 'LOW' ? 'THẤP' : selectedIssueDetail.issue.priority)}</strong></div>
               <div>{t('issues.type', 'Loại issue:')} <strong>{selectedIssueDetail.issue.type}</strong></div>
               <div>{t('issues.creator', 'Người báo cáo:')} <strong>{users.find(u => u.id === selectedIssueDetail.issue.reporter_id)?.name || 'N/A'}</strong></div>
               <div>{t('issues.createdDate', 'Ngày tạo:')} <strong>{new Date(selectedIssueDetail.issue.created_at).toLocaleDateString('vi-VN')}</strong></div>
@@ -1411,10 +1443,10 @@ export default function Dashboard() {
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ borderBottom: '1px solid var(--neutral-border)', paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.08)', border: '1px solid rgba(14, 165, 233, 0.35)', padding: '2px 8px', borderRadius: '0px', fontFamily: 'monospace' }}>
                       DỰ ÁN: {taskProj?.name || 'Chung'}
                     </span>
                     {taskProj && (
@@ -1422,15 +1454,16 @@ export default function Dashboard() {
                         href={`/projects/${taskProj.id}?taskId=${task.id}`}
                         style={{
                           fontSize: '11px',
-                          color: 'var(--primary-color)',
+                          color: '#0ea5e9',
                           textDecoration: 'none',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '4px',
-                          fontWeight: '500',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          border: '1.5px solid var(--primary-color)',
+                          fontWeight: '600',
+                          padding: '2px 8px',
+                          borderRadius: '0px',
+                          border: '1px solid rgba(14, 165, 233, 0.45)',
+                          backgroundColor: 'rgba(14, 165, 233, 0.06)',
                           cursor: 'pointer'
                         }}
                         title="Đi tới chi tiết công việc trong dự án"
@@ -1508,9 +1541,9 @@ export default function Dashboard() {
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ borderBottom: '1px solid var(--neutral-border)', paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--primary-color)', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#818cf8', backgroundColor: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(129, 140, 248, 0.35)', padding: '2px 8px', borderRadius: '0px', fontFamily: 'monospace' }}>
                     KEY: {proj.project_key}
                   </span>
                   <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--neutral-dark)', margin: '6px 0 0 0' }}>{proj.name}</h2>
@@ -1676,67 +1709,34 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="scrollable-view" style={{ padding: '24px' }}>
+    <div className="dashboard-fullscreen-view">
       <style>{`
-        /* Premium Dashboard CSS Grid and glassmorphism styling */
-        .dashboard-header-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 24px;
-        }
-        .config-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          background: var(--neutral-bg-card);
-          border: 1.5px solid var(--neutral-border);
-          border-radius: 8px;
-          font-weight: 600;
-          color: var(--neutral-dark);
-          box-shadow: var(--shadow-sm);
-          cursor: pointer;
-          position: relative;
-          transition: var(--transition-fast);
-        }
-        .config-btn:hover {
-          background: var(--neutral-bg-hover);
-          border-color: var(--neutral-border);
-        }
-        .config-dropdown {
-          position: absolute;
-          top: 45px;
-          right: 0;
-          background: var(--neutral-bg-card);
-          border: 1.5px solid var(--neutral-border);
-          border-radius: 8px;
-          box-shadow: var(--shadow-lg);
-          padding: 12px;
-          width: 220px;
-          z-index: 100;
+        /* Fullscreen Viewport-Fit Dashboard Styling */
+        .dashboard-fullscreen-view {
+          height: calc(100vh - 56px);
+          max-height: calc(100vh - 56px);
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          padding: 14px 20px;
+          box-sizing: border-box;
+          overflow: hidden;
+          background-color: var(--neutral-bg);
         }
-        .config-dropdown-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px;
-          font-size: 13px;
-          cursor: pointer;
-          font-weight: 500;
+
+        /* 4 Top Stat Cards Row */
+        .dashboard-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+          margin-bottom: 12px;
+          flex-shrink: 0;
         }
-        .config-dropdown-item input {
-          cursor: pointer;
-        }
-        
         .stat-card-clickable {
           background: var(--neutral-bg-card);
           border: 1.5px solid var(--neutral-border);
-          border-radius: 12px;
-          padding: 20px;
+          border-radius: 8px;
+          padding: 8px 14px;
+          min-height: 52px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -1745,68 +1745,83 @@ export default function Dashboard() {
           transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease;
         }
         .stat-card-clickable:hover {
-          transform: translateY(-4px);
+          transform: translateY(-2px);
           box-shadow: var(--shadow-md);
           border-color: var(--primary-color);
         }
+        .stat-info h3 {
+          font-size: 20px;
+          font-weight: 750;
+          color: var(--neutral-dark);
+          margin: 0;
+          line-height: 1.1;
+        }
+        .stat-info p {
+          font-size: 11px;
+          color: var(--neutral-muted);
+          margin: 2px 0 0 0;
+          font-weight: 600;
+        }
         
-        /* 2x2 High Contrast Box Layout */
+        /* Main 2x2 Widgets Grid Area */
         .dashboard-widgets-grid-2x2 {
+          flex: 1;
+          min-height: 0;
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 24px;
+          grid-template-rows: repeat(2, 1fr);
+          gap: 12px;
         }
         .widget-box {
-          border: 1.5px solid var(--neutral-border);
-          border-radius: 12px;
+          border: none;
+          border-radius: 8px;
           background: var(--neutral-bg-card);
           display: flex;
           flex-direction: column;
-          height: 400px;
+          height: 100%;
+          min-height: 0;
           overflow: hidden;
           box-shadow: var(--shadow-sm);
-          transition: box-shadow 0.25s ease, border-color 0.25s ease;
-        }
-        @media (max-width: 768px) {
-          .dashboard-widgets-grid-2x2 {
-            grid-template-columns: 1fr;
-          }
-          .widget-box {
-            height: 320px;
-          }
+          transition: box-shadow 0.25s ease, transform 0.25s ease;
         }
         .widget-box:hover {
           box-shadow: var(--shadow-md);
-          border-color: var(--primary-color);
         }
         .widget-box-header {
-          padding: 12px 20px;
-          border-bottom: 1.5px solid var(--neutral-border);
+          padding: 8px 14px;
+          border-bottom: none;
           background: var(--neutral-bg-card);
           cursor: pointer;
           transition: background 0.15s ease;
+          flex-shrink: 0;
         }
         .widget-box-header:hover {
           background: var(--neutral-bg-hover);
         }
         .widget-box-title {
-          font-size: 15px;
-          font-weight: 750;
+          font-size: 13px;
+          font-weight: 800;
           color: var(--neutral-dark);
           text-align: center;
-          text-decoration: underline;
-          text-underline-offset: 4px;
           margin: 0;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.06em;
           user-select: none;
         }
         .widget-box-body {
-          padding: 16px 20px;
+          padding: 10px 12px;
           flex: 1;
+          min-height: 0;
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 8px;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .widget-box-body::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
         }
         .empty-widget-state {
           display: flex;
@@ -1814,54 +1829,189 @@ export default function Dashboard() {
           align-items: center;
           justify-content: center;
           height: 100%;
-          min-height: 200px;
+          min-height: 120px;
           color: var(--neutral-muted);
           text-align: center;
           gap: 8px;
         }
+
+        .mobile-dashboard-widget-tabs {
+          display: none;
+        }
+
+        /* Responsive Breakpoints for Smaller Windows & Mobile */
+        @media (max-width: 991px) and (min-width: 769px) {
+          .dashboard-fullscreen-view {
+            height: auto;
+            min-height: calc(100vh - 56px);
+            max-height: none;
+            overflow-y: auto;
+            padding: 12px;
+          }
+          .dashboard-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+          }
+          .stat-card-clickable {
+            padding: 8px 12px;
+            min-height: 48px;
+          }
+          .stat-info h3 {
+            font-size: 17px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .dashboard-fullscreen-view {
+            height: calc(100vh - 56px) !important;
+            max-height: calc(100vh - 56px) !important;
+            padding: 8px 10px 10px 10px !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-sizing: border-box !important;
+          }
+
+          .dashboard-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 6px !important;
+            margin-bottom: 8px !important;
+            flex-shrink: 0 !important;
+          }
+
+          .stat-card-clickable {
+            padding: 6px 10px !important;
+            min-height: 44px !important;
+          }
+
+          .stat-info h3 {
+            font-size: 16px !important;
+          }
+
+          .stat-info p {
+            font-size: 10px !important;
+          }
+
+          .stat-icon {
+            width: 28px !important;
+            height: 28px !important;
+            font-size: 12px !important;
+          }
+
+          .mobile-dashboard-widget-tabs {
+            display: flex !important;
+            gap: 4px !important;
+            margin-bottom: 8px !important;
+            flex-shrink: 0 !important;
+            background: var(--neutral-bg-card) !important;
+            border: 1px solid var(--neutral-border) !important;
+            padding: 3px !important;
+            border-radius: 4px;
+          }
+          .mobile-dashboard-tab-btn {
+            flex: 1 !important;
+            min-width: 0 !important;
+            padding: 7px 2px !important;
+            font-size: 10px !important;
+            font-weight: 800 !important;
+            font-family: monospace !important;
+            border: 1px solid transparent !important;
+            background: transparent !important;
+            color: var(--neutral-muted) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.03em !important;
+            white-space: nowrap !important;
+          }
+          .mobile-dashboard-tab-btn.active {
+            background: var(--primary-light) !important;
+            color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+          }
+          .mobile-dashboard-tab-btn .mobile-tab-count {
+            font-size: 9px !important;
+            padding: 1px 5px !important;
+            border-radius: 99px !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            font-weight: 700 !important;
+          }
+
+          .dashboard-widgets-grid-2x2 {
+            display: flex !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            scroll-snap-type: x mandatory !important;
+            scroll-behavior: smooth !important;
+            gap: 0 !important;
+            width: 100% !important;
+            flex: 1 !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            margin-bottom: 0 !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+          }
+          .dashboard-widgets-grid-2x2::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+          }
+          .dashboard-widgets-grid-2x2 .widget-box {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            flex-shrink: 0 !important;
+            scroll-snap-align: start !important;
+            scroll-snap-stop: always !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            max-height: 100% !important;
+            flex: 1 !important;
+            box-sizing: border-box !important;
+            padding: 10px 12px !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .dashboard-widgets-grid-2x2 .widget-box .widget-box-body {
+            flex: 1 !important;
+            overflow-y: auto !important;
+            min-height: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            padding-right: 2px !important;
+          }
+        }
         
         /* Item Card Layouts */
-        .item-row-card {
-          padding: 14px;
-          border: 1.5px solid var(--neutral-border);
-          border-radius: 8px;
+        .item-row-card,
+        .report-grid-card {
+          padding: 11px 13px;
+          border: none;
+          border-radius: 6px;
           background: var(--neutral-bg-card);
           cursor: pointer;
           transition: var(--transition-fast);
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          justify-content: space-between;
+          height: 98px;
+          min-height: 98px;
+          max-height: 98px;
+          box-sizing: border-box;
           box-shadow: 0 1px 2px rgba(0,0,0,0.01);
         }
-        .item-row-card:hover {
-          background: var(--neutral-bg-hover);
-          border-color: var(--primary-color);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-sm);
-        }
-        
-        /* Report Grid layout on Dashboard */
-        .reports-grid-dashboard {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 12px;
-        }
-        .report-grid-card {
-          height: 100px;
-          max-height: 100px;
-          border: 1.5px solid var(--neutral-border);
-          border-radius: 8px;
-          padding: 10px 12px;
-          background: var(--neutral-bg-card);
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          cursor: pointer;
-          transition: var(--transition-fast);
-        }
+        .item-row-card:hover,
         .report-grid-card:hover {
           background: var(--neutral-bg-hover);
-          border-color: var(--primary-color);
           transform: translateY(-2px);
           box-shadow: var(--shadow-sm);
         }
@@ -1986,64 +2136,7 @@ export default function Dashboard() {
         }
       `}</style>
 
-      {/* Top Header bar with personalization toggle */}
-      <div className="dashboard-header-bar">
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--neutral-dark)' }}>{t('dashboard.overview', 'Giao diện Tổng quan')}</h1>
-          <p style={{ fontSize: '13px', color: 'var(--neutral-muted)', marginTop: '2px' }}>
-            {t('dashboard.welcomePrefix', 'Xin chào, ')}<strong>{currentUser.name}</strong> ({formatSystemRole(currentUser.system_role, t)}){t('dashboard.welcomeSuffix', '. Dưới đây là hoạt động hôm nay của bạn.')}
-          </p>
-        </div>
-        <div style={{ position: 'relative' }}>
-          <button className="config-btn" onClick={() => setShowConfigDropdown(!showConfigDropdown)}>
-            <i className="fa-solid fa-sliders"></i>
-            {t('dashboard.customize', 'Tùy chỉnh Dashboard')}
-          </button>
-          {showConfigDropdown && (
-            <div className="config-dropdown">
-              <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--neutral-muted)', paddingBottom: '4px', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}>
-                {t('dashboard.selectCards', 'Chọn thẻ hiển thị')}
-              </span>
-              <label className="config-dropdown-item" style={{ opacity: canAccessIssues ? 1 : 0.5 }}>
-                <input
-                  type="checkbox"
-                  checked={visibleSections.issues}
-                  disabled={!canAccessIssues}
-                  onChange={() => handleToggleSection('issues')}
-                />
-                {t('dashboard.issuesOption', 'Vướng mắc (Issues)')}
-              </label>
-              <label className="config-dropdown-item" style={{ opacity: canAccessTasks ? 1 : 0.5 }}>
-                <input
-                  type="checkbox"
-                  checked={visibleSections.tasks}
-                  disabled={!canAccessTasks}
-                  onChange={() => handleToggleSection('tasks')}
-                />
-                {t('dashboard.tasksOption', 'Việc cần làm (Tasks)')}
-              </label>
-              <label className="config-dropdown-item" style={{ opacity: canAccessProjects ? 1 : 0.5 }}>
-                <input
-                  type="checkbox"
-                  checked={visibleSections.projects}
-                  disabled={!canAccessProjects}
-                  onChange={() => handleToggleSection('projects')}
-                />
-                {t('dashboard.projectsOption', 'Dự án tham gia')}
-              </label>
-              <label className="config-dropdown-item" style={{ opacity: canAccessReports ? 1 : 0.5 }}>
-                <input
-                  type="checkbox"
-                  checked={visibleSections.reports}
-                  disabled={!canAccessReports}
-                  onChange={() => handleToggleSection('reports')}
-                />
-                {t('dashboard.reportsOption', 'Báo cáo hàng ngày')}
-              </label>
-            </div>
-          )}
-        </div>
-      </div>
+
 
       {/* 4 Stat Cards Row */}
       <div className="dashboard-grid" style={{ marginBottom: '24px' }}>
@@ -2093,8 +2186,38 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* Mobile Horizontal Tabs for Widgets */}
+      {(() => {
+        const mobileWidgetTabs = [
+          showIssues && { id: 'issues', title: 'ISSUE', count: myIssuesSorted.length },
+          showTasks && { id: 'tasks', title: t('dashboard.toDoTasks', 'Việc cần làm'), count: myTasksSorted.length },
+          showProjects && { id: 'projects', title: t('sidebar.projects', 'Dự án'), count: myProjectsSorted.length },
+          showReports && { id: 'reports', title: t('sidebar.dailyReports', 'Báo cáo'), count: reportsFiltered.length },
+        ].filter(Boolean);
+
+        return (
+          <div className="mobile-dashboard-widget-tabs">
+            {mobileWidgetTabs.map((tab, idx) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`mobile-dashboard-tab-btn ${activeMobileWidgetTab === idx ? 'active' : ''} tab-${tab.id}`}
+                onClick={() => scrollToWidget(idx)}
+              >
+                <span>{tab.title}</span>
+                <span className="mobile-tab-count">{tab.count}</span>
+              </button>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Main Widgets 2x2 Grid Area */}
-      <div className="dashboard-widgets-grid-2x2">
+      <div 
+        className="dashboard-widgets-grid-2x2"
+        ref={widgetsGridRef}
+        onScroll={handleWidgetsScroll}
+      >
 
         {/* Widget 1: Issues */}
         {showIssues && (
@@ -2112,36 +2235,47 @@ export default function Dashboard() {
                 </div>
               ) : (
                 myIssuesSorted.slice(0, 4).map(issue => {
-                  let badgeColor = 'var(--neutral-muted)';
-                  if (issue.priority === 'CRITICAL') badgeColor = 'var(--danger-color)';
-                  if (issue.priority === 'HIGH') badgeColor = '#ea580c';
-                  if (issue.priority === 'MEDIUM') badgeColor = 'var(--primary-color)';
+                  let priorityLabel = 'TRUNG BÌNH';
+                  let priorityClass = 'priority-medium';
+                  const rawP = (issue.priority || '').toUpperCase();
+                  if (rawP === 'CRITICAL' || rawP === 'KHẨN CẤP') {
+                    priorityLabel = 'KHẨN CẤP';
+                    priorityClass = 'priority-critical';
+                  } else if (rawP === 'HIGH' || rawP === 'CAO') {
+                    priorityLabel = 'CAO';
+                    priorityClass = 'priority-high';
+                  } else if (rawP === 'MEDIUM' || rawP === 'TRUNG BÌNH') {
+                    priorityLabel = 'TRUNG BÌNH';
+                    priorityClass = 'priority-medium';
+                  } else if (rawP === 'LOW' || rawP === 'THẤP') {
+                    priorityLabel = 'THẤP';
+                    priorityClass = 'priority-low';
+                  }
 
                   return (
                     <div
                       key={issue.id}
-                      className="item-row-card"
+                      className={`item-row-card ${priorityClass}`}
                       onClick={() => {
                         setActiveDetailPopup('issues');
                         setSelectedIssueIdForPopup(issue.id);
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', backgroundColor: '#eff6ff', color: 'var(--primary-color)', padding: '2px 8px', borderRadius: '4px' }}>
-                          {issue.issue_key}
-                        </span>
-                        <span style={{ fontSize: '11px', color: badgeColor, fontWeight: 'bold', backgroundColor: '#f8fafc', padding: '2px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                          {issue.priority}
+                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                        <span className={`dashboard-priority-tag ${priorityClass}`}>
+                          {priorityLabel}
                         </span>
                       </div>
-                      <div className="item-title-text" style={{ margin: '4px 0', fontSize: '13.5px' }}>{issue.summary}</div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
-                        <span style={{ fontSize: '11px', color: 'var(--neutral-muted)' }}>
-                          <i className="fa-solid fa-calendar-days" style={{ marginRight: '4px' }}></i>
+                      <div className="item-title-text" style={{ margin: '4px 0 2px 0', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={issue.summary || issue.title || issue.issue_key}>
+                        {issue.summary || issue.title || issue.issue_key}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--neutral-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <i className="fa-solid fa-calendar-days" style={{ fontSize: '10px' }}></i>
                           {new Date(issue.created_at).toLocaleDateString('vi-VN')}
                         </span>
                         {issue.assignee_id && (
-                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--primary-color)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px' }} title={`Người xử lý: ${users.find(u => u.id === issue.assignee_id)?.name || ''}`}>
+                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--primary-color)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px', flexShrink: 0 }} title={`Người xử lý: ${users.find(u => u.id === issue.assignee_id)?.name || ''}`}>
                             {(users.find(u => u.id === issue.assignee_id)?.name || 'U').split(' ').pop().charAt(0)}
                           </div>
                         )}
@@ -2171,44 +2305,48 @@ export default function Dashboard() {
               ) : (
                 myTasksSorted.slice(0, 4).map(task => {
                   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'Done';
-                  let priorityLabel = task.priority.toUpperCase();
+                  let priorityLabel = 'TRUNG BÌNH';
+                  let priorityClass = 'priority-medium';
+                  const rawP = (task.priority || '').toUpperCase();
+                  if (rawP === 'KHẨN CẤP' || rawP === 'CRITICAL') {
+                    priorityLabel = 'KHẨN CẤP';
+                    priorityClass = 'priority-critical';
+                  } else if (rawP === 'CAO' || rawP === 'HIGH') {
+                    priorityLabel = 'CAO';
+                    priorityClass = 'priority-high';
+                  } else if (rawP === 'TRUNG BÌNH' || rawP === 'MEDIUM') {
+                    priorityLabel = 'TRUNG BÌNH';
+                    priorityClass = 'priority-medium';
+                  } else if (rawP === 'THẤP' || rawP === 'LOW') {
+                    priorityLabel = 'THẤP';
+                    priorityClass = 'priority-low';
+                  }
 
                   return (
                     <div
                       key={task.id}
-                      className="item-row-card"
+                      className={`item-row-card ${priorityClass}`}
                       onClick={() => {
                         setActiveDetailPopup('tasks');
                         setSelectedTaskIdForPopup(task.id);
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 'bold', color: task.priority === 'Khẩn cấp' || task.priority === 'Cao' ? 'var(--danger-color)' : 'var(--warning-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                        <span className={`dashboard-priority-tag ${priorityClass}`}>
                           {priorityLabel}
                         </span>
+                      </div>
+                      <div className="item-title-text" style={{ margin: '4px 0 2px 0', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={task.title}>{task.title}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                        <span style={{ fontSize: '11px', color: isOverdue ? 'var(--danger-color)' : 'var(--neutral-muted)', fontWeight: isOverdue ? 'bold' : 'normal', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <i className="fa-solid fa-calendar-days" style={{ fontSize: '10px' }}></i>
+                          {task.due_date ? new Date(task.due_date).toLocaleDateString('vi-VN') : 'N/A'}
+                        </span>
                         {task.assignee_id && (
-                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px' }} title={`Người nhận việc: ${users.find(u => u.id === task.assignee_id)?.name || ''}`}>
+                          <div style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px', flexShrink: 0 }} title={`Người nhận việc: ${users.find(u => u.id === task.assignee_id)?.name || ''}`}>
                             {(users.find(u => u.id === task.assignee_id)?.name || 'U').split(' ').pop().charAt(0)}
                           </div>
                         )}
-                      </div>
-                      <div className="item-title-text" style={{ margin: '4px 0', fontSize: '13.5px' }}>{task.title}</div>
-                      {task.description && (
-                        <div style={{ fontSize: '12px', color: 'var(--neutral-muted)', marginBottom: '4px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                          {(() => {
-                            try {
-                              const parsed = JSON.parse(task.description);
-                              if (parsed && typeof parsed === 'object' && 'text' in parsed) {
-                                return parsed.text || 'Không có mô tả.';
-                              }
-                            } catch (e) { }
-                            return task.description;
-                          })()}
-                        </div>
-                      )}
-                      <div style={{ fontSize: '11px', color: isOverdue ? 'var(--danger-color)' : 'var(--neutral-muted)', fontWeight: isOverdue ? 'bold' : 'normal' }}>
-                        <i className="fa-solid fa-clock" style={{ marginRight: '4px' }}></i>
-                        {task.due_date ? new Date(task.due_date).toLocaleDateString('vi-VN') : 'N/A'}
                       </div>
                     </div>
                   );
@@ -2239,21 +2377,34 @@ export default function Dashboard() {
                   const progress = pTasks.length > 0 ? Math.round((done / pTasks.length) * 100) : 0;
 
                   return (
-                    <div key={proj.id} className="item-row-card" onClick={() => router.push(`/projects/${proj.id}`)}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className="item-title-text" style={{ fontSize: '13.5px' }}>{proj.name}</span>
-                        <span className="badge badge-info">{(proj.status === 'Thực thi' || proj.status === 'Ongoing') ? 'ONGOING' : (proj.status === 'Giám sát' || proj.status === 'Monitoring') ? 'MONITORING' : (proj.status === 'Kết thúc' || proj.status === 'Finished') ? 'FINISHED' : (proj.status ? proj.status.toUpperCase() : 'ONGOING')}</span>
-                      </div>
-                      <p style={{ fontSize: '12px', color: 'var(--neutral-muted)', margin: '4px 0', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                        {proj.description || t('projects.noDescription', 'Không có mô tả dự án.')}
-                      </p>
-                      <div style={{ marginTop: '4px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontSize: '11px', fontWeight: 'bold' }}>
-                          <span>{t('project.progress', 'Tiến độ')}</span>
-                          <span>{progress}%</span>
+                    <div
+                      key={proj.id}
+                      className="item-row-card"
+                      onClick={() => router.push(`/projects/${proj.id}`)}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <h4 className="item-title-text" style={{ fontSize: '13px', fontWeight: '700', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {proj.name}
+                          </h4>
                         </div>
-                        <div className="progress-bar-outer" style={{ height: '5px', borderRadius: '4px', backgroundColor: '#e2e8f0' }}>
-                          <div className="progress-bar-inner" style={{ width: `${progress}%`, height: '100%', borderRadius: '4px', backgroundColor: 'var(--primary-color)' }}></div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
+                          <span style={{ fontSize: '10.5px', color: 'var(--neutral-muted)', fontFamily: 'monospace' }}>
+                            {pTasks.length > 0 ? `${done}/${pTasks.length} việc` : '0 việc'}
+                          </span>
+                          <span className="dashboard-status-tag" style={{ background: 'rgba(99, 102, 241, 0.12)', color: '#818cf8', border: '1px solid rgba(129, 140, 248, 0.35)' }}>
+                            {progress}%
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '11px', fontWeight: '600' }}>
+                          <span style={{ color: 'var(--neutral-muted)' }}>{t('project.progress', 'Tiến độ dự án')}</span>
+                          <span className="item-title-text" style={{ fontWeight: '700' }}>{progress}%</span>
+                        </div>
+                        <div className="dashboard-progress-track">
+                          <div className="dashboard-progress-fill" style={{ width: `${progress}%` }}></div>
                         </div>
                       </div>
                     </div>
@@ -2279,55 +2430,61 @@ export default function Dashboard() {
                   {t('dashboard.noPendingReports', 'Không có báo cáo nào chờ duyệt.')}
                 </div>
               ) : (
-                <div className="reports-grid-dashboard">
-                  {reportsFiltered.slice(0, 3).map((report, idx) => {
-                    const userColor = users.find(u => u.id === report.user_id)?.color || '#3b82f6';
-                    const proj = projects.find(p => p.id === report.project_id);
+                reportsFiltered.slice(0, 3).map((report, idx) => {
+                  const userColor = users.find(u => u.id === report.user_id)?.color || '#3b82f6';
+                  const proj = projects.find(p => p.id === report.project_id);
 
-                    return (
-                      <div
-                        key={report.id || idx}
-                        className="report-grid-card"
-                        onClick={() => {
-                          // Click report card opens split-screen reports popup with 25vw / 50vw and selects report
-                          setActiveDetailPopup('reports');
-                          setSelectedReportForPopup(report);
-                          setReportCommentText(report.comment || '');
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: userColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px' }}>
-                              {report.user_name.split(' ').pop().charAt(0)}
-                            </div>
-                            <div>
-                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--neutral-dark)', margin: 0 }}>{report.user_name}</h4>
-                              <span style={{ fontSize: '9px', color: 'var(--neutral-muted)', display: 'block', marginTop: '-2px' }}>{formatUserRoleForDailyReport(report.user_role, t)}</span>
-                            </div>
+                  return (
+                    <div
+                      key={report.id || idx}
+                      className="report-grid-card"
+                      onClick={() => {
+                        setActiveDetailPopup('reports');
+                        setSelectedReportForPopup(report);
+                        setReportCommentText(report.comment || '');
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: 0, flex: 1 }}>
+                          <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: userColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px', flexShrink: 0 }}>
+                            {report.user_name.split(' ').pop().charAt(0)}
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                            <span style={{ fontSize: '9.5px', color: 'var(--neutral-muted)' }}>
-                              {new Date(report.created_at).toLocaleDateString('vi-VN')}
-                            </span>
-                            <span style={{ fontSize: '9px', color: report.status === 'Approved' ? 'var(--success-color)' : report.status === 'Rejected' ? 'var(--danger-color)' : 'var(--warning-color)', fontWeight: 'bold' }}>
-                              {report.status === 'Approved' ? 'APPROVED' : report.status === 'Rejected' ? 'REJECTED' : 'PENDING'}
-                            </span>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <h4 className="item-title-text" style={{ fontSize: '13px', fontWeight: '700', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {report.user_name}
+                            </h4>
                           </div>
                         </div>
-
-                        {report.project_id && (
-                          <span style={{ display: 'inline-block', alignSelf: 'flex-start', fontSize: '9.5px', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '8px', fontWeight: '600', marginTop: '2px' }}>
-                            {proj?.name || 'Dự án'}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
+                          <span style={{ fontSize: '10.5px', color: 'var(--neutral-muted)', fontFamily: 'monospace' }}>
+                            {new Date(report.created_at).toLocaleDateString('vi-VN')}
                           </span>
-                        )}
-
-                        <div className="report-snippet" style={{ marginTop: '2px' }}>
-                          {getReportSnippet(report.content)}
+                          <span className={`dashboard-status-tag status-${report.status?.toLowerCase() || 'pending'}`}>
+                            {report.status === 'Approved' ? 'APPROVED' : report.status === 'Rejected' ? 'REJECTED' : 'PENDING'}
+                          </span>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      <div 
+                        className="item-title-text report-snippet" 
+                        style={{ 
+                          margin: 0, 
+                          fontSize: '13px', 
+                          fontWeight: '600', 
+                          whiteSpace: 'nowrap', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis',
+                          width: '100%',
+                          maxWidth: 'calc(100% - 40px)',
+                          display: 'block'
+                        }}
+                        title={getReportSnippet(report.content)}
+                      >
+                        {getReportSnippet(report.content)}
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
@@ -2337,15 +2494,14 @@ export default function Dashboard() {
 
       {/* ================= UNIFIED SPLIT-SCREEN POPUP (75vw Width, 75vh Height, 25% Left List & 50% Right Content) ================= */}
       {activeDetailPopup && (
-        <div className="modal show modal-backdrop-centered" onClick={() => setActiveDetailPopup(null)}>
+        <div className={`modal show modal-backdrop-centered popup-theme-${activeDetailPopup}`} onClick={() => setActiveDetailPopup(null)}>
           <div
-            className="detail-popup-dialog"
+            className={`detail-popup-dialog popup-dialog-${activeDetailPopup}`}
             style={{
               width: activeDetailPopup === 'reports' ? '100vw' : '75vw',
               height: activeDetailPopup === 'reports' ? '100vh' : '75vh',
               backgroundColor: 'var(--neutral-bg-main)',
-              border: activeDetailPopup === 'reports' ? 'none' : '1.5px solid #cbd5e1',
-              borderRadius: activeDetailPopup === 'reports' ? '0px' : '12px',
+              borderRadius: '0px',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
@@ -2499,39 +2655,71 @@ export default function Dashboard() {
                       let cardSubtext = '';
                       let cardBadgeText = '';
                       let cardBadgeColor = 'var(--neutral-muted)';
+                      let priorityClass = '';
 
                       if (activeDetailPopup === 'issues') {
                         isActive = item.id === selectedIssueIdForPopup;
                         cardTitle = item.summary;
                         cardSubtext = item.issue_key;
-                        cardBadgeText = item.priority;
-                        if (item.priority === 'CRITICAL') cardBadgeColor = 'var(--danger-color)';
-                        if (item.priority === 'HIGH') cardBadgeColor = '#ea580c';
-                        if (item.priority === 'MEDIUM') cardBadgeColor = 'var(--primary-color)';
+                        const rawP = (item.priority || '').toUpperCase();
+                        if (rawP === 'CRITICAL' || rawP === 'KHẨN CẤP') {
+                          cardBadgeText = 'KHẨN CẤP';
+                          cardBadgeColor = '#f43f5e';
+                          priorityClass = 'priority-critical';
+                        } else if (rawP === 'HIGH' || rawP === 'CAO') {
+                          cardBadgeText = 'CAO';
+                          cardBadgeColor = '#fb923c';
+                          priorityClass = 'priority-high';
+                        } else if (rawP === 'MEDIUM' || rawP === 'TRUNG BÌNH') {
+                          cardBadgeText = 'TRUNG BÌNH';
+                          cardBadgeColor = '#38bdf8';
+                          priorityClass = 'priority-medium';
+                        } else {
+                          cardBadgeText = 'THẤP';
+                          cardBadgeColor = '#10b981';
+                          priorityClass = 'priority-low';
+                        }
                       } else if (activeDetailPopup === 'tasks') {
                         isActive = item.id === selectedTaskIdForPopup;
                         cardTitle = item.title;
-                        cardSubtext = item.status;
-                        cardBadgeText = item.priority.toUpperCase();
-                        cardBadgeColor = item.priority === 'Khẩn cấp' || item.priority === 'Cao' ? 'var(--danger-color)' : 'var(--warning-color)';
+                        const taskProj = projects.find(p => p.id === item.project_id);
+                        cardSubtext = taskProj ? taskProj.name : item.status;
+                        const rawP = (item.priority || '').toUpperCase();
+                        if (rawP === 'KHẨN CẤP' || rawP === 'CRITICAL') {
+                          cardBadgeText = 'KHẨN CẤP';
+                          cardBadgeColor = '#f43f5e';
+                          priorityClass = 'priority-critical';
+                        } else if (rawP === 'CAO' || rawP === 'HIGH') {
+                          cardBadgeText = 'CAO';
+                          cardBadgeColor = '#fb923c';
+                          priorityClass = 'priority-high';
+                        } else if (rawP === 'TRUNG BÌNH' || rawP === 'MEDIUM') {
+                          cardBadgeText = 'TRUNG BÌNH';
+                          cardBadgeColor = '#38bdf8';
+                          priorityClass = 'priority-medium';
+                        } else {
+                          cardBadgeText = 'THẤP';
+                          cardBadgeColor = '#10b981';
+                          priorityClass = 'priority-low';
+                        }
                       } else if (activeDetailPopup === 'projects') {
                         isActive = item.id === selectedProjectIdForPopup;
                         cardTitle = item.name;
                         cardSubtext = item.project_key;
-                        cardBadgeText = (item.status === 'Thực thi' || item.status === 'Ongoing') ? 'Ongoing' : (item.status === 'Giám sát' || item.status === 'Monitoring') ? 'Monitoring' : (item.status === 'Kết thúc' || item.status === 'Finished') ? 'Finished' : (item.status || 'Ongoing');
-                        cardBadgeColor = 'var(--primary-color)';
+                        cardBadgeText = (item.status === 'Thực thi' || item.status === 'Ongoing') ? 'ONGOING' : (item.status === 'Giám sát' || item.status === 'Monitoring') ? 'MONITORING' : (item.status === 'Kết thúc' || item.status === 'Finished') ? 'FINISHED' : (item.status ? item.status.toUpperCase() : 'ONGOING');
+                        cardBadgeColor = '#818cf8';
                       } else if (activeDetailPopup === 'reports') {
                         isActive = item.id === selectedReportForPopup?.id;
                         cardTitle = item.user_name;
                         cardSubtext = new Date(item.created_at).toLocaleDateString('vi-VN');
                         cardBadgeText = item.status === 'Approved' ? 'APPROVED' : item.status === 'Rejected' ? 'REJECTED' : 'PENDING';
-                        cardBadgeColor = item.status === 'Approved' ? 'var(--success-color)' : item.status === 'Rejected' ? 'var(--danger-color)' : 'var(--warning-color)';
+                        cardBadgeColor = item.status === 'Approved' ? '#10b981' : item.status === 'Rejected' ? '#f43f5e' : '#f59e0b';
                       }
 
                       return (
                         <React.Fragment key={item.id}>
                           <div
-                            className={`split-card-item ${isActive && !isCheckingStatusMode ? 'active' : ''}`}
+                            className={`split-card-item ${priorityClass} ${isActive && !isCheckingStatusMode ? 'active' : ''}`}
                             style={{
                               opacity: (activeDetailPopup === 'reports' && isCheckingStatusMode) ? 0.6 : 1,
                               cursor: (activeDetailPopup === 'reports' && isCheckingStatusMode) ? 'not-allowed' : 'pointer'
@@ -2555,15 +2743,42 @@ export default function Dashboard() {
                               setMobileDetailOpen(true);
                             }}
                           >
-                            <div className={`split-card-item-row ${activeDetailPopup === 'reports' ? 'report-card-item-row' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                              <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--neutral-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                            <div className={`split-card-item-row ${activeDetailPopup === 'reports' ? 'report-card-item-row' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--neutral-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                                 {cardTitle}
                               </span>
-                              <span style={{ fontSize: '9.5px', color: cardBadgeColor, fontWeight: 'bold' }}>
-                                {cardBadgeText}
-                              </span>
+                              {priorityClass ? (
+                                <span className={`dashboard-priority-tag ${priorityClass}`} style={{ flexShrink: 0 }}>
+                                  {cardBadgeText}
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontSize: '9.5px',
+                                    color: cardBadgeColor,
+                                    fontWeight: '800',
+                                    border: `1px solid ${cardBadgeColor}55`,
+                                    background: `${cardBadgeColor}15`,
+                                    width: '82px',
+                                    minWidth: '82px',
+                                    maxWidth: '82px',
+                                    height: '20px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    textAlign: 'center',
+                                    borderRadius: '0px',
+                                    whiteSpace: 'nowrap',
+                                    letterSpacing: '0.04em',
+                                    boxSizing: 'border-box',
+                                    flexShrink: 0
+                                  }}
+                                >
+                                  {cardBadgeText}
+                                </span>
+                              )}
                             </div>
-                            <div style={{ fontSize: '10px', color: 'var(--neutral-muted)' }}>
+                            <div style={{ fontSize: '10px', color: 'var(--neutral-muted)', fontFamily: 'monospace' }}>
                               {cardSubtext}
                             </div>
                           </div>

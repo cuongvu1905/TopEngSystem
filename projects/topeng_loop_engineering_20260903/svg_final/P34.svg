@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14" />
+      <stop offset="50%" stop-color="#0B1120" />
+      <stop offset="100%" stop-color="#0D1527" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)" />
+
+  
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="240" height="26" rx="13" fill="#1E293B" stroke="#10B981" stroke-width="1" />
+    <text x="176" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981" text-anchor="middle">PHẦN III: AI CHAT TOPVSYSTEM</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">LỘ TRÌNH 4 TRỤ CỘT NÂNG CẤP (2026 - 2027)</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Kế hoạch mở rộng năng lực AI toàn diện từ văn phòng thiết kế đến hiện trường thi công</text>
+  </g>
+
+  
+  <g id="pillars-grid" data-pptx-bounds="56 160 1168 450">
+    
+    <rect x="56" y="160" width="272" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="72" y="176" width="100" height="24" rx="6" fill="#075985" />
+    <text x="122" y="193" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#38BDF8" text-anchor="middle">QUÝ 3/2026</text>
+    <text x="72" y="225" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Trụ Cột 1</text>
+    <text x="72" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#38BDF8">RAG CAD / BIM / PDF</text>
+
+    <line x1="72" y1="265" x2="312" y2="265" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="72" y="295">
+      <tspan fill="#F1F5F9" font-weight="600">• Đọc hiểu bản vẽ CAD:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="72" y="313"><tspan>Vector RAG trích xuất thông số kỹ thuật trực tiếp từ file DWG, DXF.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="72" y="337"><tspan fill="#F1F5F9" font-weight="600">• Tra cứu mô hình BIM:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="72" y="355"><tspan>Hỏi đáp về va chạm đường ống, thông số cáp điện và vật tư thiết bị.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="72" y="379"><tspan fill="#F1F5F9" font-weight="600">• Tiêu chuẩn TCVN / QCVN:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="72" y="397"><tspan>Tra cứu quy chuẩn xây dựng và PCCC tức thời trong chat.</tspan>
+    </text><rect x="354" y="160" width="272" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="370" y="176" width="100" height="24" rx="6" fill="#064E3B" />
+    <text x="420" y="193" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#34D399" text-anchor="middle">QUÝ 4/2026</text>
+    <text x="370" y="225" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Trụ Cột 2</text>
+    <text x="370" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#10B981">Multi-Agent Giám Sát</text>
+
+    <line x1="370" y1="265" x2="610" y2="265" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="370" y="295">
+      <tspan fill="#F1F5F9" font-weight="600">• Bầy đàn tác tử hiện trường:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="370" y="313"><tspan>Phân công mạng lưới sub-agent theo dõi các mũi thi công.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="370" y="337"><tspan fill="#F1F5F9" font-weight="600">• Nhận diện thị giác PPE:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="370" y="355"><tspan>Phân tích camera công trường, cảnh báo vi phạm an toàn lao động.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="370" y="379"><tspan fill="#F1F5F9" font-weight="600">• Cảnh báo rủi ro sớm:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="370" y="397"><tspan>Tự phát hiện chậm tiến độ và thời tiết cực đoan để điều chỉnh kế hoạch.</tspan>
+    </text><rect x="652" y="160" width="272" height="440" rx="16" fill="url(#cardGrad)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="668" y="176" width="100" height="24" rx="6" fill="#3730A3" />
+    <text x="718" y="193" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#A5B4FC" text-anchor="middle">QUÝ 1/2027</text>
+    <text x="668" y="225" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Trụ Cột 3</text>
+    <text x="668" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#818CF8">Voice AI Công Trường</text>
+
+    <line x1="668" y1="265" x2="908" y2="265" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="668" y="295">
+      <tspan fill="#F1F5F9" font-weight="600">• Hands-free Voice AI:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="668" y="313"><tspan>Chỉ huy trưởng nói qua bộ đàm, AI tự nhận diện và ghi chép nhật ký.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="668" y="337"><tspan fill="#F1F5F9" font-weight="600">• Lọc nhiễu tiếng ồn thông minh:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="668" y="355"><tspan>Xử lý giọng nói chính xác ngay trong môi trường công trường ồn ào.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="668" y="379"><tspan fill="#F1F5F9" font-weight="600">• Phiên dịch tức thời:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="668" y="397"><tspan>Dịch song ngữ giọng nói trực tiếp giữa kỹ sư Việt và chuyên gia Hàn/Trung.</tspan>
+    </text><rect x="952" y="160" width="272" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4" />
+    <rect x="968" y="176" width="100" height="24" rx="6" fill="#78350F" />
+    <text x="1018" y="193" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#FBBF24" text-anchor="middle">QUÝ 2/2027</text>
+    <text x="968" y="225" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Trụ Cột 4</text>
+    <text x="968" y="248" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#F59E0B">Trí Tuệ Sâu ERP/MES</text>
+
+    <line x1="968" y1="265" x2="1208" y2="265" stroke="#334155" stroke-width="1" />
+
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="295">
+      <tspan fill="#F1F5F9" font-weight="600">• Tích hợp dữ liệu ERP:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="313"><tspan>Kết nối tài chính, kho bãi</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="331"><tspan>và sản xuất gia công xưởng.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="353"><tspan fill="#F1F5F9" font-weight="600">• Dự báo vật tư thông minh:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="371"><tspan>Dự báo nhu cầu tồn kho,</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="389"><tspan>đặt hàng tránh gián đoạn.</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="411"><tspan fill="#F1F5F9" font-weight="600">• Tối ưu hóa dòng tiền:</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="429"><tspan>Dự báo chi phí thi công</tspan>
+      </text><text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8" x="968" y="447"><tspan>so với ngân sách ban đầu.</tspan>
+    </text></g>
+
+  
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1" />
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần III: AI Chat TOPVSystem | 3.7 Lộ trình 4 trụ cột 2026 - 2027</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 34 / 35</text>
+  </g>
+</svg>

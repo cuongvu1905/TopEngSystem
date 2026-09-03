@@ -13,7 +13,7 @@ import { getSwal } from '@/utils/swal';
 const UNASSIGNED_CUSTOMER = '__UNASSIGNED__';
 
 export default function Projects() {
-  const { currentUser, projects, tasks, projectMembers, users, reloadAll, hasPermission } = useApp();
+  const { currentUser, projects, tasks, projectMembers, users, reloadAll, hasPermission, setHeaderActions } = useApp();
   const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
@@ -38,10 +38,13 @@ export default function Projects() {
   }, {});
 
   const getProjectYear = (p) => {
-    if (p.start_date && p.start_date.includes('-')) {
+    if (p.start_date && typeof p.start_date === 'string' && p.start_date.includes('-')) {
       return p.start_date.split('-')[0];
     }
-    return '';
+    if (p.created_at) {
+      return new Date(p.created_at).getFullYear().toString();
+    }
+    return '2026';
   };
 
   const toggleYearExpanded = (year) => {
@@ -279,10 +282,12 @@ export default function Projects() {
     );
   }
 
+  const [isMobileTreeOpen, setIsMobileTreeOpen] = useState(false);
+
   // Filter projects by permission
   const visibleProjects = projects.filter(p => {
     if (hasPermission('view_all_projects')) return true;
-    return projectMembers.some(m => m.project_id === p.id && m.user_id === currentUser.id);
+    return projectMembers.some(m => m.project_id === p.id && (m.user_id === currentUser.id || m.userId === currentUser.id));
   });
 
   // Group visible projects by creation year, then by customer code within each year,
@@ -322,90 +327,105 @@ export default function Projects() {
     })
     .sort((a, b) => (b.db_id || 0) - (a.db_id || 0));
 
+  useEffect(() => {
+    setHeaderActions(
+      <div className="projects-header-actions desktop-header-actions" style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <button
+          className="btn btn-secondary btn-sm" 
+          onClick={handleJoinProjectClick}
+          style={{ padding: '6px 10px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+        >
+          <i className="fa-solid fa-right-to-bracket"></i> <span>{t('projects.joinProject', 'Tham gia dự án')}</span>
+        </button>
+        <button 
+          className="btn btn-secondary btn-sm" 
+          onClick={() => setIsCustomerModalOpen(true)}
+          style={{ padding: '6px 10px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+        >
+          <i className="fa-solid fa-user-tie"></i> <span>{t('projects.manageCustomers', 'Khách hàng')}</span>
+        </button>
+        {isAdmin && (
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setIsFolderTemplateModalOpen(true)}
+            style={{ padding: '6px 10px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+          >
+            <i className="fa-solid fa-folder-tree"></i> <span>{t('projects.designFolderTemplate', 'Cây thư mục')}</span>
+          </button>
+        )}
+        {showCreateBtn && (
+          <button className="btn btn-primary btn-sm" onClick={() => setIsModalOpen(true)} style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+            <i className="fa-solid fa-plus"></i> <span>{t('projects.createProject', 'Tạo Dự Án')}</span>
+          </button>
+        )}
+      </div>
+    );
+    return () => setHeaderActions(null);
+  }, [isAdmin, showCreateBtn, t]);
+
   return (
     <div className="scrollable-view">
-      <div className="view-header">
-        <div className="view-title-group">
-          <h2>{t('projects.title', 'Danh sách Dự án')}</h2>
-          <p>{t('projects.subtitle', 'Quản lý quy trình và theo dõi tiến độ của tất cả các dự án trong doanh nghiệp.')}</p>
-        </div>
-        <div className="view-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      {/* Mobile-Only Action Buttons Bar (Sits neatly at top of page on mobile, leaves Header clean) */}
+      <div className="mobile-projects-action-bar">
+        {showCreateBtn && (
+          <button 
+            type="button"
+            className="btn btn-primary mobile-btn-create" 
+            onClick={() => setIsModalOpen(true)}
+          >
+            <i className="fa-solid fa-plus"></i>
+            <span>{t('projects.createProject', 'Tạo Dự Án')}</span>
+          </button>
+        )}
+        <div className="mobile-secondary-actions-row">
           <button
+            type="button"
             className="btn btn-secondary" 
             onClick={handleJoinProjectClick}
-            style={{ 
-              backgroundColor: 'var(--neutral-bg-card)', 
-              color: 'var(--neutral-dark)', 
-              border: '1px solid var(--neutral-border)',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              fontSize: '13px',
-              fontWeight: '600',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer'
-            }}
           >
-            <i className="fa-solid fa-right-to-bracket"></i> {t('projects.joinProject', 'Tham gia dự án')}
+            <i className="fa-solid fa-right-to-bracket"></i>
+            <span>{t('projects.joinProject', 'Tham gia')}</span>
           </button>
           <button 
+            type="button"
             className="btn btn-secondary" 
             onClick={() => setIsCustomerModalOpen(true)}
-            style={{ 
-              backgroundColor: 'var(--neutral-bg-card)', 
-              color: 'var(--neutral-dark)', 
-              border: '1px solid var(--neutral-border)',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              fontSize: '13px',
-              fontWeight: '600',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer'
-            }}
           >
-            <i className="fa-solid fa-user-tie"></i> {t('projects.manageCustomers', 'Quản lý khách hàng')}
+            <i className="fa-solid fa-user-tie"></i>
+            <span>{t('projects.manageCustomers', 'Khách hàng')}</span>
           </button>
           {isAdmin && (
             <button
+              type="button"
               className="btn btn-secondary"
               onClick={() => setIsFolderTemplateModalOpen(true)}
-              style={{
-                backgroundColor: 'var(--neutral-bg-card)',
-                color: 'var(--neutral-dark)',
-                border: '1px solid var(--neutral-border)',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: '600',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer'
-              }}
             >
-              <i className="fa-solid fa-folder-tree"></i> {t('projects.designFolderTemplate', 'Thiết kế cây thư mục')}
-            </button>
-          )}
-          {showCreateBtn && (
-            <button className="btn btn-primary" onClick={() => setIsModalOpen(true)} style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600' }}>
-              <i className="fa-solid fa-plus"></i> {t('projects.createProject', 'Tạo Dự Án')}
+              <i className="fa-solid fa-folder-tree"></i>
+              <span>{t('projects.designFolderTemplate', 'Cây thư mục')}</span>
             </button>
           )}
         </div>
       </div>
 
-      <div className="doc-layout" style={{ gridTemplateColumns: '240px 1fr', alignItems: 'start' }}>
-        <div className="doc-folder-tree-panel" style={{ maxHeight: 'none' }}>
+      <button 
+        type="button" 
+        className="doc-folder-toggle-btn mobile-only-toggle" 
+        onClick={() => setIsMobileTreeOpen(prev => !prev)}
+      >
+        <i className="fa-solid fa-filter"></i>
+        <span>{selectedYear ? `${selectedYear} ${selectedCustomerCode ? `• [${selectedCustomerCode}]` : ''}` : t('projects.treeAllProjects', 'Tất cả dự án')}</span>
+        <i className={`fa-solid ${isMobileTreeOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`} style={{ marginLeft: 'auto' }}></i>
+      </button>
+
+      <div className="doc-layout projects-doc-layout" style={{ alignItems: 'start' }}>
+        <div className={`doc-folder-tree-panel ${isMobileTreeOpen ? 'show' : ''}`} style={{ maxHeight: 'none' }}>
           <div className="doc-folder-tree-header">
             <span>{t('projects.byYearAndCustomer', 'Theo năm / khách hàng')}</span>
           </div>
           <div className="doc-folder-tree-scroll">
             <div
               className={`doc-folder-node ${!selectedYear ? 'active' : ''}`}
-              onClick={() => { setSelectedYear(null); setSelectedCustomerCode(null); }}
+              onClick={() => { setSelectedYear(null); setSelectedCustomerCode(null); setIsMobileTreeOpen(false); }}
             >
               <div className="doc-folder-node-left">
                 <span className="doc-folder-node-spacer" />
@@ -428,6 +448,7 @@ export default function Projects() {
                       onClick={() => {
                         setSelectedYear(year);
                         setSelectedCustomerCode(null);
+                        setIsMobileTreeOpen(false);
                         if (!isExpanded) toggleYearExpanded(year);
                       }}
                     >
@@ -452,7 +473,7 @@ export default function Projects() {
                             <div
                               key={code}
                               className={`doc-folder-node ${isSelected ? 'active' : ''}`}
-                              onClick={() => { setSelectedYear(year); setSelectedCustomerCode(code); }}
+                              onClick={() => { setSelectedYear(year); setSelectedCustomerCode(code); setIsMobileTreeOpen(false); }}
                             >
                               <div className="doc-folder-node-left">
                                 <span className="doc-folder-node-spacer" />
@@ -472,11 +493,8 @@ export default function Projects() {
           </div>
         </div>
 
-        <div className="doc-main-panel">
-          <div style={{ fontSize: '12.5px', color: 'var(--neutral-muted)', fontWeight: 600 }}>
-            {t('projects.projectCount', '{count} dự án').replace('{count}', filteredByYearProjects.length)}
-          </div>
-          <div className="project-list-grid">
+        <div className="doc-main-panel" style={{ gap: 0 }}>
+          <div className="project-list-grid" style={{ marginTop: 0 }}>
         {filteredByYearProjects.length === 0 ? (
           <div className="card" style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--neutral-muted)', fontSize: '14px' }}>
             {t('projects.noProjectsFound', 'Không tìm thấy dự án nào trong năm đã chọn.')}

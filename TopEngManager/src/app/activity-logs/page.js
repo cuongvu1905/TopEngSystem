@@ -470,13 +470,6 @@ export default function ActivityLogs() {
 
   return (
     <div className="scrollable-view">
-      <div className="view-header">
-        <div className="view-title-group">
-          <h2>{t('logs.title', 'Nhật ký Hoạt động')}</h2>
-          <p>{t('logs.subtitle', 'Ghi nhận mọi thay đổi, phục vụ mục đích kiểm soát bảo mật và tính toán tiến độ làm việc.')}</p>
-        </div>
-      </div>
-
       <div className="doc-filters" style={{ marginBottom: '20px' }}>
         <div className="log-filters-bar" style={{ width: '100%' }}>
           <div className="log-filter-item">

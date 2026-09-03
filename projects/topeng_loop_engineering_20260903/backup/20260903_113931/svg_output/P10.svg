@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="260" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="186" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: KHÁI NIỆM &amp; NGUYÊN LÝ</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">LOOP ENGINEERING LÀ GÌ? ĐỊNH NGHĨA KỸ NGHỆ</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Hai góc nhìn bổ trợ: Từ nền tảng lý thuyết điều khiển học đến thực tiễn kỹ thuật phần mềm</text>
+  </g>
+
+  <!-- 2 Big Columns: Academic vs Practical -->
+  <g id="definitions-grid" data-pptx-bounds="56 160 1168 450">
+    <!-- Left Column: Academic Definition -->
+    <rect x="56" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="180" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1"/>
+    <text x="166" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">ĐỊNH NGHĨA HỌC THUẬT</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Closed-Loop Cybernetics</text>
+
+    <line x1="76" y1="260" x2="604" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#38BDF8" font-weight="600">Bản chất điều khiển học (Cybernetics):</tspan>
+      <tspan x="76" dy="24">Là phân nhánh kỹ nghệ phần mềm nghiên cứu việc tích hợp</tspan>
+      <tspan x="76" dy="22">mô hình AI vào các vòng lặp phản hồi đóng (Closed-Loop),</tspan>
+      <tspan x="76" dy="22">nơi tác tử tự quan sát trạng thái môi trường (State Perception),</tspan>
+      <tspan x="76" dy="22">ra quyết định hành động (Action) và nhận phản hồi thực tế</tspan>
+      <tspan x="76" dy="22">để tự hoàn thành mục tiêu mà không cần con người can thiệp.</tspan>
+    </text>
+
+    <rect x="76" y="440" width="528" height="135" rx="10" fill="#0B1120" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.3"/>
+    <text x="96" y="468" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8">Bước tiến hóa Software 3.0:</text>
+    <text x="96" y="495" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="96" dy="0">• Software 1.0: Con người gõ từng dòng lệnh logic (Rules).</tspan>
+      <tspan x="96" dy="22">• Software 2.0: Huấn luyện trọng số mạng nơ-ron (Neural Nets).</tspan>
+      <tspan x="96" dy="22">• Software 3.0 / Loop: Agent tự vận hành và sửa mã qua vòng lặp.</tspan>
+    </text>
+
+    <!-- Right Column: Practical Engineering -->
+    <rect x="656" y="160" width="568" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="676" y="180" width="180" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="766" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">KHÁI NIỆM THỰC TIỄN</text>
+    <text x="676" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#F1F5F9">Kỹ Nghệ Trong Thực Tế</text>
+
+    <line x1="676" y1="260" x2="1204" y2="260" stroke="#334155" stroke-width="1"/>
+
+    <text x="676" y="295" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="676" dy="0" fill="#10B981" font-weight="600">Loop Engineering diễn ra như thế nào?</tspan>
+      <tspan x="676" dy="24">• Được cấp công cụ thật: Truy cập Shell, File system, Linter, Git.</tspan>
+      <tspan x="676" dy="24">• Nhận Goal thay vì Prompt đơn lẻ:</tspan>
+      <tspan x="696" dy="20">"Sửa bug #104 và đảm bảo pass 100% tests" thay vì chỉ hỏi code.</tspan>
+      <tspan x="676" dy="26">• Vòng lặp dừng khi đạt tiêu chuẩn nghiệm thu:</tspan>
+      <tspan x="696" dy="20">Chỉ bàn giao khi lệnh kiểm thử thực tế trả về Exit Code = 0.</tspan>
+    </text>
+
+    <rect x="676" y="440" width="528" height="135" rx="10" fill="#0B1120" stroke="#10B981" stroke-width="1" stroke-opacity="0.3"/>
+    <text x="696" y="468" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#10B981">Giá trị sống còn đối với kỹ sư:</text>
+    <text x="696" y="495" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="#94A3B8">
+      <tspan x="696" dy="0">• Xóa bỏ hoàn toàn gánh nặng copy-paste log lỗi thủ công.</tspan>
+      <tspan x="696" dy="22">• Đảm bảo mã nguồn trước khi merge đã được máy tính kiểm chứng.</tspan>
+      <tspan x="696" dy="22">• Kỹ sư chuyển vai trò từ "Thợ gõ code" sang "Kiến trúc sư hệ thống".</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.6 Định nghĩa kỹ nghệ</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 10 / 35</text>
+  </g>
+</svg>

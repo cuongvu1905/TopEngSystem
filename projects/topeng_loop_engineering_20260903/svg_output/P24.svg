@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="230" height="26" rx="13" fill="#1E293B" stroke="#818CF8" stroke-width="1"/>
+    <text x="171" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8" text-anchor="middle">PHẦN II: CÁC MÔ HÌNH AI AGENT</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">SO SÁNH: TƯ DUY LOGIC &amp; PHÂN RÃ BÀI TOÁN LỚN</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Cách mỗi hệ sinh thái AI tiếp cận và xử lý những thách thức kỹ thuật có độ phức tạp cao</text>
+  </g>
+
+  <!-- 3 Comparison Columns -->
+  <g id="logic-panels" data-pptx-bounds="56 160 1168 450">
+    <!-- Panel 1: OpenAI -->
+    <rect x="56" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#10B981" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="76" y="180" width="140" height="28" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+    <text x="146" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#34D399" text-anchor="middle">OPENAI ECOSYSTEM</text>
+    <text x="76" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Tiếp Cận Trực Tiếp</text>
+    <text x="76" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#10B981">Phản ứng nhanh &amp; Gọi Tool linh hoạt</text>
+
+    <line x1="76" y1="285" x2="396" y2="285" stroke="#334155" stroke-width="1"/>
+
+    <text x="76" y="320" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0" fill="#34D399" font-weight="600">• Phong cách tư duy:</tspan>
+      <tspan x="96" dy="20">Trả lời tức thì, thiên về phản xạ nhanh.</tspan>
+      <tspan x="76" dy="26" fill="#34D399" font-weight="600">• Điểm mạnh bài toán:</tspan>
+      <tspan x="96" dy="20">Rất mạnh ở các bài toán API, chuyển đổi JSON,</tspan>
+      <tspan x="96" dy="20">giao tiếp web và tự động hóa tác vụ SaaS.</tspan>
+      <tspan x="76" dy="26" fill="#FCA5A5" font-weight="600">• Giới hạn tư duy:</tspan>
+      <tspan x="96" dy="20">Dễ gặp bế tắc nếu bài toán đòi hỏi hơn 10 bước</tspan>
+      <tspan x="96" dy="20">suy luận logic trừu tượng liên tục.</tspan>
+    </text>
+
+    <!-- Panel 2: Anthropic Claude -->
+    <rect x="457" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#F59E0B" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="477" y="180" width="160" height="28" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1"/>
+    <text x="557" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#FBBF24" text-anchor="middle">ANTHROPIC CLAUDE</text>
+    <text x="477" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Tư Duy Chuỗi Ý Nghĩ</text>
+    <text x="477" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#F59E0B">Extended Thinking &amp; Tự Phản Biện</text>
+
+    <line x1="477" y1="285" x2="797" y2="285" stroke="#334155" stroke-width="1"/>
+
+    <text x="477" y="320" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="477" dy="0" fill="#FBBF24" font-weight="600">• Phong cách tư duy:</tspan>
+      <tspan x="497" dy="20">Suy nghĩ thấu đáo hàng phút trước khi viết code.</tspan>
+      <tspan x="477" dy="26" fill="#FBBF24" font-weight="600">• Điểm mạnh bài toán:</tspan>
+      <tspan x="497" dy="20">Giải quyết các bài toán thuật toán khó, phát hiện</tspan>
+      <tspan x="497" dy="20">lỗi race condition, rò rỉ bộ nhớ cực kỳ sâu sắc.</tspan>
+      <tspan x="477" dy="26" fill="#FCA5A5" font-weight="600">• Giới hạn tư duy:</tspan>
+      <tspan x="497" dy="20">Đơn tác tử nên khó phân rã các dự án cần chạy</tspan>
+      <tspan x="497" dy="20">hàng chục luồng rà soát song song.</tspan>
+    </text>
+
+    <!-- Panel 3: Google DeepMind Antigravity -->
+    <rect x="859" y="160" width="365" height="440" rx="16" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.4"/>
+    <rect x="879" y="180" width="160" height="28" rx="6" fill="#075985" stroke="#38BDF8" stroke-width="1"/>
+    <text x="959" y="199" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#7DD3FC" text-anchor="middle">DEEPMIND ANTIGRAVITY</text>
+    <text x="879" y="235" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="bold" fill="#F1F5F9">Phân Rã Đa Tác Tử</text>
+    <text x="879" y="260" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600" fill="#38BDF8">Hierarchical Multi-Agent Swarm</text>
+
+    <line x1="879" y1="285" x2="1199" y2="285" stroke="#334155" stroke-width="1"/>
+
+    <text x="879" y="320" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="879" dy="0" fill="#38BDF8" font-weight="600">• Phong cách tư duy:</tspan>
+      <tspan x="899" dy="20">Lập kế hoạch vĩ mô → Chia nhỏ nhiệm vụ cho bầy đàn.</tspan>
+      <tspan x="879" dy="26" fill="#38BDF8" font-weight="600">• Điểm mạnh bài toán:</tspan>
+      <tspan x="899" dy="20">Khả năng xử lý các dự án doanh nghiệp lớn,</tspan>
+      <tspan x="899" dy="20">điều phối song song nhiều sub-agents không nghẽn.</tspan>
+      <tspan x="879" dy="26" fill="#38BDF8" font-weight="600">• Điểm độc đáo:</tspan>
+      <tspan x="899" dy="20">Duy trì ngữ cảnh bền vững qua Artifacts khóa chặt.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần II: Các mô hình AI Agent | 2.9 So sánh năng lực tư duy logic</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 24 / 35</text>
+  </g>
+</svg>

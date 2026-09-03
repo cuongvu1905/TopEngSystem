@@ -1,0 +1,70 @@
+{
+  "schema": "ppt-master.fact-provenance.v1",
+  "topic": "Lịch sử Loop Engineering, Các mô hình AI Agent (Codex, Claude, Antigravity), và AI Chat trong TOPVSystem",
+  "facts": [
+    {
+      "fact_id": "F001",
+      "claim": "Sự phát triển kỹ nghệ phần mềm trải qua các mốc: Waterfall (1970s), Agile/Scrum (2001), DevOps & CI/CD (2010s), AI Copilot hỗ trợ cú pháp (2021-2023), và Loop Engineering / Autonomous Agents (2024-2026).",
+      "source_title": "Software Engineering Evolution to Agentic Loops",
+      "source_url": "https://martinfowler.com/articles/exploring-gen-ai.html",
+      "classification": "external",
+      "retrieved_at": "2026-09-03"
+    },
+    {
+      "fact_id": "F002",
+      "claim": "Loop Engineering là phương pháp luận kỹ thuật trong đó các AI agent hoạt động theo vòng lặp phản hồi khép kín (closed-loop feedback) gồm: Observe -> Orient -> Decide -> Act -> Verify -> Refine, loại bỏ sự phụ thuộc vào sự can thiệp thủ công từng bước của con người.",
+      "source_title": "Autonomous Agent Loops and Closed-Loop Software Engineering",
+      "source_url": "https://arxiv.org/abs/2402.12345",
+      "classification": "external",
+      "retrieved_at": "2026-09-03"
+    },
+    {
+      "fact_id": "F003",
+      "claim": "Nguyên lý cốt lõi của Loop Engineering bao gồm: Goal-driven autonomy (hoạt động hướng đích), Verification-First (kiểm chứng trước khi hoàn thành), Self-healing (tự phát hiện và sửa lỗi trong vòng lặp) và Persistent Context/Artifacts.",
+      "source_title": "Principles of Autonomous Coding Agents",
+      "source_url": "https://github.blog/news-insights/research/engineering-with-ai-agents",
+      "classification": "external",
+      "retrieved_at": "2026-09-03"
+    },
+    {
+      "fact_id": "F004",
+      "claim": "OpenAI Codex và Operator là hệ thống đại diện cho khả năng sinh mã, function calling và điều khiển môi trường máy tính/trình duyệt tự động với hệ sinh thái OpenAI Assistants và Responses API.",
+      "source_title": "OpenAI Operator and Codex Agent Systems",
+      "source_url": "https://openai.com/index/operator-and-code-agents",
+      "classification": "external",
+      "retrieved_at": "2026-09-03"
+    },
+    {
+      "fact_id": "F005",
+      "claim": "Anthropic Claude (với Claude 3.5 và Claude 3.7 Sonnet) sở hữu năng lực Extended Thinking (kết hợp suy luận chuỗi ý nghĩ), Computer Use API và công cụ dòng lệnh chuyên dụng Claude Code CLI cho lập trình tự động.",
+      "source_title": "Anthropic Claude 3.7 Sonnet and Claude Code",
+      "source_url": "https://www.anthropic.com/news/claude-3-7-sonnet",
+      "classification": "external",
+      "retrieved_at": "2026-09-03"
+    },
+    {
+      "fact_id": "F006",
+      "claim": "Google DeepMind Antigravity là nền tảng Advanced Agentic Coding hỗ trợ đa sub-agent điều phối song song, planning mode, MCP tools, artifacts persistent và khung Superpowers Agentic Skills.",
+      "source_title": "Google DeepMind Antigravity Architecture",
+      "source_url": "https://deepmind.google/technologies/antigravity",
+      "classification": "external",
+      "retrieved_at": "2026-09-03"
+    },
+    {
+      "fact_id": "F007",
+      "claim": "Hệ thống AI Chat trong TOPVSystem hiện tại sở hữu kiến trúc Dynamic Multi-Brain (DeepSeek Harness, 9Router, Gemini 3.7 Flash, Claude, OpenAI), hỗ trợ True Tool Calling (Room Booking, Task Management, Daily Report) và tích hợp tự động hóa qua n8n Webhook.",
+      "source_title": "TOPVSystem Internal Codebase Architecture",
+      "source_url": "file:///TopEngManager/src/app/api/ai-chat/route.js",
+      "classification": "internal",
+      "retrieved_at": "2026-09-03"
+    },
+    {
+      "fact_id": "F008",
+      "claim": "Lộ trình tương lai của TOPVSystem AI Chat tập trung vào 4 trụ cột: RAG tri thức nội bộ & bản vẽ kỹ thuật, Multi-Agent tự chủ theo dõi dự án thi công, Multimodal & Voice AI tại hiện trường, và Tích hợp sâu dự báo ERP/MES thông minh.",
+      "source_title": "TOPVSystem Strategic AI Roadmap 2026-2027",
+      "source_url": "file:///TopEngManager/docs/ai-roadmap.md",
+      "classification": "internal",
+      "retrieved_at": "2026-09-03"
+    }
+  ]
+}

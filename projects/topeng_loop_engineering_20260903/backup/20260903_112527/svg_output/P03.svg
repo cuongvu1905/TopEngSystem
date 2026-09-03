@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" data-pptx-page-role="content">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B14"/>
+      <stop offset="50%" stop-color="#0B1120"/>
+      <stop offset="100%" stop-color="#0D1527"/>
+    </linearGradient>
+    <linearGradient id="stepGradActive" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bgGrad)"/>
+
+  <!-- Page Header -->
+  <g id="header-group" data-pptx-bounds="56 40 1168 100">
+    <rect x="56" y="40" width="220" height="26" rx="13" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="166" y="58" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="middle">PHẦN I: LOOP ENGINEERING</text>
+    <text x="56" y="102" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="bold" fill="#F1F5F9">TIẾN TRÌNH TIẾN HÓA KỸ NGHỆ PHẦN MỀM</text>
+    <text x="56" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="#94A3B8">Hành trình 5 thập kỷ: Từ quy trình thủ công tuần tự đến kỷ nguyên AI vận hành vòng lặp tự chủ</text>
+  </g>
+
+  <!-- 5 Timeline Steps Flow -->
+  <g id="timeline-group" data-pptx-bounds="56 160 1168 330">
+    <!-- Horizontal connecting line -->
+    <line x1="120" y1="200" x2="1160" y2="200" stroke="#334155" stroke-width="3"/>
+    <line x1="910" y1="200" x2="1160" y2="200" stroke="#38BDF8" stroke-width="4"/>
+
+    <!-- Step 1: Waterfall -->
+    <circle cx="120" cy="200" r="18" fill="#1E293B" stroke="#64748B" stroke-width="2"/>
+    <text x="120" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#94A3B8" text-anchor="middle">1</text>
+    <rect x="56" y="240" width="215" height="230" rx="12" fill="url(#stepGradActive)" stroke="#334155" stroke-width="1"/>
+    <rect x="72" y="256" width="70" height="22" rx="4" fill="#0B1120"/>
+    <text x="107" y="271" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B" text-anchor="middle">1970s-1990s</text>
+    <text x="72" y="302" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Waterfall</text>
+    <text x="72" y="328" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="72" dy="0">• Phát triển tuyến tính</tspan>
+      <tspan x="72" dy="22">• Tài liệu cồng kềnh</tspan>
+      <tspan x="72" dy="22">• Chu kỳ tính theo năm</tspan>
+      <tspan x="72" dy="22">• Rủi ro bàn giao cực lớn</tspan>
+    </text>
+
+    <!-- Step 2: Agile & Scrum -->
+    <circle cx="370" cy="200" r="18" fill="#1E293B" stroke="#64748B" stroke-width="2"/>
+    <text x="370" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#94A3B8" text-anchor="middle">2</text>
+    <rect x="295" y="240" width="215" height="230" rx="12" fill="url(#stepGradActive)" stroke="#334155" stroke-width="1"/>
+    <rect x="311" y="256" width="70" height="22" rx="4" fill="#0B1120"/>
+    <text x="346" y="271" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B" text-anchor="middle">2001-2010s</text>
+    <text x="311" y="302" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">Agile &amp; Scrum</text>
+    <text x="311" y="328" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="311" dy="0">• Vòng lặp ngắn (Sprints)</tspan>
+      <tspan x="311" dy="22">• Phản hồi người dùng sớm</tspan>
+      <tspan x="311" dy="22">• Linh hoạt thay đổi</tspan>
+      <tspan x="311" dy="22">• Vẫn dựa 100% con người</tspan>
+    </text>
+
+    <!-- Step 3: DevOps & CI/CD -->
+    <circle cx="620" cy="200" r="18" fill="#1E293B" stroke="#64748B" stroke-width="2"/>
+    <text x="620" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#94A3B8" text-anchor="middle">3</text>
+    <rect x="535" y="240" width="215" height="230" rx="12" fill="url(#stepGradActive)" stroke="#334155" stroke-width="1"/>
+    <rect x="551" y="256" width="75" height="22" rx="4" fill="#0B1120"/>
+    <text x="588" y="271" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B" text-anchor="middle">2015-2020</text>
+    <text x="551" y="302" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">DevOps / CI-CD</text>
+    <text x="551" y="328" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="551" dy="0">• Tự động hóa build &amp; test</tspan>
+      <tspan x="551" dy="22">• Triển khai liên tục</tspan>
+      <tspan x="551" dy="22">• Kiểm soát hạ tầng mã</tspan>
+      <tspan x="551" dy="22">• Lập trình viên vẫn gõ mã</tspan>
+    </text>
+
+    <!-- Step 4: AI Copilot -->
+    <circle cx="870" cy="200" r="18" fill="#1E293B" stroke="#6366F1" stroke-width="2"/>
+    <text x="870" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#818CF8" text-anchor="middle">4</text>
+    <rect x="774" y="240" width="215" height="230" rx="12" fill="url(#stepGradActive)" stroke="#6366F1" stroke-width="1" stroke-opacity="0.5"/>
+    <rect x="790" y="256" width="80" height="22" rx="4" fill="#0B1120"/>
+    <text x="830" y="271" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#818CF8" text-anchor="middle">2021-2023</text>
+    <text x="790" y="302" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">AI Copilot</text>
+    <text x="790" y="328" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="790" dy="0">• Gợi ý code (Autocomplete)</tspan>
+      <tspan x="790" dy="22">• Mô hình "One-shot"</tspan>
+      <tspan x="790" dy="22">• Thiếu ngữ cảnh dự án</tspan>
+      <tspan x="790" dy="22">• Con người tự sửa lỗi test</tspan>
+    </text>
+
+    <!-- Step 5: Loop Engineering (Highlight) -->
+    <circle cx="1120" cy="200" r="22" fill="#0B1120" stroke="#38BDF8" stroke-width="3"/>
+    <text x="1120" y="206" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold" fill="#38BDF8" text-anchor="middle">5</text>
+    <rect x="1009" y="240" width="215" height="230" rx="12" fill="url(#stepGradActive)" stroke="#38BDF8" stroke-width="2"/>
+    <rect x="1025" y="256" width="90" height="22" rx="4" fill="#0369A1"/>
+    <text x="1070" y="271" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="bold" fill="#F0F9FF" text-anchor="middle">2024-2026+</text>
+    <text x="1025" y="302" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#38BDF8">Loop Engineering</text>
+    <text x="1025" y="328" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#F1F5F9">
+      <tspan x="1025" dy="0">• Vòng lặp tự chủ khép kín</tspan>
+      <tspan x="1025" dy="22">• Plan → Act → Verify → Refine</tspan>
+      <tspan x="1025" dy="22">• Tự đọc log, tự vá lỗi</tspan>
+      <tspan x="1025" dy="22">• Đạt kết quả có kiểm chứng</tspan>
+    </text>
+  </g>
+
+  <!-- Key Insight Callout Banner -->
+  <g id="callout-group" data-pptx-bounds="56 505 1168 115">
+    <rect x="56" y="505" width="1168" height="110" rx="14" fill="#1E293B" stroke="#38BDF8" stroke-width="1" stroke-opacity="0.3"/>
+    <rect x="76" y="525" width="120" height="28" rx="6" fill="#0B1120" stroke="#10B981" stroke-width="1"/>
+    <text x="136" y="544" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#10B981" text-anchor="middle">BƯỚC ĐỘT PHÁ</text>
+    <text x="210" y="545" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="bold" fill="#F1F5F9">
+      Sự chuyển dịch từ "Prompt &amp; Hope" sang "Closed-Loop Autonomous Execution"
+    </text>
+    <text x="76" y="585" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94A3B8">
+      <tspan x="76" dy="0">Nếu như Copilot chỉ dừng lại ở việc sinh code rồi phó mặc cho lập trình viên kiểm thử, thì Loop Engineering trao cho AI Agent</tspan>
+      <tspan x="76" dy="22">khả năng tương tác môi trường terminal, tự chạy lệnh kiểm thử và sửa lỗi tuần hoàn khép kín cho tới khi hoàn tất mục tiêu.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer Navigation -->
+  <g id="footer-group" data-pptx-bounds="56 645 1168 30">
+    <line x1="56" y1="635" x2="1224" y2="635" stroke="#1E293B" stroke-width="1"/>
+    <text x="56" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#64748B">Phần I: Loop Engineering | 1.1 Lịch sử tiến hóa</text>
+    <text x="1224" y="660" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="bold" fill="#38BDF8" text-anchor="end">SLIDE 03 / 12</text>
+  </g>
+</svg>
