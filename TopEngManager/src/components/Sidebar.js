@@ -67,13 +67,17 @@ export default function Sidebar({ isOpen = false, onClose }) {
           <i className="fa-solid fa-comments"></i>
           <span>{t('sidebar.chat', 'Trò chuyện')}</span>
         </Link>
-        <Link href="/documents" onClick={handleNavigate} className={`menu-item ${pathname === '/documents' ? 'active' : ''}`}>
+        <Link href="/topvwiki" onClick={handleNavigate} className={`menu-item ${pathname === '/topvwiki' ? 'active' : ''}`}>
           <i className="fa-solid fa-file-lines"></i>
-          <span>{t('sidebar.documents', 'Tài liệu')}</span>
+          <span>{t('sidebar.topvwiki', 'TOPVWiki')}</span>
         </Link>
         <Link href="/daily-reports" onClick={handleNavigate} className={`menu-item ${pathname === '/daily-reports' ? 'active' : ''}`}>
           <i className="fa-solid fa-file-invoice"></i>
           <span>{t('sidebar.dailyReports', 'Báo cáo ngày')}</span>
+        </Link>
+        <Link href="/approvals" onClick={handleNavigate} className={`menu-item ${pathname === '/approvals' ? 'active' : ''}`}>
+          <i className="fa-solid fa-file-signature"></i>
+          <span>{t('sidebar.approvals', 'Phê duyệt')}</span>
         </Link>
         {hasPermission('view_activity_logs') && (
           <Link href="/activity-logs" onClick={handleNavigate} className={`menu-item ${pathname === '/activity-logs' ? 'active' : ''}`}>

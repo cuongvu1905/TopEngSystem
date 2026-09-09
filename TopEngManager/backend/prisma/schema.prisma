@@ -473,3 +473,41 @@ model roombooking {
   @@index([location, room_id, booking_date], map: "idx_roombooking_slot")
   @@index([booking_date], map: "idx_roombooking_date")
 }
+
+// An overtime or leave request an employee submits for their leader to approve. Both
+// kinds share one table: they differ only in a handful of fields, while everything the
+// app does with them — the history list, editing a pending one, the approver's queue —
+// is identical, and one table keeps that code single.
+model approvalrequest {
+  id             Int       @id @default(autoincrement())
+  request_id     String    @unique(map: "request_id") @db.VarChar(50)
+  request_type   String    @db.VarChar(20)
+  requester_id   String    @db.VarChar(36)
+  department_id  String?   @db.VarChar(36)
+  // Snapshots taken when the request is filed, so the paper trail still reads correctly
+  // after somebody moves department or a leader changes.
+  employee_code  String?   @db.VarChar(50)
+  department_name String?  @db.VarChar(150)
+  approver_id    String?   @db.VarChar(36)
+  approver_name  String?   @db.VarChar(150)
+  request_date   String    @db.VarChar(10)
+  start_time     String    @db.VarChar(5)
+  end_time       String    @db.VarChar(5)
+  project_name   String?   @db.VarChar(255)
+  work_location  String?   @db.VarChar(100)
+  leave_kind     String?   @db.VarChar(20)
+  reason         String?   @db.Text
+  // Overtime work rows: [{ startTime, endTime, content }]. Free-form in number, which is
+  // why they are not columns.
+  work_details   String?   @db.Text
+  status         String    @default("Pending") @db.VarChar(20)
+  comment        String?   @db.Text
+  decided_by     String?   @db.VarChar(36)
+  decided_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime  @default(now()) @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([requester_id], map: "idx_approvalrequest_requester")
+  @@index([department_id], map: "idx_approvalrequest_department")
+  @@index([status], map: "idx_approvalrequest_status")
+}

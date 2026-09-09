@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import DocumentExplorer from '@/components/DocumentExplorer';
 
-export default function Documents() {
+export default function TopvWiki() {
   const { currentUser } = useApp();
   const { t } = useLanguage();
 

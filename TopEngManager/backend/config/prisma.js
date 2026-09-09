@@ -535,6 +535,46 @@ async function runMigrations() {
   } catch (err) {
     console.error('roombooking migration failed:', err.message);
   }
+  // Overtime and leave requests. Both kinds live in one table; see the schema comment.
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'approvalrequest'`;
+    if (tables.length === 0) {
+      console.log('Creating approvalrequest table...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`approvalrequest\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`request_id\` VARCHAR(50) NOT NULL UNIQUE,
+          \`request_type\` VARCHAR(20) NOT NULL,
+          \`requester_id\` VARCHAR(36) NOT NULL,
+          \`department_id\` VARCHAR(36) NULL,
+          \`employee_code\` VARCHAR(50) NULL,
+          \`department_name\` VARCHAR(150) NULL,
+          \`approver_id\` VARCHAR(36) NULL,
+          \`approver_name\` VARCHAR(150) NULL,
+          \`request_date\` VARCHAR(10) NOT NULL,
+          \`start_time\` VARCHAR(5) NOT NULL,
+          \`end_time\` VARCHAR(5) NOT NULL,
+          \`project_name\` VARCHAR(255) NULL,
+          \`work_location\` VARCHAR(100) NULL,
+          \`leave_kind\` VARCHAR(20) NULL,
+          \`reason\` TEXT NULL,
+          \`work_details\` TEXT NULL,
+          \`status\` VARCHAR(20) NOT NULL DEFAULT 'Pending',
+          \`comment\` TEXT NULL,
+          \`decided_by\` VARCHAR(36) NULL,
+          \`decided_at\` TIMESTAMP NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP NULL,
+          INDEX \`idx_approvalrequest_requester\` (\`requester_id\`),
+          INDEX \`idx_approvalrequest_department\` (\`department_id\`),
+          INDEX \`idx_approvalrequest_status\` (\`status\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('approvalrequest table created.');
+    }
+  } catch (err) {
+    console.error('approvalrequest migration failed:', err.message);
+  }
 }
 
 runMigrations();

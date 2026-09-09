@@ -408,13 +408,62 @@ export default function DocumentExplorer({ projectId = null }) {
       }
     }
 
+    // A file already in this folder is never overwritten silently. The copy that is there
+    // gets filed into a "Backup file" folder under a dated name, and only if the user says
+    // so here. Asked before the upload so a cancelled batch never leaves the browser.
+    let conflictNames = [];
+    try {
+      const check = await db.checkDocumentNameConflicts({
+        folderId: selectedFolderId, projectId, fileNames: files.map(f => f.name)
+      });
+      conflictNames = check?.conflicts || [];
+    } catch (err) {
+      // Only an optimisation: the server refuses an unconfirmed replacement on its own,
+      // so a failure here must not stand in the way of an ordinary upload.
+      console.error('Failed to check for duplicate document names', err);
+    }
+    if (conflictNames.length > 0) {
+      const Swal = await getSwal();
+      const result = await Swal.fire({
+        icon: 'question',
+        title: t('documents.replaceConfirmTitle', 'Bạn có muốn thay thế file hiện tại không?'),
+        // text, not html: the names come from whatever the user uploaded earlier.
+        text: t('documents.replaceConfirmText', 'Thư mục đã có tệp: {files}. Nếu đồng ý, tệp hiện tại sẽ được chuyển vào thư mục "Backup file" và đổi tên theo ngày tải lên.')
+          .replace('{files}', conflictNames.join(', ')),
+        showCancelButton: true,
+        confirmButtonText: t('documents.replaceConfirmBtn', 'Đồng ý'),
+        cancelButtonText: t('common.cancel', 'Hủy')
+      });
+      if (!result.isConfirmed) {
+        e.target.value = '';
+        return;
+      }
+    }
+
     setUploading(true);
     try {
-      const created = await db.uploadDocuments(files, { folderId: selectedFolderId, projectId, uploadedBy: currentUser.id });
+      const created = await db.uploadDocuments(files, {
+        folderId: selectedFolderId, projectId, uploadedBy: currentUser.id,
+        replaceExisting: conflictNames.length > 0
+      });
+      // A replacement may have just created the "Backup file" folder, so the tree is
+      // reloaded too, not only the file list.
+      if (conflictNames.length > 0) await loadFolders();
       await loadDocuments();
       const folderPath = selectedFolderId ? getFolderPath(selectedFolderId) : rootLabel;
+      const replaced = new Set(conflictNames.map(name => name.toLowerCase()));
       for (const doc of (created || [])) {
-        await db.logActivity(currentUser.id, 'UPLOAD', 'Document', doc.document_id, `đã tải lên tài liệu '${doc.original_name}' vào '${folderPath}'`, { project_id: projectId });
+        const wasReplacement = replaced.has((doc.original_name || '').toLowerCase());
+        await db.logActivity(
+          currentUser.id,
+          wasReplacement ? 'UPDATE' : 'UPLOAD',
+          'Document',
+          doc.document_id,
+          wasReplacement
+            ? `đã thay thế tài liệu '${doc.original_name}' trong '${folderPath}' (bản cũ được lưu vào 'Backup file')`
+            : `đã tải lên tài liệu '${doc.original_name}' vào '${folderPath}'`,
+          { project_id: projectId }
+        );
       }
     } catch (err) {
       const Swal = await getSwal();

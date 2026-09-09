@@ -144,8 +144,48 @@ export const MySQLAdapter = {
     return await callApi('deleteDocumentFolder', { folderId });
   },
 
+  // --- Overtime / leave approval requests ---
+  // Every one of these re-checks the caller's role and org scope on the server; the
+  // requesterId is only ever a claim about who is asking.
+  getApprovalPermissions: async function(requesterId) {
+    return await callApi('getApprovalPermissions', { requesterId });
+  },
+
+  getMyApprovalRequests: async function({ requesterId, requestType = null } = {}) {
+    return await callApi('getMyApprovalRequests', { requesterId, requestType });
+  },
+
+  createApprovalRequest: async function(payload) {
+    return await callApi('createApprovalRequest', payload);
+  },
+
+  updateApprovalRequest: async function(payload) {
+    return await callApi('updateApprovalRequest', payload);
+  },
+
+  deleteApprovalRequest: async function({ requestId, requesterId }) {
+    return await callApi('deleteApprovalRequest', { requestId, requesterId });
+  },
+
+  getManagedApprovalRequests: async function({ requesterId, requestType = null, teamId = null, status = null } = {}) {
+    return await callApi('getManagedApprovalRequests', { requesterId, requestType, teamId, status });
+  },
+
+  decideApprovalRequest: async function({ requestId, requesterId, status, comment }) {
+    return await callApi('decideApprovalRequest', { requestId, requesterId, status, comment });
+  },
+
+  getApprovalTeams: async function(requesterId) {
+    return await callApi('getApprovalTeams', { requesterId });
+  },
+
   getDocuments: async function({ projectId = null, folderId = null, searchQuery = '' } = {}) {
     return await callApi('getDocuments', { projectId, folderId, searchQuery });
+  },
+
+  // Asked before any bytes are sent, so a batch the user cancels is never uploaded.
+  checkDocumentNameConflicts: async function({ folderId = null, projectId = null, fileNames = [] } = {}) {
+    return await callApi('checkDocumentNameConflicts', { folderId, projectId, fileNames });
   },
 
   deleteDocument: async function(documentId) {
@@ -162,7 +202,7 @@ export const MySQLAdapter = {
     return `${backendUrl}/downloadDocument/${documentId}?inline=1`;
   },
 
-  uploadDocuments: async function(files, { folderId, projectId, uploadedBy }) {
+  uploadDocuments: async function(files, { folderId, projectId, uploadedBy, replaceExisting = false }) {
     const formData = new FormData();
     for (const file of files) {
       formData.append('files', file);
@@ -170,6 +210,8 @@ export const MySQLAdapter = {
     if (folderId) formData.append('folderId', folderId);
     if (projectId) formData.append('projectId', projectId);
     if (uploadedBy) formData.append('uploadedBy', uploadedBy);
+    // Only sent when the user actually agreed; the server refuses a silent overwrite.
+    if (replaceExisting) formData.append('replaceExisting', 'true');
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5000/api';
     const res = await fetch(`${backendUrl}/uploadDocument`, {
       method: 'POST',

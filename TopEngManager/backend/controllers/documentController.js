@@ -80,6 +80,126 @@ function collectFolderSubtreeIds(allFolders, rootFolderId) {
   return ids;
 }
 
+// --- Replacing a file keeps the old one -------------------------------------------
+// Uploaded files live flat on disk under a random stored_name, and the folder tree is
+// pure database, so archiving a file is a metadata change only: point it at the backup
+// folder and rename it. Nothing is moved or rewritten on the filesystem, and nothing is
+// deleted, so a replacement is always recoverable.
+//
+// The folder is recognised by folder_type, never by its name — a user may rename it, and
+// two folders in one project may legitimately share a name.
+const BACKUP_FOLDER_TYPE = 'backup';
+const BACKUP_FOLDER_NAME = 'Backup file';
+
+// Windows users and a Linux server disagree about filename case, so the comparison is
+// done here rather than left to the database collation.
+function normalizeDocName(value) {
+  return String(value ?? '').trim().toLowerCase();
+}
+
+// "09-09-2026_" — the day the file being archived was uploaded, not today.
+function backupNamePrefix(uploadedAt) {
+  const date = uploadedAt ? new Date(uploadedAt) : new Date();
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day}-${month}-${date.getFullYear()}_`;
+}
+
+// Replacing the same file twice in one day would otherwise produce two identical names.
+function withNameCounter(name, n) {
+  if (n <= 1) return name;
+  const ext = path.extname(name);
+  return `${name.slice(0, name.length - ext.length)} (${n})${ext}`;
+}
+
+async function uniqueBackupName(tx, backupFolderId, baseName) {
+  const existing = await tx.document.findMany({
+    where: { folder_id: backupFolderId },
+    select: { original_name: true }
+  });
+  const taken = new Set(existing.map(doc => normalizeDocName(doc.original_name)));
+  let n = 1;
+  while (taken.has(normalizeDocName(withNameCounter(baseName, n)))) n += 1;
+  return withNameCounter(baseName, n);
+}
+
+async function findBackupFolder(tx, parentFolderId, projectId) {
+  return tx.documentfolder.findFirst({
+    where: {
+      parent_folder_id: parentFolderId || null,
+      folder_type: BACKUP_FOLDER_TYPE,
+      ...(parentFolderId ? {} : { project_id: projectId || null })
+    },
+    // A stable pick if an older duplicate ever exists, rather than whatever the engine
+    // happens to return first.
+    orderBy: { id: 'asc' }
+  });
+}
+
+// Created here rather than through createDocumentFolder on purpose: that endpoint is
+// PM-only, and the person replacing a file usually is not the PM. This is the system
+// filing a copy away, not a user creating a folder, so the PM rule stays untouched.
+async function ensureBackupFolder(tx, { parentFolderId, projectId, createdBy }) {
+  const existing = await findBackupFolder(tx, parentFolderId, projectId);
+  if (existing) return existing;
+  return tx.documentfolder.create({
+    data: {
+      folder_id: 'fold-' + crypto.randomUUID(),
+      name: BACKUP_FOLDER_NAME,
+      parent_folder_id: parentFolderId || null,
+      project_id: projectId || null,
+      created_by: createdBy || null,
+      folder_type: BACKUP_FOLDER_TYPE,
+      // Deliberately no prefix or extension rule. An archived name carries a date in
+      // front of it, and the parent's required-prefix check only tolerates 6 leading
+      // characters, so an inherited rule would reject every archived file.
+      default_prefix: null,
+      allowed_extensions: null
+    }
+  });
+}
+
+// A folder already holding archived copies must not grow a backup folder of its own.
+async function isBackupFolder(folderId) {
+  if (!folderId) return false;
+  const folder = await prisma.documentfolder.findUnique({ where: { folder_id: folderId } });
+  return folder?.folder_type === BACKUP_FOLDER_TYPE;
+}
+
+// What the target folder currently holds, used to spot a name clash before anything is
+// written. The root folder is scoped by project, since it has no folder row.
+async function documentsInFolder(folderId, projectId) {
+  return prisma.document.findMany({
+    where: folderId
+      ? { folder_id: folderId }
+      : { folder_id: null, project_id: projectId || null }
+  });
+}
+
+// Which of the names being uploaded already exist in the target folder. The frontend asks
+// this before sending any bytes, so a batch that gets cancelled is never uploaded at all.
+exports.checkDocumentNameConflicts = async (req, res, next) => {
+  try {
+    const { folderId, projectId, fileNames } = req.body || {};
+    if (!Array.isArray(fileNames)) {
+      return res.status(400).json({ error: 'Thiếu danh sách tên tệp' });
+    }
+    if (await isBackupFolder(folderId)) {
+      return res.json({ conflicts: [], isBackupFolder: true });
+    }
+    const existing = await documentsInFolder(folderId, projectId);
+    const taken = new Map(existing.map(doc => [normalizeDocName(doc.original_name), doc.original_name]));
+    const conflicts = [];
+    fileNames.forEach(name => {
+      const hit = taken.get(normalizeDocName(name));
+      if (hit && !conflicts.includes(hit)) conflicts.push(hit);
+    });
+    res.json({ conflicts, isBackupFolder: false });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getDocumentFolders = async (req, res, next) => {
   try {
     const { projectId } = req.body;
@@ -547,8 +667,24 @@ exports.getDocuments = async (req, res, next) => {
 
     let documents;
     if (searchQuery && searchQuery.trim()) {
+      // Archived copies stay out of search results. They are older versions of a file that
+      // is still in its own folder, so including them would double every hit and surface
+      // names nobody typed (the date prefix).
+      const backupFolders = await prisma.documentfolder.findMany({
+        where: { folder_type: BACKUP_FOLDER_TYPE },
+        select: { folder_id: true }
+      });
+      const backupFolderIds = backupFolders.map(folder => folder.folder_id);
       documents = await prisma.document.findMany({
-        where: { ...scopeWhere, original_name: { contains: searchQuery.trim() } },
+        where: {
+          ...scopeWhere,
+          original_name: { contains: searchQuery.trim() },
+          // NOT IN drops rows whose folder_id is NULL, which would hide every file sitting
+          // in the root folder, so the null case is spelled out.
+          ...(backupFolderIds.length > 0
+            ? { OR: [{ folder_id: null }, { folder_id: { notIn: backupFolderIds } }] }
+            : {})
+        },
         orderBy: { created_at: 'desc' }
       });
     } else {
@@ -569,20 +705,24 @@ exports.uploadDocument = async (req, res, next) => {
       return res.status(400).json({ error: 'Không tìm thấy tệp tải lên' });
     }
     const { folderId, projectId, uploadedBy } = req.body;
+    // Multipart form fields arrive as strings, so a plain truthiness test would read
+    // "false" as a yes.
+    const replaceExisting = req.body.replaceExisting === true || req.body.replaceExisting === 'true';
+
+    const rejectBatch = async (error, status = 400, extra = {}) => {
+      // Multer already wrote these to disk before this handler ran — clean them up
+      // since the whole batch is being rejected, not just the offending files.
+      for (const file of req.files) {
+        const absolutePath = path.join(__dirname, '..', 'uploads', 'documents', file.filename);
+        fs.unlink(absolutePath, (err) => {
+          if (err && err.code !== 'ENOENT') console.error('Failed to delete rejected upload:', absolutePath, err.message);
+        });
+      }
+      return res.status(status).json({ error, ...extra });
+    };
 
     if (folderId) {
       const targetFolder = await prisma.documentfolder.findUnique({ where: { folder_id: folderId } });
-      const rejectBatch = async (error) => {
-        // Multer already wrote these to disk before this handler ran — clean them up
-        // since the whole batch is being rejected, not just the offending files.
-        for (const file of req.files) {
-          const absolutePath = path.join(__dirname, '..', 'uploads', 'documents', file.filename);
-          fs.unlink(absolutePath, (err) => {
-            if (err && err.code !== 'ENOENT') console.error('Failed to delete rejected upload:', absolutePath, err.message);
-          });
-        }
-        return res.status(400).json({ error });
-      };
 
       if (targetFolder?.default_prefix) {
         const invalidFiles = req.files
@@ -603,22 +743,83 @@ exports.uploadDocument = async (req, res, next) => {
       }
     }
 
+    // A folder of archived copies does not archive anything itself, so an upload there
+    // behaves exactly as it did before this feature existed.
+    const targetIsBackup = await isBackupFolder(folderId);
+
+    // The folder's contents, kept current as the batch is processed so two files sharing a
+    // name inside one batch behave like two separate uploads.
+    let folderDocs = targetIsBackup ? [] : await documentsInFolder(folderId, projectId);
+    const clashFor = (name) => folderDocs.find(
+      doc => normalizeDocName(doc.original_name) === normalizeDocName(name)
+    );
+
+    if (!targetIsBackup && !replaceExisting) {
+      // The confirmation dialog is not the enforcement: without an explicit yes the server
+      // refuses rather than quietly stacking a second file under the same name.
+      const conflicts = [...new Set(
+        req.files
+          .map(f => clashFor(fixOriginalName(f.originalname)))
+          .filter(Boolean)
+          .map(doc => doc.original_name)
+      )];
+      if (conflicts.length > 0) {
+        return rejectBatch(`Thư mục đã có tệp cùng tên: ${conflicts.join(', ')}`, 409, { conflicts });
+      }
+    }
+
     const created = [];
     for (const file of req.files) {
+      const originalName = fixOriginalName(file.originalname);
       const ext = path.extname(file.originalname).slice(1).toLowerCase();
-      const doc = await prisma.document.create({
-        data: {
-          document_id: 'doc-' + crypto.randomUUID(),
-          folder_id: folderId || null,
-          project_id: projectId || null,
-          original_name: fixOriginalName(file.originalname),
-          stored_name: file.filename,
-          file_path: `/uploads/documents/${file.filename}`,
-          file_size: file.size,
-          file_ext: ext,
-          uploaded_by: uploadedBy || null
+      const clash = targetIsBackup ? null : clashFor(originalName);
+
+      // One transaction per file: the old copy is never left renamed without its
+      // replacement in place, nor the other way round.
+      const doc = await prisma.$transaction(async (tx) => {
+        let slotIds = [];
+        if (clash) {
+          const backupFolder = await ensureBackupFolder(tx, {
+            parentFolderId: folderId, projectId, createdBy: uploadedBy
+          });
+          const baseName = backupNamePrefix(clash.created_at) + clash.original_name;
+          const archivedName = await uniqueBackupName(tx, backupFolder.folder_id, baseName);
+          // A required-file row has to follow whichever copy is current, so remember the
+          // rows pointing at the old one and re-point them once the new one exists.
+          slotIds = (await tx.documentfileslot.findMany({
+            where: { document_id: clash.document_id }, select: { id: true }
+          })).map(slot => slot.id);
+          await tx.document.update({
+            where: { document_id: clash.document_id },
+            data: { folder_id: backupFolder.folder_id, original_name: archivedName }
+          });
         }
+
+        const fresh = await tx.document.create({
+          data: {
+            document_id: 'doc-' + crypto.randomUUID(),
+            folder_id: folderId || null,
+            project_id: projectId || null,
+            original_name: originalName,
+            stored_name: file.filename,
+            file_path: `/uploads/documents/${file.filename}`,
+            file_size: file.size,
+            file_ext: ext,
+            uploaded_by: uploadedBy || null
+          }
+        });
+
+        if (slotIds.length > 0) {
+          await tx.documentfileslot.updateMany({
+            where: { id: { in: slotIds } },
+            data: { document_id: fresh.document_id }
+          });
+        }
+        return fresh;
       });
+
+      if (clash) folderDocs = folderDocs.filter(doc => doc.document_id !== clash.document_id);
+      folderDocs.push(doc);
       created.push(doc);
     }
     res.json(created);

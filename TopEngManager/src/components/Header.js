@@ -236,8 +236,10 @@ export default function Header({ onToggleSidebar }) {
     pageTitle = t('sidebar.roomBooking', 'Đặt phòng họp');
   } else if (pathname === '/chat') {
     pageTitle = t('sidebar.chat', 'Hộp thoại Trò chuyện');
-  } else if (pathname === '/documents') {
-    pageTitle = t('sidebar.documents', 'Quản lý Tài liệu');
+  } else if (pathname === '/approvals') {
+    pageTitle = t('sidebar.approvals', 'Phê duyệt');
+  } else if (pathname === '/topvwiki') {
+    pageTitle = t('sidebar.topvwiki', 'TOPVWiki');
   } else if (pathname === '/activity-logs') {
     pageTitle = t('sidebar.activityLogs', 'Lịch sử Hoạt động');
   } else if (pathname === '/hr') {
