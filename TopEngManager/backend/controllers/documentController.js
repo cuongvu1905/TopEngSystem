@@ -905,14 +905,37 @@ exports.uploadDocumentFileSlot = async (req, res, next) => {
       return res.status(404).json({ error: 'Không tìm thấy hàng trong bảng quản lý file' });
     }
 
+    // Multer writes the file to disk before this handler runs, so every way out of here
+    // has to take it back off again or a refused upload leaves an orphan behind.
+    const rejectUpload = (status, payload) => {
+      const written = path.join(__dirname, '..', 'uploads', 'documents', req.file.filename);
+      fs.unlink(written, (err) => {
+        if (err && err.code !== 'ENOENT') console.error('Failed to delete rejected upload:', written, err.message);
+      });
+      return res.status(status).json(payload);
+    };
+
     const originalName = fixOriginalName(req.file.originalname);
     if (slot.prefix && !matchesRequiredPrefix(originalName, slot.prefix)) {
-      return res.status(400).json({ error: `Tên tệp phải chứa "${slot.prefix}" (tối đa 6 ký tự bất kỳ phía trước)` });
+      return rejectUpload(400, { error: `Tên tệp phải chứa "${slot.prefix}" (tối đa 6 ký tự bất kỳ phía trước)` });
     }
 
     const parentFolder = await prisma.documentfolder.findUnique({ where: { folder_id: folderId || slot.folder_id } });
     if (parentFolder?.allowed_extensions && !matchesAllowedExtensions(originalName, parentFolder.allowed_extensions)) {
-      return res.status(400).json({ error: `Thư mục này chỉ chấp nhận đuôi tệp: ${parseAllowedExtensions(parentFolder.allowed_extensions).join(', ')}` });
+      return rejectUpload(400, { error: `Thư mục này chỉ chấp nhận đuôi tệp: ${parseAllowedExtensions(parentFolder.allowed_extensions).join(', ')}` });
+    }
+
+    // Asked last, so a file that was never going to be accepted is reported for what is
+    // wrong with it rather than as a replacement question. The dialog is not the
+    // enforcement: without an explicit yes the server refuses, so a direct API call
+    // cannot replace the row's file and skip the backup.
+    const replaceExisting = req.body.replaceExisting === true || req.body.replaceExisting === 'true';
+    if (slot.document_id && !replaceExisting) {
+      const current = await prisma.document.findUnique({ where: { document_id: slot.document_id } });
+      return rejectUpload(409, {
+        error: `Hàng này đã có tệp: ${current ? current.original_name : ''}`,
+        conflicts: current ? [current.original_name] : []
+      });
     }
 
     const ext = path.extname(req.file.originalname).slice(1).toLowerCase();
@@ -930,15 +953,26 @@ exports.uploadDocumentFileSlot = async (req, res, next) => {
       }
     });
 
-    // Re-uploading to an already-filled row replaces the previous file instead of leaving an orphan.
+    // Re-uploading to an already-filled row used to delete the previous file outright.
+    // It is filed into the row's "Backup file" folder instead, exactly like replacing a
+    // file in an ordinary folder: the row only ever points at the current copy, but the
+    // one it replaced stays on disk and stays reachable.
     if (slot.document_id) {
       const oldDoc = await prisma.document.findUnique({ where: { document_id: slot.document_id } });
       if (oldDoc) {
-        const absolutePath = path.join(__dirname, '..', oldDoc.file_path);
-        fs.unlink(absolutePath, (err) => {
-          if (err && err.code !== 'ENOENT') console.error('Failed to delete replaced file:', absolutePath, err.message);
+        await prisma.$transaction(async (tx) => {
+          const backupFolder = await ensureBackupFolder(tx, {
+            parentFolderId: oldDoc.folder_id,
+            projectId: oldDoc.project_id,
+            createdBy: uploadedBy
+          });
+          const baseName = backupNamePrefix(oldDoc.created_at) + oldDoc.original_name;
+          const archivedName = await uniqueBackupName(tx, backupFolder.folder_id, baseName);
+          await tx.document.update({
+            where: { document_id: oldDoc.document_id },
+            data: { folder_id: backupFolder.folder_id, original_name: archivedName }
+          });
         });
-        await prisma.document.delete({ where: { document_id: oldDoc.document_id } }).catch(() => {});
       }
     }
 
