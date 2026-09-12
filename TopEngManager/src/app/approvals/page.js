@@ -18,6 +18,18 @@ const LEAVE_KINDS = [
 
 const WORK_LOCATIONS = ['Hà Nội', 'Vĩnh Phúc', 'Thái Nguyên'];
 
+// Mirrors the lifecycle in backend/controllers/approvalController.js. Kept side by side on
+// purpose: the buttons must never offer something the endpoint would turn down.
+//   Pending  -> approver approves or rejects; filer edits or deletes
+//   Approved -> approver may still reject; filer may not touch it
+//   Rejected -> back with the filer: edit (which resubmits) or delete
+const filerMayChange = (status) => status === 'Pending' || status === 'Rejected';
+const approverMayDecide = (status, decision) => {
+  if (status === 'Pending') return true;
+  if (status === 'Approved') return decision === 'Rejected';
+  return false;
+};
+
 const todayString = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -95,6 +107,7 @@ export default function Approvals() {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(blankForm('overtime'));
   const [editingId, setEditingId] = useState(null);
+  const [editingStatus, setEditingStatus] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const isManageTab = activeTab === 'manage';
@@ -157,6 +170,7 @@ export default function Approvals() {
   const openCreate = () => {
     setForm(blankForm(activeTab));
     setEditingId(null);
+    setEditingStatus(null);
     setFormOpen(true);
   };
 
@@ -175,6 +189,7 @@ export default function Approvals() {
         : [emptyWorkRow()]
     });
     setEditingId(row.request_id);
+    setEditingStatus(row.status);
     setFormOpen(true);
   };
 
@@ -236,11 +251,14 @@ export default function Approvals() {
       }
       setFormOpen(false);
       setEditingId(null);
+      setEditingStatus(null);
       await loadMine();
       Swal.fire({
         icon: 'success', title: t('common.success', 'Thành công'),
         text: editingId
-          ? t('approval.updateSuccess', 'Đã cập nhật đơn.')
+          ? (editingStatus === 'Rejected'
+            ? t('approval.resubmitSuccess', 'Đã nộp lại đơn, chờ phê duyệt.')
+            : t('approval.updateSuccess', 'Đã cập nhật đơn.'))
           : t('approval.submitSuccess', 'Đã nộp đơn, chờ phê duyệt.')
       });
     } catch (err) {
@@ -416,14 +434,21 @@ export default function Approvals() {
                   <td style={statusStyle(row.status)}>{statusLabel(row.status)}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      <button type="button" className="btn btn-sm" onClick={() => showDetail(row)}>
-                        {t('approval.detail', 'Chi tiết')}
-                      </button>
-                      {/* A decided request is a record, not a draft: it stops being editable. */}
-                      {!isManageTab && row.status === 'Pending' && (
+                      {/* Only the approver needs to open a request in full; on your own
+                          tabs the row already says everything, and Edit shows the rest. */}
+                      {isManageTab && (
+                        <button type="button" className="btn btn-sm" onClick={() => showDetail(row)}>
+                          {t('approval.detail', 'Chi tiết')}
+                        </button>
+                      )}
+                      {/* A rejected request is back with whoever filed it: they fix it and
+                          send it again, or drop it. An approved one is out of their hands. */}
+                      {!isManageTab && filerMayChange(row.status) && (
                         <>
                           <button type="button" className="btn btn-sm btn-primary" onClick={() => openEdit(row)}>
-                            {t('common.edit', 'Sửa')}
+                            {row.status === 'Rejected'
+                              ? t('approval.editResubmit', 'Sửa & nộp lại')
+                              : t('common.edit', 'Sửa')}
                           </button>
                           <button type="button" className="btn btn-sm btn-danger" onClick={() => removeRequest(row)}>
                             {t('common.delete', 'Xóa')}
@@ -431,14 +456,17 @@ export default function Approvals() {
                         </>
                       )}
                       {isManageTab && row.status === 'Pending' && (
-                        <>
-                          <button type="button" className="btn btn-sm btn-primary" onClick={() => decide(row, 'Approved')}>
-                            {t('approval.approve', 'Phê duyệt')}
-                          </button>
-                          <button type="button" className="btn btn-sm btn-danger" onClick={() => decide(row, 'Rejected')}>
-                            {t('approval.reject', 'Từ chối')}
-                          </button>
-                        </>
+                        <button type="button" className="btn btn-sm btn-primary" onClick={() => decide(row, 'Approved')}>
+                          {t('approval.approve', 'Phê duyệt')}
+                        </button>
+                      )}
+                      {/* An approval is not final: it can still be withdrawn afterwards. */}
+                      {isManageTab && approverMayDecide(row.status, 'Rejected') && (
+                        <button type="button" className="btn btn-sm btn-danger" onClick={() => decide(row, 'Rejected')}>
+                          {row.status === 'Approved'
+                            ? t('approval.rejectApproved', 'Thu hồi phê duyệt')
+                            : t('approval.reject', 'Từ chối')}
+                        </button>
                       )}
                     </div>
                   </td>

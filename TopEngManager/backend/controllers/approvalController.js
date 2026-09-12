@@ -5,6 +5,24 @@ const REQUEST_TYPES = ['overtime', 'leave'];
 const LEAVE_KINDS = ['morning', 'afternoon', 'full'];
 const DECISIONS = ['Approved', 'Rejected'];
 
+// The whole lifecycle in one place, so the buttons and the endpoints cannot drift apart:
+//
+//   Pending  -> the approver may approve or reject it; the filer may edit or delete it
+//   Approved -> the approver may still reject it later; the filer may not touch it
+//   Rejected -> it is back with the filer, who edits and resubmits it, or deletes it
+//
+// Editing always sends a request back to Pending, which is what "resubmit" means here.
+function filerMayChange(status) {
+  return status === 'Pending' || status === 'Rejected';
+}
+function approverMayDecide(status, decision) {
+  if (status === 'Pending') return true;
+  // An approval is not final: something changed, the request can still be turned down.
+  if (status === 'Approved') return decision === 'Rejected';
+  // Already rejected: the filer has it now, nothing to decide until they resubmit.
+  return false;
+}
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -276,15 +294,24 @@ exports.updateApprovalRequest = async (req, res, next) => {
     if (existing.requester_id !== requesterId) {
       return res.status(403).json({ error: 'Bạn chỉ có thể sửa đơn của chính mình.' });
     }
-    if (existing.status !== 'Pending') {
-      return res.status(400).json({ error: 'Đơn đã được xử lý nên không thể sửa.' });
+    if (!filerMayChange(existing.status)) {
+      return res.status(400).json({ error: 'Đơn đã được phê duyệt nên không thể sửa.' });
     }
     const parsed = validatePayload({ ...req.body, requestType: existing.request_type });
     if (parsed.error) return res.status(400).json({ error: parsed.error });
 
     const updated = await prisma.approvalrequest.update({
       where: { request_id: requestId },
-      data: { ...parsed.data, updated_at: new Date() }
+      data: {
+        ...parsed.data,
+        // Back in the queue. The old decision is cleared so a stale "rejected by" cannot
+        // sit next to a request that is waiting again; the comment stays, because it is
+        // the reason the filer is meant to be addressing.
+        status: 'Pending',
+        decided_by: null,
+        decided_at: null,
+        updated_at: new Date()
+      }
     });
     res.json(shapeRequest(updated));
   } catch (err) {
@@ -304,8 +331,8 @@ exports.deleteApprovalRequest = async (req, res, next) => {
     if (!ownsIt && !isAdminLike(requester?.role)) {
       return res.status(403).json({ error: 'Bạn chỉ có thể xóa đơn của chính mình.' });
     }
-    if (ownsIt && !isAdminLike(requester?.role) && existing.status !== 'Pending') {
-      return res.status(400).json({ error: 'Đơn đã được xử lý nên không thể xóa.' });
+    if (ownsIt && !isAdminLike(requester?.role) && !filerMayChange(existing.status)) {
+      return res.status(400).json({ error: 'Đơn đã được phê duyệt nên không thể xóa.' });
     }
     await prisma.approvalrequest.delete({ where: { request_id: requestId } });
     res.json({ success: true });
@@ -397,6 +424,13 @@ exports.decideApprovalRequest = async (req, res, next) => {
     }
     if (existing.requester_id === user.user_id) {
       return res.status(403).json({ error: 'Bạn không thể tự phê duyệt đơn của mình.' });
+    }
+    if (!approverMayDecide(existing.status, status)) {
+      return res.status(400).json({
+        error: existing.status === 'Rejected'
+          ? 'Đơn đã bị từ chối, người nộp cần sửa và nộp lại.'
+          : 'Đơn đã được phê duyệt, chỉ có thể từ chối.'
+      });
     }
 
     const updated = await prisma.approvalrequest.update({
