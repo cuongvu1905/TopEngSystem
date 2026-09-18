@@ -325,7 +325,29 @@ export const MySQLAdapter = {
     return await callApi('unlockDocument', { documentId, userId });
   },
 
+  // The mailbox the system sends from. Admin only - the server checks the requester's
+  // role, so these are not callable by hiding a tab.
+  getMailSettings: async function(requesterId) {
+    return await callApi('getMailSettings', { requesterId });
+  },
+
+  updateMailSettings: async function(settings) {
+    return await callApi('updateMailSettings', settings);
+  },
+
+  // Logs in and hangs up; sends no message.
+  testMailSettings: async function(settings) {
+    return await callApi('testMailSettings', settings);
+  },
+
   // --- Project Manpower board (HR → "Nhân lực dự án" tab) ---
+  // given window. Pass no window and the whole list comes back.
+  // Everyone who may be requested as an interpreter, minus anyone already booked against
+  // the given window. Pass no window and the whole list comes back.
+  getInterpreters: async function({ date, startTime, endTime } = {}) {
+    return await callApi('getInterpreters', { date, startTime, endTime });
+  },
+
   getRoomBookings: async function({ location, fromDate, toDate } = {}) {
     return await callApi('getRoomBookings', { location, fromDate, toDate });
   },
@@ -613,8 +635,8 @@ export const MySQLAdapter = {
     return await callApi('deleteUser', { userId });
   },
 
-  updateUserRoleAndDept: async function(userId, role, departmentId, fullName = undefined, email = undefined, newEmployeeId = undefined, requestedBy = undefined) {
-    return await callApi('updateUserRoleAndDept', { userId, role, departmentId, fullName, email, newEmployeeId, requestedBy });
+  updateUserRoleAndDept: async function(userId, role, departmentId, fullName = undefined, email = undefined, newEmployeeId = undefined, requestedBy = undefined, isInterpreter = undefined) {
+    return await callApi('updateUserRoleAndDept', { userId, role, departmentId, fullName, email, newEmployeeId, isInterpreter, requestedBy });
   },
 
   addPartLeadership: async function(userId, departmentId) {

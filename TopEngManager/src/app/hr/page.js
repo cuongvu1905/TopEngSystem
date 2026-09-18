@@ -7,6 +7,7 @@ import { db } from '@/utils/db';
 import Link from 'next/link';
 import { getSwal } from '@/utils/swal';
 import ManpowerTab from '@/components/ManpowerTab';
+import MailSettingsPanel from '@/components/MailSettingsPanel';
 
 const Swal = {
   fire: async (...args) => {
@@ -659,6 +660,13 @@ export default function HRManagement() {
               ${deptOptionsHtml}
             </select>
           </div>
+          <div class="form-group" style="margin-bottom: 4px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 13px; cursor: pointer;">
+              <input type="checkbox" id="edit-interpreter" style="width: 16px; height: 16px; margin: 0; cursor: pointer;" ${memberObj.is_interpreter ? 'checked' : ''}>
+              ${t('team.isInterpreter', 'Là phiên dịch')}
+            </label>
+            <div style="font-size: 11.5px; color: #6b7280; margin-top: 4px; padding-left: 24px;">${t('team.isInterpreterHint', 'Người được bật mục này sẽ xuất hiện trong danh sách chọn phiên dịch khi đặt phòng họp.')}</div>
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -671,12 +679,13 @@ export default function HRManagement() {
         const email = document.getElementById('edit-email').value.trim();
         const role = document.getElementById('edit-role').value;
         const departmentId = document.getElementById('edit-dept').value;
+        const isInterpreter = document.getElementById('edit-interpreter').checked;
 
         if (!newEmployeeId || !fullName || !email || !role) {
           Swal.showValidationMessage(t('team.requiredFieldsWarning', 'Vui lòng điền đầy đủ thông tin bắt buộc.'));
           return false;
         }
-        return { newEmployeeId, fullName, email, role, departmentId };
+        return { newEmployeeId, fullName, email, role, departmentId, isInterpreter };
       }
     });
 
@@ -697,7 +706,8 @@ export default function HRManagement() {
           formValues.fullName,
           formValues.email,
           formValues.newEmployeeId,
-          currentUser.id
+          currentUser.id,
+          formValues.isInterpreter
         );
 
         await db.logActivity(
@@ -982,6 +992,11 @@ export default function HRManagement() {
               <i className="fa-solid fa-shield-halved"></i> {t('team.permissionsTable', 'Bảng Phân Quyền')}
             </button>
           )}
+          {isAdmin && (
+            <button className={`tab-btn ${activeTab === 'mail' ? 'active' : ''}`} onClick={() => setActiveTab('mail')}>
+              <i className="fa-solid fa-envelope-circle-check"></i> {t('team.tabMailSettings', 'Cấu hình Email')}
+            </button>
+          )}
           {/* A Part Leader lands on this tab by default, so the button has to be there
               too — otherwise they can leave for "Nhân lực dự án" and never come back. */}
           {(hasPermission('manage_departments') || isTeamLeader || isPartLeader || isCurrentUserInRootDept) && (
@@ -995,6 +1010,13 @@ export default function HRManagement() {
             </button>
           )}
         </div>
+      )}
+
+      {/* ================= TAB: OUTGOING MAIL ACCOUNT ================= */}
+      {/* Admin only here and on the server: the three endpoints behind this panel each
+          re-read the requester's role, so the tab being hidden is not what protects it. */}
+      {activeTab === 'mail' && isAdmin && (
+        <MailSettingsPanel currentUser={currentUser} />
       )}
 
       {/* ================= TAB: PROJECT MANPOWER BOARD ================= */}

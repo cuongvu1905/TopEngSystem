@@ -84,12 +84,15 @@ export default function DocumentFileSlotTable({ folderId, projectId, currentUser
 
     setUploadingSlotId(slot.id);
     try {
+      const replaced = !!slot.document_id;
       await db.uploadDocumentFileSlot(file, {
         slotId: slot.id, folderId, projectId, uploadedBy: currentUser.id,
-        replaceExisting: !!slot.document_id
+        replaceExisting: replaced
       });
       await loadSlots();
-      onSlotsChanged?.();
+      // A replacement files the old copy into a "Backup file" folder that may have
+      // just been created, and a folder nobody refetched is a folder nobody can see.
+      onSlotsChanged?.({ replaced });
     } catch (err) {
       const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });

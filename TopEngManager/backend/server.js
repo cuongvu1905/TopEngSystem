@@ -20,6 +20,7 @@ const dailyReportRoutes = require('./routes/dailyReportRoutes');
 const manpowerRoutes = require('./routes/manpowerRoutes');
 const roomBookingRoutes = require('./routes/roomBookingRoutes');
 const approvalRoutes = require('./routes/approvalRoutes');
+const mailSettingRoutes = require('./routes/mailSettingRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -86,6 +87,7 @@ app.use('/api', dailyReportRoutes);
 app.use('/api', manpowerRoutes);
 app.use('/api', roomBookingRoutes);
 app.use('/api', approvalRoutes);
+app.use('/api', mailSettingRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

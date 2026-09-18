@@ -127,6 +127,13 @@ export default function DocumentExplorer({ projectId = null }) {
     };
   }, [folderContextMenu]);
 
+  // Slot uploads always change the progress figures; a replacement can also add the
+  // "Backup file" folder, which only shows up once the tree itself is reloaded.
+  const handleSlotsChanged = useCallback(async ({ replaced = false } = {}) => {
+    await loadFileSlots();
+    if (replaced) await loadFolders();
+  }, [loadFileSlots, loadFolders]);
+
   const getChildren = (parentId) => folders.filter(f => (f.parent_folder_id || null) === parentId);
 
   const toggleCollapse = (id) => {
@@ -716,7 +723,7 @@ export default function DocumentExplorer({ projectId = null }) {
         )}
 
         {isSlotTableFolder ? (
-          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} canUpload={canUploadDocuments} allowedExtensions={currentFolder?.allowed_extensions} onSlotsChanged={loadFileSlots} />
+          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} canUpload={canUploadDocuments} allowedExtensions={currentFolder?.allowed_extensions} onSlotsChanged={handleSlotsChanged} />
         ) : (
         <div className="doc-file-list">
           {documents.length === 0 ? (

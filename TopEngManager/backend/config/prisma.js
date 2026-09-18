@@ -575,6 +575,89 @@ async function runMigrations() {
   } catch (err) {
     console.error('approvalrequest migration failed:', err.message);
   }
+  // Who may be requested as an interpreter for a meeting. A flag rather than a role:
+  // interpreting is something a person does on top of whatever they already are in the
+  // org chart, so folding it into `role` would cost them their real one.
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`user\` LIKE 'is_interpreter'`;
+    if (columns.length === 0) {
+      console.log('Adding is_interpreter column to user table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `user` ADD COLUMN `is_interpreter` TINYINT(1) NOT NULL DEFAULT 0;');
+      console.log('is_interpreter column added successfully.');
+    }
+  } catch (err) {
+    console.error('user is_interpreter migration failed:', err.message);
+  }
+
+  // The interpreters requested for a booking, as JSON: [{ id, name, email }]. The name and
+  // address are copied in rather than joined on demand so the row keeps a record of who was
+  // actually notified, even after somebody changes their address or leaves the company.
+  try {
+    const columns = await prisma.$queryRaw`SHOW COLUMNS FROM \`roombooking\` LIKE 'interpreters'`;
+    if (columns.length === 0) {
+      console.log('Adding interpreters column to roombooking table...');
+      await prisma.$executeRawUnsafe('ALTER TABLE `roombooking` ADD COLUMN `interpreters` TEXT NULL;');
+      console.log('interpreters column added successfully.');
+    }
+  } catch (err) {
+    console.error('roombooking interpreters migration failed:', err.message);
+  }
+
+  // Seed interpreters so the feature is testable on a fresh database. Matched on email,
+  // and only ever created - never updated - so that renaming one of these people, moving
+  // them into a department or un-flagging them in HR is not undone on the next restart.
+  try {
+    const seedInterpreters = [
+      { userId: 'usr-interpreter-01', email: 'thpmai@topengnet.com', fullName: 'THP Mai' },
+      { userId: 'usr-interpreter-02', email: 'tkdiem@topengnet.com', fullName: 'TK Diem' }
+    ];
+    const password = crypto
+      .createHmac('sha256', 'top_eng_manager_secure_salt_key')
+      .update('123456')
+      .digest('hex');
+    for (const seed of seedInterpreters) {
+      const existing = await prisma.user.findFirst({ where: { email: seed.email } });
+      if (existing) continue;
+      console.log('Seeding interpreter account ' + seed.email + '...');
+      await prisma.user.create({
+        data: {
+          user_id: seed.userId,
+          full_name: seed.fullName,
+          email: seed.email,
+          password,
+          role: 'Nhân viên (Staff)',
+          is_interpreter: true
+        }
+      });
+      console.log('Interpreter account ' + seed.email + ' seeded.');
+    }
+  } catch (err) {
+    console.error('interpreter seed failed:', err.message);
+  }
+  // Lets an Admin change the outgoing-mail account from the app instead of editing
+  // backend/.env on the server. Absent or incomplete, the .env values keep being used.
+  try {
+    const tables = await prisma.$queryRaw`SHOW TABLES LIKE 'mailsetting'`;
+    if (tables.length === 0) {
+      console.log('Creating mailsetting table...');
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS \`mailsetting\` (
+          \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+          \`smtp_host\` VARCHAR(255) NULL,
+          \`smtp_port\` INT NULL,
+          \`smtp_secure\` TINYINT(1) NULL,
+          \`smtp_user\` VARCHAR(255) NULL,
+          \`smtp_pass\` TEXT NULL,
+          \`smtp_from\` VARCHAR(255) NULL,
+          \`updated_by\` VARCHAR(36) NULL,
+          \`updated_at\` TIMESTAMP NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('mailsetting table created.');
+    }
+  } catch (err) {
+    console.error('mailsetting migration failed:', err.message);
+  }
 }
 
 runMigrations();

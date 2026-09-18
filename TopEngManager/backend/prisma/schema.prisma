@@ -348,6 +348,9 @@ model user {
   password                      String           @db.VarChar(255)
   role                          String           @default("Staff") @db.VarChar(100)
   additional_part_leader_of     String?          @db.VarChar(50)
+  // Interpreting is an extra duty, not a job title, so it rides alongside `role`
+  // instead of replacing it.
+  is_interpreter                Boolean          @default(false)
   session_token                 String?          @db.VarChar(255)
   last_login_ip                 String?          @db.VarChar(100)
   last_login_ua                 String?          @db.Text
@@ -455,6 +458,21 @@ model manpowercellmember {
 
 // Meeting-room bookings. Previously these lived only in each browser's localStorage, so a
 // booking was invisible to everybody except the person who made it.
+// The outgoing-mail account, when an Admin has set one from the settings screen. One
+// row (id 1). smtp_pass is stored encrypted - an SMTP password has to be handed to the
+// server in the clear, so it cannot be hashed the way a login password is.
+model mailsetting {
+  id          Int       @id @default(autoincrement())
+  smtp_host   String?   @db.VarChar(255)
+  smtp_port   Int?
+  smtp_secure Boolean?
+  smtp_user   String?   @db.VarChar(255)
+  smtp_pass   String?   @db.Text
+  smtp_from   String?   @db.VarChar(255)
+  updated_by  String?   @db.VarChar(36)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
 model roombooking {
   id           Int      @id @default(autoincrement())
   booking_id   String   @unique(map: "booking_id") @db.VarChar(50)
@@ -468,6 +486,9 @@ model roombooking {
   booker_id    String?  @db.VarChar(36)
   purpose      String?  @db.Text
   importance   String?  @db.VarChar(10)
+  // JSON: [{ id, name, email }] - the interpreters requested for this meeting, with the
+  // address each was notified at kept alongside the id.
+  interpreters String?  @db.Text
   created_at   DateTime @default(now()) @db.Timestamp(0)
 
   @@index([location, room_id, booking_date], map: "idx_roombooking_slot")
