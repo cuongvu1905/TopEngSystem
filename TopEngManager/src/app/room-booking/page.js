@@ -970,6 +970,7 @@ export default function RoomBookingPage() {
                     </div>
                   </div>
 
+                  <div className="form-group">
                     <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
                       {t('roomBooking.purposeLabel', 'Nội dung / Mục đích cuộc họp')}{needsInterpreter && <span style={{ color: '#ef4444' }}> *</span>}
                     </label>
