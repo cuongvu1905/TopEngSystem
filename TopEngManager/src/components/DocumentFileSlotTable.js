@@ -4,11 +4,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/utils/db';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
-import { matchesRequiredPrefix, matchesAllowedExtensions, parseAllowedExtensions } from '@/utils/filePrefixMatch';
+import { matchesRequiredPrefix, matchesAllowedExtensions, parseAllowedExtensions, UPLOAD_ACCEPT_EXT } from '@/utils/filePrefixMatch';
 
 // Kept in sync with DocumentExplorer.js's ACCEPT_EXT (duplicated rather than
 // imported to avoid a circular import between the two sibling components).
-const ACCEPT_EXT = '.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.csv,.png,.jpg,.jpeg,.zip,.rar,.dwg,.zw1';
+const ACCEPT_EXT = UPLOAD_ACCEPT_EXT;
 
 // Fixed-row file manager for folders tagged folder_type === 'file_slot_table'
 // (e.g. the auto-provisioned "01.TK Điện" folder): each predefined row only
@@ -17,7 +17,6 @@ export default function DocumentFileSlotTable({ folderId, projectId, currentUser
   const { t } = useLanguage();
   const [slots, setSlots] = useState([]);
   const [uploadingSlotId, setUploadingSlotId] = useState(null);
-  const [addingRow, setAddingRow] = useState(false);
   const fileInputRef = useRef(null);
   const pendingSlotRef = useRef(null);
 
@@ -65,29 +64,40 @@ export default function DocumentFileSlotTable({ folderId, projectId, currentUser
       return;
     }
 
+    // A row that already holds a file is never replaced silently. The copy that is there
+    // is filed into this folder's "Backup file" folder, and only if the user says so.
+    if (slot.document_id) {
+      const Swal = await getSwal();
+      const current = slot.document?.original_name || slot.prefix || '';
+      const result = await Swal.fire({
+        icon: 'question',
+        title: t('documents.replaceConfirmTitle', 'Bạn có muốn thay thế file hiện tại không?'),
+        // text, not html: the name comes from whatever was uploaded earlier.
+        text: t('documents.replaceConfirmText', 'Thư mục đã có tệp: {files}. Nếu đồng ý, tệp hiện tại sẽ được chuyển vào thư mục "Backup file" và đổi tên theo ngày tải lên.')
+          .replace('{files}', current),
+        showCancelButton: true,
+        confirmButtonText: t('documents.replaceConfirmBtn', 'Đồng ý'),
+        cancelButtonText: t('common.cancel', 'Hủy')
+      });
+      if (!result.isConfirmed) return;
+    }
+
     setUploadingSlotId(slot.id);
     try {
-      await db.uploadDocumentFileSlot(file, { slotId: slot.id, folderId, projectId, uploadedBy: currentUser.id });
+      const replaced = !!slot.document_id;
+      await db.uploadDocumentFileSlot(file, {
+        slotId: slot.id, folderId, projectId, uploadedBy: currentUser.id,
+        replaceExisting: replaced
+      });
       await loadSlots();
-      onSlotsChanged?.();
+      // A replacement files the old copy into a "Backup file" folder that may have
+      // just been created, and a folder nobody refetched is a folder nobody can see.
+      onSlotsChanged?.({ replaced });
     } catch (err) {
       const Swal = await getSwal();
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
     } finally {
       setUploadingSlotId(null);
-    }
-  };
-
-  const handleAddRow = async () => {
-    setAddingRow(true);
-    try {
-      await db.createDocumentFileSlot({ folderId });
-      await loadSlots();
-    } catch (err) {
-      const Swal = await getSwal();
-      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
-    } finally {
-      setAddingRow(false);
     }
   };
 
@@ -163,17 +173,6 @@ export default function DocumentFileSlotTable({ folderId, projectId, currentUser
           })}
         </tbody>
       </table>
-      {canUpload && (
-        <button
-          type="button"
-          onClick={handleAddRow}
-          disabled={addingRow}
-          title={t('documents.slotAddRow', 'Thêm hàng')}
-          style={{ marginTop: '12px', width: '36px', height: '36px', borderRadius: '4px', border: 'none', backgroundColor: '#0f766e', color: '#fff', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer' }}
-        >
-          +
-        </button>
-      )}
     </div>
   );
 }

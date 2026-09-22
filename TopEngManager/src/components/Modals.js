@@ -75,6 +75,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
   const [startDate, setStartDate] = useState('2026-06-01');
   const [endDate, setEndDate] = useState('2026-12-31');
   const [visibility, setVisibility] = useState('Private');
+  // The <Tên_Xưởng>/<Tên_Máy>/* folders the Admin designed, and which of them this project wants.
+  const [templateFolderOptions, setTemplateFolderOptions] = useState([]);
+  const [selectedTemplateFolders, setSelectedTemplateFolders] = useState(() => new Set());
   const [customers, setCustomers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [systemUsers, setSystemUsers] = useState([]);
@@ -161,6 +164,32 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
     }));
   };
 
+  // Everything is ticked by default, so leaving this section alone provisions exactly the
+  // complete tree that projects got before the choice existed.
+  useEffect(() => {
+    if (!isOpen || projectId) return undefined;
+    let cancelled = false;
+    db.getSelectableTemplateFolders()
+      .then(list => {
+        if (cancelled) return;
+        const options = Array.isArray(list) ? list : [];
+        setTemplateFolderOptions(options);
+        setSelectedTemplateFolders(new Set(options.map(f => f.template_folder_id)));
+      })
+      .catch(() => {
+        if (!cancelled) { setTemplateFolderOptions([]); setSelectedTemplateFolders(new Set()); }
+      });
+    return () => { cancelled = true; };
+  }, [isOpen, projectId]);
+
+  const toggleTemplateFolder = (id) => {
+    setSelectedTemplateFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || isSubmitting) return;
@@ -178,7 +207,9 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
         end_date: endDate,
         visibility,
         create_by: currentUser.id,
-        created_by: currentUser.id
+        created_by: currentUser.id,
+        // Only meaningful on create; an update must not re-provision folders.
+        ...(projectId ? {} : { template_folder_ids: [...selectedTemplateFolders] })
       };
 
       const membersList = Object.keys(selectedMembers).map(userId => ({
@@ -282,6 +313,53 @@ export const ProjectModal = ({ isOpen, onClose, projectId, currentUser, onSaved 
               </div>
             </div>
             
+          {/* Which of the Admin-designed <Tên_Xưởng>/<Tên_Máy>/* folders this project needs.
+              Only offered when creating: an existing project's folders are edited in its
+              Documents tab, and re-provisioning them here would duplicate what is there. */}
+          {!projectId && templateFolderOptions.length > 0 && (
+            <div className="form-group" style={{ marginBottom: '14px' }}>
+              <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--neutral-dark)', marginBottom: '4px', display: 'block' }}>
+                {t('project.templateFoldersLabel', 'Thư mục tài liệu cần tạo')}
+              </label>
+              <div style={{ fontSize: '11.5px', color: 'var(--neutral-muted)', marginBottom: '8px' }}>
+                {t('project.templateFoldersHint', 'Chỉ những thư mục được tích sẽ xuất hiện trong tài liệu của dự án. Thư mục con và quy định tên tệp bên trong vẫn theo thiết kế của Admin.')}
+              </div>
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px',
+                border: '1px solid var(--neutral-border)', borderRadius: '6px', padding: '10px',
+                backgroundColor: 'var(--neutral-bg-main)'
+              }}>
+                {templateFolderOptions.map(folder => {
+                  const checked = selectedTemplateFolders.has(folder.template_folder_id);
+                  return (
+                    <label
+                      key={folder.template_folder_id}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--neutral-dark)', cursor: 'pointer' }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleTemplateFolder(folder.template_folder_id)}
+                        style={{ cursor: 'pointer', margin: 0, flexShrink: 0 }}
+                      />
+                      <i
+                        className={folder.folder_type === 'file_slot_table' ? 'fa-solid fa-table-list' : 'fa-solid fa-folder'}
+                        style={{ color: 'var(--neutral-muted)', fontSize: '12px' }}
+                      ></i>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {selectedTemplateFolders.size === 0 && (
+                <div style={{ fontSize: '11.5px', color: '#f59e0b', marginTop: '6px' }}>
+                  <i className="fa-solid fa-circle-info"></i>{' '}
+                  {t('project.templateFoldersNoneHint', 'Không tích thư mục nào: dự án sẽ chỉ có thư mục gốc, không có thư mục con.')}
+                </div>
+              )}
+            </div>
+          )}
+
             <div className="form-group">
               <label>{t('project.projectMembers', 'Thành viên dự án')}</label>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
@@ -1096,6 +1174,86 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
     }
   };
 
+  // Deleting a customer is Admin-only. The server enforces it too: hiding the button is
+  // not a permission check, and this one removes a record other data can point at.
+  const isAdmin = !!currentUser?.system_role?.includes('Admin');
+
+  const handleDeleteCustomer = async () => {
+    // activeCustomerId is the numeric primary key as a string (that is what the list sets),
+    // NOT customer_id. Matching on the wrong field found nothing and the button did nothing.
+    const target = customers.find(c => c.id === parseInt(activeCustomerId, 10));
+    if (!target) {
+      setErrorMsg(t('customer.deleteError', 'Không thể xóa khách hàng.'));
+      return;
+    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    const Swal = await getSwal();
+    const confirmed = await Swal.fire({
+      title: t('customer.deleteTitle', 'Xóa khách hàng'),
+      text: t('customer.deleteConfirm', 'Bạn có chắc chắn muốn xóa khách hàng "{name}"? Hành động này không thể hoàn tác.')
+        .replace('{name}', target.customer_name),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: t('common.confirm', 'Đồng ý'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b'
+    });
+    if (!confirmed.isConfirmed) return;
+
+    setLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await db.deleteCustomer(target.customer_id, currentUser.id);
+      await db.logActivity(
+        currentUser.id, 'DELETE', 'Customer', target.customer_id,
+        `đã xóa khách hàng '${target.customer_name}'`
+      ).catch(() => {});
+      await loadCustomers();
+      setActiveCustomerId('new');
+      setCustName('');
+      setCustCode('');
+      setAddress('');
+      setTaxCode('');
+      setIsEditing(true);
+      setSuccessMsg(t('customer.deleteSuccess', 'Đã xóa khách hàng.'));
+      if (onSaved) onSaved();
+    } catch (err) {
+      // Being blocked by linked projects is the expected, actionable case, so it gets its
+      // own popup listing them rather than a one-line banner the user has to hunt for.
+      const linkedNames = Array.isArray(err.projectNames) ? err.projectNames : null;
+      if (linkedNames && linkedNames.length > 0) {
+        const escapeHtml = (v) => String(v).replace(/[&<>"']/g, ch => (
+          { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+        ));
+        await Swal.fire({
+          icon: 'warning',
+          title: t('customer.deleteBlockedTitle', 'Không thể xóa khách hàng'),
+          html: `<div style="text-align:left;font-size:13.5px;line-height:1.6">
+            <div>${escapeHtml(
+              t('customer.deleteBlockedText', 'Khách hàng "{name}" đã liên kết với {count} dự án nên không thể xóa:')
+                .replace('{name}', target.customer_name)
+                .replace('{count}', String(linkedNames.length))
+            )}</div>
+            <ul style="margin:10px 0 0 18px;padding:0">
+              ${linkedNames.map(n => `<li>${escapeHtml(n)}</li>`).join('')}
+            </ul>
+            <div style="margin-top:12px;color:#64748b;font-size:12.5px">${escapeHtml(
+              t('customer.deleteBlockedHint', 'Vui lòng xóa hoặc chuyển các dự án này sang khách hàng khác trước, rồi quay lại xóa khách hàng.')
+            )}</div>
+          </div>`,
+          confirmButtonText: t('common.close', 'Đóng'),
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      } else {
+        setErrorMsg(err.message || t('customer.deleteError', 'Không thể xóa khách hàng.'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderCustomerFormContent = () => (
     <>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '700', color: 'var(--neutral-dark)', borderBottom: '2px solid var(--primary-color)', paddingBottom: '8px', display: 'inline-block', width: 'fit-content' }}>
@@ -1203,6 +1361,18 @@ export const CustomerModal = ({ isOpen, onClose, currentUser, onSaved }) => {
               </table>
 
               <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--neutral-border)', paddingTop: '16px' }}>
+                {/* Sits apart from Save/Cancel so it cannot be hit by accident */}
+                {isAdmin && activeCustomerId !== 'new' && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={handleDeleteCustomer}
+                    disabled={loading}
+                    style={{ marginRight: 'auto', backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
+                  >
+                    <i className="fa-solid fa-trash-can"></i> {t('customer.deleteBtn', 'Xóa khách hàng')}
+                  </button>
+                )}
                 {isEditing ? (
                   <>
                     <button 

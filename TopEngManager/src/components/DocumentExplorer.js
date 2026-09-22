@@ -8,7 +8,7 @@ import { getSwal } from '@/utils/swal';
 import TextDocumentEditor from '@/components/TextDocumentEditor';
 import FilePreviewModal, { PREVIEWABLE_EXTENSIONS } from '@/components/FilePreviewModal';
 import DocumentFileSlotTable from '@/components/DocumentFileSlotTable';
-import { matchesRequiredPrefix, matchesAllowedExtensions, parseAllowedExtensions } from '@/utils/filePrefixMatch';
+import { matchesRequiredPrefix, matchesAllowedExtensions, parseAllowedExtensions, UPLOAD_ACCEPT_EXT } from '@/utils/filePrefixMatch';
 
 const FILE_ICONS = {
   pdf: 'fa-file-pdf',
@@ -27,9 +27,10 @@ const FILE_ICONS = {
   txt: 'fa-file-lines',
   html: 'fa-file-lines',
   dwg: 'fa-file-pen',
-  zw1: 'fa-file-pen'
+  zw1: 'fa-file-pen',
+  drawio: 'fa-diagram-project'
 };
-const ACCEPT_EXT = '.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.csv,.png,.jpg,.jpeg,.zip,.rar,.dwg,.zw1';
+const ACCEPT_EXT = UPLOAD_ACCEPT_EXT;
 
 function formatFileSize(bytes) {
   if (bytes === null || bytes === undefined) return '';
@@ -68,6 +69,10 @@ export default function DocumentExplorer({ projectId = null }) {
     ? projectMembers.find(m => m.project_id === projectId && m.user_id === currentUser?.id)?.project_role
     : null;
   const canUploadDocuments = !projectId || hasPermission('upload_project_documents') || myProjectRole === 'PM';
+  // Creating folders inside a project is limited to its PM (and Admin). A Team/Part Leader
+  // who is not the PM of THIS project cannot, so a general role is not enough. The
+  // company-wide Documents page keeps its existing open behaviour.
+  const canCreateFolders = !projectId || isAdmin || myProjectRole === 'PM';
 
   const loadFolders = useCallback(async () => {
     try {
@@ -122,6 +127,13 @@ export default function DocumentExplorer({ projectId = null }) {
     };
   }, [folderContextMenu]);
 
+  // Slot uploads always change the progress figures; a replacement can also add the
+  // "Backup file" folder, which only shows up once the tree itself is reloaded.
+  const handleSlotsChanged = useCallback(async ({ replaced = false } = {}) => {
+    await loadFileSlots();
+    if (replaced) await loadFolders();
+  }, [loadFileSlots, loadFolders]);
+
   const getChildren = (parentId) => folders.filter(f => (f.parent_folder_id || null) === parentId);
 
   const toggleCollapse = (id) => {
@@ -144,15 +156,32 @@ export default function DocumentExplorer({ projectId = null }) {
 
   const rootLabel = projectId ? t('documents.projectRoot', 'Tài liệu dự án') : t('documents.companyRoot', 'Tất cả tài liệu');
 
-  // Indented preview of what a template clone will produce, so the confirm dialog shows
-  // the actual tree instead of just a count.
-  const buildTemplatePreview = (templates, nodes, depth = 0, lines = []) => {
-    for (const node of nodes) {
-      lines.push('\u00a0'.repeat(depth * 4) + node.name);
-      const children = templates.filter(c => c.parent_template_folder_id === node.template_folder_id);
-      buildTemplatePreview(templates, children, depth + 1, lines);
-    }
-    return lines;
+  // Renders the tree to be created, with a checkbox on every <Tên_Máy>/* folder so the
+  // creator picks the same way they do in the new-project dialog. Levels above those are
+  // structural and always created, so they are plain text.
+  const buildTemplateDialogHtml = (templates, nodes, selectableIds) => {
+    const escapeHtml = (s) => String(s).replace(/[&<>"']/g, ch => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+    ));
+    const lines = [];
+    const walk = (list, depth) => {
+      list.forEach(node => {
+        const pad = '&nbsp;'.repeat(depth * 4);
+        if (selectableIds.has(node.template_folder_id)) {
+          lines.push(
+            `<label style="display:block;cursor:pointer">${pad}` +
+            `<input type="checkbox" class="tmpl-pick" value="${escapeHtml(node.template_folder_id)}" checked ` +
+            `style="vertical-align:middle;margin-right:6px" />` +
+            `<span style="vertical-align:middle">${escapeHtml(node.name)}</span></label>`
+          );
+        } else {
+          lines.push(`<div>${pad}${escapeHtml(node.name)}</div>`);
+        }
+        walk(templates.filter(c => c.parent_template_folder_id === node.template_folder_id), depth + 1);
+      });
+    };
+    walk(nodes, 0);
+    return lines.join('');
   };
 
   // Creates the Admin-designed tree instead of a single empty folder.
@@ -180,26 +209,37 @@ export default function DocumentExplorer({ projectId = null }) {
     const escapeHtml = (s) => String(s).replace(/[&<>"']/g, ch => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
     ));
-    const preview = buildTemplatePreview(templates, nodes)
-      .map(line => escapeHtml(line))
-      .join('<br/>');
+    // The pickable folders are always the same ones: the children of the template's second
+    // level, i.e. <Tên_Xưởng>/<Tên_Máy>/*, whichever level this button starts from.
+    let selectable;
+    try {
+      selectable = await db.getSelectableTemplateFolders();
+    } catch (err) {
+      selectable = [];
+    }
+    const selectableIds = new Set((selectable || []).map(f => f.template_folder_id));
+    const previewHtml = buildTemplateDialogHtml(templates, nodes, selectableIds);
 
     const result = await Swal.fire({
       title: t('documents.templateTreeTitle', 'Tạo thư mục theo mẫu'),
       html: `<div style="text-align:left;font-size:13px;line-height:1.7">
-        <div style="margin-bottom:8px">${escapeHtml(t('documents.templateTreeConfirm', 'Sẽ tạo cây thư mục sau theo thiết kế của Admin:'))}</div>
-        <div style="font-family:monospace">${preview}</div>
+        <div style="margin-bottom:8px">${escapeHtml(t('documents.templateTreePick', 'Chọn các thư mục cần tạo (theo thiết kế của Admin):'))}</div>
+        <div style="font-family:monospace">${previewHtml}</div>
       </div>`,
       showCancelButton: true,
       confirmButtonText: t('common.create', 'Tạo mới'),
       cancelButtonText: t('common.cancel', 'Hủy'),
-      confirmButtonColor: 'var(--primary-color)'
+      confirmButtonColor: 'var(--primary-color)',
+      preConfirm: () => Array.from(document.querySelectorAll('.tmpl-pick:checked')).map(el => el.value)
     });
     if (!result.isConfirmed) return true;   // handled: the user chose not to
+    const picked = Array.isArray(result.value) ? result.value : [];
 
     try {
       const res = await db.createFolderTreeFromTemplate({
-        projectId, parentFolderId, templateLevel, createdBy: currentUser.id
+        projectId, parentFolderId, templateLevel, createdBy: currentUser.id,
+        // only meaningful when the design actually offers a choice
+        selectedFolderIds: selectableIds.size > 0 ? picked : undefined
       });
       await loadFolders();
       const parentPath = parentFolderId ? getFolderPath(parentFolderId) : rootLabel;
@@ -223,6 +263,7 @@ export default function DocumentExplorer({ projectId = null }) {
   };
 
   const handleCreateFolder = async (parentFolderId, parentFolder) => {
+    if (!canCreateFolders) return;
     // SweetAlert2 restores focus to the triggering button on close, which in
     // some browsers re-fires a phantom keyboard "click" on it — blur it
     // first so that phantom click has no target and can't re-open the dialog.
@@ -374,13 +415,62 @@ export default function DocumentExplorer({ projectId = null }) {
       }
     }
 
+    // A file already in this folder is never overwritten silently. The copy that is there
+    // gets filed into a "Backup file" folder under a dated name, and only if the user says
+    // so here. Asked before the upload so a cancelled batch never leaves the browser.
+    let conflictNames = [];
+    try {
+      const check = await db.checkDocumentNameConflicts({
+        folderId: selectedFolderId, projectId, fileNames: files.map(f => f.name)
+      });
+      conflictNames = check?.conflicts || [];
+    } catch (err) {
+      // Only an optimisation: the server refuses an unconfirmed replacement on its own,
+      // so a failure here must not stand in the way of an ordinary upload.
+      console.error('Failed to check for duplicate document names', err);
+    }
+    if (conflictNames.length > 0) {
+      const Swal = await getSwal();
+      const result = await Swal.fire({
+        icon: 'question',
+        title: t('documents.replaceConfirmTitle', 'Bạn có muốn thay thế file hiện tại không?'),
+        // text, not html: the names come from whatever the user uploaded earlier.
+        text: t('documents.replaceConfirmText', 'Thư mục đã có tệp: {files}. Nếu đồng ý, tệp hiện tại sẽ được chuyển vào thư mục "Backup file" và đổi tên theo ngày tải lên.')
+          .replace('{files}', conflictNames.join(', ')),
+        showCancelButton: true,
+        confirmButtonText: t('documents.replaceConfirmBtn', 'Đồng ý'),
+        cancelButtonText: t('common.cancel', 'Hủy')
+      });
+      if (!result.isConfirmed) {
+        e.target.value = '';
+        return;
+      }
+    }
+
     setUploading(true);
     try {
-      const created = await db.uploadDocuments(files, { folderId: selectedFolderId, projectId, uploadedBy: currentUser.id });
+      const created = await db.uploadDocuments(files, {
+        folderId: selectedFolderId, projectId, uploadedBy: currentUser.id,
+        replaceExisting: conflictNames.length > 0
+      });
+      // A replacement may have just created the "Backup file" folder, so the tree is
+      // reloaded too, not only the file list.
+      if (conflictNames.length > 0) await loadFolders();
       await loadDocuments();
       const folderPath = selectedFolderId ? getFolderPath(selectedFolderId) : rootLabel;
+      const replaced = new Set(conflictNames.map(name => name.toLowerCase()));
       for (const doc of (created || [])) {
-        await db.logActivity(currentUser.id, 'UPLOAD', 'Document', doc.document_id, `đã tải lên tài liệu '${doc.original_name}' vào '${folderPath}'`, { project_id: projectId });
+        const wasReplacement = replaced.has((doc.original_name || '').toLowerCase());
+        await db.logActivity(
+          currentUser.id,
+          wasReplacement ? 'UPDATE' : 'UPLOAD',
+          'Document',
+          doc.document_id,
+          wasReplacement
+            ? `đã thay thế tài liệu '${doc.original_name}' trong '${folderPath}' (bản cũ được lưu vào 'Backup file')`
+            : `đã tải lên tài liệu '${doc.original_name}' vào '${folderPath}'`,
+          { project_id: projectId }
+        );
       }
     } catch (err) {
       const Swal = await getSwal();
@@ -499,13 +589,15 @@ export default function DocumentExplorer({ projectId = null }) {
             <span>{folder.name}</span>
           </div>
           <div className="doc-folder-node-actions">
-            <button
-              type="button"
-              title={t('documents.newSubfolder', 'Thư mục con mới')}
-              onClick={(e) => { e.stopPropagation(); handleCreateFolder(folder.folder_id, folder); }}
-            >
-              <i className="fa-solid fa-plus"></i>
-            </button>
+            {canCreateFolders && (
+              <button
+                type="button"
+                title={t('documents.newSubfolder', 'Thư mục con mới')}
+                onClick={(e) => { e.stopPropagation(); handleCreateFolder(folder.folder_id, folder); }}
+              >
+                <i className="fa-solid fa-plus"></i>
+              </button>
+            )}
           </div>
         </div>
         {hasChildren && !isCollapsed && (
@@ -528,14 +620,16 @@ export default function DocumentExplorer({ projectId = null }) {
       <div className={`doc-folder-tree-panel ${mobileTreeOpen ? 'show' : ''}`}>
         <div className="doc-folder-tree-header">
           <span>{t('documents.folders', 'Thư mục')}</span>
-          <button
-            type="button"
-            className="doc-folder-add-root"
-            title={t('documents.newFolder', 'Thư mục mới')}
-            onClick={() => handleCreateFolder(null)}
-          >
-            <i className="fa-solid fa-folder-plus"></i>
-          </button>
+          {canCreateFolders && (
+            <button
+              type="button"
+              className="doc-folder-add-root"
+              title={t('documents.newFolder', 'Thư mục mới')}
+              onClick={() => handleCreateFolder(null)}
+            >
+              <i className="fa-solid fa-folder-plus"></i>
+            </button>
+          )}
         </div>
         <div className="doc-folder-tree-scroll">
           {rootFolders.length === 0 ? (
@@ -629,7 +723,7 @@ export default function DocumentExplorer({ projectId = null }) {
         )}
 
         {isSlotTableFolder ? (
-          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} canUpload={canUploadDocuments} allowedExtensions={currentFolder?.allowed_extensions} onSlotsChanged={loadFileSlots} />
+          <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} canUpload={canUploadDocuments} allowedExtensions={currentFolder?.allowed_extensions} onSlotsChanged={handleSlotsChanged} />
         ) : (
         <div className="doc-file-list">
           {documents.length === 0 ? (

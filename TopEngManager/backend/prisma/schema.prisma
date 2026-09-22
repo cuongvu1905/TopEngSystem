@@ -348,6 +348,9 @@ model user {
   password                      String           @db.VarChar(255)
   role                          String           @default("Staff") @db.VarChar(100)
   additional_part_leader_of     String?          @db.VarChar(50)
+  // Interpreting is an extra duty, not a job title, so it rides alongside `role`
+  // instead of replacing it.
+  is_interpreter                Boolean          @default(false)
   session_token                 String?          @db.VarChar(255)
   last_login_ip                 String?          @db.VarChar(100)
   last_login_ua                 String?          @db.Text
@@ -455,6 +458,21 @@ model manpowercellmember {
 
 // Meeting-room bookings. Previously these lived only in each browser's localStorage, so a
 // booking was invisible to everybody except the person who made it.
+// The outgoing-mail account, when an Admin has set one from the settings screen. One
+// row (id 1). smtp_pass is stored encrypted - an SMTP password has to be handed to the
+// server in the clear, so it cannot be hashed the way a login password is.
+model mailsetting {
+  id          Int       @id @default(autoincrement())
+  smtp_host   String?   @db.VarChar(255)
+  smtp_port   Int?
+  smtp_secure Boolean?
+  smtp_user   String?   @db.VarChar(255)
+  smtp_pass   String?   @db.Text
+  smtp_from   String?   @db.VarChar(255)
+  updated_by  String?   @db.VarChar(36)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
 model roombooking {
   id           Int      @id @default(autoincrement())
   booking_id   String   @unique(map: "booking_id") @db.VarChar(50)
@@ -468,8 +486,49 @@ model roombooking {
   booker_id    String?  @db.VarChar(36)
   purpose      String?  @db.Text
   importance   String?  @db.VarChar(10)
+  // JSON: [{ id, name, email }] - the interpreters requested for this meeting, with the
+  // address each was notified at kept alongside the id.
+  interpreters String?  @db.Text
   created_at   DateTime @default(now()) @db.Timestamp(0)
 
   @@index([location, room_id, booking_date], map: "idx_roombooking_slot")
   @@index([booking_date], map: "idx_roombooking_date")
+}
+
+// An overtime or leave request an employee submits for their leader to approve. Both
+// kinds share one table: they differ only in a handful of fields, while everything the
+// app does with them — the history list, editing a pending one, the approver's queue —
+// is identical, and one table keeps that code single.
+model approvalrequest {
+  id             Int       @id @default(autoincrement())
+  request_id     String    @unique(map: "request_id") @db.VarChar(50)
+  request_type   String    @db.VarChar(20)
+  requester_id   String    @db.VarChar(36)
+  department_id  String?   @db.VarChar(36)
+  // Snapshots taken when the request is filed, so the paper trail still reads correctly
+  // after somebody moves department or a leader changes.
+  employee_code  String?   @db.VarChar(50)
+  department_name String?  @db.VarChar(150)
+  approver_id    String?   @db.VarChar(36)
+  approver_name  String?   @db.VarChar(150)
+  request_date   String    @db.VarChar(10)
+  start_time     String    @db.VarChar(5)
+  end_time       String    @db.VarChar(5)
+  project_name   String?   @db.VarChar(255)
+  work_location  String?   @db.VarChar(100)
+  leave_kind     String?   @db.VarChar(20)
+  reason         String?   @db.Text
+  // Overtime work rows: [{ startTime, endTime, content }]. Free-form in number, which is
+  // why they are not columns.
+  work_details   String?   @db.Text
+  status         String    @default("Pending") @db.VarChar(20)
+  comment        String?   @db.Text
+  decided_by     String?   @db.VarChar(36)
+  decided_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime  @default(now()) @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([requester_id], map: "idx_approvalrequest_requester")
+  @@index([department_id], map: "idx_approvalrequest_department")
+  @@index([status], map: "idx_approvalrequest_status")
 }

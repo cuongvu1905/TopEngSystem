@@ -99,7 +99,13 @@ exports.saveProject = async (req, res, next) => {
       `;
 
       try {
-        await createDefaultProjectFolderTree(id, proj.create_by || proj.created_by || null);
+        // The creator picks which <Tên_Máy>/* folders this project needs; an absent list
+        // means "everything", which is what callers that predate the choice send.
+        await createDefaultProjectFolderTree(
+          id,
+          proj.create_by || proj.created_by || null,
+          Array.isArray(proj.template_folder_ids) ? proj.template_folder_ids : undefined
+        );
       } catch (folderErr) {
         console.error('Failed to auto-provision default document folder tree for new project:', folderErr);
       }
@@ -260,6 +266,48 @@ exports.deleteProject = async (req, res, next) => {
     await prisma.project.delete({ where: { project_id: projectId } });
 
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Deleting a customer is Admin-only, and refused while any project still points at it.
+// This guard is the ONLY protection: the fk_project_customer constraint is ON DELETE SET
+// NULL, so the database would happily blank the link and leave every affected project
+// still displaying the old "[customer code]" prefix baked into its stored name.
+exports.deleteCustomer = async (req, res, next) => {
+  try {
+    const { customerId, requesterId } = req.body || {};
+    if (!customerId) {
+      return res.status(400).json({ error: 'Thiếu mã khách hàng.' });
+    }
+    if (!(await isRequesterAdmin(requesterId))) {
+      return res.status(403).json({ error: 'Chỉ tài khoản Admin mới có quyền xóa khách hàng.' });
+    }
+
+    const customer = await prisma.customer.findUnique({ where: { customer_id: customerId } });
+    if (!customer) {
+      return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
+    }
+
+    const linked = await prisma.project.findMany({
+      where: { customer_id: customerId },
+      select: { project_name: true },
+      orderBy: [{ project_name: 'asc' }, { id: 'asc' }]
+    });
+    if (linked.length > 0) {
+      // The names go back as a list so the client can lay them out; the sentence is kept
+      // here too for any caller that just shows the error text.
+      const names = linked.map(row => row.project_name);
+      return res.status(409).json({
+        error: `Khách hàng "${customer.customer_name}" đã liên kết với dự án ${names.join(', ')} nên không thể xóa.`,
+        projectCount: names.length,
+        projectNames: names
+      });
+    }
+
+    await prisma.customer.delete({ where: { customer_id: customerId } });
+    res.json({ success: true, customer_name: customer.customer_name });
   } catch (err) {
     next(err);
   }

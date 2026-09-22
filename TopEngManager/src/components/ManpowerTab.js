@@ -8,6 +8,93 @@ import { getSwal } from '@/utils/swal';
 import { getAllowedScopes, getScopeDepartmentIds, getOwningTeamId, toApiScope, UNSCOPED_SCOPE_ID } from '@/utils/orgScope';
 import { toTsv, parseTsv } from '@/utils/tsvGrid';
 
+// The cell used to prefix each line with its time block. A leader editing such a line
+// saved the prefix along with their text, so stored edits still carry it. Strip it on read:
+// the label is never wanted now, and this cleans old rows without rewriting any file.
+const TIME_LABEL_RE = /\[\s*\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}\s*\]\s*/g;
+const stripTimeLabels = (value) => String(value ?? '').replace(TIME_LABEL_RE, '').trim();
+
+// The cell is one plain text box, lines separated by newlines. Because the text is a
+// single blob, there is no way to tell afterwards which characters came from whom - so
+// each contributor's report is merged in ONCE, and their id is remembered in detailSeen.
+// That is what lets a member reporting later append on the next line without disturbing
+// whatever a leader has already edited above.
+// A report block is compared as a whole chunk, anchored at line boundaries, because the
+// text a member writes routinely spans several lines (a heading plus bullet points). Line
+// by line matching missed those and put the same block in twice.
+const NLX = String.fromCharCode(10);
+const containsChunk = (haystack, chunk) => (
+  `${NLX}${haystack}${NLX}`.includes(`${NLX}${chunk}${NLX}`)
+);
+const removeChunk = (haystack, chunk) => {
+  const target = `${NLX}${chunk}${NLX}`;
+  const padded = `${NLX}${haystack}${NLX}`;
+  if (!padded.includes(target)) return haystack;
+  return padded.split(target).join(NLX).replace(/^\n+|\n+$/g, '');
+};
+
+const mergeReportedDetails = (rows, details) => {
+  const merged = { ...rows };
+  Object.entries(details || {}).forEach(([projectId, entries]) => {
+    const row = merged[projectId] || { values: {}, detail: '' };
+    // detailSeen holds one key per report block, so a time block added later is recognised
+    // as new. It used to hold plain user ids, which is why a second block never appeared:
+    // the person was already "seen" from their first one.
+    const seen = new Set(row.detailSeen || []);
+
+    // Edits used to be stored per line; fold any of those in so nothing already written is
+    // lost when an older board is opened.
+    const legacyEdits = Object.values(row.detailEdits || {})
+      .map(value => stripTimeLabels(value))
+      .filter(Boolean);
+
+    // A board saved by the previous version glued all of one person's blocks into a single
+    // run separated by spaces. Those exact runs are removed so the blocks can stand on
+    // their own instead of showing twice. Exact match only: text a leader changed is kept.
+    const byReport = new Map();
+    const byUser = new Map();
+    entries.forEach(entry => {
+      const value = stripTimeLabels(entry.content);
+      if (!value) return;
+      const reportId = String(entry.key || '').split(':')[0];
+      [[byReport, reportId], [byUser, entry.userId]].forEach(([map, id]) => {
+        if (!map.has(id)) map.set(id, []);
+        map.get(id).push(value);
+      });
+    });
+    const glued = [...byReport.values(), ...byUser.values()]
+      .filter(parts => parts.length > 1)
+      .map(parts => parts.join(' ').trim());
+
+    let kept = stripTimeLabels(row.detail);
+    glued.forEach(run => { kept = removeChunk(kept, run); });
+
+    let text = [kept, ...legacyEdits].filter(Boolean).join(NLX);
+    entries.forEach(entry => {
+      const value = stripTimeLabels(entry.content);
+      if (!value) return;
+      const key = entry.key || `${entry.userId}:${value}`;
+      // Already taken in, or already visible in the cell: either way it is not added
+      // again. The second test is what repairs a board whose detailSeen was keyed by user.
+      if (seen.has(key) || containsChunk(text, value)) return;
+      text = text ? `${text}${NLX}${value}` : value;
+    });
+
+    // Every block is recorded, whether it was appended just now or was already in the
+    // text, so nothing gets merged twice on the next load.
+    const nextSeen = new Set(seen);
+    entries.forEach(entry => {
+      const value = stripTimeLabels(entry.content);
+      if (!value) return;   // an empty block stays unrecorded, so filling it in later works
+      nextSeen.add(entry.key || `${entry.userId}:${value}`);
+    });
+
+    merged[projectId] = { ...row, detail: text, detailSeen: [...nextSeen], detailEdits: undefined };
+  });
+  // A project nobody reported on keeps whatever text it already had.
+  return merged;
+};
+
 const getTodayDateString = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -463,7 +550,7 @@ function CellDetailModal({ cell, onClose, onChanged, users, currentUser, exclude
 // The board's scope is always a Team (Parts are never selected on their own): clicking a
 // Team switches to it, and its Parts appear underneath as checkboxes that choose whose
 // data is shown. Unticking a Part hides that Part's rows from the board.
-function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartIds, onTogglePart, t }) {
+function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartIds, onTogglePart, showAllProjects, onToggleAllProjects, t }) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -489,10 +576,13 @@ function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartI
     : [];
   const includedCount = selectedTeamParts.filter(p => !excludedPartIds.has(p.department_id)).length;
 
+  // The label carries the filter state: with "All project" off the board shows a shorter
+  // list of rows, and without a marker here that looks like missing data.
+  const filterNote = showAllProjects ? '' : `, ${t('manpower.filteredNote', 'DA có người nhập')}`;
   const buttonLabel = !selected
     ? t('manpower.selectTeamPlaceholder', '-- Chọn Team --')
     : selectedTeamParts.length > 0
-      ? `${selected.name} (${includedCount}/${selectedTeamParts.length} Part)`
+      ? `${selected.name} (${includedCount}/${selectedTeamParts.length} Part${filterNote})`
       : selected.name;
 
   return (
@@ -542,6 +632,30 @@ function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartI
                   </span>
                 </div>
 
+                {/* "All project" sits above the Part ticks because it overrides them: with it
+                    on, every project of the Team is listed regardless of who filled anything in. */}
+                {partsOfThisTeam.length > 0 && (
+                  <div
+                    onClick={() => onToggleAllProjects()}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '6px 8px 6px 22px', borderRadius: '4px', cursor: 'pointer',
+                      color: 'var(--neutral-dark)', fontSize: '13px', fontWeight: 600
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={showAllProjects}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={() => onToggleAllProjects()}
+                      style={{ cursor: 'pointer', margin: 0, flexShrink: 0 }}
+                    />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {t('manpower.allProjects', 'All project')}
+                    </span>
+                  </div>
+                )}
+
                 {/* Parts of the active Team: tick boxes only, they never become the scope */}
                 {partsOfThisTeam.map(part => (
                   <div
@@ -571,7 +685,7 @@ function ScopePicker({ scopeOptions, selectedScope, onSelectScope, excludedPartI
           {selectedTeamParts.length > 0 && (
             <div style={{ borderTop: '1px solid var(--neutral-border)', marginTop: '4px', padding: '8px', fontSize: '11.5px', color: 'var(--neutral-muted)' }}>
               <i className="fa-solid fa-circle-info"></i>{' '}
-              {t('manpower.partFilterHint', 'Bỏ tick Part để ẩn dữ liệu của Part đó khỏi bảng.')}
+              {t('manpower.partFilterHint', 'Bỏ tick Part để ẩn dữ liệu của Part đó khỏi bảng. Bỏ tick "All project" để chỉ hiện những dự án có người nhập vào.')}
             </div>
           )}
         </div>
@@ -998,6 +1112,12 @@ export default function ManpowerTab({ currentUser }) {
   // Parts of the selected Team whose data is hidden from the board. Stored as the
   // *excluded* set so a newly created Part is included by default (all ticked).
   const [excludedPartIds, setExcludedPartIds] = useState(() => new Set());
+  // "All project" on = show every project of the Team (how the board has always behaved).
+  // Off = show only the projects somebody from a ticked Part was actually entered into,
+  // whether by their own daily report or by a leader adding them to a cell by hand.
+  const [showAllProjects, setShowAllProjects] = useState(true);
+  // Project ids that have at least one occupant, after the Part filter has been applied.
+  const [occupiedProjectIds, setOccupiedProjectIds] = useState(() => new Set());
   // Rows exactly as they were read from the saved file, so a project that has dropped
   // out of the current view never loses its stored numbers when the board is saved.
   const loadedRowsRef = useRef([]);
@@ -1007,6 +1127,12 @@ export default function ManpowerTab({ currentUser }) {
   const [selectedDate, setSelectedDate] = useState(getTodayDateString());
   // { [manpower_project_id]: { values: { [manpower_location_id]: string }, detail: string } }
   const [cells, setCells] = useState({});
+
+  // The daily-report text behind each project row: { [projectId]: [{ userId, userName, content }] },
+  // ordered by who filed first. Recomputed on every load, never stored, so a member who
+  // reports later always shows up on the next line - including after a leader has edited
+  // the lines above.
+  const [projectDetails, setProjectDetails] = useState({});
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingBoard, setIsLoadingBoard] = useState(false);
@@ -1029,7 +1155,7 @@ export default function ManpowerTab({ currentUser }) {
 
   // Rectangular cell-range selection over the headcount columns, so a block of cells
   // can be copied out as Excel-compatible TSV (and an Excel block pasted back in).
-  // { anchor: {r, c}, focus: {r, c} } as indices into projects[] / locations[].
+  // { anchor: {r, c}, focus: {r, c} } as indices into visibleProjects[] / locations[].
   const [selection, setSelection] = useState(null);
   const isDraggingRef = useRef(false);
 
@@ -1085,7 +1211,7 @@ export default function ManpowerTab({ currentUser }) {
   }, [scopeOptions, selectedScope, departments, currentUser?.department_id]);
 
   // Switching Team starts again with every Part of that Team ticked.
-  useEffect(() => { setExcludedPartIds(new Set()); }, [selectedScope]);
+  useEffect(() => { setExcludedPartIds(new Set()); setShowAllProjects(true); }, [selectedScope]);
 
   const toggleExcludedPart = (partId) => {
     setExcludedPartIds(prev => {
@@ -1129,9 +1255,10 @@ export default function ManpowerTab({ currentUser }) {
     }
     setIsLoadingBoard(true);
     try {
-      const [res, headcount] = await Promise.all([
+      const [res, headcount, details] = await Promise.all([
         db.getManpowerReport(dateStr, toApiScope(selectedScope)),
-        db.getManpowerHeadcount(dateStr, effectiveScopeIds, [...excludedPartIds]).catch(() => ({}))
+        db.getManpowerHeadcount(dateStr, effectiveScopeIds, [...excludedPartIds]).catch(() => ({})),
+        db.getManpowerProjectDetails(dateStr, effectiveScopeIds, [...excludedPartIds]).catch(() => ({}))
       ]);
       loadedRowsRef.current = res?.data?.rows || [];
       // Baseline for the auto-save comparison: what the stored file already contains.
@@ -1144,7 +1271,14 @@ export default function ManpowerTab({ currentUser }) {
       // file would leave a stale figure behind whenever a cell empties out (removing the
       // last member produces no headcount entry, so nothing would overwrite the old one).
       (res?.data?.rows || []).forEach(row => {
-        next[row.manpower_project_id] = { values: {}, detail: row.detail || '' };
+        next[row.manpower_project_id] = {
+          values: {},
+          detail: row.detail || '',
+          // detailSeen is whose report has already been folded into the text above.
+          detailSeen: Array.isArray(row.detailSeen) ? row.detailSeen : [],
+          // Carried only so a board saved by the previous per-line version can be migrated.
+          detailEdits: row.detailEdits || {}
+        };
       });
 
       // Anyone who filed a daily report for this day against a project + work location
@@ -1163,15 +1297,26 @@ export default function ManpowerTab({ currentUser }) {
         next[projectId] = { ...row, values };
       });
 
+      setProjectDetails(details || {});
+      // Fold any not-yet-merged report text into each row's cell before it is displayed.
+      // Auto-save then persists the merged text, so this happens once per contributor.
+      Object.assign(next, mergeReportedDetails(next, details));
       setAutoFilledCells(auto);
       setCellNames(names);
+      // Derived from the same headcount the numbers come from, so it already respects the
+      // un-ticked Parts: a project only counts as occupied if a ticked Part put someone in it.
+      setOccupiedProjectIds(new Set(Object.keys(headcount || {}).filter(
+        projectId => Object.values(headcount[projectId] || {}).some(cell => (cell?.count || 0) > 0)
+      )));
       setCells(next);
       setSavedFileName(res?.exists ? (res.file_name || '') : '');
     } catch (err) {
       console.error('Failed to load manpower board', err);
       loadedRowsRef.current = [];
+      setProjectDetails({});
       setAutoFilledCells({});
       setCellNames({});
+      setOccupiedProjectIds(new Set());
       setCells({});
       setSavedFileName('');
     } finally {
@@ -1182,6 +1327,13 @@ export default function ManpowerTab({ currentUser }) {
   useEffect(() => { loadConfig(); }, [loadConfig]);
   useEffect(() => { loadBoard(selectedDate); }, [selectedDate, loadBoard]);
 
+  // Only the roles that can open this tab may touch the text. Stated here rather than
+  // relying on the parent's tab gate alone.
+  const canEditDetails = (() => {
+    const role = currentUser?.system_role || '';
+    return role.includes('Admin') || role === 'Team Leader' || role === 'Part Leader';
+  })();
+
   const updateDetail = (projectId, value) => {
     setCells(prev => {
       const row = prev[projectId] || { values: {}, detail: '' };
@@ -1189,10 +1341,19 @@ export default function ManpowerTab({ currentUser }) {
     });
   };
 
+  // The rows on screen. Everything that addresses a row by index - selection, copy, paste,
+  // and the rows written to the saved file - must go through this same array, or an index
+  // would point at a different project than the one the user sees.
+  const visibleProjects = useMemo(() => (
+    showAllProjects
+      ? projects
+      : projects.filter(p => occupiedProjectIds.has(p.manpower_project_id))
+  ), [projects, showAllProjects, occupiedProjectIds]);
+
   // Total headcount across every cell of the board, excluding the free-text detail column.
   const totalManpower = useMemo(() => {
     let sum = 0;
-    projects.forEach(p => {
+    visibleProjects.forEach(p => {
       const row = cells[p.manpower_project_id];
       if (!row) return;
       locations.forEach(loc => {
@@ -1201,7 +1362,7 @@ export default function ManpowerTab({ currentUser }) {
       });
     });
     return sum;
-  }, [cells, projects, locations]);
+  }, [cells, visibleProjects, locations]);
 
   useEffect(() => {
     const stopDragging = () => { isDraggingRef.current = false; };
@@ -1249,7 +1410,7 @@ export default function ManpowerTab({ currentUser }) {
   const totalCols = locations.length + 2;
 
   const readCell = (r, c) => {
-    const project = projects[r];
+    const project = visibleProjects[r];
     if (!project) return '';
     if (c === NAME_COL) return project.name || '';
     const row = cells[project.manpower_project_id];
@@ -1284,7 +1445,7 @@ export default function ManpowerTab({ currentUser }) {
     e.preventDefault();
     setSelection(prev => {
       const base = prev || { anchor: { r, c }, focus: { r, c } };
-      const nr = Math.min(projects.length - 1, Math.max(0, base.focus.r + delta[0]));
+      const nr = Math.min(visibleProjects.length - 1, Math.max(0, base.focus.r + delta[0]));
       const nc = Math.min(totalCols - 1, Math.max(0, base.focus.c + delta[1]));
       return { ...base, focus: { r: nr, c: nc } };
     });
@@ -1375,7 +1536,7 @@ export default function ManpowerTab({ currentUser }) {
     setCells(prev => {
       const next = { ...prev };
       matrix.forEach((cols, i) => {
-        const project = projects[r1 + i];
+        const project = visibleProjects[r1 + i];
         if (!project) return;
         const row = next[project.manpower_project_id] || { values: {}, detail: '' };
         let detail = row.detail || '';
@@ -1390,21 +1551,44 @@ export default function ManpowerTab({ currentUser }) {
       return next;
     });
 
-    const lastRow = Math.min(projects.length - 1, r1 + matrix.length - 1);
+    const lastRow = Math.min(visibleProjects.length - 1, r1 + matrix.length - 1);
     const lastCol = Math.min(totalCols - 1, c1 + Math.max(...matrix.map(m => m.length)) - 1);
     setSelection({ anchor: { r: r1, c: c1 }, focus: { r: lastRow, c: lastCol } });
   };
 
   // The rows that would be written for the current view. Un-ticked Parts are hidden from
   // the view, not deleted, so their previously saved rows are carried through untouched.
+  // Which row's detail text is open in the big editor, and the draft being typed there.
+  // The draft is kept separate so Cancel really discards, rather than having already
+  // written through to the board.
+  const [detailEditor, setDetailEditor] = useState(null);
+  const [detailDraft, setDetailDraft] = useState('');
+
+  const openDetailEditor = (project) => {
+    setDetailDraft(cells[project.manpower_project_id]?.detail || '');
+    setDetailEditor({ projectId: project.manpower_project_id, projectName: project.name });
+  };
+
+  const saveDetailEditor = () => {
+    if (!detailEditor) return;
+    updateDetail(detailEditor.projectId, detailDraft);
+    setDetailEditor(null);
+  };
+
   const buildBoardRows = () => {
-    const rows = projects.map(p => ({
-      manpower_project_id: p.manpower_project_id,
-      project_name: p.name,
-      values: cells[p.manpower_project_id]?.values || {},
-      detail: cells[p.manpower_project_id]?.detail || ''
-    }));
-    const visibleIds = new Set(projects.map(p => p.manpower_project_id));
+    const rows = visibleProjects.map(p => {
+      const row = cells[p.manpower_project_id] || {};
+      // The cell text IS the detail now, so the .html prints it as-is. detailSeen records
+      // whose report has already been folded in, so nobody is merged twice.
+      return {
+        manpower_project_id: p.manpower_project_id,
+        project_name: p.name,
+        values: row.values || {},
+        detail: row.detail || '',
+        detailSeen: row.detailSeen || []
+      };
+    });
+    const visibleIds = new Set(visibleProjects.map(p => p.manpower_project_id));
     loadedRowsRef.current.forEach(savedRow => {
       if (!visibleIds.has(savedRow.manpower_project_id)) rows.push(savedRow);
     });
@@ -1420,7 +1604,7 @@ export default function ManpowerTab({ currentUser }) {
   // data actually differs from what is already stored, and stays quiet otherwise, so
   // merely browsing dates never creates junk files or pointless writes.
   const persistBoard = useCallback(async () => {
-    if (!selectedScope || projects.length === 0) return;
+    if (!selectedScope || visibleProjects.length === 0) return;
 
     const rows = buildBoardRows();
     const signature = JSON.stringify(rows);
@@ -1458,7 +1642,7 @@ export default function ManpowerTab({ currentUser }) {
     }
     // buildBoardRows reads cells/projects/locations, which are already in the dep list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedScope, selectedScopeName, selectedDate, projects, locations, cells, savedFileName, currentUser?.id, loadConfig]);
+  }, [selectedScope, selectedScopeName, selectedDate, visibleProjects, locations, cells, savedFileName, currentUser?.id, loadConfig]);
 
   // Debounced so typing in the detail column does not fire a request per keystroke.
   useEffect(() => {
@@ -1532,6 +1716,8 @@ export default function ManpowerTab({ currentUser }) {
               onSelectScope={setSelectedScope}
               excludedPartIds={excludedPartIds}
               onTogglePart={toggleExcludedPart}
+              showAllProjects={showAllProjects}
+              onToggleAllProjects={() => setShowAllProjects(prev => !prev)}
               t={t}
             />
           </div>
@@ -1654,7 +1840,7 @@ export default function ManpowerTab({ currentUser }) {
             </span>
           </div>
 
-          {projects.length === 0 || locations.length === 0 ? (
+          {visibleProjects.length === 0 || locations.length === 0 ? (
             <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--neutral-muted)', fontSize: '13.5px' }}>
               <i className="fa-solid fa-table-list" style={{ fontSize: '28px', display: 'block', marginBottom: '10px' }}></i>
               {t('manpower.emptyConfigHint', 'Hãy dùng "Cập nhật thông tin dự án" để thêm danh sách dự án và địa điểm làm việc trước.')}
@@ -1688,7 +1874,8 @@ export default function ManpowerTab({ currentUser }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {projects.map((p, rowIndex) => (
+                    {visibleProjects.map((p, rowIndex) => {
+                      return (
                       <tr key={p.manpower_project_id}>
                         <td
                           onMouseDown={(e) => handleCellMouseDown(rowIndex, NAME_COL, e)}
@@ -1758,25 +1945,46 @@ export default function ManpowerTab({ currentUser }) {
                             backgroundColor: isCellSelected(rowIndex, detailColIndex) ? 'rgba(59, 130, 246, 0.22)' : undefined
                           }}
                         >
-                          <textarea
-                            data-mp-detail="1"
-                            rows={2}
-                            value={cells[p.manpower_project_id]?.detail || ''}
-                            onChange={(e) => updateDetail(p.manpower_project_id, e.target.value)}
-                            onKeyDown={(e) => handleCellKeyDown(e, rowIndex, detailColIndex)}
-                            disabled={isLoadingBoard}
-                            style={{
-                              ...cellInputStyle,
-                              textAlign: 'left',
-                              resize: 'vertical',
-                              minHeight: '42px',
-                              lineHeight: 1.45,
-                              fontFamily: 'inherit'
-                            }}
-                          />
+                          {/* One plain text box per row, plus a button that opens the same
+                              text in a roomy popup - the cell is too short for long content. */}
+                          <div style={{ display: 'flex', alignItems: 'stretch', gap: '4px' }}>
+                            <textarea
+                              data-mp-detail="1"
+                              rows={2}
+                              value={cells[p.manpower_project_id]?.detail || ''}
+                              readOnly={!canEditDetails}
+                              onChange={(e) => updateDetail(p.manpower_project_id, e.target.value)}
+                              onKeyDown={(e) => handleCellKeyDown(e, rowIndex, detailColIndex)}
+                              disabled={isLoadingBoard}
+                              style={{
+                                ...cellInputStyle,
+                                flex: 1,
+                                textAlign: 'left',
+                                resize: 'vertical',
+                                minHeight: '42px',
+                                lineHeight: 1.45,
+                                fontFamily: 'inherit'
+                              }}
+                            />
+                            <button
+                              type="button"
+                              title={t('manpower.openDetail', 'Mở nội dung')}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={() => openDetailEditor(p)}
+                              disabled={isLoadingBoard}
+                              style={{
+                                flexShrink: 0, width: '30px', border: '1px solid var(--neutral-border)',
+                                borderRadius: '4px', backgroundColor: 'var(--neutral-bg-card)',
+                                color: 'var(--primary-color)', cursor: 'pointer', fontSize: '12px'
+                              }}
+                            >
+                              <i className="fa-solid fa-up-right-and-down-left-from-center"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1845,6 +2053,57 @@ export default function ManpowerTab({ currentUser }) {
         currentUser={currentUser}
         excludedPartIds={excludedPartIds}
       />
+
+      {/* The detail text of one row, in a window big enough to actually read it. Editing
+          here is the same edit as in the cell; Cancel discards the draft. */}
+      {detailEditor && (
+        <div className="modal show" style={{ display: 'flex', zIndex: 1002 }}>
+          <div className="modal-dialog" style={{ maxWidth: '860px', width: '90%' }}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <i className="fa-solid fa-list-check" style={{ color: 'var(--primary-color)' }}></i>
+                  {t('manpower.detailColumn', 'Chi tiết công việc của dự án')}
+                  <span style={{ color: 'var(--neutral-muted)', fontWeight: 500, fontSize: '14px' }}>
+                    — {detailEditor.projectName}
+                  </span>
+                </h3>
+                <button className="btn-close-modal" onClick={() => setDetailEditor(null)}>
+                  <i className="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+
+              <div className="modal-body" style={{ padding: '20px' }}>
+                <textarea
+                  value={detailDraft}
+                  readOnly={!canEditDetails}
+                  onChange={(e) => setDetailDraft(e.target.value)}
+                  placeholder={canEditDetails
+                    ? t('manpower.detailEditorPlaceholder', 'Mỗi nội dung một dòng...')
+                    : ''}
+                  style={{
+                    width: '100%', minHeight: '340px', padding: '12px 14px', borderRadius: '6px',
+                    border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)',
+                    color: 'var(--neutral-dark)', fontSize: '13.5px', lineHeight: 1.6,
+                    fontFamily: 'inherit', resize: 'vertical', outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div className="modal-footer" style={{ padding: '12px 20px', borderTop: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setDetailEditor(null)}>
+                  {canEditDetails ? t('common.cancel', 'Hủy') : t('common.close', 'Đóng')}
+                </button>
+                {canEditDetails && (
+                  <button type="button" className="btn btn-primary" onClick={saveDetailEditor}>
+                    {t('common.save', 'Lưu')}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ManpowerInfoModal
         isOpen={isInfoModalOpen}

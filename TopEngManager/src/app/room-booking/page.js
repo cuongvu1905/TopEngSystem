@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { db } from '@/utils/db';
 import TimeField, { normalizeTime, TIME_RE } from '@/components/TimeField';
 import { useApp } from '@/context/AppContext';
@@ -128,6 +128,17 @@ export default function RoomBookingPage() {
   // Defaults to LOW on purpose: leaving the field untouched should describe the most
   // common case (an internal team meeting), never lock a slot nobody agreed to lock.
   const [modalImportance, setModalImportance] = useState('LOW');
+  // Interpreter request. The people on offer come from the server (accounts flagged as
+  // interpreters in HR), never from a list hardcoded here, so adding an interpreter is a
+  // personnel change rather than a code change.
+  const [interpreters, setInterpreters] = useState([]);
+  const [isLoadingInterpreters, setIsLoadingInterpreters] = useState(false);
+  const [needsInterpreter, setNeedsInterpreter] = useState(false);
+  const [selectedInterpreterIds, setSelectedInterpreterIds] = useState([]);
+  // How many interpreters were left out because they are already booked at this hour,
+  // so a name disappearing from the list reads as "busy" rather than "deleted".
+  const [busyInterpreterCount, setBusyInterpreterCount] = useState(0);
+  const [droppedInterpreters, setDroppedInterpreters] = useState([]);
 
   // Bookings come from the server: a meeting room is shared, so everyone must see the same
   // schedule. They used to be kept in localStorage, which is per-browser - that is why a
@@ -147,6 +158,63 @@ export default function RoomBookingPage() {
   }, []);
 
   useEffect(() => { loadBookings(); }, [loadBookings]);
+
+  // The selection is mirrored in a ref so the loader can prune it without reading stale
+  // state or doing work inside a state updater.
+  const selectionRef = useRef([]);
+  const knownNames = useRef(new Map());
+  const setSelection = useCallback((next) => {
+    selectionRef.current = next;
+    setSelectedInterpreterIds(next);
+  }, []);
+
+  // Who is free depends on the slot being booked, so this is re-read whenever the date or
+  // the hours move. The sequence number stops a slow earlier reply landing on a newer one.
+  const interpreterRequest = useRef(0);
+  const loadInterpreters = useCallback(async (slot) => {
+    const seq = ++interpreterRequest.current;
+    setIsLoadingInterpreters(true);
+    try {
+      const result = await db.getInterpreters(slot);
+      if (seq !== interpreterRequest.current) return;
+      const list = Array.isArray(result?.interpreters) ? result.interpreters : [];
+      list.forEach(person => knownNames.current.set(person.id, person.name));
+      setInterpreters(list);
+      setBusyInterpreterCount(Number(result?.busyCount) || 0);
+
+      // Someone picked earlier can become busy once the hours move. Dropping them in
+      // silence is how a booking ends up notifying nobody, so name whoever was dropped.
+      const free = new Set(list.map(person => person.id));
+      const dropped = selectionRef.current.filter(id => !free.has(id));
+      if (dropped.length > 0) {
+        setSelection(selectionRef.current.filter(id => free.has(id)));
+        setDroppedInterpreters(dropped.map(id => knownNames.current.get(id) || id));
+      } else {
+        setDroppedInterpreters([]);
+      }
+    } catch (err) {
+      if (seq !== interpreterRequest.current) return;
+      console.error('Failed to load interpreters', err);
+      setInterpreters([]);
+      setBusyInterpreterCount(0);
+    } finally {
+      if (seq === interpreterRequest.current) setIsLoadingInterpreters(false);
+    }
+  }, [setSelection]);
+
+  // Only asked for once the box is ticked, and re-asked as the slot is edited.
+  useEffect(() => {
+    if (!isModalOpen || !needsInterpreter) return;
+    const start = normalizeTime(modalStartTime);
+    const end = normalizeTime(modalEndTime);
+    const slotReady = TIME_RE.test(start) && TIME_RE.test(end) && start < end;
+    loadInterpreters(slotReady ? { date: modalDate, startTime: start, endTime: end } : {});
+  }, [isModalOpen, needsInterpreter, modalDate, modalStartTime, modalEndTime, loadInterpreters]);
+
+  const toggleInterpreter = useCallback((id) => {
+    const current = selectionRef.current;
+    setSelection(current.includes(id) ? current.filter(x => x !== id) : [...current, id]);
+  }, [setSelection]);
 
 
   // Update booker name when currentUser is loaded
@@ -200,6 +268,12 @@ export default function RoomBookingPage() {
     }
     setModalPurpose('');
     setModalImportance('LOW');
+    // A fresh form asks for nothing: carrying the previous meeting’s interpreters over
+    // would quietly email people about a meeting nobody chose them for.
+    setNeedsInterpreter(false);
+    setSelection([]);
+    setDroppedInterpreters([]);
+    setBusyInterpreterCount(0);
     setIsModalOpen(true);
   };
 
@@ -261,6 +335,32 @@ export default function RoomBookingPage() {
       return;
     }
 
+    // "Cần phiên dịch" with nobody picked would book the room and notify no one, which
+    // is the one outcome the person who ticked that box did not want.
+    if (needsInterpreter && selectedInterpreterIds.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('common.notice', 'Thông báo'),
+        text: t('roomBooking.pickInterpreter', 'Vui lòng chọn ít nhất một phiên dịch, hoặc bỏ tick "Cần phiên dịch".'),
+        confirmButtonColor: 'var(--primary-color)'
+      });
+      setIsSavingBooking(false);
+      return;
+    }
+
+    // An interpreter has to know what they are turning up to translate. The hours are
+    // already required for every booking; the meeting content is not, until now.
+    if (needsInterpreter && !modalPurpose.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('common.notice', 'Thông báo'),
+        text: t('roomBooking.purposeRequiredForInterpreter', 'Vui lòng nhập nội dung cuộc họp khi có yêu cầu phiên dịch.'),
+        confirmButtonColor: 'var(--primary-color)'
+      });
+      setIsSavingBooking(false);
+      return;
+    }
+
     // A local overlap check catches the common case instantly, but it can only see the
     // schedule this browser has already loaded. The server repeats the check and is the
     // authority: two people booking the same slot at the same moment both pass here.
@@ -283,7 +383,7 @@ export default function RoomBookingPage() {
     }
 
     try {
-      await db.createRoomBooking({
+      const created = await db.createRoomBooking({
         location: modalLocation,
         roomId: modalRoomId,
         date: modalDate,
@@ -292,19 +392,39 @@ export default function RoomBookingPage() {
         team: modalTeam.trim(),
         bookerName: modalBookerName.trim(),
         bookerId: currentUser?.id || null,
-        purpose: modalPurpose.trim() || t('roomBooking.defaultPurpose', 'Họp nhóm'),
-        importance: modalImportance
+        // With an interpreter requested the content is the email subject, so the
+        // "Họp nhóm" stand-in would defeat the check the server makes on it.
+        purpose: needsInterpreter
+          ? modalPurpose.trim()
+          : (modalPurpose.trim() || t('roomBooking.defaultPurpose', 'Họp nhóm')),
+        importance: modalImportance,
+        interpreterIds: needsInterpreter ? selectedInterpreterIds : []
       });
       await loadBookings();
       setIsModalOpen(false);
-      Swal.fire({
-        icon: 'success',
-        title: t('common.success', 'Thành công'),
-        text: t('roomBooking.bookSuccess', 'Đặt phòng họp thành công!'),
-        confirmButtonColor: 'var(--primary-color)',
-        timer: 1800,
-        showConfirmButton: false
-      });
+
+      // The room is held either way. If the notification did not go out, say so rather
+      // than reporting a bare success the booker would read as "the interpreter knows".
+      const mail = created && created.mail;
+      if (mail && !mail.sent) {
+        const who = (mail.recipients || []).join(', ');
+        Swal.fire({
+          icon: 'warning',
+          title: t('roomBooking.mailFailedTitle', 'Đã đặt phòng, nhưng chưa gửi được email'),
+          text: t('roomBooking.mailFailedText', 'Lịch họp đã được lưu. Hệ thống chưa gửi được email cho phiên dịch ({who}), vui lòng báo trực tiếp cho họ.').replace('{who}', who)
+            + (mail.error ? ' (' + mail.error + ')' : ''),
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: t('common.success', 'Thành công'),
+          text: t('roomBooking.bookSuccess', 'Đặt phòng họp thành công!'),
+          confirmButtonColor: 'var(--primary-color)',
+          timer: 1800,
+          showConfirmButton: false
+        });
+      }
     } catch (err) {
       // A 409 means somebody else took the slot between this page loading and now, so
       // refresh the schedule to show what actually happened.
@@ -337,16 +457,31 @@ export default function RoomBookingPage() {
 
     if (!result.isConfirmed) return;
     try {
-      await db.deleteRoomBooking(bookingId, currentUser?.id);
+      const cancelled = await db.deleteRoomBooking(bookingId, currentUser?.id);
       await loadBookings();
       setDetailBooking(null);
-      Swal.fire({
-        icon: 'success',
-        title: t('common.deleted', 'Đã xóa'),
-        text: t('roomBooking.cancelSuccess', 'Đã huỷ lịch đặt phòng thành công.'),
-        timer: 1500,
-        showConfirmButton: false
-      });
+
+      // The meeting is off either way. If the interpreters were not told, say so rather
+      // than reporting a bare success the canceller would read as "they know".
+      const mail = cancelled && cancelled.mail;
+      if (mail && !mail.sent) {
+        const who = (mail.recipients || []).join(', ');
+        Swal.fire({
+          icon: 'warning',
+          title: t('roomBooking.cancelMailFailedTitle', 'Đã huỷ họp, nhưng chưa gửi được email'),
+          text: t('roomBooking.cancelMailFailedText', 'Cuộc họp đã được huỷ. Hệ thống chưa gửi được email báo huỷ cho phiên dịch ({who}), vui lòng báo trực tiếp cho họ.').replace('{who}', who)
+            + (mail.error ? ' (' + mail.error + ')' : ''),
+          confirmButtonColor: 'var(--primary-color)'
+        });
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: t('common.deleted', 'Đã xóa'),
+          text: t('roomBooking.cancelSuccess', 'Đã huỷ lịch đặt phòng thành công.'),
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }
     } catch (err) {
       await loadBookings();
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
@@ -646,6 +781,96 @@ export default function RoomBookingPage() {
 
               <form onSubmit={handleSaveBooking}>
                 <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '20px' }}>
+                  {/* Interpreter request, first thing on the form: it changes what the rest
+                      of the form demands (the meeting content stops being optional), so it
+                      cannot sit below the fields it governs. */}
+                  <div className="form-group" style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', color: 'var(--neutral-dark)', margin: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={needsInterpreter}
+                        onChange={(e) => setNeedsInterpreter(e.target.checked)}
+                        style={{ cursor: 'pointer', margin: 0, width: '16px', height: '16px', accentColor: 'var(--primary-color)' }}
+                      />
+                      <i className="fa-solid fa-language" style={{ color: 'var(--primary-color)' }}></i>
+                      {t('roomBooking.needInterpreter', 'Cần phiên dịch')}
+                    </label>
+
+                    {needsInterpreter && (
+                      <div style={{ marginTop: '10px' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--neutral-muted)', marginBottom: '8px', lineHeight: 1.45 }}>
+                          {t('roomBooking.interpreterHint', 'Chọn phiên dịch cần mời (có thể chọn nhiều người). Danh sách chỉ hiện những người còn trống trong ngày và khung giờ đã chọn bên dưới. Hệ thống sẽ gửi email thông báo tới từng người được chọn.')}
+                        </div>
+
+                        {/* Changing the hours can take a chosen interpreter away. Saying so is
+                            the difference between a visible change and a silent one. */}
+                        {droppedInterpreters.length > 0 && (
+                          <div style={{
+                            fontSize: '12px', lineHeight: 1.45, marginBottom: '8px',
+                            padding: '8px 10px', borderRadius: '6px',
+                            color: '#b45309', border: '1px solid rgba(245, 158, 11, 0.55)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.14)'
+                          }}>
+                            <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: '6px' }}></i>
+                            {t('roomBooking.interpreterDropped', 'Đã bỏ chọn {names} vì khung giờ vừa đổi bị trùng lịch của họ.').replace('{names}', droppedInterpreters.join(', '))}
+                          </div>
+                        )}
+
+                        {isLoadingInterpreters ? (
+                          <div style={{ fontSize: '12.5px', color: 'var(--neutral-muted)', padding: '6px 2px' }}>
+                            {t('roomBooking.loadingInterpreters', 'Đang tải danh sách phiên dịch...')}
+                          </div>
+                        ) : interpreters.length === 0 ? (
+                          <div style={{ fontSize: '12.5px', color: 'var(--neutral-muted)', fontStyle: 'italic', padding: '6px 2px', lineHeight: 1.45 }}>
+                            {busyInterpreterCount > 0
+                              ? t('roomBooking.allInterpretersBusy', 'Tất cả phiên dịch đều đã có lịch trùng khung giờ này. Vui lòng chọn khung giờ khác.')
+                              : t('roomBooking.noInterpreters', 'Chưa có tài khoản nào được đánh dấu là phiên dịch. Nhờ HR/Admin bật mục "Phiên dịch" trong hồ sơ nhân viên.')}
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '170px', overflowY: 'auto' }}>
+                              {interpreters.map(person => {
+                                const picked = selectedInterpreterIds.includes(person.id);
+                                return (
+                                  <label
+                                    key={person.id}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '9px',
+                                      padding: '7px 9px',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      margin: 0,
+                                      border: `1.5px solid ${picked ? 'var(--primary-color)' : 'transparent'}`,
+                                      backgroundColor: picked ? 'rgba(30, 64, 175, 0.12)' : 'var(--neutral-bg-card, transparent)'
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={picked}
+                                      onChange={() => toggleInterpreter(person.id)}
+                                      style={{ cursor: 'pointer', margin: 0, width: '15px', height: '15px', accentColor: 'var(--primary-color)', flexShrink: 0 }}
+                                    />
+                                    <span style={{ minWidth: 0 }}>
+                                      <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--neutral-dark)' }}>{person.name}</span>
+                                      <span style={{ fontSize: '11.5px', color: 'var(--neutral-muted)', marginLeft: '6px', wordBreak: 'break-all' }}>{person.email}</span>
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            {busyInterpreterCount > 0 && (
+                              <div style={{ fontSize: '11.5px', color: 'var(--neutral-muted)', marginTop: '7px', fontStyle: 'italic' }}>
+                                {t('roomBooking.interpreterBusyHidden', 'Đang ẩn {count} phiên dịch đã có lịch trùng khung giờ này.').replace('{count}', String(busyInterpreterCount))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div className="form-group">
                       <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
@@ -745,9 +970,8 @@ export default function RoomBookingPage() {
                     </div>
                   </div>
 
-                  <div className="form-group">
                     <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '4px', display: 'block' }}>
-                      {t('roomBooking.purposeLabel', 'Nội dung / Mục đích cuộc họp')}
+                      {t('roomBooking.purposeLabel', 'Nội dung / Mục đích cuộc họp')}{needsInterpreter && <span style={{ color: '#ef4444' }}> *</span>}
                     </label>
                     <textarea
                       rows={3}
@@ -887,6 +1111,32 @@ export default function RoomBookingPage() {
                       {b.purpose || t('roomBooking.noPurpose', '(Không có nội dung)')}
                     </div>
                   </div>
+
+                  {/* Who was asked to interpret. Bookings made before this field existed have
+                      none, and then the section is simply absent rather than showing "(none)". */}
+                  {b.interpreters && b.interpreters.length > 0 && (
+                    <div>
+                      <div style={{ color: 'var(--neutral-muted)', fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>
+                        <i className="fa-solid fa-language" style={{ marginRight: '6px', color: 'var(--primary-color)' }}></i>
+                        {t('roomBooking.interpreterLabel', 'Phiên dịch')}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {b.interpreters.map((person, idx) => (
+                          <div
+                            key={person.id || idx}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap',
+                              padding: '8px 10px', borderRadius: '8px',
+                              border: '1px solid var(--neutral-border)', backgroundColor: 'var(--neutral-bg-main)'
+                            }}
+                          >
+                            <span style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--neutral-dark)' }}>{person.name}</span>
+                            <span style={{ fontSize: '11.5px', color: 'var(--neutral-muted)', wordBreak: 'break-all' }}>{person.email}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="modal-footer" style={{ padding: '12px 20px', borderTop: '1px solid var(--neutral-border)', display: 'flex', justifyContent: 'space-between', gap: '10px' }}>

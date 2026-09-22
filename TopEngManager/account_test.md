@@ -49,6 +49,25 @@ Tài liệu này chứa thông tin các tài khoản thử nghiệm tương ứn
 
 ---
 
+## Tài khoản phiên dịch (kiểm thử tính năng đặt phòng họp)
+
+Các tài khoản này được hệ thống tự tạo khi khởi động backend nếu chưa tồn tại (khớp theo
+email, chỉ tạo mới - không ghi đè, nên đổi tên hay chuyển phòng ban cho chúng sẽ không bị mất).
+
+| Họ và tên | Email | Vai trò hệ thống | Đánh dấu |
+| :--- | :--- | :--- | :--- |
+| **THP Mai** | `thpmai@topengnet.com` | `Nhân viên (Staff)` | Là phiên dịch |
+| **TK Diem** | `tkdiem@topengnet.com` | `Nhân viên (Staff)` | Là phiên dịch |
+
+Muốn thêm/bớt phiên dịch: vào **Nhân sự → sửa thông tin nhân viên → tích "Là phiên dịch"**.
+Ai được tích sẽ xuất hiện trong danh sách chọn khi đặt phòng họp.
+
+Khi đặt phòng, danh sách chỉ hiện những phiên dịch **còn trống** trong ngày và khung giờ
+đang chọn - ai đã được đăng ký cho một cuộc họp trùng giờ (ở bất kỳ phòng/địa điểm nào)
+sẽ không xuất hiện.
+
+---
+
 ## Hướng dẫn kiểm thử nhanh
 1. Truy cập vào ứng dụng tại [http://localhost:3000](http://localhost:3000)
 2. Sử dụng email hoặc mã nhân viên của tài khoản muốn kiểm thử kèm mật khẩu `123456` để đăng nhập.

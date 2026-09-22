@@ -17,6 +17,7 @@ router.post('/deleteManpowerLocation', manpowerController.deleteManpowerLocation
 
 router.post('/getManpowerHeadcount', manpowerController.getManpowerHeadcount);
 router.post('/getManpowerCellMembers', manpowerController.getManpowerCellMembers);
+router.post('/getManpowerProjectDetails', manpowerController.getManpowerProjectDetails);
 router.post('/getUserDayReports', manpowerController.getUserDayReports);
 router.post('/getPlacedUserIds', manpowerController.getPlacedUserIds);
 router.post('/addManpowerCellMember', manpowerController.addManpowerCellMember);

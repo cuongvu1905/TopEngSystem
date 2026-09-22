@@ -232,6 +232,7 @@ exports.getUsers = async (req, res, next) => {
         email: u.email,
         phone: u.phone,
         system_role: u.role,
+        is_interpreter: !!u.is_interpreter,
         department_id: deptIsMasked ? null : u.department_id,
         department_name: deptIsMasked ? null : (u.department ? u.department.name : 'Chưa phân phòng'),
         additional_part_leader_of: u.partleadership.map(pl => pl.department_id),
@@ -484,7 +485,7 @@ exports.testConnection = async (req, res, next) => {
 
 exports.updateUserRoleAndDept = async (req, res, next) => {
   try {
-    const { userId, role, departmentId, fullName, email, newEmployeeId, requestedBy } = req.body;
+    const { userId, role, departmentId, fullName, email, newEmployeeId, isInterpreter, requestedBy } = req.body;
     if (!userId) {
       return res.status(400).json({ error: 'Thiếu mã nhân viên cần cập nhật.' });
     }
@@ -542,6 +543,12 @@ exports.updateUserRoleAndDept = async (req, res, next) => {
     }
     if (email !== undefined) {
       updateData.email = email;
+    }
+    // Whether this person may be requested as a meeting interpreter. Anyone allowed to
+    // edit an employee at all may set it: it grants no access, it only makes the person
+    // appear in the interpreter list on the room-booking form.
+    if (isInterpreter !== undefined) {
+      updateData.is_interpreter = !!isInterpreter;
     }
 
     await prisma.user.update({

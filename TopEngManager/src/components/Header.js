@@ -15,23 +15,25 @@ export default function Header({ onToggleSidebar }) {
   // Title translation logic based on pathname
   let pageTitle = headerTitle;
   if (!pageTitle) {
-    pageTitle = t('sidebar.dashboard', 'Dashboard');
+    pageTitle = t('sidebar.dashboard', 'Bảng điều khiển');
     if (pathname.startsWith('/projects')) {
-      pageTitle = pathname.includes('/projects/') ? t('projects.projectDetailTitle', 'Chi tiết dự án') : t('sidebar.projects', 'Dự án');
+      pageTitle = pathname.includes('/projects/') ? t('projects.projectDetailTitle', 'Chi tiết dự án') : t('sidebar.projects', 'Quản lý Dự án');
     } else if (pathname === '/tasks') {
-      pageTitle = t('sidebar.tasks', 'Công việc');
+      pageTitle = t('sidebar.tasks', 'Quản lý Công việc');
     } else if (pathname === '/room-booking') {
       pageTitle = t('sidebar.roomBooking', 'Đặt phòng họp');
     } else if (pathname === '/chat') {
-      pageTitle = t('sidebar.chat', 'Trò chuyện');
-    } else if (pathname === '/documents') {
-      pageTitle = t('sidebar.documents', 'Tài liệu');
+      pageTitle = t('sidebar.chat', 'Hộp thoại Trò chuyện');
+    } else if (pathname === '/approvals') {
+      pageTitle = t('sidebar.approvals', 'Phê duyệt');
+    } else if (pathname === '/topvwiki' || pathname === '/documents') {
+      pageTitle = t('sidebar.topvwiki', 'TOPVWiki');
     } else if (pathname === '/activity-logs') {
-      pageTitle = t('sidebar.activityLogs', 'Lịch sử làm việc');
+      pageTitle = t('sidebar.activityLogs', 'Lịch sử Hoạt động');
     } else if (pathname === '/hr') {
       pageTitle = t('sidebar.teamManagement', 'Quản lý nhân sự');
     } else if (pathname === '/daily-reports') {
-      pageTitle = t('sidebar.dailyReports', 'Báo cáo ngày');
+      pageTitle = t('sidebar.dailyReports', 'Báo cáo hàng ngày');
     }
   }
 

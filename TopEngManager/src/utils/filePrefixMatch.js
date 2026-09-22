@@ -30,3 +30,15 @@ export function matchesAllowedExtensions(filename, allowedExtensions) {
   const ext = (filename.split('.').pop() || '').toLowerCase();
   return list.includes(ext);
 }
+
+// The file types the document store accepts. Two components each kept their own copy of
+// this list, so adding a type meant editing it in three places and hoping none was missed.
+// Must stay in step with ALLOWED_EXTENSIONS in backend/routes/documentRoutes.js, which is
+// the gate that actually enforces it.
+export const UPLOAD_EXTENSIONS = [
+  'txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf', 'csv',
+  'png', 'jpg', 'jpeg', 'zip', 'rar', 'dwg', 'zw1', 'drawio'
+];
+
+// The accept="" value for a file input.
+export const UPLOAD_ACCEPT_EXT = UPLOAD_EXTENSIONS.map(e => `.${e}`).join(',');

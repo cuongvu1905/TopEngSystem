@@ -11,7 +11,9 @@ if (!fs.existsSync(documentsUploadDir)) {
   fs.mkdirSync(documentsUploadDir, { recursive: true });
 }
 
-const ALLOWED_EXTENSIONS = ['txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf', 'csv', 'png', 'jpg', 'jpeg', 'zip', 'rar', 'dwg', 'zw1'];
+// The gate that actually enforces what can be uploaded. Must stay in step with
+// UPLOAD_EXTENSIONS in src/utils/filePrefixMatch.js, which drives the file picker.
+const ALLOWED_EXTENSIONS = ['txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pdf', 'csv', 'png', 'jpg', 'jpeg', 'zip', 'rar', 'dwg', 'zw1', 'drawio'];
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -40,6 +42,7 @@ router.post('/createDocumentFolder', documentController.createDocumentFolder);
 router.post('/renameDocumentFolder', documentController.renameDocumentFolder);
 router.post('/deleteDocumentFolder', documentController.deleteDocumentFolder);
 router.post('/getDocuments', documentController.getDocuments);
+router.post('/checkDocumentNameConflicts', documentController.checkDocumentNameConflicts);
 router.post('/getDocumentFileSlots', documentController.getDocumentFileSlots);
 router.post('/getProjectFileSlots', documentController.getProjectFileSlots);
 router.post('/createDocumentFileSlot', documentController.createDocumentFileSlot);
@@ -52,6 +55,7 @@ router.post('/uploadDocumentFileSlot', (req, res, next) => {
   });
 }, documentController.uploadDocumentFileSlot);
 router.post('/createFolderTreeFromTemplate', documentController.createFolderTreeFromTemplate);
+router.post('/getSelectableTemplateFolders', documentController.getSelectableTemplateFolders);
 router.post('/getFolderTemplates', documentController.getFolderTemplates);
 router.post('/createFolderTemplateFolder', documentController.createFolderTemplateFolder);
 router.post('/renameFolderTemplateFolder', documentController.renameFolderTemplateFolder);

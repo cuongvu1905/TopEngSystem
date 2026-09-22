@@ -468,6 +468,138 @@ export default function DailyReportsPage() {
   const myReports = reports.filter(r => r.user_id === currentUser?.id);
 
   // Apply Date filters
+  // One card in the report history. Extracted so the month accordion can render it per
+  // group without duplicating the markup.
+  const renderHistoryCard = (report) => {
+                    const userColor = users.find(u => u.id === report.user_id)?.color || '#3b82f6';
+                    const proj = projects.find(p => p.id === report.project_id);
+                    
+                    return (
+                      <div 
+                        key={report.id} 
+                        style={{ 
+                          border: '1.5px solid var(--neutral-border)', 
+                          borderRadius: '8px', 
+                          padding: '16px', 
+                          background: 'var(--neutral-bg-card)', 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '12px', 
+                          cursor: 'pointer', 
+                          transition: 'all 0.2s',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                        }}
+                        onClick={() => showReportDetailPopup(report)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                          e.currentTarget.style.borderColor = 'var(--primary-color)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                          e.currentTarget.style.borderColor = 'var(--neutral-border)';
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: userColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px' }}>
+                              {report.user_name.split(' ').pop().charAt(0)}
+                            </div>
+                            <div>
+                              <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--neutral-dark)', margin: 0 }}>{report.user_name}</h4>
+                              <span style={{ fontSize: '9px', color: 'var(--neutral-muted)', display: 'block', marginTop: '-2px' }}>{report.user_role}</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                            <span style={{ fontSize: '9.5px', color: 'var(--neutral-muted)' }}>
+                              {new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US')}
+                            </span>
+                            <span style={{
+                              fontSize: '9px',
+                              color: report.status === 'Approved' ? 'var(--success-color)' : report.status === 'Rejected' ? 'var(--danger-color)' : report.status === 'Draft' ? 'var(--neutral-muted)' : 'var(--warning-color)',
+                              fontWeight: 'bold'
+                            }}>
+                              {report.status === 'Approved' ? t('report.approvedStatus', 'Đã duyệt') : report.status === 'Rejected' ? t('report.rejectedStatus', 'Từ chối') : report.status === 'Draft' ? t('report.draftStatus', 'Nháp') : 'Pending'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {report.project_id && (
+                          <span style={{ display: 'inline-block', alignSelf: 'flex-start', fontSize: '9.5px', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '1px 5px', borderRadius: '8px', fontWeight: '600', marginTop: '2px' }}>
+                            {proj?.name || 'Dự án'}
+                          </span>
+                        )}
+
+                        <div 
+                          style={{ 
+                            fontSize: '12px', 
+                            color: 'var(--neutral-muted)', 
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis', 
+                            display: '-webkit-box', 
+                            WebkitLineClamp: 3, 
+                            WebkitBoxOrient: 'vertical', 
+                            lineHeight: '1.5',
+                            marginTop: '4px' 
+                          }}
+                        >
+                          {getReportSnippet(report.content)}
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--neutral-border)', paddingTop: '8px' }}>
+                          <span style={{ fontSize: '11px', color: '#64748b' }}>
+                            {report.file_url ? <><i className="fa-solid fa-paperclip"></i> {t('report.hasAttachment', 'Có đính kèm')}</> : t('report.noAttachment', 'Không có đính kèm')}
+                          </span>
+                          {(report.status === 'Pending' || report.status === 'pending' || report.status === 'Chờ duyệt' || report.status === 'Draft') && report.user_id === currentUser?.id && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const SwalInstance = (await import('sweetalert2')).default;
+                                const result = await SwalInstance.fire({
+                                  icon: 'warning',
+                                  title: t('common.confirmDelete', 'Xác nhận xóa'),
+                                  text: t('report.confirmDeleteText', 'Bạn có chắc chắn muốn xóa báo cáo này? Hành động này không thể hoàn tác.'),
+                                  showCancelButton: true,
+                                  confirmButtonText: t('report.deleteReportBtn', 'Xóa báo cáo'),
+                                  cancelButtonText: t('common.cancel', 'Hủy'),
+                                  confirmButtonColor: '#ef4444',
+                                  cancelButtonColor: '#64748b',
+                                });
+                                if (result.isConfirmed) {
+                                  try {
+                                    await db.deleteDailyReport(report.id);
+                                    await loadReports();
+                                    SwalInstance.fire({ icon: 'success', title: t('common.deleted', 'Đã xóa'), text: t('report.deleteSuccessText', 'Báo cáo đã được xóa thành công!'), timer: 2000, showConfirmButton: false });
+                                  } catch (err) {
+                                    SwalInstance.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: t('report.deleteErrorText', 'Không thể xóa báo cáo: ') + err.message });
+                                  }
+                                }
+                              }}
+                              style={{
+                                background: 'none',
+                                border: '1px solid #fecaca',
+                                borderRadius: '6px',
+                                color: '#ef4444',
+                                fontSize: '11px',
+                                padding: '3px 10px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                transition: 'all 0.15s ease',
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.borderColor = '#ef4444'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#fecaca'; }}
+                            >
+                              <i className="fa-solid fa-trash-can" style={{ fontSize: '10px' }}></i> {t('common.delete', 'Xóa')}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+  };
+
   const reportsFilteredByDate = myReports.filter(report => {
     const reportDate = new Date(report.created_at);
     reportDate.setHours(0, 0, 0, 0);
@@ -484,6 +616,47 @@ export default function DailyReportsPage() {
     }
     return true;
   });
+
+  // The history is grouped by month, newest month first, because a year of daily reports is
+  // hundreds of cards. Only the months the user opens are rendered.
+  // Plain derived values, not memoized: reportsFilteredByDate is itself rebuilt on every
+  // render, so a useMemo keyed on it would never hit -- and the React Compiler rejects it.
+  const monthKeyOf = (value) => {
+    const d = new Date(value);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const reportsByMonth = (() => {
+    const groups = new Map();
+    reportsFilteredByDate.forEach(report => {
+      const key = monthKeyOf(report.created_at);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(report);
+    });
+    return [...groups.entries()]
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([key, items]) => ({ key, items }));
+  })();
+
+  const currentMonthKey = monthKeyOf(new Date());
+
+  // Which months are open. The current month starts open; the rest stay collapsed.
+  const [expandedMonths, setExpandedMonths] = useState(() => new Set([currentMonthKey]));
+
+  // Reopening the modal comes back to the current month rather than whatever was last left
+  // open, and a date filter that hides the current month opens the newest month there is.
+  useEffect(() => {
+    if (!isHistoryOpen) return;
+    setExpandedMonths(new Set([currentMonthKey]));
+  }, [isHistoryOpen, currentMonthKey]);
+
+  const toggleMonth = (key) => {
+    setExpandedMonths(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
 
   // Shared "report detail" popup: opened both from a History card click and from
   // clicking a green (already-reported) day in the Report Status calendar below.
@@ -1265,108 +1438,40 @@ export default function DailyReportsPage() {
                   <p style={{ fontSize: '13.5px', margin: 0 }}>{t('report.noReportsFound', 'Không tìm thấy báo cáo nào trong khoảng thời gian này.')}</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
-                  {reportsFilteredByDate.map(report => {
-                    const userColor = users.find(u => u.id === report.user_id)?.color || 'var(--primary-color)';
-                    const proj = projects.find(p => p.id === report.project_id);
-                    
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {reportsByMonth.map(({ key, items }) => {
+                    const [year, month] = key.split('-');
+                    const isOpen = expandedMonths.has(key);
                     return (
-                      <div 
-                        key={report.id} 
-                        className="daily-report-history-card"
-                        onClick={() => showReportDetailPopup(report)}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: userColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px' }}>
-                              {report.user_name.split(' ').pop().charAt(0)}
-                            </div>
-                            <div>
-                              <h4 style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--neutral-dark)', margin: 0 }}>{report.user_name}</h4>
-                              <span style={{ fontSize: '10px', color: 'var(--neutral-muted)', display: 'block', marginTop: '1px' }}>{report.user_role}</span>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                            <span style={{ fontSize: '10px', color: 'var(--neutral-muted)' }}>
-                              {new Date(report.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US')}
-                            </span>
-                            <span className={`badge ${report.status === 'Approved' ? 'badge-success' : report.status === 'Rejected' ? 'badge-danger' : report.status === 'Draft' ? 'badge-secondary' : 'badge-warning'}`} style={{ fontSize: '9.5px', padding: '1px 6px', fontWeight: 'bold' }}>
-                              {report.status === 'Approved' ? t('report.approvedStatus', 'ĐÃ DUYỆT') : report.status === 'Rejected' ? t('report.rejectedStatus', 'TỪ CHỐI') : report.status === 'Draft' ? t('report.draftStatus', 'NHÁP') : 'PENDING'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {report.project_id && (
-                          <span className="badge badge-info" style={{ display: 'inline-block', alignSelf: 'flex-start', fontSize: '10px', padding: '1px 6px', fontWeight: '700' }}>
-                            {proj?.name || 'Dự án'}
-                          </span>
-                        )}
-
-                        <div 
-                          style={{ 
-                            fontSize: '12px', 
-                            color: 'var(--neutral-muted)', 
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis', 
-                            display: '-webkit-box', 
-                            WebkitLineClamp: 3, 
-                            WebkitBoxOrient: 'vertical', 
-                            lineHeight: '1.5',
-                            marginTop: '4px' 
+                      <div key={key} style={{ border: '1px solid var(--neutral-border)', borderRadius: '8px', overflow: 'hidden' }}>
+                        <button
+                          type="button"
+                          onClick={() => toggleMonth(key)}
+                          style={{
+                            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            gap: '10px', padding: '12px 16px', border: 'none', cursor: 'pointer',
+                            backgroundColor: isOpen ? 'var(--neutral-bg-hover)' : 'var(--neutral-bg-card)',
+                            color: 'var(--primary-color)', fontSize: '13.5px', fontWeight: 600, textAlign: 'left'
                           }}
                         >
-                          {getReportSnippet(report.content)}
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', borderTop: '1px solid var(--neutral-border)', paddingTop: '8px' }}>
-                          <span style={{ fontSize: '11px', color: '#64748b' }}>
-                            {report.file_url ? <><i className="fa-solid fa-paperclip"></i> {t('report.hasAttachment', 'Có đính kèm')}</> : t('report.noAttachment', 'Không có đính kèm')}
+                          <span>
+                            {t('report.historyMonthLabel', 'Tháng {month}/{year}')
+                              .replace('{month}', month).replace('{year}', year)}
+                            {' '}
+                            <span style={{ color: 'var(--neutral-muted)', fontWeight: 500 }}>
+                              ({items.length} {t('report.historyRecordUnit', 'bản ghi')})
+                            </span>
                           </span>
-                          {(report.status === 'Pending' || report.status === 'pending' || report.status === 'Chờ duyệt' || report.status === 'Draft') && report.user_id === currentUser?.id && (
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                const SwalInstance = (await import('sweetalert2')).default;
-                                const result = await SwalInstance.fire({
-                                  icon: 'warning',
-                                  title: t('common.confirmDelete', 'Xác nhận xóa'),
-                                  text: t('report.confirmDeleteText', 'Bạn có chắc chắn muốn xóa báo cáo này? Hành động này không thể hoàn tác.'),
-                                  showCancelButton: true,
-                                  confirmButtonText: t('report.deleteReportBtn', 'Xóa báo cáo'),
-                                  cancelButtonText: t('common.cancel', 'Hủy'),
-                                  confirmButtonColor: '#ef4444',
-                                  cancelButtonColor: '#64748b',
-                                });
-                                if (result.isConfirmed) {
-                                  try {
-                                    await db.deleteDailyReport(report.id);
-                                    await loadReports();
-                                    SwalInstance.fire({ icon: 'success', title: t('common.deleted', 'Đã xóa'), text: t('report.deleteSuccessText', 'Báo cáo đã được xóa thành công!'), timer: 2000, showConfirmButton: false });
-                                  } catch (err) {
-                                    SwalInstance.fire({ icon: 'error', title: t('common.error', 'Lỗi'), text: t('report.deleteErrorText', 'Không thể xóa báo cáo: ') + err.message });
-                                  }
-                                }
-                              }}
-                              style={{
-                                background: 'none',
-                                border: '1px solid #fecaca',
-                                borderRadius: '6px',
-                                color: '#ef4444',
-                                fontSize: '11px',
-                                padding: '3px 10px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                transition: 'all 0.15s ease',
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.borderColor = '#ef4444'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#fecaca'; }}
-                            >
-                              <i className="fa-solid fa-trash-can" style={{ fontSize: '10px' }}></i> {t('common.delete', 'Xóa')}
-                            </button>
-                          )}
-                        </div>
+                          <i className={isOpen ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'} style={{ fontSize: '12px', color: 'var(--neutral-muted)' }}></i>
+                        </button>
+                        {isOpen && (
+                          <div style={{
+                            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                            gap: '16px', padding: '16px', borderTop: '1px solid var(--neutral-border)'
+                          }}>
+                            {items.map(report => renderHistoryCard(report))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
