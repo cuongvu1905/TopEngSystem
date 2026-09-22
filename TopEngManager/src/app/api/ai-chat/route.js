@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { ALL_PLUGINS_SCHEMA, executePluginTool } from '@/plugins';
 import { parseBookingIntentFromText, parseCancelIntentFromText } from '@/utils/aiTools';
+import { scanAndIndexFolder, getIndexedFolderData, getAllIndexedFolders } from '@/utils/folderIndexer';
+import { retrieveRelevantChunks, buildStrictRAGPrompt } from '@/utils/ragRetriever';
 
 const CONFIG_PATH = path.join(process.cwd(), 'src', 'config', 'ai_config.json');
 
@@ -51,7 +53,14 @@ async function triggerN8NWebhook(webhookUrl, payload) {
 // =========================================================================
 export async function POST(request) {
   try {
-    const { messages, systemContext, currentUser, language = 'vi' } = await request.json();
+    const { 
+      messages, 
+      systemContext, 
+      currentUser, 
+      language = 'vi',
+      folderRagMode = false,
+      targetFolderPath = ''
+    } = await request.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ success: false, error: 'Messages array is required.' }, { status: 400 });
@@ -88,7 +97,45 @@ export async function POST(request) {
     };
     const activeLangName = langNames[language] || (language === 'en' ? 'English' : 'Vietnamese (Tiếng Việt)');
 
-    let fullSystemPrompt = `[CRITICAL SYSTEM DIRECTIVE: LANGUAGE ENFORCEMENT]
+    let retrievedSources = [];
+
+    // =========================================================================
+    // STRICT FOLDER RAG MODE (If activated by User)
+    // =========================================================================
+    let fullSystemPrompt = '';
+    if (folderRagMode && targetFolderPath) {
+      let indexData = getIndexedFolderData(targetFolderPath);
+      if (!indexData || !indexData.chunks || indexData.chunks.length === 0) {
+        const scanRes = await scanAndIndexFolder(targetFolderPath, false);
+        if (scanRes.success) {
+          indexData = scanRes;
+        }
+      }
+
+      const latestUserMsg = messages.filter(m => m.role === 'user').slice(-1)[0]?.content || '';
+      if (indexData && indexData.chunks && indexData.chunks.length > 0) {
+        const matched = retrieveRelevantChunks(latestUserMsg, indexData.chunks, 5);
+        retrievedSources = matched.map(m => ({
+          fileName: m.fileName,
+          filePath: m.filePath,
+          chunkIndex: m.chunkIndex,
+          score: m.score
+        }));
+
+        const ragData = buildStrictRAGPrompt({
+          query: latestUserMsg,
+          retrievedChunks: matched,
+          folderPath: targetFolderPath,
+          language
+        });
+        fullSystemPrompt = ragData.systemPrompt;
+      } else {
+        fullSystemPrompt = language === 'en'
+          ? `[STRICT DIRECTIVE - ZERO HALLUCINATION]\nNo documents found in folder "${targetFolderPath}". Answer strictly: "I could not find any information regarding this in the provided folder documents."`
+          : `[CHỈ THỊ NGHIÊM NGẶT - CHỐNG BỊA ĐẶT]\nKhông tìm thấy bất kỳ tài liệu nào trong thư mục "${targetFolderPath}". Hãy trả lời chính xác: "Không tìm thấy thông tin này trong tài liệu của thư mục đã cung cấp."`;
+      }
+    } else {
+      fullSystemPrompt = `[CRITICAL SYSTEM DIRECTIVE: LANGUAGE ENFORCEMENT]
 - The user's active interface and communication language is: ${activeLangName} (Language Code: '${language}').
 - You MUST converse, think, explain, clarify, and formulate your final response strictly in ${activeLangName}.
 - If the user sends a message in English or the active language is 'en', YOUR ENTIRE ANSWER MUST BE IN ENGLISH.
@@ -96,14 +143,14 @@ export async function POST(request) {
 - NEVER output Vietnamese when the active language is '${language}' (English/Korean/Chinese/Japanese) unless the user explicitly requests Vietnamese.
 
 ` + (config.systemPrompt || 'You are an intelligent enterprise AI Assistant for the TopEng System management platform.');
-    fullSystemPrompt += `\n=== REAL-TIME CALENDAR INFO ===\n${currentCalendarInfo}\n`;
-    fullSystemPrompt += `\n=== CURRENT USER PROFILE ===\n- Name: ${currentUser?.name || 'User'}\n- Email: ${currentUser?.email || 'user@topeng.com'}\n- Role: ${currentUser?.system_role || 'Staff'}\n- Department: ${currentUser?.department_name || 'R&D'}\n`;
+      fullSystemPrompt += `\n=== REAL-TIME CALENDAR INFO ===\n${currentCalendarInfo}\n`;
+      fullSystemPrompt += `\n=== CURRENT USER PROFILE ===\n- Name: ${currentUser?.name || 'User'}\n- Email: ${currentUser?.email || 'user@topeng.com'}\n- Role: ${currentUser?.system_role || 'Staff'}\n- Department: ${currentUser?.department_name || 'R&D'}\n`;
 
-    if (systemContext) {
-      fullSystemPrompt += `\n=== SYSTEM CONTEXT DATA ===\n${systemContext}\n=== END OF CONTEXT DATA ===\n`;
-    }
+      if (systemContext) {
+        fullSystemPrompt += `\n=== SYSTEM CONTEXT DATA ===\n${systemContext}\n=== END OF CONTEXT DATA ===\n`;
+      }
 
-    fullSystemPrompt += `\n\n=== ZERO-FRICTION ROOM BOOKING & ACTION POLICY ===
+      fullSystemPrompt += `\n\n=== ZERO-FRICTION ROOM BOOKING & ACTION POLICY ===
 - When the user asks to book a meeting room and provides basic details (e.g., room size/type and start time, such as "Book a large meeting room for 11 am", "Đặt phòng họp lớn lúc 10h", "Book small room at 2pm", "Book meeting room for 15:00"):
   * YOU MUST NEVER ASK follow-up questions asking for missing details like date, duration, purpose, or location!
   * IMMEDIATELY CALL \`book_meeting_room\` with smart defaults:
@@ -125,7 +172,10 @@ YOU ARE EQUIPPED WITH ENTERPRISE AGENT TOOLS:
 1. Meeting Room Booking & Cancellation & Availability check (book_meeting_room, cancel_meeting_room, check_room_availability).
 2. Task Management (list_my_tasks, create_task).
 3. Daily Report drafting (generate_daily_report).
+4. Local Knowledge Folder Search & Indexing (scan_and_index_folder, search_folder_knowledge, get_indexed_folder_status).
+5. Desktop Spotlight Guide (show_desktop_spotlight_guide, check_desktop_agent_status) - Khi người dùng hỏi cách thực hiện thao tác trên màn hình KSystem hoặc phần mềm máy tính, bạn có thể gọi công cụ này để chiếu đèn Spotlight trực tiếp lên màn hình máy tính của họ.
 When user needs to perform any of these actions, automatically call the best tool with accurate parameters.`;
+    }
 
     const contextHelper = {
       currentUser,
@@ -258,7 +308,13 @@ When user needs to perform any of these actions, automatically call the best too
       // CASE B: MODEL RETURNED REGULAR TEXT
       // =======================================================================
       const reply = assistantMessage?.content || 'Xin lỗi, tôi không thể tạo phản hồi lúc này.';
-      return NextResponse.json({ success: true, reply, model, provider });
+      return NextResponse.json({ 
+        success: true, 
+        reply, 
+        model, 
+        provider,
+        retrievedSources: retrievedSources.length > 0 ? retrievedSources : undefined
+      });
     }
 
     // =========================================================================

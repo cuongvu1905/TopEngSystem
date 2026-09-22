@@ -1,0 +1,6 @@
+{
+  "mainDatabase": "MySQL Cluster Master-Slave",
+  "port": 3306,
+  "ip": "10.0.0.88",
+  "backupSchedule": "Hàng ngày lúc 02:00 AM"
+}

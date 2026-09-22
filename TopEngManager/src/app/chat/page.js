@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getSwal } from '@/utils/swal';
+import { extractStepsFromAiResponse } from '@/utils/aiStepParser';
 
 const STORAGE_KEY = 'topeng_ai_chat_sessions_v2';
 
@@ -274,6 +275,15 @@ function AIChatPage() {
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [isTestingConfig, setIsTestingConfig] = useState(false);
 
+  // Folder RAG Knowledge State (DeepSeek Strict Local Folder QA)
+  const [folderRagMode, setFolderRagMode] = useState(false);
+  const [targetFolderPath, setTargetFolderPath] = useState('');
+  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [isScanningFolder, setIsScanningFolder] = useState(false);
+  const [folderScanData, setFolderScanData] = useState(null);
+  const [folderInputVal, setFolderInputVal] = useState('');
+  const [isDesktopAgentOnline, setIsDesktopAgentOnline] = useState(false);
+
   // Chat sessions state
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
@@ -285,6 +295,23 @@ function AIChatPage() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const streamTimerRef = useRef(null);
+
+  // Check Desktop Agent status
+  const checkDesktopAgent = async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      const res = await fetch('http://127.0.0.1:20188/api/status', { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        setIsDesktopAgentOnline(true);
+        return true;
+      }
+    } catch {
+      setIsDesktopAgentOnline(false);
+      return false;
+    }
+  };
 
   // Fetch AI Config from Server
   const fetchAIConfig = async () => {
@@ -306,6 +333,24 @@ function AIChatPage() {
 
   useEffect(() => {
     fetchAIConfig();
+    checkDesktopAgent();
+    const agentTimer = setInterval(checkDesktopAgent, 6000);
+
+    try {
+      const savedFolder = localStorage.getItem('topeng_ai_rag_folder');
+      const savedRagMode = localStorage.getItem('topeng_ai_rag_mode');
+      if (savedFolder) {
+        setTargetFolderPath(savedFolder);
+        setFolderInputVal(savedFolder);
+      }
+      if (savedRagMode === 'true') {
+        setFolderRagMode(true);
+      }
+    } catch (e) {
+      console.warn('Could not load saved RAG folder settings', e);
+    }
+
+    return () => clearInterval(agentTimer);
   }, []);
 
   // Initialize sessions from localStorage
@@ -610,6 +655,140 @@ function AIChatPage() {
     }
   };
 
+  // Handle scan folder for RAG Knowledge
+  const handleScanFolder = async (folderPathToScan, force = true) => {
+    const path = (folderPathToScan || folderInputVal || '').trim();
+    if (!path) {
+      const Swal = await getSwal();
+      Swal.fire({
+        title: 'Chưa nhập đường dẫn',
+        text: 'Vui lòng nhập đường dẫn thư mục cần quét (Ví dụ: C:/Docs hoặc scratch/demo_knowledge_dir)',
+        icon: 'warning',
+        confirmButtonColor: '#f59e0b'
+      });
+      return;
+    }
+
+    setIsScanningFolder(true);
+    try {
+      const res = await fetch('/api/ai-chat/folder-indexer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          folderPath: path,
+          forceReindex: force
+        })
+      });
+      const data = await res.json();
+      const Swal = await getSwal();
+
+      if (data.success && data.data) {
+        setFolderScanData(data.data);
+        setTargetFolderPath(data.data.folderPath);
+        setFolderInputVal(data.data.folderPath);
+        setFolderRagMode(true);
+        localStorage.setItem('topeng_ai_rag_folder', data.data.folderPath);
+        localStorage.setItem('topeng_ai_rag_mode', 'true');
+
+        Swal.fire({
+          title: 'Quét thư mục thành công! 📂',
+          html: `<div style="text-align: left; font-size: 13px; line-height: 1.6;">
+            <p><strong>Thư mục:</strong> <code style="word-break: break-all;">${data.data.folderPath}</code></p>
+            <p><strong>Số file đã đọc:</strong> <span style="color: #10b981; font-weight: 700;">${data.data.parsedFiles}</span> / ${data.data.totalFiles}</p>
+            <p><strong>Số đoạn ngữ cảnh (Chunks):</strong> <b>${data.data.totalChunks}</b></p>
+            <p style="color: #10b981; font-weight: 600; margin-top: 8px;">✅ Chế độ DeepSeek Strict Folder RAG đã tự động BẬT!</p>
+          </div>`,
+          icon: 'success',
+          confirmButtonColor: '#10b981'
+        });
+      } else {
+        Swal.fire({
+          title: 'Lỗi quét thư mục',
+          text: data.error || 'Không thể quét thư mục. Vui lòng kiểm tra lại đường dẫn.',
+          icon: 'error',
+          confirmButtonColor: '#f43f5e'
+        });
+      }
+    } catch (err) {
+      const Swal = await getSwal();
+      Swal.fire({
+        title: 'Lỗi kết nối quét thư mục',
+        text: err.message,
+        icon: 'error',
+        confirmButtonColor: '#f43f5e'
+      });
+    } finally {
+      setIsScanningFolder(false);
+    }
+  };
+
+  const handleToggleRagMode = () => {
+    if (!folderRagMode && !targetFolderPath) {
+      setIsFolderModalOpen(true);
+      return;
+    }
+    const newMode = !folderRagMode;
+    setFolderRagMode(newMode);
+    localStorage.setItem('topeng_ai_rag_mode', String(newMode));
+  };
+
+  // Helper to parse step-by-step procedures from AI responses dynamically
+  const parseStepsFromText = (text) => {
+    return extractStepsFromAiResponse(text);
+  };
+
+  // Trigger Desktop Spotlight Overlay
+  const handleTriggerSpotlight = async (steps, customWindowHint = 'Top Engineering Vina') => {
+    const isOnline = await checkDesktopAgent();
+    const Swal = await getSwal();
+
+    if (!isOnline) {
+      Swal.fire({
+        title: 'TOPV Desktop Agent Chưa Khởi Chạy',
+        html: `<div style="text-align: left; font-size: 13px; line-height: 1.6;">
+          <p>Để chiếu đèn Spotlight trực tiếp lên phần mềm <b>${customWindowHint}</b>, bạn vui lòng:</p>
+          <ol style="padding-left: 20px; margin-top: 8px;">
+            <li>Mở thư mục <code>TopEngManager</code> trên máy tính.</li>
+            <li>Nhấp đúp vào file <b><code>run_desktop_agent.bat</code></b> để khởi động.</li>
+            <li>Sau khi màn hình đen xuất hiện <i>(Port 20188)</i>, quay lại đây và nhấn lại nút này!</li>
+          </ol>
+        </div>`,
+        icon: 'warning',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Đã hiểu'
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch('http://127.0.0.1:20188/api/spotlight/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          steps,
+          windowHint: customWindowHint
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire({
+          title: '✨ Spotlight Đang Chiếu Đèn!',
+          text: `Đã mở lớp phủ hướng dẫn ${steps.length} bước trên màn hình. Bạn hãy nhìn lên ứng dụng ${customWindowHint} để thao tác!`,
+          icon: 'success',
+          timer: 3500,
+          showConfirmButton: false
+        });
+      }
+    } catch (err) {
+      Swal.fire({
+        title: 'Lỗi khởi chạy Spotlight',
+        text: err.message,
+        icon: 'error',
+        confirmButtonColor: '#f43f5e'
+      });
+    }
+  };
+
   // Helper to generate localized session object
   const createFreshSessionObj = (lang = currentLang) => {
     const nameText = currentUser?.name ? ` **${currentUser.name}**` : '';
@@ -836,7 +1015,9 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           messages: apiMessages,
           systemContext,
           currentUser,
-          language: currentLang || 'vi'
+          language: currentLang || 'vi',
+          folderRagMode: folderRagMode && !!targetFolderPath,
+          targetFolderPath: folderRagMode ? targetFolderPath : ''
         })
       });
 
@@ -878,6 +1059,9 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
                       ...m, 
                       content: fullResponse, 
                       bookingData: data.bookingData || null,
+                      retrievedSources: data.retrievedSources || null,
+                      isFolderRag: folderRagMode && !!targetFolderPath,
+                      targetFolderPath: folderRagMode ? targetFolderPath : '',
                       isStreaming: false 
                     };
                   }
@@ -1135,6 +1319,72 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           </div>
 
           <div className="ai-header-actions">
+            {/* DESKTOP AGENT STATUS BADGE */}
+            <div 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '11.5px',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                background: isDesktopAgentOnline ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.05)',
+                border: `1px solid ${isDesktopAgentOnline ? 'rgba(16, 185, 129, 0.3)' : 'var(--neutral-border)'}`,
+                color: isDesktopAgentOnline ? '#10b981' : 'var(--neutral-muted)',
+                cursor: 'pointer'
+              }}
+              onClick={() => {
+                getSwal().then(Swal => {
+                  Swal.fire({
+                    title: isDesktopAgentOnline ? '🟢 Desktop Agent Đang Kết Nối' : '⚪ Desktop Agent Chưa Chạy',
+                    html: isDesktopAgentOnline 
+                      ? '<p style="font-size:13px; color:#10b981;">Dịch vụ Desktop Agent trên máy tính (Cổng 20188) đang hoạt động. Bạn có thể kích hoạt tính năng Chiếu đèn Spotlight trên KSystem bất cứ lúc nào!</p>'
+                      : '<div style="text-align:left; font-size:13px;"><p>Để kết nối và chiếu đèn lên phần mềm Desktop:</p><ol><li>Mở thư mục <code>TopEngManager</code></li><li>Chạy file <b><code>run_desktop_agent.bat</code></b></li></ol></div>',
+                    icon: isDesktopAgentOnline ? 'success' : 'info',
+                    confirmButtonColor: '#3085d6'
+                  });
+                });
+              }}
+              title={isDesktopAgentOnline ? 'TOPV Desktop Agent đang kết nối (Port 20188)' : 'TOPV Desktop Agent chưa chạy. Chạy run_desktop_agent.bat để kết nối.'}
+            >
+              <span style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: isDesktopAgentOnline ? '#10b981' : '#94a3b8',
+                boxShadow: isDesktopAgentOnline ? '0 0 8px #10b981' : 'none'
+              }}></span>
+              <span className="ai-btn-text" style={{ fontWeight: 600 }}>
+                {isDesktopAgentOnline ? 'Desktop Helper ON' : 'Desktop Helper OFF'}
+              </span>
+            </div>
+
+            {/* KNOWLEDGE FOLDER RAG BUTTON */}
+            <button
+              type="button"
+              className={`btn btn-sm ${folderRagMode ? 'btn-success' : 'btn-secondary'} ai-folder-btn`}
+              onClick={() => setIsFolderModalOpen(true)}
+              title="Quản lý và nạp thư mục tài liệu để AI trả lời (Strict RAG)"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                borderColor: folderRagMode ? '#10b981' : 'var(--neutral-border)',
+                background: folderRagMode ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
+                color: folderRagMode ? '#10b981' : 'inherit'
+              }}
+            >
+              <i className="fa-solid fa-folder-open"></i>
+              <span className="ai-btn-text">
+                {targetFolderPath ? (targetFolderPath.split(/[/\\]/).filter(Boolean).pop() || 'Thư mục') : 'Thư mục Tri thức'}
+              </span>
+              {folderRagMode && (
+                <span className="badge" style={{ background: '#10b981', color: '#fff', fontSize: '9px', padding: '2px 5px', borderRadius: '4px' }}>
+                  STRICT RAG
+                </span>
+              )}
+            </button>
+
             {/* ONLY ADMIN CAN SEE & OPEN THIS CONFIGURATION BUTTON */}
             {isAdmin && (
               <button
@@ -1193,6 +1443,93 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
                           {msg.isStreaming && (
                             <span className="ai-streaming-cursor">▋</span>
                           )}
+
+                          {/* Strict RAG Sources Citation */}
+                          {msg.retrievedSources && msg.retrievedSources.length > 0 && !msg.isStreaming && (
+                            <div className="ai-rag-sources-box" style={{
+                              marginTop: '12px',
+                              padding: '10px 14px',
+                              borderRadius: '8px',
+                              background: 'rgba(16, 185, 129, 0.08)',
+                              border: '1px solid rgba(16, 185, 129, 0.3)',
+                              fontSize: '12px'
+                            }}>
+                              <div style={{ fontWeight: 600, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                <i className="fa-solid fa-file-circle-check"></i>
+                                <span>Tài liệu trích dẫn từ Thư mục (Strict RAG):</span>
+                              </div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                {msg.retrievedSources.map((src, sIdx) => (
+                                  <span key={sIdx} style={{
+                                    background: 'rgba(255, 255, 255, 0.06)',
+                                    border: '1px solid var(--neutral-border)',
+                                    padding: '3px 8px',
+                                    borderRadius: '5px',
+                                    fontFamily: 'monospace',
+                                    fontSize: '11px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}>
+                                    📄 <b>{src.fileName}</b> (Đoạn {src.chunkIndex || (sIdx + 1)})
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Step-by-Step Interactive Spotlight Action Card */}
+                          {!msg.isStreaming && (() => {
+                            const detectedSteps = parseStepsFromText(msg.content);
+                            if (detectedSteps.length >= 2) {
+                              return (
+                                <div style={{
+                                  marginTop: '12px',
+                                  padding: '12px 16px',
+                                  borderRadius: '8px',
+                                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%)',
+                                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  flexWrap: 'wrap',
+                                  gap: '12px'
+                                }}>
+                                  <div>
+                                    <div style={{ fontWeight: 700, fontSize: '13px', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <i className="fa-solid fa-wand-magic-sparkles"></i>
+                                      <span>Hướng Dẫn Trực Quan Trên Màn Hình Desktop</span>
+                                    </div>
+                                    <div style={{ fontSize: '11.5px', color: 'var(--neutral-muted)', marginTop: '2px' }}>
+                                      AI đã phát hiện <b>{detectedSteps.length} bước</b> thao tác. Bật chế độ chiếu đèn Spotlight trực tiếp lên ứng dụng Windows (KSystem/ERP).
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => handleTriggerSpotlight(detectedSteps, 'KSystem')}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      padding: '8px 16px',
+                                      background: 'linear-gradient(135deg, #0284c7 0%, #059669 100%)',
+                                      borderColor: 'transparent',
+                                      fontWeight: 700,
+                                      fontSize: '12px',
+                                      boxShadow: '0 2px 10px rgba(2, 132, 199, 0.35)',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    <i className="fa-solid fa-bullseye"></i>
+                                    <span>Bật Chiếu Đèn trên KSystem</span>
+                                  </button>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+
                           {msg.bookingData && !msg.isStreaming && (
                             <div className="ai-booking-action-card">
                               <div className="ai-booking-card-top">
@@ -1272,6 +1609,52 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
 
         {/* Input Bar Area */}
         <div className="ai-chat-input-bar-wrap">
+          {/* Quick RAG Mode Switcher Bar */}
+          <div className="ai-rag-toolbar" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '6px 14px',
+            background: folderRagMode ? 'rgba(16, 185, 129, 0.08)' : 'rgba(0, 0, 0, 0.03)',
+            borderBottom: '1px solid var(--neutral-border)',
+            fontSize: '12px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={folderRagMode}
+                  onChange={handleToggleRagMode}
+                  style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                />
+                <span style={{ fontWeight: 600, color: folderRagMode ? '#10b981' : 'var(--neutral-muted)' }}>
+                  <i className="fa-solid fa-folder-tree" style={{ marginRight: '4px' }}></i>
+                  Chế độ DeepSeek Q&A Thư mục (Strict RAG)
+                </span>
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {targetFolderPath ? (
+                <span style={{ color: 'var(--neutral-muted)', fontSize: '11.5px', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  📁 <code>{targetFolderPath}</code>
+                </span>
+              ) : (
+                <span style={{ color: '#f59e0b', fontSize: '11.5px' }}>
+                  ⚠️ Chưa nạp thư mục
+                </span>
+              )}
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => setIsFolderModalOpen(true)}
+                style={{ padding: '2px 8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <i className="fa-solid fa-sliders"></i> {targetFolderPath ? 'Cấu hình' : 'Nạp Thư mục'}
+              </button>
+            </div>
+          </div>
+
           {isGenerating && (
             <div className="ai-generating-banner">
               <span className="ai-spinner"><i className="fa-solid fa-circle-notch fa-spin"></i></span>
@@ -1292,7 +1675,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
             <textarea
               ref={inputRef}
               className="ai-textarea"
-              placeholder={t('chat.inputPlaceholder', 'Nhập tin nhắn...')}
+              placeholder={folderRagMode ? 'Hỏi bất kỳ điều gì trong thư mục tài liệu đã nạp...' : t('chat.inputPlaceholder', 'Nhập tin nhắn...')}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -1555,6 +1938,238 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* LOCAL KNOWLEDGE FOLDER RAG CONFIGURATION MODAL */}
+      {/* ========================================================================= */}
+      {isFolderModalOpen && (
+        <div className="modal-backdrop ai-config-modal-backdrop" onClick={() => !isScanningFolder && setIsFolderModalOpen(false)}>
+          <div className="modal-dialog ai-config-modal-dialog" style={{ maxWidth: '650px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header ai-config-modal-header" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(56, 189, 248, 0.08) 100%)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="ai-config-modal-icon" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }}>
+                  <i className="fa-solid fa-folder-tree"></i>
+                </div>
+                <div>
+                  <h3 className="modal-title" style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>
+                    Thư mục Tri thức DeepSeek (Strict Folder RAG)
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '11.5px', color: 'var(--neutral-muted)' }}>
+                    AI chỉ lấy dữ liệu trong thư mục để trả lời, chống bịa đặt và trích dẫn nguồn
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="close-btn" 
+                onClick={() => setIsFolderModalOpen(false)}
+                disabled={isScanningFolder}
+              >
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div className="modal-body ai-config-modal-body" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Directive Alert */}
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                fontSize: '12px',
+                lineHeight: 1.5
+              }}>
+                <div style={{ fontWeight: 600, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <i className="fa-solid fa-shield-halved"></i>
+                  <span>Nguyên tắc Zero-Hallucination:</span>
+                </div>
+                <span>Khi bật chế độ này, mô hình DeepSeek chỉ được phép trả lời dựa trên nội dung các file trong thư mục bạn đưa vào (Hỗ trợ: PDF, Word .docx, Excel .xlsx, Text, Markdown, Code, JSON...).</span>
+              </div>
+
+              {/* Folder Path Input */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="ai-form-label" style={{ marginBottom: '6px' }}>
+                  <i className="fa-solid fa-folder" style={{ color: 'var(--primary-color)' }}></i> Đường dẫn thư mục cục bộ:
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Ví dụ: C:/Users/.../Documents hoặc D:/TaiLieuDuAn"
+                    value={folderInputVal}
+                    onChange={(e) => setFolderInputVal(e.target.value)}
+                    style={{ fontSize: '12.5px', fontFamily: 'monospace', flex: 1 }}
+                    disabled={isScanningFolder}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => handleScanFolder(folderInputVal, true)}
+                    disabled={isScanningFolder || !folderInputVal.trim()}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '12.5px',
+                      padding: '8px 16px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {isScanningFolder ? (
+                      <>
+                        <i className="fa-solid fa-circle-notch fa-spin"></i>
+                        <span>Đang quét...</span>
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-arrows-rotate"></i>
+                        <span>Quét & Nạp</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick sample paths */}
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', fontSize: '11px' }}>
+                <span style={{ color: 'var(--neutral-muted)' }}>Gợi ý nhanh:</span>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  style={{ fontSize: '11px', padding: '2px 8px' }}
+                  onClick={() => {
+                    const p = 'docs';
+                    setFolderInputVal(p);
+                    handleScanFolder(p, true);
+                  }}
+                >
+                  📁 Thư mục Docs dự án
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  style={{ fontSize: '11px', padding: '2px 8px' }}
+                  onClick={() => {
+                    const p = 'scratch/demo_knowledge_dir';
+                    setFolderInputVal(p);
+                    handleScanFolder(p, true);
+                  }}
+                >
+                  📁 Thư mục Demo mẫu
+                </button>
+              </div>
+
+              {/* Scan Results / Status Box */}
+              {folderScanData && (
+                <div style={{
+                  background: 'var(--neutral-bg-card)',
+                  border: '1px solid var(--neutral-border)',
+                  borderRadius: '8px',
+                  padding: '12px 14px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontWeight: 600, fontSize: '13px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <i className="fa-solid fa-circle-check"></i> Đã lập chỉ mục thành công
+                    </span>
+                    <span style={{ fontSize: '11.5px', color: 'var(--neutral-muted)' }}>
+                      {folderScanData.parsedFiles} file / {folderScanData.totalChunks} đoạn ngữ cảnh
+                    </span>
+                  </div>
+
+                  <div style={{
+                    maxHeight: '140px',
+                    overflowY: 'auto',
+                    border: '1px solid var(--neutral-border)',
+                    borderRadius: '6px',
+                    background: 'rgba(0, 0, 0, 0.05)',
+                    padding: '6px 10px',
+                    fontSize: '11.5px'
+                  }}>
+                    {folderScanData.fileSummaries && folderScanData.fileSummaries.map((f, fIdx) => (
+                      <div key={fIdx} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        padding: '4px 0',
+                        borderBottom: fIdx === folderScanData.fileSummaries.length - 1 ? 'none' : '1px solid rgba(255, 255, 255, 0.05)'
+                      }}>
+                        <span style={{ fontFamily: 'monospace', color: f.status === 'success' ? 'inherit' : 'var(--neutral-muted)' }}>
+                          📄 {f.fileName}
+                        </span>
+                        <span style={{ color: f.status === 'success' ? '#10b981' : '#f59e0b', fontSize: '11px' }}>
+                          {f.status === 'success' ? `${f.chunksCount} chunks` : f.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Toggle Strict RAG Switch */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                background: folderRagMode ? 'rgba(16, 185, 129, 0.1)' : 'var(--neutral-bg)',
+                border: `1px solid ${folderRagMode ? '#10b981' : 'var(--neutral-border)'}`,
+                borderRadius: '8px'
+              }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: folderRagMode ? '#10b981' : 'inherit' }}>
+                    Kích hoạt Chế độ Q&A Thư mục (Strict RAG)
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: 'var(--neutral-muted)' }}>
+                    Bật để DeepSeek chỉ trả lời từ dữ liệu trong thư mục này
+                  </div>
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={folderRagMode}
+                    onChange={handleToggleRagMode}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="modal-footer ai-config-modal-footer" style={{ justifyContent: 'flex-end', gap: '8px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setIsFolderModalOpen(false)}
+                style={{ padding: '7px 16px' }}
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                className="btn btn-success btn-sm"
+                onClick={() => {
+                  if (targetFolderPath) {
+                    setFolderRagMode(true);
+                    localStorage.setItem('topeng_ai_rag_mode', 'true');
+                  }
+                  setIsFolderModalOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 18px',
+                  background: '#10b981',
+                  borderColor: '#10b981',
+                  color: '#fff',
+                  fontWeight: 600
+                }}
+              >
+                <i className="fa-solid fa-check"></i>
+                <span>Xác nhận & Bắt đầu Chat</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

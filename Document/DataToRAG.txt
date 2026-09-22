@@ -1,0 +1,135 @@
+1.ERP là gì?
+*ERP(Enterprice Resource Planning) là hệ thống quản lý toàn bộ nguồn lực và quy trình của doanh nghiệp trên một hệ thống duy nhất.
+*Mục tiêu: 
+	- Dữ liệu tập trung.
+	- Quy trình chuẩn hóa.
+	- Minh bạch.
+	- Tối ưu chi phí.
+	- Hỗ trợ ra quyết định.
+*ERP kết nối các phòng ban:
+	- Engineering: 
+		+ BOM, thiết kết.
+		+ Mã vật tư.
+	- Purchasing:
+		+ Yêu cầu đặt mua.
+		+ Đặt hàng.
+		+ Nhà cung cấp.
+	- Management:
+		+ Phê duyệt.
+		+ Báo cáo, phân tích.
+	- Accounting:
+		+ Giá, hóa đơn.
+		+ Chi phí, công nợ.
+	- Warehouse:
+		+ Tồn kho
+		+ Nhập/Xuất kho.
+	- Production:
+		+ Sản xuất.
+		+ Sử dụng vật tư.
+	- Project:
+		+ Theo dõi chi phí.
+		+ Tiến độ dự án.
+*Tại sao phải làm ERP?
+	- Biết công ty đang có gì (kiểm soát tồn kho chính xác).
+	- Biết tiền đang đi dâu (theo dõi chi phí, ngân sách dự án).
+	- Có lịch sử rõ ràng (truy xuất nguồn gốc minh bạch).
+	- Kiểm soát quyền hạn (quy trình phê duyệt, chống sai sót).
+	- Dữ liệu dùng chung( một nguồn dữ liệu - chính xác, nhất quán).
+2.Nhập ERP hàng tháng
+*Nhập ERP
+	- Bước 1:
+		+ Truy cập hệ thống KSystem.
+	- Bước 2: 
+		+ Trong phần Menu, chọn mục Dự án -> Quản lý kết quả -> Nguồn nhân lực -> Nhập kết quả dự án (theo từng nguồn lực - nguồn lực).
+	- Bước 3: 	
+		+ Bộ phận kinh doanh chọn TOPV Division.
+		+ Nhập ngày làm việc: ngày đầu tiên làm việc trong tháng và ngày cuối cùng làm việc trong tháng.
+		+ Nguồn nhân lực: Nhập tên và chọn đúng tên nhân sự và mã nhân viên muốn nhập.
+	- Bước 4: 
+		+ Chọn vào phần Mã dự án và nhập mã dự án.
+		+ Sau khi nhập Mã dự án, mục Dự án và Tên WBS sẽ tự động được hệ thống điền vào.
+		+ Nhập ngày bắt đầu làm việc trong dự án đó vào Ngày bắt đầu làm việc.
+		+ Nhập ngày hoàn thành công việc trong dự án đó vào Ngày hoàn thành công việc.
+		+ Nhân viên tự tính số giờ làm việc thực tế trong dự án đó ( = số giờ làm việc cơ bản + số giờ OT - số giờ nghỉ).
+	- Bước 5:
+		+ Nếu nhân viên tham gia nhiều dự án trong tháng thì sẽ xuống hàng tiếp theo và lặp lại Bước 3 cho tất cả các dự án.
+	- Bước 6:
+		+ Bấm nút Lưu phía trên của trang để lưu lại.
+*Tra cứu
+	- Bước 1:
+		+ Truy cập hệ thống KSystem.
+	- Bước 2: 
+		+ Trong phần Menu, chọn mục Dự án -> Quản lý kết quả -> Nguồn nhân lực -> Nhập kết quả dự án (theo từng nguồn lực - nguồn lực).
+	- Bước 3: 	
+		+ Bộ phận kinh doanh chọn TOPV Division.
+		+ Nhập ngày làm việc: ngày đầu tiên làm việc trong tháng và ngày cuối cùng làm việc trong tháng.
+		+ Nguồn nhân lực: Nhập tên và chọn đúng tên nhân sự và mã nhân viên muốn tra cứu.
+	- Bước 4:
+		+ Bấm nút Tra cứu phía trên của trang để tra cứu.
+*Chỉnh sửa báo cáo ERP đã có
+	- Tra cứu bản đã tồn tại, rồi chỉnh sửa.
+	- Bấm Lưu để cập nhật thông tin.
+*Xóa hàng
+	- Chọn hàng muốn xóa.
+	- Bấm nút Xóa Sheet phía trên của trang.
+3.Hoạch toán ERP khi đi công tác
+*Lưu ý: Để có thể nhập hoạch toán khi đi công tác, cần đảm bảo tài khoản nhập có đầy đủ các quyền trên hệ thống KSystem. Nếu tài khoản còn thiếu quyền, hãy liên hệ với bộ phận kế toán để xin cấp đầy đủ các quyền.
+*Kiểm tra các quyền của tài khoản
+	- Bước 1:
+		+ Truy cập hệ thống KSystem.
+	- Bước 2: 
+		+ Bấm chọn Menu và xem các quyền hiện có.
+	- Các quyền đầy đủ:
+		+ Thông tin cơ bản.
+		+ Kế toán.
+		+ Giá vốn.
+		+ Bán hàng.
+		+ Kho vận.
+		+ Sản xuất.
+		+ Mua hàng.
+		+ Quản lý chât lượng.
+		+ Quản lý hệ thống.
+		+ All Common.
+		+ Sojourn Report.
+		+ MRP.
+		+ Dự án.
+*Các bước hoạch toán ERP khi đi công tác
+	- Bước 1:
+		+ Truy cập hệ thống KSystem.
+	- Bước 2: 
+		+ Trong phần Menu, chọn Kế toán -> Chứng từ -> Xử lý chứng từ -> Nhập chứng từ ghi nhật ký.
+	- Bước 3: Nhập tổng chi phí sử dụng khi đi công tác 
+		+ Nhập 62783 vào Hạng mục tài khoản để chọn "Travel Expence(M) / Chi phí công tác".
+		+ Nhập số tiền vào Phát sinh nợ.
+		+ Diễn giải nhập loại chi phí theo form chung.
+		+ Form Diễn giải: _Loại chi phí + Mr. + _Tên nhân viên + theo quyết định + _Số quyết định công tác
+		Ví dụ: 	Chi phí công tác Mr.Nguyễn Văn A theo quyết định 123ABC
+				Chi phí ăn uống Mr.Nguyễn Văn A theo quyết định 123ABC
+		+ Bộ phận trực thuộc: nhập TOPV.
+		+ Trung tâm hoạt động: nhập Mã dự án.
+		+ Chọn Thêm hàng (phía bên phải trang) để thêm hàng.
+		+ Lặp lại với tất cả các loại chi phí: chi phí công tác, đi lại, Sim điện thoại,...
+	- Bước 4: Nhập phần tạm ứng công tác
+		+ Nhập 1413 vào Hạng mục tài khoản để chọn “Advance Payments(Staff)/ Tạm ứng (Nhân viên)”.
+		+ Nhập số tiền nhân viên đã được thanh toán tạm ứng khi công tác vào Phát sinh có.
+		+ Diễn giải nhập theo form chung: 
+			TT Tạm ứng công tác phí cho + _Tên nhân viên + theo quyết định + _Số quyết định công tác
+			Ví dụ: TT Tạm ứng công tác phí cho Nguyễn Văn A theo quyết định 123ABC
+		+ Bộ phận trực thuộc: nhập TOPV
+		+ Trung tâm hoạt động: nhập Mã dự án
+		+ Nhập tên người đi công tác vào mục Giá trị hạng mục quản lý.
+		+ Tích vào Lưu chọn chứng từ phát sinh để nhập Số chứng từ phát sinh.(Là số tạm ứng tiền của nhân viên).
+	- Bước 5: Nhập phần cần được công ty thanh toán
+		+ Nhập 33882 vào Hạng mục tài khoản để chọn “Other payable to employee/ Trả khác cho nhân viên”.
+		+ Hệ thống sẽ tự động tính số tiền cần thanh toán tại Phát sinh có .
+		+ Diễn giải nhập theo form chung: 
+			TT công tác phí cho + _Tên nhân viên + theo quyết định + _Số quyết định công tác
+			Ví dụ: TT công tác phí cho Nguyễn Văn A theo quyết định 123ABC
+		+ Bộ phận trực thuộc: nhập TOPV.
+		+ Trung tâm hoạt động: nhập Mã dự án.
+		+ Nhập Tên nhân viên vào hàng Nhân viên, cột Giá trị hạng mục quản lý.
+		+ Nhập TOPV vào hàng Bộ phận, cột Giá trị hạng mục quản lý.
+	- Bước 6:
+		+ Nhấn Lưu để lưu lại các thông tin đã kê khai.
+		+ Sau đó click vào icon máy in để in hoặc tải về bản hoạch toán này.
+		
