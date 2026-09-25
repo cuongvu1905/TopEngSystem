@@ -156,7 +156,10 @@ export const AppContextProvider = ({ children }) => {
         const session = sessionRes?.data?.session;
         if (session && session.user && session.token) {
           try {
-            const check = await db.checkSession(session.user.id, session.token);
+            const check = await db.checkSession(session.user.id, session.token).catch((err) => {
+              console.warn('Session check transient warning:', err?.message || err);
+              return null;
+            });
             if (check && !check.valid) {
               clearInterval(sessionInterval);
               await db.client.auth.signOut();
@@ -170,7 +173,7 @@ export const AppContextProvider = ({ children }) => {
               });
             }
           } catch (err) {
-            console.error('Session check error:', err);
+            console.warn('Session check error:', err?.message || err);
           }
         }
       }, 5000);

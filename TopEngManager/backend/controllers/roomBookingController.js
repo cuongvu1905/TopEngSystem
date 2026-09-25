@@ -542,13 +542,19 @@ exports.deleteRoomBooking = async (req, res, next) => {
 
     const admin = await isRequesterAdmin(requesterId);
     let isOwner = !!(requesterId && booking.booker_id && booking.booker_id === requesterId);
-    if (!isOwner && requesterId && !booking.booker_id) {
-      // Rows created before booker_id existed can only be matched by name.
+    if (!isOwner && requesterId) {
+      // Rows created before booker_id existed, or with legacy/custom name, matched by name
       const requester = await prisma.user.findUnique({
         where: { user_id: requesterId },
         select: { full_name: true }
       });
-      isOwner = !!(requester && requester.full_name === booking.booker_name);
+      if (requester && requester.full_name) {
+        const reqName = requester.full_name.toLowerCase().trim();
+        const bName = (booking.booker_name || '').toLowerCase().trim();
+        if (reqName && bName && (reqName === bName || reqName.includes(bName) || bName.includes(reqName))) {
+          isOwner = true;
+        }
+      }
     }
     if (!admin && !isOwner) {
       return res.status(403).json({ error: 'Bạn không có quyền hủy lịch đặt phòng này.' });

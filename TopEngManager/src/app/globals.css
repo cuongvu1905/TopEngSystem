@@ -4529,10 +4529,10 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0px !important;
 }
 
-/* 1. Popup Issue Theme (Emerald Green) */
+/* 1. Popup Issue Theme */
 [data-theme="cyber"] .popup-dialog-issues {
-  border: 1px solid #10b981 !important;
-  box-shadow: 0 0 35px rgba(16, 185, 129, 0.22), 0 0 1px #10b981 !important;
+  border: 1px solid #231c3a !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75) !important;
 }
 [data-theme="cyber"] .popup-dialog-issues .modal-header h3 {
   color: #10b981 !important;
@@ -4549,10 +4549,10 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.25) !important;
 }
 
-/* 2. Popup Task Theme (Sky Cyan) */
+/* 2. Popup Task Theme */
 [data-theme="cyber"] .popup-dialog-tasks {
-  border: 1px solid #0ea5e9 !important;
-  box-shadow: 0 0 35px rgba(14, 165, 233, 0.22), 0 0 1px #0ea5e9 !important;
+  border: 1px solid #231c3a !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75) !important;
 }
 [data-theme="cyber"] .popup-dialog-tasks .modal-header h3 {
   color: #0ea5e9 !important;
@@ -4569,10 +4569,10 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 8px rgba(14, 165, 233, 0.25) !important;
 }
 
-/* 3. Popup Project Theme (Indigo Purple) */
+/* 3. Popup Project Theme */
 [data-theme="cyber"] .popup-dialog-projects {
-  border: 1px solid #6366f1 !important;
-  box-shadow: 0 0 35px rgba(99, 102, 241, 0.22), 0 0 1px #6366f1 !important;
+  border: 1px solid #231c3a !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75) !important;
 }
 [data-theme="cyber"] .popup-dialog-projects .modal-header h3 {
   color: #818cf8 !important;
@@ -4589,10 +4589,10 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 8px rgba(99, 102, 241, 0.25) !important;
 }
 
-/* 4. Popup Daily Report Theme (Amber Gold) */
+/* 4. Popup Daily Report Theme */
 [data-theme="cyber"] .popup-dialog-reports {
-  border: 1px solid #f59e0b !important;
-  box-shadow: 0 0 35px rgba(245, 158, 11, 0.22), 0 0 1px #f59e0b !important;
+  border: 1px solid #231c3a !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75) !important;
 }
 [data-theme="cyber"] .popup-dialog-reports .modal-header h3 {
   color: #f59e0b !important;
@@ -5861,9 +5861,9 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme="cyber"] .daily-report-calendar-modal,
 [data-theme="cyber"] .daily-report-history-modal {
   background-color: #0e0b1d !important;
-  border: 1.5px solid #10b981 !important;
+  border: 1px solid #231c3a !important;
   border-radius: 0px !important;
-  box-shadow: 0 0 35px rgba(16, 185, 129, 0.22), 0 0 50px rgba(9, 7, 18, 0.98) !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75) !important;
 }
 
 [data-theme="cyber"] .daily-report-modal-header {
@@ -5872,7 +5872,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 [data-theme="cyber"] .daily-report-modal-header h3 {
-  color: #10b981 !important;
+  color: #f8fafc !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
 }
@@ -6294,27 +6294,41 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 13px;
 }
 
+.form-group label.room-importance-option,
 .room-importance-option {
-  display: grid;
-  grid-template-columns: auto 88px 1fr;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 11px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
   border-radius: var(--border-radius);
   cursor: pointer;
   border: 1.5px solid var(--neutral-border);
   background-color: var(--neutral-bg-main);
   transition: all 0.15s ease;
+  margin-bottom: 0 !important;
+}
+.room-importance-option.is-selected {
+  border-color: var(--primary-color);
+  background-color: var(--neutral-bg-card);
 }
 
 .importance-badge-tag {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-align: center;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 74px !important;
+  min-width: 74px !important;
+  max-width: 74px !important;
+  height: 24px !important;
+  box-sizing: border-box !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  text-align: center !important;
   border-radius: var(--border-radius);
-  padding: 2.5px 0;
+  padding: 0 !important;
   border: 1px solid transparent;
+  flex-shrink: 0 !important;
 }
 .importance-badge-tag.imp-high {
   color: #ef4444;
@@ -6333,9 +6347,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .importance-desc-text {
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.45;
   color: var(--neutral-dark);
+  flex: 1;
+  margin-left: 2px;
 }
 
 .room-detail-info-grid {
@@ -6476,21 +6492,22 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0px !important;
 }
 [data-theme="cyber"] .room-importance-option.is-selected {
-  border-color: #10b981 !important;
+  border-color: #4b3d75 !important;
+  background-color: #130f28 !important;
 }
 
 [data-theme="cyber"] .room-booking-modal .modal-dialog .modal-content {
   background-color: #0e0b1d !important;
-  border: 1.5px solid #10b981 !important;
+  border: 1px solid #231c3a !important;
   border-radius: 0px !important;
-  box-shadow: 0 0 35px rgba(16, 185, 129, 0.22), 0 0 50px rgba(9, 7, 18, 0.98) !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75) !important;
 }
 [data-theme="cyber"] .room-booking-modal .modal-header {
   background-color: #120e25 !important;
   border-bottom: 1px solid #1f1836 !important;
 }
 [data-theme="cyber"] .room-booking-modal .modal-header h3 {
-  color: #10b981 !important;
+  color: #f8fafc !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
 }

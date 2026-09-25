@@ -391,7 +391,7 @@ export default function RoomBookingPage() {
         endTime,
         team: modalTeam.trim(),
         bookerName: modalBookerName.trim(),
-        bookerId: currentUser?.id || null,
+        bookerId: currentUser?.id || currentUser?.user_id || null,
         // With an interpreter requested the content is the email subject, so the
         // "Họp nhóm" stand-in would defeat the check the server makes on it.
         purpose: needsInterpreter
@@ -457,7 +457,7 @@ export default function RoomBookingPage() {
 
     if (!result.isConfirmed) return;
     try {
-      const cancelled = await db.deleteRoomBooking(bookingId, currentUser?.id);
+      const cancelled = await db.deleteRoomBooking(bookingId, currentUser?.id || currentUser?.user_id);
       await loadBookings();
       setDetailBooking(null);
 
@@ -1002,7 +1002,7 @@ export default function RoomBookingPage() {
                               value={lvl.id}
                               checked={isPicked}
                               onChange={() => setModalImportance(lvl.id)}
-                              style={{ cursor: 'pointer', margin: 0, accentColor: lvl.color }}
+                              style={{ cursor: 'pointer', margin: 0, accentColor: lvl.color, flexShrink: 0 }}
                             />
                             <span className={`importance-badge-tag imp-${lvl.id.toLowerCase()}`}>
                               {lvl.id}
@@ -1046,7 +1046,15 @@ export default function RoomBookingPage() {
         const b = detailBooking;
         const lvl = getImportanceLevel(b.importance);
         const isPastBooking = b.date < formatDateStr(getToday());
-        const isOwnerOrAdmin = currentUser && (b.bookerName === currentUser.name || currentUser.system_role.includes('Admin'));
+        const currentUserId = currentUser?.id || currentUser?.user_id;
+        const bName = (b.bookerName || '').trim().toLowerCase();
+        const uName = (currentUser?.name || '').trim().toLowerCase();
+        const isOwner = !!(currentUser && (
+          (b.bookerId && currentUserId && b.bookerId === currentUserId) ||
+          (bName && uName && (bName === uName || uName.includes(bName) || bName.includes(uName)))
+        ));
+        const isAdmin = !!(currentUser?.system_role?.includes('Admin') || currentUser?.system_role?.includes('Quản trị') || currentUser?.system_role?.includes('Owner') || currentUser?.email === 'admin@topeng.com');
+        const isOwnerOrAdmin = isOwner || isAdmin;
         const canCancel = !!isOwnerOrAdmin && !isPastBooking;
         const room = ROOMS.find(r => r.id === b.roomId);
         const loc = LOCATIONS.find(l => l.id === b.location);
