@@ -169,7 +169,8 @@ const translateNotifContent = (title, content, t) => {
 export default function Sidebar({ isOpen = false, onClose }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, logout, reloadAll, hasPermission, notifications } = useApp();
+  const { currentUser, logout, reloadAll, hasPermission, notifications, isFeatureHidden, hiddenFeatures } = useApp();
+  const isAdmin = currentUser?.system_role?.includes("Admin") || currentUser?.system_role?.includes("Quản trị") || currentUser?.system_role?.includes("Owner");
   const { currentLang, changeLanguage, languages, currentLanguageObj, t } = useLanguage();
   const { currentTheme, currentThemeObj, themeStyle, themeMode, themeStyles, colorModes, themes, changeTheme, changeStyleAndMode } = useTheme();
 
@@ -533,7 +534,7 @@ export default function Sidebar({ isOpen = false, onClose }) {
     setIsUserMenuOpen(false);
     const Swal = await getSwal();
 
-    let selectedStyle = themeStyle || (currentTheme.includes('cyber') || currentTheme === 'trollllm' ? 'cyber' : 'classic');
+    let selectedStyle = themeStyle || (currentTheme.includes('cyber') || currentTheme === 'cyber' ? 'cyber' : 'classic');
     let selectedMode = themeMode || (currentTheme === 'light' || currentTheme === 'cyber-light' ? 'light' : 'dark');
     let selectedLang = currentLang;
 
@@ -843,42 +844,85 @@ export default function Sidebar({ isOpen = false, onClose }) {
       </Link>
 
       <nav className="sidebar-menu">
-        <Link href="/dashboard" onClick={handleNavigate} className={`menu-item ${pathname === '/dashboard' || pathname === '/' ? 'active' : ''}`}>
-          <i className="fa-solid fa-chart-line"></i>
-          <span>{t('sidebar.dashboard', 'Dashboard')}</span>
-        </Link>
-        <Link href="/projects" onClick={handleNavigate} className={`menu-item ${pathname.startsWith('/projects') ? 'active' : ''}`}>
-          <i className="fa-solid fa-folder-open"></i>
-          <span>{t('sidebar.projects', 'Dự án')}</span>
-        </Link>
-        <Link href="/tasks" onClick={handleNavigate} className={`menu-item ${pathname === '/tasks' ? 'active' : ''}`}>
-          <i className="fa-solid fa-list-check"></i>
-          <span>{t('sidebar.tasks', 'Công việc')}</span>
-        </Link>
-        <Link href="/room-booking" onClick={handleNavigate} className={`menu-item ${pathname === '/room-booking' ? 'active' : ''}`}>
-          <i className="fa-solid fa-door-open"></i>
-          <span>{t('sidebar.roomBooking', 'Đặt phòng họp')}</span>
-        </Link>
-        <Link href="/chat" onClick={handleNavigate} className={`menu-item ${pathname === '/chat' ? 'active' : ''}`}>
-          <i className="fa-solid fa-robot"></i>
-          <span>{t('sidebar.chat', 'AI Chat')}</span>
-        </Link>
-        <Link href="/topvwiki" onClick={handleNavigate} className={`menu-item ${pathname === '/topvwiki' ? 'active' : ''}`}>
-          <i className="fa-solid fa-file-lines"></i>
-          <span>{t('sidebar.topvwiki', 'TOPVWiki')}</span>
-        </Link>
-        <Link href="/daily-reports" onClick={handleNavigate} className={`menu-item ${pathname === '/daily-reports' ? 'active' : ''}`}>
-          <i className="fa-solid fa-file-invoice"></i>
-          <span>{t('sidebar.dailyReports', 'Báo cáo ngày')}</span>
-        </Link>
-        <Link href="/approvals" onClick={handleNavigate} className={`menu-item ${pathname === '/approvals' ? 'active' : ''}`}>
-          <i className="fa-solid fa-file-signature"></i>
-          <span>{t('sidebar.approvals', 'Phê duyệt')}</span>
-        </Link>
-        {hasPermission('view_activity_logs') && (
+        {!isFeatureHidden?.('dashboard') && (
+          <Link href="/dashboard" onClick={handleNavigate} className={`menu-item ${pathname === '/dashboard' || pathname === '/' ? 'active' : ''}`}>
+            <i className="fa-solid fa-chart-line"></i>
+            <span>{t('sidebar.dashboard', 'Dashboard')}</span>
+            {isAdmin && hiddenFeatures?.includes('dashboard') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
+          </Link>
+        )}
+        {!isFeatureHidden?.('projects') && (
+          <Link href="/projects" onClick={handleNavigate} className={`menu-item ${pathname.startsWith('/projects') ? 'active' : ''}`}>
+            <i className="fa-solid fa-folder-open"></i>
+            <span>{t('sidebar.projects', 'Dự án')}</span>
+            {isAdmin && hiddenFeatures?.includes('projects') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
+          </Link>
+        )}
+        {!isFeatureHidden?.('tasks') && (
+          <Link href="/tasks" onClick={handleNavigate} className={`menu-item ${pathname === '/tasks' ? 'active' : ''}`}>
+            <i className="fa-solid fa-list-check"></i>
+            <span>{t('sidebar.tasks', 'Công việc')}</span>
+            {isAdmin && hiddenFeatures?.includes('tasks') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
+          </Link>
+        )}
+        {!isFeatureHidden?.('room-booking') && (
+          <Link href="/room-booking" onClick={handleNavigate} className={`menu-item ${pathname === '/room-booking' ? 'active' : ''}`}>
+            <i className="fa-solid fa-door-open"></i>
+            <span>{t('sidebar.roomBooking', 'Đặt phòng họp')}</span>
+            {isAdmin && hiddenFeatures?.includes('room-booking') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
+          </Link>
+        )}
+        {!isFeatureHidden?.('chat') && (
+          <Link href="/chat" onClick={handleNavigate} className={`menu-item ${pathname === '/chat' ? 'active' : ''}`}>
+            <i className="fa-solid fa-robot"></i>
+            <span>{t('sidebar.chat', 'AI Chat')}</span>
+            {isAdmin && hiddenFeatures?.includes('chat') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
+          </Link>
+        )}
+        {!isFeatureHidden?.('topvwiki') && (
+          <Link href="/topvwiki" onClick={handleNavigate} className={`menu-item ${pathname === '/topvwiki' ? 'active' : ''}`}>
+            <i className="fa-solid fa-file-lines"></i>
+            <span>{t('sidebar.topvwiki', 'TOPVWiki')}</span>
+            {isAdmin && hiddenFeatures?.includes('topvwiki') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
+          </Link>
+        )}
+        {!isFeatureHidden?.('daily-reports') && (
+          <Link href="/daily-reports" onClick={handleNavigate} className={`menu-item ${pathname === '/daily-reports' ? 'active' : ''}`}>
+            <i className="fa-solid fa-file-invoice"></i>
+            <span>{t('sidebar.dailyReports', 'Báo cáo ngày')}</span>
+            {isAdmin && hiddenFeatures?.includes('daily-reports') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
+          </Link>
+        )}
+        {!isFeatureHidden?.('approvals') && (
+          <Link href="/approvals" onClick={handleNavigate} className={`menu-item ${pathname === '/approvals' ? 'active' : ''}`}>
+            <i className="fa-solid fa-file-signature"></i>
+            <span>{t('sidebar.approvals', 'Phê duyệt')}</span>
+            {isAdmin && hiddenFeatures?.includes('approvals') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
+          </Link>
+        )}
+        {!isFeatureHidden?.('activity-logs') && hasPermission('view_activity_logs') && (
           <Link href="/activity-logs" onClick={handleNavigate} className={`menu-item ${pathname === '/activity-logs' ? 'active' : ''}`}>
             <i className="fa-solid fa-clock-rotate-left"></i>
             <span>{t('sidebar.activityLogs', 'Lịch sử làm việc')}</span>
+            {isAdmin && hiddenFeatures?.includes('activity-logs') && (
+              <span title="Đang ẩn với nhân viên" style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--warning-color)' }}><i className="fa-solid fa-eye-slash"></i></span>
+            )}
           </Link>
         )}
         {hasPermission('view_hr') && (

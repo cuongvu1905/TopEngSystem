@@ -93,4 +93,51 @@ function invalidateMailConfig() {
   cachedAt = 0;
 }
 
-module.exports = { getMailConfig, invalidateMailConfig, secureFor, SETTING_ID, DEFAULT_HOST, DEFAULT_PORT };
+const fs = require('fs');
+const path = require('path');
+const managerEmailsPath = path.join(__dirname, 'mail_manager_emails.json');
+
+function getManagerEmails() {
+  try {
+    if (fs.existsSync(managerEmailsPath)) {
+      const raw = fs.readFileSync(managerEmailsPath, 'utf8');
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.manager_emails)) {
+        return data.manager_emails;
+      }
+    }
+  } catch (err) {
+    console.error('Error reading manager emails:', err);
+  }
+  const fromEnv = process.env.SMTP_MANAGER_EMAILS;
+  if (fromEnv) {
+    return fromEnv.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function saveManagerEmails(emails) {
+  try {
+    const list = Array.from(new Set(
+      (Array.isArray(emails) ? emails : [])
+        .map(e => String(e || '').trim())
+        .filter(e => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+    ));
+    fs.writeFileSync(managerEmailsPath, JSON.stringify({ manager_emails: list }, null, 2), 'utf8');
+    return list;
+  } catch (err) {
+    console.error('Error saving manager emails:', err);
+    throw err;
+  }
+}
+
+module.exports = {
+  getMailConfig,
+  invalidateMailConfig,
+  secureFor,
+  getManagerEmails,
+  saveManagerEmails,
+  SETTING_ID,
+  DEFAULT_HOST,
+  DEFAULT_PORT
+};

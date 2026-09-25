@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 const { encrypt } = require('../utils/secretBox');
-const { getMailConfig, invalidateMailConfig, secureFor, SETTING_ID, DEFAULT_HOST, DEFAULT_PORT } = require('../config/mailSettings');
+const { getMailConfig, invalidateMailConfig, secureFor, getManagerEmails, saveManagerEmails, SETTING_ID, DEFAULT_HOST, DEFAULT_PORT } = require('../config/mailSettings');
 const { verifyMail } = require('../utils/mailer');
 
 // The mailbox the system sends from. Admin-only: whoever controls this address sends mail
@@ -46,6 +46,8 @@ exports.getMailSettings = async (req, res, next) => {
       updatedByName = who ? who.full_name : row.updated_by;
     }
 
+    const managerEmails = getManagerEmails();
+
     res.json({
       source: cfg.source,               // 'database' = an Admin set it, 'env' = backend/.env
       host: cfg.host,
@@ -55,7 +57,8 @@ exports.getMailSettings = async (req, res, next) => {
       from: cfg.from,
       hasPassword: !!cfg.pass,
       updatedAt: row ? row.updated_at : null,
-      updatedByName
+      updatedByName,
+      managerEmails
     });
   } catch (err) {
     next(err);
@@ -133,9 +136,10 @@ exports.updateMailSettings = async (req, res, next) => {
     // half-filled row behind that would quietly keep overriding it.
     if (body.clear === true) {
       await prisma.mailsetting.deleteMany({ where: { id: SETTING_ID } });
+      saveManagerEmails([]);
       invalidateMailConfig();
       const cfg = await getMailConfig();
-      return res.json({ success: true, source: cfg.source, user: cfg.user, hasPassword: !!cfg.pass });
+      return res.json({ success: true, source: cfg.source, user: cfg.user, hasPassword: !!cfg.pass, managerEmails: [] });
     }
 
     let candidate;
@@ -167,10 +171,15 @@ exports.updateMailSettings = async (req, res, next) => {
       update: data
     });
 
+    let savedManagerEmails = getManagerEmails();
+    if (body.managerEmails !== undefined) {
+      savedManagerEmails = saveManagerEmails(body.managerEmails);
+    }
+
     // So the very next send uses what was just typed instead of waiting out the cache.
     invalidateMailConfig();
     const cfg = await getMailConfig();
-    res.json({ success: true, source: cfg.source, user: cfg.user, hasPassword: !!cfg.pass });
+    res.json({ success: true, source: cfg.source, user: cfg.user, hasPassword: !!cfg.pass, managerEmails: savedManagerEmails });
   } catch (err) {
     next(err);
   }

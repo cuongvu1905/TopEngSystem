@@ -32,6 +32,7 @@ export const AppContextProvider = ({ children }) => {
   const [chatRoomMembers, setChatRoomMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [rolePermissions, setRolePermissions] = useState({});
+  const [hiddenFeatures, setHiddenFeatures] = useState([]);
   const [headerActions, setHeaderActions] = useState(null);
   const [headerTitle, setHeaderTitle] = useState(null);
 
@@ -121,6 +122,7 @@ export const AppContextProvider = ({ children }) => {
       setNotifications(nots);
       setActivityLogs(logs);
       setRolePermissions(rpConfig?.role_permissions || {});
+      setHiddenFeatures(rpConfig?.hidden_features || []);
 
     } catch (e) {
       console.error("Context reload failed: ", e);
@@ -251,9 +253,28 @@ export const AppContextProvider = ({ children }) => {
   const hasPermission = (permissionName) => {
     if (!currentUser) return false;
     const role = currentUser.system_role;
-    if (role?.includes("Admin") || role?.includes("Owner")) return true;
+    if (role?.includes("Admin") || role?.includes("Quản trị") || role?.includes("Owner")) return true;
     const permissions = rolePermissions[role] || [];
     return permissions.includes(permissionName);
+  };
+
+  const isFeatureHidden = (featureKey) => {
+    if (!currentUser) return false;
+    const role = currentUser.system_role;
+    const isAdmin = role?.includes("Admin") || role?.includes("Quản trị") || role?.includes("Owner") || currentUser?.email === 'admin@topeng.com';
+    if (isAdmin) return false; // Admin always sees all features
+    return (hiddenFeatures || []).includes(featureKey);
+  };
+
+  const updateHiddenFeatures = async (newHiddenFeatures) => {
+    try {
+      await db.saveHiddenFeatures(newHiddenFeatures);
+      setHiddenFeatures(newHiddenFeatures);
+      return { success: true };
+    } catch (e) {
+      console.error("Failed to update hidden features:", e);
+      throw e;
+    }
   };
 
   const value = {
@@ -269,6 +290,10 @@ export const AppContextProvider = ({ children }) => {
     chatRoomMembers,
     isLoading,
     rolePermissions,
+    hiddenFeatures,
+    setHiddenFeatures,
+    isFeatureHidden,
+    updateHiddenFeatures,
     headerActions,
     setHeaderActions,
     headerTitle,

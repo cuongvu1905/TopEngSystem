@@ -728,6 +728,10 @@ export const MySQLAdapter = {
     return await callApi('saveRolesPermissions', { roles, role_permissions: rolePermissions });
   },
 
+  saveHiddenFeatures: async function(hiddenFeatures) {
+    return await callApi('saveHiddenFeatures', { hidden_features: hiddenFeatures });
+  },
+
   findProjectById: async function(projectId) {
     return await callApi('findProjectById', { projectId });
   },

@@ -2686,7 +2686,7 @@ h1, h2, h3, h4, h5, h6 {
     flex: 1 !important;
     gap: 8px !important;
   }
-  [data-theme="trollllm"] #page-title,
+  [data-theme="cyber"] #page-title,
   [data-theme="cyber-light"] #page-title,
   #page-title {
     font-size: 14px !important;
@@ -3621,9 +3621,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   THEME 3: TrollLLM (Cyber Midnight Terminal - Softened Palette & Sharp UI)
+   THEME 3: Cyber (Cyber Midnight Terminal - Softened Palette & Sharp UI)
    ========================================================================== */
-[data-theme="trollllm"] {
+[data-theme="cyber"] {
   --font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace, "Courier New", Courier, sans-serif;
 
@@ -3647,74 +3647,74 @@ h1, h2, h3, h4, h5, h6 {
   --info-color: #0ea5e9;          /* Softer Cyan */
   --info-light: rgba(14, 165, 233, 0.12);
 
-  --border-radius: 0px;           /* Exact Sharp Square Corners of TrollLLM */
+  --border-radius: 0px;           /* Exact Sharp Square Corners of Cyber */
   --shadow-sm: 0 0 10px rgba(9, 7, 18, 0.8);
   --shadow-md: 0 0 16px rgba(9, 7, 18, 0.9);
   --shadow-lg: 0 0 24px rgba(9, 7, 18, 0.95);
   --shadow-xl: 0 0 32px rgba(9, 7, 18, 0.98);
 }
 
-/* Global Typography for TrollLLM */
-[data-theme="trollllm"] body {
+/* Global Typography for Cyber */
+[data-theme="cyber"] body {
   background-color: #090712 !important;
   color: #ffffff !important;
 }
 
-[data-theme="trollllm"] .dashboard-fullscreen-view {
+[data-theme="cyber"] .dashboard-fullscreen-view {
   background-color: #090712 !important;
 }
 
-[data-theme="trollllm"] h1,
-[data-theme="trollllm"] h2,
-[data-theme="trollllm"] h3,
-[data-theme="trollllm"] h4,
-[data-theme="trollllm"] .brand-name,
-[data-theme="trollllm"] .widget-box-title,
-[data-theme="trollllm"] .stat-info h3,
-[data-theme="trollllm"] .stat-info p,
-[data-theme="trollllm"] .btn,
-[data-theme="trollllm"] .badge,
-[data-theme="trollllm"] .config-btn,
-[data-theme="trollllm"] .menu-item span,
-[data-theme="trollllm"] #page-title {
+[data-theme="cyber"] h1,
+[data-theme="cyber"] h2,
+[data-theme="cyber"] h3,
+[data-theme="cyber"] h4,
+[data-theme="cyber"] .brand-name,
+[data-theme="cyber"] .widget-box-title,
+[data-theme="cyber"] .stat-info h3,
+[data-theme="cyber"] .stat-info p,
+[data-theme="cyber"] .btn,
+[data-theme="cyber"] .badge,
+[data-theme="cyber"] .config-btn,
+[data-theme="cyber"] .menu-item span,
+[data-theme="cyber"] #page-title {
   font-family: 'JetBrains Mono', monospace, "Courier New", Courier, sans-serif !important;
 }
 
-/* Exact Square Corners for TrollLLM */
-[data-theme="trollllm"] .btn,
-[data-theme="trollllm"] .card,
-[data-theme="trollllm"] .stat-card-clickable,
-[data-theme="trollllm"] .widget-box,
-[data-theme="trollllm"] .item-row-card,
-[data-theme="trollllm"] .report-grid-card,
-[data-theme="trollllm"] .split-card-item,
-[data-theme="trollllm"] .kanban-column,
-[data-theme="trollllm"] .project-card,
-[data-theme="trollllm"] .badge,
-[data-theme="trollllm"] .config-btn,
-[data-theme="trollllm"] .config-dropdown,
-[data-theme="trollllm"] .dropdown-menu,
-[data-theme="trollllm"] input,
-[data-theme="trollllm"] select,
-[data-theme="trollllm"] textarea,
-[data-theme="trollllm"] .modal-content,
-[data-theme="trollllm"] .modal-dialog,
-[data-theme="trollllm"] .brand-logo,
-[data-theme="trollllm"] .stat-icon {
+/* Exact Square Corners for Cyber */
+[data-theme="cyber"] .btn,
+[data-theme="cyber"] .card,
+[data-theme="cyber"] .stat-card-clickable,
+[data-theme="cyber"] .widget-box,
+[data-theme="cyber"] .item-row-card,
+[data-theme="cyber"] .report-grid-card,
+[data-theme="cyber"] .split-card-item,
+[data-theme="cyber"] .kanban-column,
+[data-theme="cyber"] .project-card,
+[data-theme="cyber"] .badge,
+[data-theme="cyber"] .config-btn,
+[data-theme="cyber"] .config-dropdown,
+[data-theme="cyber"] .dropdown-menu,
+[data-theme="cyber"] input,
+[data-theme="cyber"] select,
+[data-theme="cyber"] textarea,
+[data-theme="cyber"] .modal-content,
+[data-theme="cyber"] .modal-dialog,
+[data-theme="cyber"] .brand-logo,
+[data-theme="cyber"] .stat-icon {
   border-radius: 0px !important;
 }
 
-/* TrollLLM Sidebar & Header */
-[data-theme="trollllm"] .sidebar {
+/* Cyber Sidebar & Header */
+[data-theme="cyber"] .sidebar {
   background-color: #0c0a18 !important;
   border-right: 1px solid #1e1736 !important;
 }
 
-[data-theme="trollllm"] .sidebar-brand {
+[data-theme="cyber"] .sidebar-brand {
   border-bottom: 1px solid #1e1736 !important;
 }
 
-[data-theme="trollllm"] .brand-logo {
+[data-theme="cyber"] .brand-logo {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
@@ -3722,19 +3722,19 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0 !important;
 }
 
-[data-theme="trollllm"] .brand-name h2 {
+[data-theme="cyber"] .brand-name h2 {
   color: #ffffff !important;
   letter-spacing: 0.05em;
   font-size: 15px;
 }
 
-[data-theme="trollllm"] .brand-name span {
+[data-theme="cyber"] .brand-name span {
   color: #10b981 !important;
   font-weight: 700;
   letter-spacing: 0.1em;
 }
 
-[data-theme="trollllm"] .menu-item {
+[data-theme="cyber"] .menu-item {
   color: #8b86a0 !important;
   margin: 2px 8px !important;
   padding: 10px 14px !important;
@@ -3743,30 +3743,30 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.02em;
 }
 
-[data-theme="trollllm"] .menu-item:hover {
+[data-theme="cyber"] .menu-item:hover {
   background-color: #130f26 !important;
   color: #10b981 !important;
 }
 
-[data-theme="trollllm"] .menu-item.active {
+[data-theme="cyber"] .menu-item.active {
   background: rgba(16, 185, 129, 0.08) !important;
   color: #10b981 !important;
   border-left: 3px solid #10b981 !important;
   font-weight: 700 !important;
 }
 
-[data-theme="trollllm"] .menu-item.active i {
+[data-theme="cyber"] .menu-item.active i {
   color: #10b981 !important;
   filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.7));
 }
 
-[data-theme="trollllm"] .header {
+[data-theme="cyber"] .header {
   background-color: rgba(12, 10, 24, 0.96) !important;
   backdrop-filter: blur(16px) !important;
   border-bottom: 1px solid #1e1736 !important;
 }
 
-[data-theme="trollllm"] #page-title {
+[data-theme="cyber"] #page-title {
   font-size: 20px !important;
   font-weight: 900 !important;
   letter-spacing: 0.04em !important;
@@ -3778,7 +3778,7 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden !important;
 }
 
-[data-theme="trollllm"] #page-title::before {
+[data-theme="cyber"] #page-title::before {
   content: "> ";
   color: #10b981;
   font-weight: 900;
@@ -3787,27 +3787,27 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 0;
 }
 
-[data-theme="trollllm"] .sidebar-user-popover {
+[data-theme="cyber"] .sidebar-user-popover {
   background-color: #0f0c20 !important;
   border: 1.5px solid #10b981 !important;
   border-radius: 0px !important;
   box-shadow: 0 0 25px rgba(16, 185, 129, 0.25) !important;
 }
 
-[data-theme="trollllm"] .sidebar-notif-btn {
+[data-theme="cyber"] .sidebar-notif-btn {
   background-color: #110d22 !important;
   border: 1px solid #221a3c !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .sidebar-notif-btn:hover {
+[data-theme="cyber"] .sidebar-notif-btn:hover {
   border-color: #10b981 !important;
   color: #10b981 !important;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.3) !important;
 }
 
-/* TrollLLM Action Buttons */
-[data-theme="trollllm"] .btn-primary {
+/* Cyber Action Buttons */
+[data-theme="cyber"] .btn-primary {
   background: #10b981 !important;
   color: #000000 !important;
   font-weight: 800 !important;
@@ -3818,12 +3818,12 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.15s ease;
 }
 
-[data-theme="trollllm"] .btn-primary:hover {
+[data-theme="cyber"] .btn-primary:hover {
   background: #059669 !important;
   box-shadow: 0 0 24px rgba(16, 185, 129, 0.8) !important;
 }
 
-[data-theme="trollllm"] .btn-secondary {
+[data-theme="cyber"] .btn-secondary {
   background: #130f25 !important;
   border: 1px solid #271e44 !important;
   color: #ffffff !important;
@@ -3832,13 +3832,13 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.04em !important;
 }
 
-[data-theme="trollllm"] .btn-secondary:hover {
+[data-theme="cyber"] .btn-secondary:hover {
   border-color: #10b981 !important;
   color: #10b981 !important;
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.25) !important;
 }
 
-[data-theme="trollllm"] .btn-danger {
+[data-theme="cyber"] .btn-danger {
   background: #f43f5e !important;
   color: #ffffff !important;
   border: none !important;
@@ -3847,7 +3847,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 14px rgba(244, 63, 94, 0.45) !important;
 }
 
-[data-theme="trollllm"] .config-btn {
+[data-theme="cyber"] .config-btn {
   background: #110d22 !important;
   border: 1px solid #251c42 !important;
   color: #10b981 !important;
@@ -3858,13 +3858,13 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
 }
 
-[data-theme="trollllm"] .config-btn:hover {
+[data-theme="cyber"] .config-btn:hover {
   border-color: #10b981 !important;
   box-shadow: 0 0 14px rgba(16, 185, 129, 0.35) !important;
 }
 
-/* TrollLLM 4 Top Stat Boxes (Square, Distinct Outline, Glowing Progress Bar) */
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable {
+/* Cyber 4 Top Stat Boxes (Square, Distinct Outline, Glowing Progress Bar) */
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable {
   background: #0e0b1c !important;
   padding: 8px 14px !important;
   min-height: 52px !important;
@@ -3872,7 +3872,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.2s ease !important;
 }
 
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable .stat-icon {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable .stat-icon {
   width: 32px !important;
   height: 32px !important;
   font-size: 14px !important;
@@ -3881,7 +3881,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center !important;
 }
 
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable .stat-info p {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable .stat-info p {
   font-size: 11px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
@@ -3889,11 +3889,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Box 1: Issues (Green Accent + Bottom Bar) */
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(1) {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(1) {
   border: 1px solid #10b981 !important;
   box-shadow: 0 0 16px rgba(16, 185, 129, 0.18) !important;
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(1)::after {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(1)::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -3903,13 +3903,13 @@ h1, h2, h3, h4, h5, h6 {
   background: #10b981;
   box-shadow: 0 0 10px #10b981;
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(1) h3 {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(1) h3 {
   color: #10b981 !important;
   font-size: 28px !important;
   font-weight: 900 !important;
   text-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(1) .stat-icon {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(1) .stat-icon {
   background: transparent !important;
   border: 1px solid #10b981 !important;
   color: #10b981 !important;
@@ -3917,11 +3917,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Box 2: Tasks (Cyan Accent + Bottom Bar) */
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(2) {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(2) {
   border: 1px solid #0ea5e9 !important;
   box-shadow: 0 0 16px rgba(14, 165, 233, 0.18) !important;
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(2)::after {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(2)::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -3931,13 +3931,13 @@ h1, h2, h3, h4, h5, h6 {
   background: #0ea5e9;
   box-shadow: 0 0 10px #0ea5e9;
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(2) h3 {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(2) h3 {
   color: #0ea5e9 !important;
   font-size: 28px !important;
   font-weight: 900 !important;
   text-shadow: 0 0 12px rgba(14, 165, 233, 0.5);
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(2) .stat-icon {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(2) .stat-icon {
   background: transparent !important;
   border: 1px solid #0ea5e9 !important;
   color: #0ea5e9 !important;
@@ -3945,11 +3945,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Box 3: Projects (Indigo/Purple Accent + Bottom Bar) */
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(3) {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(3) {
   border: 1px solid #6366f1 !important;
   box-shadow: 0 0 16px rgba(99, 102, 241, 0.18) !important;
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(3)::after {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(3)::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -3959,13 +3959,13 @@ h1, h2, h3, h4, h5, h6 {
   background: #818cf8;
   box-shadow: 0 0 10px #6366f1;
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(3) h3 {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(3) h3 {
   color: #818cf8 !important;
   font-size: 28px !important;
   font-weight: 900 !important;
   text-shadow: 0 0 12px rgba(129, 140, 248, 0.5);
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(3) .stat-icon {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(3) .stat-icon {
   background: transparent !important;
   border: 1px solid #6366f1 !important;
   color: #818cf8 !important;
@@ -3973,11 +3973,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Box 4: Reports (Amber Accent + Bottom Bar) */
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(4) {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(4) {
   border: 1px solid #f59e0b !important;
   box-shadow: 0 0 16px rgba(245, 158, 11, 0.18) !important;
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(4)::after {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(4)::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -3987,21 +3987,21 @@ h1, h2, h3, h4, h5, h6 {
   background: #fbbf24;
   box-shadow: 0 0 10px #f59e0b;
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(4) h3 {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(4) h3 {
   color: #fbbf24 !important;
   font-size: 28px !important;
   font-weight: 900 !important;
   text-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
 }
-[data-theme="trollllm"] .dashboard-grid .stat-card-clickable:nth-child(4) .stat-icon {
+[data-theme="cyber"] .dashboard-grid .stat-card-clickable:nth-child(4) .stat-icon {
   background: transparent !important;
   border: 1px solid #f59e0b !important;
   color: #fbbf24 !important;
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.3) !important;
 }
 
-/* TrollLLM 4 Main 2x2 Widget Boxes (Border-free, Clean, Eye-friendly) */
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box {
+/* Cyber 4 Main 2x2 Widget Boxes (Border-free, Clean, Eye-friendly) */
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box {
   background: #0e0b1c !important;
   border: none !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
@@ -4009,16 +4009,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Widget 1: ISSUE */
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(1) {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(1) {
   border: none !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(1) .widget-box-header {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(1) .widget-box-header {
   background: #130f26 !important;
   border-bottom: none !important;
   padding: 8px 14px !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(1) .widget-box-title {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(1) .widget-box-title {
   color: #10b981 !important;
   font-size: 12.5px !important;
   font-weight: 800 !important;
@@ -4026,21 +4026,21 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase !important;
   text-decoration: none !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(1) .empty-widget-state i {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(1) .empty-widget-state i {
   color: #10b981 !important;
 }
 
 /* Widget 2: Tasks */
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(2) {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(2) {
   border: none !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(2) .widget-box-header {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(2) .widget-box-header {
   background: #130f26 !important;
   border-bottom: none !important;
   padding: 8px 14px !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(2) .widget-box-title {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(2) .widget-box-title {
   color: #0ea5e9 !important;
   font-size: 12.5px !important;
   font-weight: 800 !important;
@@ -4048,21 +4048,21 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase !important;
   text-decoration: none !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(2) .empty-widget-state i {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(2) .empty-widget-state i {
   color: #0ea5e9 !important;
 }
 
 /* Widget 3: Projects */
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) {
   border: none !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .widget-box-header {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .widget-box-header {
   background: #130f26 !important;
   border-bottom: none !important;
   padding: 8px 14px !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .widget-box-title {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .widget-box-title {
   color: #818cf8 !important;
   font-size: 12.5px !important;
   font-weight: 800 !important;
@@ -4070,21 +4070,21 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase !important;
   text-decoration: none !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .empty-widget-state i {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .empty-widget-state i {
   color: #818cf8 !important;
 }
 
 /* Widget 4: Reports */
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) {
   border: none !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) .widget-box-header {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) .widget-box-header {
   background: #130f26 !important;
   border-bottom: none !important;
   padding: 8px 14px !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) .widget-box-title {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) .widget-box-title {
   color: #fbbf24 !important;
   font-size: 12.5px !important;
   font-weight: 800 !important;
@@ -4092,7 +4092,7 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase !important;
   text-decoration: none !important;
 }
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) .empty-widget-state i {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) .empty-widget-state i {
   color: #fbbf24 !important;
 }
 
@@ -4211,12 +4211,34 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: space-between;
   overflow: hidden;
   min-width: 0;
+  background: #f8fafc;
+  border: 1px solid var(--neutral-border, #e5e7eb);
+  border-radius: 6px;
+  transition: var(--transition-fast, all 0.15s ease);
 }
 
-/* TrollLLM Inset Item Cards (Border-free, Seamless, Soft Dark Tone) */
-[data-theme="trollllm"] .item-row-card,
-[data-theme="trollllm"] .report-grid-card,
-[data-theme="trollllm"] .split-card-item {
+.item-row-card:hover,
+.report-grid-card:hover {
+  background: var(--neutral-bg-card, #ffffff);
+  border-color: #cbd5e1;
+}
+
+[data-theme="dark"] .item-row-card,
+[data-theme="dark"] .report-grid-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+}
+
+[data-theme="dark"] .item-row-card:hover,
+[data-theme="dark"] .report-grid-card:hover {
+  background: #172033;
+  border-color: #475569;
+}
+
+/* Cyber Inset Item Cards (Border-free, Seamless, Soft Dark Tone) */
+[data-theme="cyber"] .item-row-card,
+[data-theme="cyber"] .report-grid-card,
+[data-theme="cyber"] .split-card-item {
   background: #130f25 !important;
   border: none !important;
   color: #ffffff !important;
@@ -4234,16 +4256,16 @@ h1, h2, h3, h4, h5, h6 {
   min-width: 0 !important;
 }
 
-[data-theme="trollllm"] .report-grid-card,
+[data-theme="cyber"] .report-grid-card,
 [data-theme="cyber-light"] .report-grid-card,
 .report-grid-card {
   justify-content: center !important;
   gap: 8px !important;
 }
 
-[data-theme="trollllm"] .item-row-card:hover,
-[data-theme="trollllm"] .report-grid-card:hover,
-[data-theme="trollllm"] .split-card-item:hover {
+[data-theme="cyber"] .item-row-card:hover,
+[data-theme="cyber"] .report-grid-card:hover,
+[data-theme="cyber"] .split-card-item:hover {
   background: #1a1532 !important;
   transform: translateY(-1px) !important;
 }
@@ -4268,7 +4290,7 @@ h1, h2, h3, h4, h5, h6 {
   color: #f8fafc !important;
 }
 
-[data-theme="trollllm"] .item-title-text {
+[data-theme="cyber"] .item-title-text {
   color: #ffffff !important;
   font-weight: 600 !important;
   white-space: nowrap !important;
@@ -4279,31 +4301,31 @@ h1, h2, h3, h4, h5, h6 {
   display: block !important;
 }
 
-[data-theme="trollllm"] .item-row-card:hover .item-title-text {
+[data-theme="cyber"] .item-row-card:hover .item-title-text {
   color: #ffffff !important;
 }
 
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .dashboard-progress-fill {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .dashboard-progress-fill {
   background: #818cf8 !important;
 }
 
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .dashboard-progress-track {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(3) .dashboard-progress-track {
   background: #19142b !important;
 }
 
-[data-theme="trollllm"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) .item-title-text {
+[data-theme="cyber"] .dashboard-widgets-grid-2x2 .widget-box:nth-child(4) .item-title-text {
   color: #ffffff !important;
   font-weight: 700 !important;
 }
 
-[data-theme="trollllm"] .dashboard-key-tag {
+[data-theme="cyber"] .dashboard-key-tag {
   background: rgba(16, 185, 129, 0.12) !important;
   color: #10b981 !important;
   border: none !important;
   border-radius: 4px !important;
 }
 
-[data-theme="trollllm"] .dashboard-priority-tag {
+[data-theme="cyber"] .dashboard-priority-tag {
   border-radius: 999px !important;
   border: none !important;
   background: #1a1532 !important;
@@ -4324,7 +4346,7 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase !important;
   font-family: monospace !important;
 }
-[data-theme="trollllm"] .dashboard-priority-tag::before {
+[data-theme="cyber"] .dashboard-priority-tag::before {
   content: "";
   display: inline-block;
   width: 6px;
@@ -4333,68 +4355,68 @@ h1, h2, h3, h4, h5, h6 {
   margin-right: 6px;
   flex-shrink: 0;
 }
-[data-theme="trollllm"] .dashboard-priority-tag.priority-critical {
+[data-theme="cyber"] .dashboard-priority-tag.priority-critical {
   color: #f43f5e !important;
   border: none !important;
   background: rgba(244, 63, 94, 0.18) !important;
 }
-[data-theme="trollllm"] .dashboard-priority-tag.priority-critical::before {
+[data-theme="cyber"] .dashboard-priority-tag.priority-critical::before {
   background-color: #f43f5e;
 }
-[data-theme="trollllm"] .dashboard-priority-tag.priority-high {
+[data-theme="cyber"] .dashboard-priority-tag.priority-high {
   color: #fb923c !important;
   border: none !important;
   background: rgba(251, 146, 60, 0.18) !important;
 }
-[data-theme="trollllm"] .dashboard-priority-tag.priority-high::before {
+[data-theme="cyber"] .dashboard-priority-tag.priority-high::before {
   background-color: #fb923c;
 }
-[data-theme="trollllm"] .dashboard-priority-tag.priority-medium {
+[data-theme="cyber"] .dashboard-priority-tag.priority-medium {
   color: #38bdf8 !important;
   border: none !important;
   background: rgba(56, 189, 248, 0.18) !important;
 }
-[data-theme="trollllm"] .dashboard-priority-tag.priority-medium::before {
+[data-theme="cyber"] .dashboard-priority-tag.priority-medium::before {
   background-color: #38bdf8;
 }
-[data-theme="trollllm"] .dashboard-priority-tag.priority-low {
+[data-theme="cyber"] .dashboard-priority-tag.priority-low {
   color: #10b981 !important;
   border: none !important;
   background: rgba(16, 185, 129, 0.18) !important;
 }
-[data-theme="trollllm"] .dashboard-priority-tag.priority-low::before {
+[data-theme="cyber"] .dashboard-priority-tag.priority-low::before {
   background-color: #10b981;
 }
 
-[data-theme="trollllm"] .dashboard-project-badge {
+[data-theme="cyber"] .dashboard-project-badge {
   background: rgba(245, 158, 11, 0.12) !important;
   color: #f59e0b !important;
   border: none !important;
   border-radius: 4px !important;
 }
 
-[data-theme="trollllm"] .dashboard-status-tag.status-approved {
+[data-theme="cyber"] .dashboard-status-tag.status-approved {
   background: rgba(16, 185, 129, 0.14) !important;
   color: #10b981 !important;
   border: none !important;
   border-radius: 4px !important;
 }
 
-[data-theme="trollllm"] .dashboard-status-tag.status-rejected {
+[data-theme="cyber"] .dashboard-status-tag.status-rejected {
   background: rgba(244, 63, 94, 0.14) !important;
   color: #f43f5e !important;
   border: none !important;
   border-radius: 4px !important;
 }
 
-[data-theme="trollllm"] .dashboard-status-tag.status-pending {
+[data-theme="cyber"] .dashboard-status-tag.status-pending {
   background: rgba(245, 158, 11, 0.14) !important;
   color: #fbbf24 !important;
   border: none !important;
   border-radius: 4px !important;
 }
 
-[data-theme="trollllm"] .report-snippet {
+[data-theme="cyber"] .report-snippet {
   color: #ffffff !important;
   font-weight: 600 !important;
   font-size: 13px !important;
@@ -4406,9 +4428,9 @@ h1, h2, h3, h4, h5, h6 {
   display: block !important;
 }
 
-/* TrollLLM Cyber Terminal Badges with Image 1 Status Glow Dot */
-[data-theme="trollllm"] .task-card-header .badge,
-[data-theme="trollllm"] .data-table td .badge {
+/* Cyber Cyber Terminal Badges with Image 1 Status Glow Dot */
+[data-theme="cyber"] .task-card-header .badge,
+[data-theme="cyber"] .data-table td .badge {
   width: auto !important;
   min-width: auto !important;
   max-width: none !important;
@@ -4428,8 +4450,8 @@ h1, h2, h3, h4, h5, h6 {
   font-family: monospace !important;
 }
 
-[data-theme="trollllm"] .task-card-header .badge::before,
-[data-theme="trollllm"] .data-table td .badge::before {
+[data-theme="cyber"] .task-card-header .badge::before,
+[data-theme="cyber"] .data-table td .badge::before {
   content: "";
   display: inline-block;
   width: 6px;
@@ -4439,168 +4461,168 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 0;
 }
 
-[data-theme="trollllm"] .badge-success {
+[data-theme="cyber"] .badge-success {
   background: rgba(16, 185, 129, 0.14) !important;
   color: #10b981 !important;
   border: 1px solid rgba(16, 185, 129, 0.45) !important;
 }
-[data-theme="trollllm"] .badge-success::before {
+[data-theme="cyber"] .badge-success::before {
   background-color: #10b981;
   box-shadow: 0 0 6px #10b981;
 }
 
-[data-theme="trollllm"] .badge-warning {
+[data-theme="cyber"] .badge-warning {
   background: rgba(251, 146, 60, 0.14) !important;
   color: #fb923c !important;
   border: 1px solid rgba(251, 146, 60, 0.45) !important;
 }
-[data-theme="trollllm"] .badge-warning::before {
+[data-theme="cyber"] .badge-warning::before {
   background-color: #fb923c;
   box-shadow: 0 0 6px #fb923c;
 }
 
-[data-theme="trollllm"] .badge-danger {
+[data-theme="cyber"] .badge-danger {
   background: rgba(244, 63, 94, 0.14) !important;
   color: #f43f5e !important;
   border: 1px solid rgba(244, 63, 94, 0.45) !important;
 }
-[data-theme="trollllm"] .badge-danger::before {
+[data-theme="cyber"] .badge-danger::before {
   background-color: #f43f5e;
   box-shadow: 0 0 6px #f43f5e;
 }
 
-[data-theme="trollllm"] .badge-info {
+[data-theme="cyber"] .badge-info {
   background: rgba(56, 189, 248, 0.14) !important;
   color: #38bdf8 !important;
   border: 1px solid rgba(56, 189, 248, 0.45) !important;
 }
-[data-theme="trollllm"] .badge-info::before {
+[data-theme="cyber"] .badge-info::before {
   background-color: #38bdf8;
   box-shadow: 0 0 6px #38bdf8;
 }
 
-/* TrollLLM Dropdowns & Popups */
-[data-theme="trollllm"] .card,
-[data-theme="trollllm"] .stat-card,
-[data-theme="trollllm"] .dashboard-card,
-[data-theme="trollllm"] .kanban-column,
-[data-theme="trollllm"] .project-card,
-[data-theme="trollllm"] .custom-table-container,
-[data-theme="trollllm"] .modal-content,
-[data-theme="trollllm"] .modal-dialog,
-[data-theme="trollllm"] .chat-container,
-[data-theme="trollllm"] .split-left-pane-25,
-[data-theme="trollllm"] .split-right-pane-50 {
+/* Cyber Dropdowns & Popups */
+[data-theme="cyber"] .card,
+[data-theme="cyber"] .stat-card,
+[data-theme="cyber"] .dashboard-card,
+[data-theme="cyber"] .kanban-column,
+[data-theme="cyber"] .project-card,
+[data-theme="cyber"] .custom-table-container,
+[data-theme="cyber"] .modal-content,
+[data-theme="cyber"] .modal-dialog,
+[data-theme="cyber"] .chat-container,
+[data-theme="cyber"] .split-left-pane-25,
+[data-theme="cyber"] .split-right-pane-50 {
   background-color: #0e0b1d !important;
   border: 1px solid #231c3a !important;
   box-shadow: 0 0 30px rgba(9, 7, 18, 0.98) !important;
 }
 
-/* TrollLLM Dashboard Popups & Modals */
-[data-theme="trollllm"] .modal.show {
+/* Cyber Dashboard Popups & Modals */
+[data-theme="cyber"] .modal.show {
   background: rgba(7, 5, 14, 0.84) !important;
   backdrop-filter: blur(8px) !important;
 }
 
-[data-theme="trollllm"] .detail-popup-dialog {
+[data-theme="cyber"] .detail-popup-dialog {
   background: #0e0b1d !important;
   border-radius: 0px !important;
 }
 
 /* 1. Popup Issue Theme (Emerald Green) */
-[data-theme="trollllm"] .popup-dialog-issues {
+[data-theme="cyber"] .popup-dialog-issues {
   border: 1px solid #10b981 !important;
   box-shadow: 0 0 35px rgba(16, 185, 129, 0.22), 0 0 1px #10b981 !important;
 }
-[data-theme="trollllm"] .popup-dialog-issues .modal-header h3 {
+[data-theme="cyber"] .popup-dialog-issues .modal-header h3 {
   color: #10b981 !important;
   text-shadow: 0 0 8px rgba(16, 185, 129, 0.4) !important;
 }
-[data-theme="trollllm"] .popup-dialog-issues .split-card-item.active {
+[data-theme="cyber"] .popup-dialog-issues .split-card-item.active {
   background: #111620 !important;
   border-color: #10b981 !important;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.2) !important;
 }
-[data-theme="trollllm"] .popup-dialog-issues .pill-search-input:focus,
-[data-theme="trollllm"] .popup-dialog-issues .rectangular-filter-select:focus {
+[data-theme="cyber"] .popup-dialog-issues .pill-search-input:focus,
+[data-theme="cyber"] .popup-dialog-issues .rectangular-filter-select:focus {
   border-color: #10b981 !important;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.25) !important;
 }
 
 /* 2. Popup Task Theme (Sky Cyan) */
-[data-theme="trollllm"] .popup-dialog-tasks {
+[data-theme="cyber"] .popup-dialog-tasks {
   border: 1px solid #0ea5e9 !important;
   box-shadow: 0 0 35px rgba(14, 165, 233, 0.22), 0 0 1px #0ea5e9 !important;
 }
-[data-theme="trollllm"] .popup-dialog-tasks .modal-header h3 {
+[data-theme="cyber"] .popup-dialog-tasks .modal-header h3 {
   color: #0ea5e9 !important;
   text-shadow: 0 0 8px rgba(14, 165, 233, 0.4) !important;
 }
-[data-theme="trollllm"] .popup-dialog-tasks .split-card-item.active {
+[data-theme="cyber"] .popup-dialog-tasks .split-card-item.active {
   background: #0e1724 !important;
   border-color: #0ea5e9 !important;
   box-shadow: 0 0 10px rgba(14, 165, 233, 0.2) !important;
 }
-[data-theme="trollllm"] .popup-dialog-tasks .pill-search-input:focus,
-[data-theme="trollllm"] .popup-dialog-tasks .rectangular-filter-select:focus {
+[data-theme="cyber"] .popup-dialog-tasks .pill-search-input:focus,
+[data-theme="cyber"] .popup-dialog-tasks .rectangular-filter-select:focus {
   border-color: #0ea5e9 !important;
   box-shadow: 0 0 8px rgba(14, 165, 233, 0.25) !important;
 }
 
 /* 3. Popup Project Theme (Indigo Purple) */
-[data-theme="trollllm"] .popup-dialog-projects {
+[data-theme="cyber"] .popup-dialog-projects {
   border: 1px solid #6366f1 !important;
   box-shadow: 0 0 35px rgba(99, 102, 241, 0.22), 0 0 1px #6366f1 !important;
 }
-[data-theme="trollllm"] .popup-dialog-projects .modal-header h3 {
+[data-theme="cyber"] .popup-dialog-projects .modal-header h3 {
   color: #818cf8 !important;
   text-shadow: 0 0 8px rgba(129, 140, 248, 0.4) !important;
 }
-[data-theme="trollllm"] .popup-dialog-projects .split-card-item.active {
+[data-theme="cyber"] .popup-dialog-projects .split-card-item.active {
   background: #151029 !important;
   border-color: #6366f1 !important;
   box-shadow: 0 0 10px rgba(99, 102, 241, 0.2) !important;
 }
-[data-theme="trollllm"] .popup-dialog-projects .pill-search-input:focus,
-[data-theme="trollllm"] .popup-dialog-projects .rectangular-filter-select:focus {
+[data-theme="cyber"] .popup-dialog-projects .pill-search-input:focus,
+[data-theme="cyber"] .popup-dialog-projects .rectangular-filter-select:focus {
   border-color: #6366f1 !important;
   box-shadow: 0 0 8px rgba(99, 102, 241, 0.25) !important;
 }
 
 /* 4. Popup Daily Report Theme (Amber Gold) */
-[data-theme="trollllm"] .popup-dialog-reports {
+[data-theme="cyber"] .popup-dialog-reports {
   border: 1px solid #f59e0b !important;
   box-shadow: 0 0 35px rgba(245, 158, 11, 0.22), 0 0 1px #f59e0b !important;
 }
-[data-theme="trollllm"] .popup-dialog-reports .modal-header h3 {
+[data-theme="cyber"] .popup-dialog-reports .modal-header h3 {
   color: #f59e0b !important;
   text-shadow: 0 0 8px rgba(245, 158, 11, 0.4) !important;
 }
-[data-theme="trollllm"] .popup-dialog-reports .split-card-item.active {
+[data-theme="cyber"] .popup-dialog-reports .split-card-item.active {
   background: #181320 !important;
   border-color: #f59e0b !important;
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.2) !important;
 }
-[data-theme="trollllm"] .popup-dialog-reports .pill-search-input:focus,
-[data-theme="trollllm"] .popup-dialog-reports .rectangular-filter-select:focus {
+[data-theme="cyber"] .popup-dialog-reports .pill-search-input:focus,
+[data-theme="cyber"] .popup-dialog-reports .rectangular-filter-select:focus {
   border-color: #f59e0b !important;
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.25) !important;
 }
 
-[data-theme="trollllm"] .detail-popup-dialog .modal-header {
+[data-theme="cyber"] .detail-popup-dialog .modal-header {
   background: #130f28 !important;
   border-bottom: 1px solid #21193c !important;
   padding: 14px 20px !important;
 }
 
-[data-theme="trollllm"] .detail-popup-dialog .modal-header h3 {
+[data-theme="cyber"] .detail-popup-dialog .modal-header h3 {
   font-family: monospace !important;
   font-weight: 800 !important;
   letter-spacing: 0.05em !important;
   font-size: 15px !important;
 }
 
-[data-theme="trollllm"] .detail-popup-dialog .btn-close-modal {
+[data-theme="cyber"] .detail-popup-dialog .btn-close-modal {
   border: 1px solid #261e40 !important;
   background: #140f28 !important;
   color: #8b86a0 !important;
@@ -4611,20 +4633,20 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.15s ease !important;
 }
 
-[data-theme="trollllm"] .detail-popup-dialog .btn-close-modal:hover {
+[data-theme="cyber"] .detail-popup-dialog .btn-close-modal:hover {
   border-color: #f43f5e !important;
   color: #f43f5e !important;
   background: rgba(244, 63, 94, 0.12) !important;
   box-shadow: 0 0 8px rgba(244, 63, 94, 0.3) !important;
 }
 
-[data-theme="trollllm"] .split-left-pane-25 {
+[data-theme="cyber"] .split-left-pane-25 {
   background: #0b0917 !important;
   border-right: 1px solid #1c1633 !important;
   padding: 14px !important;
 }
 
-[data-theme="trollllm"] .pill-search-input {
+[data-theme="cyber"] .pill-search-input {
   border-radius: 0px !important;
   background-color: #0d0a1b !important;
   border: 1px solid #241c40 !important;
@@ -4633,7 +4655,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 12px !important;
 }
 
-[data-theme="trollllm"] .rectangular-filter-select {
+[data-theme="cyber"] .rectangular-filter-select {
   border-radius: 0px !important;
   background-color: #0d0a1b !important;
   border: 1px solid #241c40 !important;
@@ -4642,7 +4664,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 11.5px !important;
 }
 
-[data-theme="trollllm"] .split-card-item {
+[data-theme="cyber"] .split-card-item {
   border-radius: 0px !important;
   background: #0d0a1a !important;
   border: 1px solid #1f1836 !important;
@@ -4650,24 +4672,24 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.15s ease !important;
 }
 
-[data-theme="trollllm"] .split-card-item:hover:not(.active) {
+[data-theme="cyber"] .split-card-item:hover:not(.active) {
   background: #140f29 !important;
   border-color: #2f2352 !important;
 }
 
-[data-theme="trollllm"] .split-right-pane-50 {
+[data-theme="cyber"] .split-right-pane-50 {
   background: #0e0b1d !important;
   padding: 20px 24px !important;
   color: #e2e8f0 !important;
 }
 
-[data-theme="trollllm"] .detail-popup-dialog .modal-footer {
+[data-theme="cyber"] .detail-popup-dialog .modal-footer {
   background: #130f28 !important;
   border-top: 1px solid #21193c !important;
   padding: 12px 20px !important;
 }
 
-[data-theme="trollllm"] .detail-popup-dialog .modal-footer .btn-secondary {
+[data-theme="cyber"] .detail-popup-dialog .modal-footer .btn-secondary {
   border-radius: 0px !important;
   background: #15102a !important;
   border: 1px solid #2a2052 !important;
@@ -4679,50 +4701,50 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.15s ease !important;
 }
 
-[data-theme="trollllm"] .detail-popup-dialog .modal-footer .btn-secondary:hover {
+[data-theme="cyber"] .detail-popup-dialog .modal-footer .btn-secondary:hover {
   background: #1f183e !important;
   border-color: #6366f1 !important;
   color: #ffffff !important;
 }
 
-[data-theme="trollllm"] .dropdown-menu {
+[data-theme="cyber"] .dropdown-menu {
   background-color: #0e0b1c !important;
   border: 1px solid #241c3e !important;
   box-shadow: 0 0 30px rgba(9, 7, 18, 0.98) !important;
 }
 
-[data-theme="trollllm"] .dropdown-header {
+[data-theme="cyber"] .dropdown-header {
   border-bottom: 1px solid #1f1836 !important;
 }
 
-[data-theme="trollllm"] .notification-item:hover {
+[data-theme="cyber"] .notification-item:hover {
   background-color: #16122c !important;
 }
 
-[data-theme="trollllm"] .notification-item.unread {
+[data-theme="cyber"] .notification-item.unread {
   background-color: rgba(0, 255, 136, 0.05) !important;
   border-left: 3px solid #00ff88 !important;
 }
 
-[data-theme="trollllm"] input:not(.ai-textarea):focus,
-[data-theme="trollllm"] select:focus,
-[data-theme="trollllm"] textarea:not(.ai-textarea):focus {
+[data-theme="cyber"] input:not(.ai-textarea):focus,
+[data-theme="cyber"] select:focus,
+[data-theme="cyber"] textarea:not(.ai-textarea):focus {
   border-color: #00ff88 !important;
   box-shadow: 0 0 0 1px #00ff88 !important;
 }
 
-/* Custom TrollLLM Cyber Scrollbars */
-[data-theme="trollllm"] ::-webkit-scrollbar {
+/* Custom Cyber Cyber Scrollbars */
+[data-theme="cyber"] ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-[data-theme="trollllm"] ::-webkit-scrollbar-track {
+[data-theme="cyber"] ::-webkit-scrollbar-track {
   background: #000000;
 }
-[data-theme="trollllm"] ::-webkit-scrollbar-thumb {
+[data-theme="cyber"] ::-webkit-scrollbar-thumb {
   background: #222222;
 }
-[data-theme="trollllm"] ::-webkit-scrollbar-thumb:hover {
+[data-theme="cyber"] ::-webkit-scrollbar-thumb:hover {
   background: #00ff88;
 }
 
@@ -5610,36 +5632,36 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Global SweetAlert2 Dark Mode overrides (All dark themes) */
 [data-theme="dark"] .swal2-popup,
-[data-theme="trollllm"] .swal2-popup {
+[data-theme="cyber"] .swal2-popup {
   background-color: var(--neutral-bg-card) !important;
   color: var(--neutral-dark) !important;
   border: 1.5px solid var(--neutral-border) !important;
 }
 [data-theme="dark"] .swal2-title,
-[data-theme="trollllm"] .swal2-title {
+[data-theme="cyber"] .swal2-title {
   color: var(--neutral-dark) !important;
 }
 [data-theme="dark"] .swal2-html-container,
-[data-theme="trollllm"] .swal2-html-container {
+[data-theme="cyber"] .swal2-html-container {
   color: var(--neutral-dark) !important;
 }
 [data-theme="dark"] .swal2-validation-message,
-[data-theme="trollllm"] .swal2-validation-message {
+[data-theme="cyber"] .swal2-validation-message {
   background-color: var(--neutral-bg-hover) !important;
   color: var(--neutral-dark) !important;
 }
 [data-theme="dark"] .swal2-input,
 [data-theme="dark"] .swal2-textarea,
 [data-theme="dark"] .swal2-select,
-[data-theme="trollllm"] .swal2-input,
-[data-theme="trollllm"] .swal2-textarea,
-[data-theme="trollllm"] .swal2-select {
+[data-theme="cyber"] .swal2-input,
+[data-theme="cyber"] .swal2-textarea,
+[data-theme="cyber"] .swal2-select {
   background-color: var(--neutral-bg-main) !important;
   color: var(--neutral-dark) !important;
   border: 1px solid var(--neutral-border) !important;
 }
 [data-theme="dark"] .swal2-close,
-[data-theme="trollllm"] .swal2-close {
+[data-theme="cyber"] .swal2-close {
   color: var(--neutral-dark) !important;
 }
 
@@ -5647,25 +5669,25 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea,
-[data-theme="trollllm"] input,
-[data-theme="trollllm"] select,
-[data-theme="trollllm"] textarea {
+[data-theme="cyber"] input,
+[data-theme="cyber"] select,
+[data-theme="cyber"] textarea {
   background-color: var(--neutral-bg-card) !important;
   color: var(--neutral-dark) !important;
   border-color: var(--neutral-border) !important;
 }
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder,
-[data-theme="trollllm"] input::placeholder,
-[data-theme="trollllm"] textarea::placeholder {
+[data-theme="cyber"] input::placeholder,
+[data-theme="cyber"] textarea::placeholder {
   color: var(--neutral-muted) !important;
 }
 
 /* Invert native date & time picker calendar/clock icons in Dark Modes */
 [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
 [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
-[data-theme="trollllm"] input[type="date"]::-webkit-calendar-picker-indicator,
-[data-theme="trollllm"] input[type="time"]::-webkit-calendar-picker-indicator {
+[data-theme="cyber"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="cyber"] input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(1) !important;
   cursor: pointer;
 }
@@ -5675,10 +5697,10 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme="dark"] input:-webkit-autofill:hover, 
 [data-theme="dark"] input:-webkit-autofill:focus, 
 [data-theme="dark"] input:-webkit-autofill:active,
-[data-theme="trollllm"] input:-webkit-autofill,
-[data-theme="trollllm"] input:-webkit-autofill:hover, 
-[data-theme="trollllm"] input:-webkit-autofill:focus, 
-[data-theme="trollllm"] input:-webkit-autofill:active {
+[data-theme="cyber"] input:-webkit-autofill,
+[data-theme="cyber"] input:-webkit-autofill:hover, 
+[data-theme="cyber"] input:-webkit-autofill:focus, 
+[data-theme="cyber"] input:-webkit-autofill:active {
   -webkit-background-clip: text;
   -webkit-text-fill-color: var(--neutral-dark) !important;
   transition: background-color 5000s ease-in-out 0s;
@@ -5834,97 +5856,97 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   TrollLLM Theme Overrides for Daily Reports Modals
+   Cyber Theme Overrides for Daily Reports Modals
    ========================================================================== */
-[data-theme="trollllm"] .daily-report-calendar-modal,
-[data-theme="trollllm"] .daily-report-history-modal {
+[data-theme="cyber"] .daily-report-calendar-modal,
+[data-theme="cyber"] .daily-report-history-modal {
   background-color: #0e0b1d !important;
   border: 1.5px solid #10b981 !important;
   border-radius: 0px !important;
   box-shadow: 0 0 35px rgba(16, 185, 129, 0.22), 0 0 50px rgba(9, 7, 18, 0.98) !important;
 }
 
-[data-theme="trollllm"] .daily-report-modal-header {
+[data-theme="cyber"] .daily-report-modal-header {
   background-color: #120e25 !important;
   border-bottom: 1px solid #1f1836 !important;
 }
 
-[data-theme="trollllm"] .daily-report-modal-header h3 {
+[data-theme="cyber"] .daily-report-modal-header h3 {
   color: #10b981 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
 }
 
-[data-theme="trollllm"] .daily-report-modal-close-btn,
-[data-theme="trollllm"] .daily-report-month-nav-btn {
+[data-theme="cyber"] .daily-report-modal-close-btn,
+[data-theme="cyber"] .daily-report-month-nav-btn {
   border: 1px solid #231c3a !important;
   border-radius: 0px !important;
   background-color: #130f26 !important;
   color: #94a3b8 !important;
 }
-[data-theme="trollllm"] .daily-report-modal-close-btn:hover,
-[data-theme="trollllm"] .daily-report-month-nav-btn:hover {
+[data-theme="cyber"] .daily-report-modal-close-btn:hover,
+[data-theme="cyber"] .daily-report-month-nav-btn:hover {
   border-color: #10b981 !important;
   color: #10b981 !important;
 }
 
-[data-theme="trollllm"] .daily-report-calendar-day-btn {
+[data-theme="cyber"] .daily-report-calendar-day-btn {
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .daily-report-calendar-day-btn.day-reported {
+[data-theme="cyber"] .daily-report-calendar-day-btn.day-reported {
   background: rgba(16, 185, 129, 0.18) !important;
   border: 1px solid #10b981 !important;
   color: #10b981 !important;
 }
 
-[data-theme="trollllm"] .daily-report-calendar-day-btn.day-draft {
+[data-theme="cyber"] .daily-report-calendar-day-btn.day-draft {
   background: rgba(245, 158, 11, 0.18) !important;
   border: 1px solid #f59e0b !important;
   color: #fbbf24 !important;
 }
 
-[data-theme="trollllm"] .daily-report-calendar-day-btn.day-missing {
+[data-theme="cyber"] .daily-report-calendar-day-btn.day-missing {
   background: rgba(239, 68, 68, 0.18) !important;
   border: 1px solid #ef4444 !important;
   color: #f87171 !important;
 }
 
-[data-theme="trollllm"] .daily-report-calendar-day-btn.day-normal,
-[data-theme="trollllm"] .daily-report-calendar-day-btn.day-weekend {
+[data-theme="cyber"] .daily-report-calendar-day-btn.day-normal,
+[data-theme="cyber"] .daily-report-calendar-day-btn.day-weekend {
   border-color: #1f1836 !important;
   background-color: transparent !important;
 }
 
-[data-theme="trollllm"] .legend-box {
+[data-theme="cyber"] .legend-box {
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .daily-report-history-filter-row {
+[data-theme="cyber"] .daily-report-history-filter-row {
   background-color: #0f0c20 !important;
   border-bottom: 1px solid #1f1836 !important;
 }
 
-[data-theme="trollllm"] .daily-report-date-input {
+[data-theme="cyber"] .daily-report-date-input {
   background-color: #130f26 !important;
   border: 1px solid #231c3a !important;
   color: #ffffff !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .daily-report-history-card {
+[data-theme="cyber"] .daily-report-history-card {
   background-color: #0d0a1a !important;
   border: 1px solid #1f1836 !important;
   border-radius: 0px !important;
   box-shadow: 0 0 16px rgba(9, 7, 18, 0.6) !important;
 }
-[data-theme="trollllm"] .daily-report-history-card:hover {
+[data-theme="cyber"] .daily-report-history-card:hover {
   border-color: #10b981 !important;
   box-shadow: 0 0 16px rgba(16, 185, 129, 0.2) !important;
 }
 
 /* ==========================================================================
-   Room Booking Page - Universal Multi-Theme & TrollLLM Overrides
+   Room Booking Page - Universal Multi-Theme & Cyber Overrides
    ========================================================================== */
 
 .room-booking-view {
@@ -6354,223 +6376,224 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   TrollLLM Theme Overrides for Room Booking
+   Cyber Theme Overrides for Room Booking
    ========================================================================== */
-[data-theme="trollllm"] .room-booking-toolbar,
-[data-theme="trollllm"] .room-week-grid-wrapper,
-[data-theme="trollllm"] .room-day-col {
+[data-theme="cyber"] .room-booking-toolbar,
+[data-theme="cyber"] .room-week-grid-wrapper,
+[data-theme="cyber"] .room-day-col {
   background-color: #0e0b1d !important;
   border-color: #1f1836 !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .room-booking-toolbar {
+[data-theme="cyber"] .room-booking-toolbar {
   border-color: #231c3a !important;
   box-shadow: 0 0 25px rgba(9, 7, 18, 0.9) !important;
 }
 
-[data-theme="trollllm"] .room-booking-select,
-[data-theme="trollllm"] .room-booking-date-input,
-[data-theme="trollllm"] .room-booking-nav-btn,
-[data-theme="trollllm"] .room-modal-input {
+[data-theme="cyber"] .room-booking-select,
+[data-theme="cyber"] .room-booking-date-input,
+[data-theme="cyber"] .room-booking-nav-btn,
+[data-theme="cyber"] .room-modal-input {
   background-color: #130f26 !important;
   border-color: #231c3a !important;
   color: #ffffff !important;
   border-radius: 0px !important;
 }
-[data-theme="trollllm"] .room-booking-nav-btn:hover {
+[data-theme="cyber"] .room-booking-nav-btn:hover {
   border-color: #10b981 !important;
   color: #10b981 !important;
 }
 
-[data-theme="trollllm"] .room-title-text {
+[data-theme="cyber"] .room-title-text {
   color: #10b981 !important;
   letter-spacing: 0.03em !important;
   text-transform: uppercase !important;
 }
-[data-theme="trollllm"] .room-title-icon {
+[data-theme="cyber"] .room-title-icon {
   color: #10b981 !important;
 }
 
-[data-theme="trollllm"] .room-capacity-badge {
+[data-theme="cyber"] .room-capacity-badge {
   color: #94a3b8 !important;
 }
 
-[data-theme="trollllm"] .room-day-col.is-today {
+[data-theme="cyber"] .room-day-col.is-today {
   border-color: #10b981 !important;
   box-shadow: 0 0 15px rgba(16, 185, 129, 0.18), inset 0 0 15px rgba(16, 185, 129, 0.05) !important;
   background-color: #0c0919 !important;
 }
 
-[data-theme="trollllm"] .today-chip {
+[data-theme="cyber"] .today-chip {
   background-color: #10b981 !important;
   color: #000000 !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .room-day-col-header {
+[data-theme="cyber"] .room-day-col-header {
   border-bottom-color: #1f1836 !important;
 }
 
-[data-theme="trollllm"] .room-meeting-card {
+[data-theme="cyber"] .room-meeting-card {
   background-color: #090714 !important;
   border-color: #1f1836 !important;
   border-radius: 0px !important;
 }
-[data-theme="trollllm"] .room-meeting-card:hover {
+[data-theme="cyber"] .room-meeting-card:hover {
   border-color: #10b981 !important;
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.25) !important;
 }
 
-[data-theme="trollllm"] .meeting-time-badge {
+[data-theme="cyber"] .meeting-time-badge {
   color: #10b981 !important;
   background-color: rgba(16, 185, 129, 0.12) !important;
   border-color: #10b981 !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .meeting-imp-dot,
-[data-theme="trollllm"] .meeting-imp-tag,
-[data-theme="trollllm"] .importance-badge-tag {
+[data-theme="cyber"] .meeting-imp-dot,
+[data-theme="cyber"] .meeting-imp-tag,
+[data-theme="cyber"] .importance-badge-tag {
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .room-book-slot-btn {
+[data-theme="cyber"] .room-book-slot-btn {
   border-color: #231c3a !important;
   border-radius: 0px !important;
   color: #94a3b8 !important;
 }
-[data-theme="trollllm"] .room-book-slot-btn:hover:not(.is-disabled) {
+[data-theme="cyber"] .room-book-slot-btn:hover:not(.is-disabled) {
   border-color: #10b981 !important;
   color: #10b981 !important;
   background-color: rgba(16, 185, 129, 0.08) !important;
 }
 
-[data-theme="trollllm"] .room-importance-option,
-[data-theme="trollllm"] .room-importance-display,
-[data-theme="trollllm"] .room-detail-purpose-box {
+[data-theme="cyber"] .room-importance-option,
+[data-theme="cyber"] .room-importance-display,
+[data-theme="cyber"] .room-detail-purpose-box {
   background-color: #090714 !important;
   border-color: #1f1836 !important;
   border-radius: 0px !important;
 }
-[data-theme="trollllm"] .room-importance-option.is-selected {
+[data-theme="cyber"] .room-importance-option.is-selected {
   border-color: #10b981 !important;
 }
 
-[data-theme="trollllm"] .room-booking-modal .modal-dialog .modal-content {
+[data-theme="cyber"] .room-booking-modal .modal-dialog .modal-content {
   background-color: #0e0b1d !important;
   border: 1.5px solid #10b981 !important;
   border-radius: 0px !important;
   box-shadow: 0 0 35px rgba(16, 185, 129, 0.22), 0 0 50px rgba(9, 7, 18, 0.98) !important;
 }
-[data-theme="trollllm"] .room-booking-modal .modal-header {
+[data-theme="cyber"] .room-booking-modal .modal-header {
   background-color: #120e25 !important;
   border-bottom: 1px solid #1f1836 !important;
 }
-[data-theme="trollllm"] .room-booking-modal .modal-header h3 {
+[data-theme="cyber"] .room-booking-modal .modal-header h3 {
   color: #10b981 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
 }
-[data-theme="trollllm"] .room-booking-modal .modal-footer {
+[data-theme="cyber"] .room-booking-modal .modal-footer {
   border-top-color: #1f1836 !important;
 }
 
 /* ==========================================================================
-   Project Detail Page (/projects/[id]) - TrollLLM Theme Overrides
+   Project Detail Page (/projects/[id]) - Cyber Theme Overrides
    ========================================================================== */
 
-[data-theme="trollllm"] .project-meta-strip {
+[data-theme="cyber"] .project-meta-strip {
   background-color: #0e0b1d !important;
   border: 1.5px solid #1f1836 !important;
   border-radius: 0px !important;
   box-shadow: 0 0 25px rgba(9, 7, 18, 0.9) !important;
 }
 
-[data-theme="trollllm"] .project-meta-item label {
+[data-theme="cyber"] .project-meta-item label {
   color: #94a3b8 !important;
   letter-spacing: 0.04em !important;
 }
 
-[data-theme="trollllm"] .project-meta-select,
-[data-theme="trollllm"] .project-meta-date-input {
+[data-theme="cyber"] .project-meta-select,
+[data-theme="cyber"] .project-meta-date-input {
   background-color: #130f26 !important;
   border: 1px solid #231c3a !important;
   color: #ffffff !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .project-meta-select:focus,
-[data-theme="trollllm"] .project-meta-date-input:focus {
+[data-theme="cyber"] .project-meta-select:focus,
+[data-theme="cyber"] .project-meta-date-input:focus {
   border-color: #10b981 !important;
 }
 
-[data-theme="trollllm"] .project-meta-progress-row .progress-bar-outer {
+[data-theme="cyber"] .project-meta-progress-row .progress-bar-outer {
   background-color: #130f26 !important;
   border: 1px solid #231c3a !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .project-meta-progress-row .progress-bar-inner {
+[data-theme="cyber"] .project-meta-progress-row .progress-bar-inner {
   background-color: #10b981 !important;
   box-shadow: 0 0 8px #10b981 !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .project-progress-percent {
+[data-theme="cyber"] .project-progress-percent {
   color: #10b981 !important;
 }
 
-[data-theme="trollllm"] .project-tabs-container {
+[data-theme="cyber"] .project-tabs-container {
   border-bottom: 1.5px solid #1f1836 !important;
 }
-[data-theme="trollllm"] .project-tabs {
+[data-theme="cyber"] .project-tabs {
   border-bottom: none !important;
 }
 
-[data-theme="trollllm"] .tab-btn {
+[data-theme="cyber"] .tab-btn {
   color: #94a3b8 !important;
   border-radius: 0px !important;
   font-weight: 700 !important;
 }
 
-[data-theme="trollllm"] .tab-btn:hover {
+[data-theme="cyber"] .tab-btn:hover {
   color: #ffffff !important;
 }
 
-[data-theme="trollllm"] .tab-btn.active {
+[data-theme="cyber"] .tab-btn.active {
   color: #10b981 !important;
   text-shadow: 0 0 8px rgba(16, 185, 129, 0.4) !important;
 }
 
-[data-theme="trollllm"] .tab-btn.active::after {
+[data-theme="cyber"] .tab-btn.active::after {
   background-color: #10b981 !important;
   box-shadow: 0 0 10px #10b981 !important;
   height: 2px !important;
 }
 
-[data-theme="trollllm"] .project-subtab-title {
+[data-theme="cyber"] .project-subtab-title {
   color: #10b981 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
 }
 
-[data-theme="trollllm"] .kanban-col {
+[data-theme="cyber"] .kanban-col {
   background-color: #0c0919 !important;
   border: 1.5px solid #1f1836 !important;
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .kanban-col-count {
+[data-theme="cyber"] .kanban-col-count {
   background-color: #130f26 !important;
   border: 1px solid #231c3a !important;
   color: #94a3b8 !important;
   border-radius: 0px !important;
 }
 
-/* TrollLLM Status Card Styles matching Image 1 */
-[data-theme="trollllm"] .item-row-card,
-[data-theme="trollllm"] .task-card {
+/* Cyber Status Card Styles matching Image 1 */
+[data-theme="cyber"] .item-row-card,
+[data-theme="cyber"] .task-card,
+[data-theme="cyber"] .report-grid-card {
   background-color: #0e0b1d !important;
   border: 1.5px solid #1f1836 !important;
   border-radius: 0px !important;
@@ -6578,115 +6601,116 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.2s ease !important;
 }
 
-[data-theme="trollllm"] .item-row-card:hover,
-[data-theme="trollllm"] .task-card:hover {
+[data-theme="cyber"] .item-row-card:hover,
+[data-theme="cyber"] .task-card:hover,
+[data-theme="cyber"] .report-grid-card:hover {
   border-color: #10b981 !important;
   box-shadow: 0 0 16px rgba(16, 185, 129, 0.22) !important;
 }
 
 /* Priority Critical (Down / Khẩn cấp / Danger) -> Red */
-[data-theme="trollllm"] .item-row-card.priority-critical,
-[data-theme="trollllm"] .task-card.priority-critical,
-[data-theme="trollllm"] .split-card-item.priority-critical {
+[data-theme="cyber"] .item-row-card.priority-critical,
+[data-theme="cyber"] .task-card.priority-critical,
+[data-theme="cyber"] .split-card-item.priority-critical {
   border-color: rgba(244, 63, 94, 0.45) !important;
   background: linear-gradient(135deg, rgba(244, 63, 94, 0.09) 0%, #0e0b1d 60%) !important;
   box-shadow: 0 0 16px rgba(244, 63, 94, 0.15) !important;
 }
-[data-theme="trollllm"] .item-row-card.priority-critical:hover,
-[data-theme="trollllm"] .task-card.priority-critical:hover,
-[data-theme="trollllm"] .split-card-item.priority-critical:hover {
+[data-theme="cyber"] .item-row-card.priority-critical:hover,
+[data-theme="cyber"] .task-card.priority-critical:hover,
+[data-theme="cyber"] .split-card-item.priority-critical:hover {
   border-color: #f43f5e !important;
   box-shadow: 0 0 22px rgba(244, 63, 94, 0.38) !important;
 }
-[data-theme="trollllm"] .split-card-item.priority-critical.active {
+[data-theme="cyber"] .split-card-item.priority-critical.active {
   border-color: #f43f5e !important;
   background: linear-gradient(135deg, rgba(244, 63, 94, 0.22) 0%, #150a16 70%) !important;
   box-shadow: 0 0 25px rgba(244, 63, 94, 0.45) !important;
 }
 
 /* Priority High (Cao / Warning) -> Amber/Orange */
-[data-theme="trollllm"] .item-row-card.priority-high,
-[data-theme="trollllm"] .task-card.priority-high,
-[data-theme="trollllm"] .split-card-item.priority-high {
+[data-theme="cyber"] .item-row-card.priority-high,
+[data-theme="cyber"] .task-card.priority-high,
+[data-theme="cyber"] .split-card-item.priority-high {
   border-color: rgba(251, 146, 60, 0.45) !important;
   background: linear-gradient(135deg, rgba(251, 146, 60, 0.09) 0%, #0e0b1d 60%) !important;
   box-shadow: 0 0 16px rgba(251, 146, 60, 0.15) !important;
 }
-[data-theme="trollllm"] .item-row-card.priority-high:hover,
-[data-theme="trollllm"] .task-card.priority-high:hover,
-[data-theme="trollllm"] .split-card-item.priority-high:hover {
+[data-theme="cyber"] .item-row-card.priority-high:hover,
+[data-theme="cyber"] .task-card.priority-high:hover,
+[data-theme="cyber"] .split-card-item.priority-high:hover {
   border-color: #fb923c !important;
   box-shadow: 0 0 22px rgba(251, 146, 60, 0.38) !important;
 }
-[data-theme="trollllm"] .split-card-item.priority-high.active {
+[data-theme="cyber"] .split-card-item.priority-high.active {
   border-color: #fb923c !important;
   background: linear-gradient(135deg, rgba(251, 146, 60, 0.22) 0%, #171016 70%) !important;
   box-shadow: 0 0 25px rgba(251, 146, 60, 0.45) !important;
 }
 
 /* Priority Medium (Trung bình / Info) -> Sky/Cyan */
-[data-theme="trollllm"] .item-row-card.priority-medium,
-[data-theme="trollllm"] .task-card.priority-medium,
-[data-theme="trollllm"] .split-card-item.priority-medium {
+[data-theme="cyber"] .item-row-card.priority-medium,
+[data-theme="cyber"] .task-card.priority-medium,
+[data-theme="cyber"] .split-card-item.priority-medium {
   border-color: rgba(56, 189, 248, 0.35) !important;
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.07) 0%, #0e0b1d 60%) !important;
   box-shadow: 0 0 14px rgba(56, 189, 248, 0.12) !important;
 }
-[data-theme="trollllm"] .item-row-card.priority-medium:hover,
-[data-theme="trollllm"] .task-card.priority-medium:hover,
-[data-theme="trollllm"] .split-card-item.priority-medium:hover {
+[data-theme="cyber"] .item-row-card.priority-medium:hover,
+[data-theme="cyber"] .task-card.priority-medium:hover,
+[data-theme="cyber"] .split-card-item.priority-medium:hover {
   border-color: #38bdf8 !important;
   box-shadow: 0 0 22px rgba(56, 189, 248, 0.32) !important;
 }
-[data-theme="trollllm"] .split-card-item.priority-medium.active {
+[data-theme="cyber"] .split-card-item.priority-medium.active {
   border-color: #38bdf8 !important;
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, #0c1626 70%) !important;
   box-shadow: 0 0 25px rgba(56, 189, 248, 0.45) !important;
 }
 
 /* Priority Low (Thấp / Up / Success) -> Emerald Green */
-[data-theme="trollllm"] .item-row-card.priority-low,
-[data-theme="trollllm"] .task-card.priority-low,
-[data-theme="trollllm"] .split-card-item.priority-low {
+[data-theme="cyber"] .item-row-card.priority-low,
+[data-theme="cyber"] .task-card.priority-low,
+[data-theme="cyber"] .split-card-item.priority-low {
   border-color: rgba(16, 185, 129, 0.4) !important;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, #0e0b1d 60%) !important;
   box-shadow: 0 0 14px rgba(16, 185, 129, 0.15) !important;
 }
-[data-theme="trollllm"] .item-row-card.priority-low:hover,
-[data-theme="trollllm"] .task-card.priority-low:hover,
-[data-theme="trollllm"] .split-card-item.priority-low:hover {
+[data-theme="cyber"] .item-row-card.priority-low:hover,
+[data-theme="cyber"] .task-card.priority-low:hover,
+[data-theme="cyber"] .split-card-item.priority-low:hover {
   border-color: #10b981 !important;
   box-shadow: 0 0 22px rgba(16, 185, 129, 0.35) !important;
 }
-[data-theme="trollllm"] .split-card-item.priority-low.active {
+[data-theme="cyber"] .split-card-item.priority-low.active {
   border-color: #10b981 !important;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, #091a18 70%) !important;
   box-shadow: 0 0 25px rgba(16, 185, 129, 0.45) !important;
 }
 
-[data-theme="trollllm"] .task-card-title {
+[data-theme="cyber"] .task-card-title {
   color: #ffffff !important;
 }
 
-[data-theme="trollllm"] .task-card-desc {
+[data-theme="cyber"] .task-card-desc {
   color: #94a3b8 !important;
 }
 
-[data-theme="trollllm"] .task-card-assignee {
+[data-theme="cyber"] .task-card-assignee {
   border-radius: 0px !important;
 }
 
-[data-theme="trollllm"] .task-card-due {
+[data-theme="cyber"] .task-card-due {
   color: #94a3b8 !important;
   font-family: monospace !important;
 }
 
-[data-theme="trollllm"] .task-card-due.overdue {
+[data-theme="cyber"] .task-card-due.overdue {
   color: #f87171 !important;
   text-shadow: 0 0 6px rgba(239, 68, 68, 0.4) !important;
 }
 
-[data-theme="trollllm"] .project-meta-col-time {
+[data-theme="cyber"] .project-meta-col-time {
   border-top-color: #1f1836 !important;
 }
 
@@ -6805,7 +6829,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 768px) {
-  [data-theme="trollllm"] #page-title {
+  [data-theme="cyber"] #page-title {
     font-size: 13px !important;
   }
 
@@ -6873,7 +6897,7 @@ h1, h2, h3, h4, h5, h6 {
     gap: 8px !important;
   }
 
-  [data-theme="trollllm"] .room-booking-toolbar-controls {
+  [data-theme="cyber"] .room-booking-toolbar-controls {
     border-top-color: #1f1836 !important;
   }
 
@@ -6939,7 +6963,7 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid var(--neutral-border) !important;
     padding: 3px !important;
   }
-  [data-theme="trollllm"] .mobile-dashboard-widget-tabs {
+  [data-theme="cyber"] .mobile-dashboard-widget-tabs {
     background: #0e0b1d !important;
     border: 1px solid #1f1836 !important;
   }
@@ -6972,25 +6996,25 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 700 !important;
   }
 
-  [data-theme="trollllm"] .mobile-dashboard-tab-btn.active.tab-issues {
+  [data-theme="cyber"] .mobile-dashboard-tab-btn.active.tab-issues {
     background: rgba(16, 185, 129, 0.14) !important;
     color: #10b981 !important;
     border-color: #10b981 !important;
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.25) !important;
   }
-  [data-theme="trollllm"] .mobile-dashboard-tab-btn.active.tab-tasks {
+  [data-theme="cyber"] .mobile-dashboard-tab-btn.active.tab-tasks {
     background: rgba(14, 165, 233, 0.14) !important;
     color: #0ea5e9 !important;
     border-color: #0ea5e9 !important;
     box-shadow: 0 0 10px rgba(14, 165, 233, 0.25) !important;
   }
-  [data-theme="trollllm"] .mobile-dashboard-tab-btn.active.tab-projects {
+  [data-theme="cyber"] .mobile-dashboard-tab-btn.active.tab-projects {
     background: rgba(99, 102, 241, 0.14) !important;
     color: #818cf8 !important;
     border-color: #818cf8 !important;
     box-shadow: 0 0 10px rgba(99, 102, 241, 0.25) !important;
   }
-  [data-theme="trollllm"] .mobile-dashboard-tab-btn.active.tab-reports {
+  [data-theme="cyber"] .mobile-dashboard-tab-btn.active.tab-reports {
     background: rgba(245, 158, 11, 0.14) !important;
     color: #f59e0b !important;
     border-color: #f59e0b !important;
@@ -7100,11 +7124,11 @@ h1, h2, h3, h4, h5, h6 {
     overflow: hidden;
     transition: all 0.2s ease;
   }
-  [data-theme="trollllm"] .mobile-member-card {
+  [data-theme="cyber"] .mobile-member-card {
     background: #0d0b1a;
     border-color: #1f1836;
   }
-  [data-theme="trollllm"] .mobile-member-card.active {
+  [data-theme="cyber"] .mobile-member-card.active {
     border-color: rgba(99, 102, 241, 0.5);
     box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
   }
@@ -7149,7 +7173,7 @@ h1, h2, h3, h4, h5, h6 {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
-  [data-theme="trollllm"] .mobile-member-name {
+  [data-theme="cyber"] .mobile-member-name {
     color: #f1f5f9 !important;
   }
 
@@ -7186,7 +7210,7 @@ h1, h2, h3, h4, h5, h6 {
     flex-direction: column !important;
     gap: 8px !important;
   }
-  [data-theme="trollllm"] .mobile-member-card-details {
+  [data-theme="cyber"] .mobile-member-card-details {
     background: rgba(14, 11, 29, 0.6) !important;
     border-top-color: #1f1836 !important;
   }
@@ -7211,7 +7235,7 @@ h1, h2, h3, h4, h5, h6 {
     text-align: right !important;
     word-break: break-all !important;
   }
-  [data-theme="trollllm"] .mobile-member-detail-row .detail-value {
+  [data-theme="cyber"] .mobile-member-detail-row .detail-value {
     color: #e2e8f0 !important;
   }
 
@@ -7255,7 +7279,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="trollllm"] .ai-booking-action-card {
+[data-theme="cyber"] .ai-booking-action-card {
   background: #0d0a1c;
   border-color: #231c3b;
   border-radius: 0px;
@@ -7291,7 +7315,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 9999px;
 }
 
-[data-theme="trollllm"] .ai-booking-badge,
+[data-theme="cyber"] .ai-booking-badge,
 [data-theme="cyber-light"] .ai-booking-badge {
   border-radius: 0px;
   font-family: var(--cyber-mono-font, 'JetBrains Mono', monospace);
@@ -7337,19 +7361,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Badge colors: Cyber Dark */
-[data-theme="trollllm"] .ai-booking-badge.room {
+[data-theme="cyber"] .ai-booking-badge.room {
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.35);
 }
 
-[data-theme="trollllm"] .ai-booking-badge.location {
+[data-theme="cyber"] .ai-booking-badge.location {
   background: rgba(16, 185, 129, 0.15);
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
-[data-theme="trollllm"] .ai-booking-badge.n8n {
+[data-theme="cyber"] .ai-booking-badge.n8n {
   background: rgba(245, 158, 11, 0.15);
   color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.35);
@@ -7389,7 +7413,7 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #334155;
 }
 
-[data-theme="trollllm"] .ai-booking-card-details {
+[data-theme="cyber"] .ai-booking-card-details {
   background: #090714;
   border: 1px solid #1e1736;
   border-radius: 0px;
@@ -7419,7 +7443,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 [data-theme="dark"] .ai-booking-row .row-lbl,
-[data-theme="trollllm"] .ai-booking-row .row-lbl {
+[data-theme="cyber"] .ai-booking-row .row-lbl {
   color: #94a3b8;
 }
 
@@ -7430,7 +7454,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 [data-theme="dark"] .ai-booking-row .row-val,
-[data-theme="trollllm"] .ai-booking-row .row-val {
+[data-theme="cyber"] .ai-booking-row .row-val {
   color: #f8fafc;
 }
 
@@ -7448,7 +7472,7 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(56, 189, 248, 0.15);
 }
 
-[data-theme="trollllm"] .ai-booking-row .row-val.highlight {
+[data-theme="cyber"] .ai-booking-row .row-val.highlight {
   color: #10b981;
   background: rgba(16, 185, 129, 0.15);
   border-radius: 0px;
@@ -7489,7 +7513,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
-[data-theme="trollllm"] .ai-booking-btn-goto {
+[data-theme="cyber"] .ai-booking-btn-goto {
   background: #10b981;
   color: #000000 !important;
   border-radius: 0px;
@@ -7497,7 +7521,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
 }
 
-[data-theme="trollllm"] .ai-booking-btn-goto:hover {
+[data-theme="cyber"] .ai-booking-btn-goto:hover {
   background: #34d399;
 }
 

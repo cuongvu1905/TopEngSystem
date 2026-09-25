@@ -25,7 +25,8 @@ function getRolesPermissionsConfig() {
       { id: 'role-bod', name: 'Ban điều hành (BOD)' }
     ],
     permissions: [],
-    role_permissions: {}
+    role_permissions: {},
+    hidden_features: []
   };
 }
 
@@ -277,6 +278,23 @@ exports.saveRolesPermissions = async (req, res, next) => {
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.saveHiddenFeatures = async (req, res, next) => {
+  try {
+    const { hidden_features } = req.body;
+    if (!Array.isArray(hidden_features)) {
+      return res.status(400).json({ error: 'hidden_features phải là một danh sách hợp lệ' });
+    }
+
+    const config = getRolesPermissionsConfig();
+    config.hidden_features = hidden_features;
+
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    res.json({ success: true, hidden_features });
   } catch (err) {
     next(err);
   }

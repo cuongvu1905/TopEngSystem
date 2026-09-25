@@ -8,6 +8,7 @@ router.post('/getUsers', authController.getUsers);
 router.post('/getRoles', authController.getRoles);
 router.post('/getRolesPermissions', authController.getRolesPermissions);
 router.post('/saveRolesPermissions', authController.saveRolesPermissions);
+router.post('/saveHiddenFeatures', authController.saveHiddenFeatures);
 router.post('/createUser', authController.createUser);
 router.post('/updateUserRoleAndDept', authController.updateUserRoleAndDept);
 router.post('/addPartLeadership', authController.addPartLeadership);

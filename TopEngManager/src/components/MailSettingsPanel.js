@@ -47,6 +47,7 @@ export default function MailSettingsPanel({ currentUser }) {
   // Never prefilled: the server does not send the stored password back, so an empty box
   // means "keep the one already saved" rather than "clear it".
   const [password, setPassword] = useState('');
+  const [managerEmails, setManagerEmails] = useState([]);
 
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,6 +62,7 @@ export default function MailSettingsPanel({ currentUser }) {
     setHasPassword(!!data.hasPassword);
     setUpdatedAt(data.updatedAt || null);
     setUpdatedByName(data.updatedByName || null);
+    setManagerEmails(Array.isArray(data.managerEmails) ? data.managerEmails : []);
     setPassword('');
   }, []);
 
@@ -87,8 +89,21 @@ export default function MailSettingsPanel({ currentUser }) {
     user: user.trim(),
     from: from.trim(),
     password,
+    managerEmails: managerEmails.map(e => e.trim()).filter(Boolean),
     ...extra
   });
+
+  const handleAddManagerEmail = () => {
+    setManagerEmails(prev => [...prev, '']);
+  };
+
+  const handleUpdateManagerEmail = (index, value) => {
+    setManagerEmails(prev => prev.map((e, idx) => idx === index ? value : e));
+  };
+
+  const handleRemoveManagerEmail = (index) => {
+    setManagerEmails(prev => prev.filter((_, idx) => idx !== index));
+  };
 
   const handleTest = async () => {
     setTesting(true);
@@ -107,6 +122,23 @@ export default function MailSettingsPanel({ currentUser }) {
 
   const handleSave = async () => {
     const Swal = await getSwal();
+
+    // Validate manager emails if any typed
+    const invalidEmail = managerEmails
+      .map(e => e.trim())
+      .filter(Boolean)
+      .find(e => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+
+    if (invalidEmail) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('common.error', 'Email không hợp lệ'),
+        text: `Địa chỉ email quản lý "${invalidEmail}" không đúng định dạng. Vui lòng kiểm tra lại.`,
+        confirmButtonColor: 'var(--primary-color)'
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       await db.updateMailSettings(payload());
@@ -271,6 +303,87 @@ export default function MailSettingsPanel({ currentUser }) {
         <div style={{ fontSize: '11.5px', color: 'var(--neutral-muted)', marginTop: '6px', lineHeight: 1.5 }}>
           {t('mail.passwordHint', 'Với Gmail, đây KHÔNG phải mật khẩu đăng nhập. Bật xác minh 2 bước rồi tạo "Mật khẩu ứng dụng" 16 ký tự tại myaccount.google.com/apppasswords. Dán cả dấu cách cũng được. Mật khẩu được mã hoá trước khi lưu và không bao giờ hiển thị lại.')}
         </div>
+      </div>
+
+      {/* Manager Emails Notification Section */}
+      <div className="form-group" style={{
+        marginTop: '4px',
+        padding: '16px',
+        borderRadius: '8px',
+        border: '1px solid var(--neutral-border)',
+        backgroundColor: 'var(--neutral-bg-main)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <label style={{ ...labelStyle, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <i className="fa-solid fa-user-tie" style={{ color: 'var(--primary-color)' }}></i>
+              {t('mail.managerEmails', 'Email quản lý nhận thông báo phiên dịch')}
+            </label>
+            <div style={{ fontSize: '11.5px', color: 'var(--neutral-muted)', lineHeight: '1.4' }}>
+              {t('mail.managerEmailsHint', 'Khi có yêu cầu hoặc huỷ phiên dịch khi đặt phòng họp, hệ thống sẽ tự động gửi thêm một email thông báo đến các địa chỉ quản lý này.')}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={handleAddManagerEmail}
+            style={{ fontSize: '12px', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          >
+            <i className="fa-solid fa-plus"></i> {t('mail.addManagerEmail', 'Thêm email quản lý')}
+          </button>
+        </div>
+
+        {managerEmails.length === 0 ? (
+          <div style={{
+            padding: '12px',
+            borderRadius: '6px',
+            border: '1px dashed var(--neutral-border)',
+            color: 'var(--neutral-muted)',
+            fontSize: '12px',
+            textAlign: 'center',
+            marginTop: '8px'
+          }}>
+            <i className="fa-regular fa-envelope" style={{ marginRight: '6px' }}></i>
+            {t('mail.noManagerEmails', 'Chưa có email quản lý nào. Bấm "Thêm email quản lý" để thêm người nhận thông báo.')}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+            {managerEmails.map((email, idx) => (
+              <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <i className="fa-solid fa-envelope" style={{
+                    position: 'absolute',
+                    left: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--neutral-muted)',
+                    fontSize: '12px'
+                  }}></i>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => handleUpdateManagerEmail(idx, e.target.value)}
+                    placeholder={t('mail.managerEmailPlaceholder', 'quanly@example.com')}
+                    style={{ ...inputStyle, paddingLeft: '32px' }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => handleRemoveManagerEmail(idx)}
+                  title="Xoá email này"
+                  style={{
+                    padding: '8px 12px',
+                    color: 'var(--danger-color, #ef4444)',
+                    border: '1px solid var(--neutral-border)'
+                  }}
+                >
+                  <i className="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {testResult && (

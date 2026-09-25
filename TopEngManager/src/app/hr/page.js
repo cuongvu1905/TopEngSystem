@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { getSwal } from '@/utils/swal';
 import ManpowerTab from '@/components/ManpowerTab';
 import MailSettingsPanel from '@/components/MailSettingsPanel';
+import FeatureVisibilityPanel from '@/components/FeatureVisibilityPanel';
 
 const Swal = {
   fire: async (...args) => {
@@ -60,8 +61,8 @@ export default function HRManagement() {
 
   const isTeamLeader = currentUser?.system_role === 'Team Leader';
   const isPartLeader = currentUser?.system_role === 'Part Leader';
-  const isAdmin = currentUser?.system_role?.includes("Admin");
-  const isHR = currentUser?.system_role?.includes("Nhân sự");
+  const isAdmin = currentUser?.system_role?.includes("Admin") || currentUser?.system_role?.includes("Quản trị") || currentUser?.system_role?.includes("Owner");
+  const isHR = currentUser?.system_role?.includes("Nhân sự") || currentUser?.system_role?.includes("HR");
   const isPartLeaderOnly = isPartLeader && !isAdmin && !isHR && !isTeamLeader;
   // The Project Manpower board is open to Admin, Team Leader and Part Leader.
   const canManageManpower = isAdmin || isTeamLeader || isPartLeader;
@@ -980,35 +981,42 @@ export default function HRManagement() {
   return (
     <div className="scrollable-view">
 
-      {(hasPermission('view_hr_members') || hasPermission('manage_role_permissions') || hasPermission('manage_departments') || isTeamLeader || isCurrentUserInRootDept || canManageManpower) && (
-        <div className="project-tabs" style={{ marginTop: '16px', marginBottom: '16px' }}>
-          {(hasPermission('view_hr_members') || isCurrentUserInRootDept) && (
-            <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
-              <i className="fa-solid fa-users"></i> {t('team.staffAndAccounts', 'Nhân sự & Tài khoản')}
-            </button>
-          )}
-          {isAdmin && (
-            <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
-              <i className="fa-solid fa-shield-halved"></i> {t('team.permissionsTable', 'Bảng Phân Quyền')}
-            </button>
-          )}
-          {isAdmin && (
-            <button className={`tab-btn ${activeTab === 'mail' ? 'active' : ''}`} onClick={() => setActiveTab('mail')}>
-              <i className="fa-solid fa-envelope-circle-check"></i> {t('team.tabMailSettings', 'Cấu hình Email')}
-            </button>
-          )}
-          {/* A Part Leader lands on this tab by default, so the button has to be there
-              too — otherwise they can leave for "Nhân lực dự án" and never come back. */}
-          {(hasPermission('manage_departments') || isTeamLeader || isPartLeader || isCurrentUserInRootDept) && (
-            <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
-              <i className="fa-solid fa-sitemap"></i> {t('team.tabDepartments', 'Quản lý phòng ban')}
-            </button>
-          )}
-          {canManageManpower && (
-            <button className={`tab-btn ${activeTab === 'manpower' ? 'active' : ''}`} onClick={() => setActiveTab('manpower')}>
-              <i className="fa-solid fa-users-gear"></i> {t('team.tabManpower', 'Nhân lực dự án')}
-            </button>
-          )}
+      {(isAdmin || isHR || hasPermission('view_hr') || hasPermission('view_hr_members') || hasPermission('manage_role_permissions') || hasPermission('manage_departments') || isTeamLeader || isPartLeader || isCurrentUserInRootDept || canManageManpower) && (
+        <div className="project-tabs-container" style={{ marginTop: '0px', marginBottom: '20px' }}>
+          <div className="project-tabs">
+            {(isAdmin || isHR || hasPermission('view_hr_members') || isCurrentUserInRootDept) && (
+              <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
+                <i className="fa-solid fa-users"></i> {t('team.staffAndAccounts', 'Nhân sự & Tài khoản')}
+              </button>
+            )}
+            {isAdmin && (
+              <button className={`tab-btn ${activeTab === 'permissions' ? 'active' : ''}`} onClick={() => setActiveTab('permissions')}>
+                <i className="fa-solid fa-shield-halved"></i> {t('team.permissionsTable', 'Bảng Phân Quyền')}
+              </button>
+            )}
+            {isAdmin && (
+              <button className={`tab-btn ${activeTab === 'mail' ? 'active' : ''}`} onClick={() => setActiveTab('mail')}>
+                <i className="fa-solid fa-envelope-circle-check"></i> {t('team.tabMailSettings', 'Cấu hình Email')}
+              </button>
+            )}
+            {isAdmin && (
+              <button className={`tab-btn ${activeTab === 'feature_visibility' ? 'active' : ''}`} onClick={() => setActiveTab('feature_visibility')}>
+                <i className="fa-solid fa-eye-slash"></i> {t('team.tabFeatureVisibility', 'Cấu hình hiển thị thẻ')}
+              </button>
+            )}
+            {/* A Part Leader lands on this tab by default, so the button has to be there
+                too — otherwise they can leave for "Nhân lực dự án" and never come back. */}
+            {(isAdmin || hasPermission('manage_departments') || isTeamLeader || isPartLeader || isCurrentUserInRootDept) && (
+              <button className={`tab-btn ${activeTab === 'departments' ? 'active' : ''}`} onClick={() => setActiveTab('departments')}>
+                <i className="fa-solid fa-sitemap"></i> {t('team.tabDepartments', 'Quản lý phòng ban')}
+              </button>
+            )}
+            {canManageManpower && (
+              <button className={`tab-btn ${activeTab === 'manpower' ? 'active' : ''}`} onClick={() => setActiveTab('manpower')}>
+                <i className="fa-solid fa-users-gear"></i> {t('team.tabManpower', 'Nhân lực dự án')}
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -1017,6 +1025,11 @@ export default function HRManagement() {
           re-read the requester's role, so the tab being hidden is not what protects it. */}
       {activeTab === 'mail' && isAdmin && (
         <MailSettingsPanel currentUser={currentUser} />
+      )}
+
+      {/* ================= TAB: FEATURE VISIBILITY CONFIGURATION ================= */}
+      {activeTab === 'feature_visibility' && isAdmin && (
+        <FeatureVisibilityPanel />
       )}
 
       {/* ================= TAB: PROJECT MANPOWER BOARD ================= */}

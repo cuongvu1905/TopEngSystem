@@ -1991,13 +1991,13 @@ export default function Dashboard() {
           }
         }
         
-        /* Item Card Layouts */
+        /* Item Card Layouts - Classic Theme Distinct Card Styling */
         .item-row-card,
         .report-grid-card {
           padding: 11px 13px;
-          border: none;
+          border: 1px solid var(--neutral-border, #e5e7eb);
           border-radius: 6px;
-          background: var(--neutral-bg-card);
+          background: #f8fafc;
           cursor: pointer;
           transition: var(--transition-fast);
           display: flex;
@@ -2007,13 +2007,27 @@ export default function Dashboard() {
           min-height: 98px;
           max-height: 98px;
           box-sizing: border-box;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.01);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
         .item-row-card:hover,
         .report-grid-card:hover {
-          background: var(--neutral-bg-hover);
+          background: var(--neutral-bg-card, #ffffff);
+          border-color: #cbd5e1;
           transform: translateY(-2px);
-          box-shadow: var(--shadow-sm);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+        }
+
+        :global([data-theme="dark"]) .item-row-card,
+        :global([data-theme="dark"]) .report-grid-card {
+          background: #0f172a;
+          border: 1px solid #334155;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        :global([data-theme="dark"]) .item-row-card:hover,
+        :global([data-theme="dark"]) .report-grid-card:hover {
+          background: #172033;
+          border-color: #475569;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
         }
         .report-snippet {
           font-size: 12px;

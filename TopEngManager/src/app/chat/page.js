@@ -237,7 +237,7 @@ const PROVIDER_PRESETS = {
 };
 
 function AIChatPage() {
-  const { currentUser, projects, tasks } = useApp();
+  const { currentUser, projects, tasks, isFeatureHidden } = useApp();
   const { t, currentLang } = useLanguage();
 
   // Strict Admin Check: Only Admin accounts can configure AI Model & API
@@ -1210,6 +1210,36 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
   ], [t, currentLang]);
 
   if (!currentUser) return null;
+
+  if (!isAdmin && isFeatureHidden?.('chat')) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', textAlign: 'center', padding: '30px' }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(234, 179, 8, 0.12)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '18px',
+          fontSize: '26px',
+          color: 'var(--warning-color)'
+        }}>
+          <i className="fa-solid fa-lock"></i>
+        </div>
+        <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: 'var(--neutral-dark)' }}>
+          Tính năng AI Chat tạm thời bị ẩn
+        </h2>
+        <p style={{ fontSize: '13.5px', color: 'var(--neutral-muted)', maxWidth: '460px', marginBottom: '20px', lineHeight: '1.5' }}>
+          Quản trị viên đã tạm thời ẩn thẻ tính năng này đối với tài khoản nhân viên. Vui lòng liên hệ Admin nếu bạn cần sử dụng tính năng này.
+        </p>
+        <a href="/dashboard" className="btn btn-primary" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 18px', fontSize: '13px' }}>
+          <i className="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="ai-chat-root-container">
@@ -2269,7 +2299,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           border-color: rgba(99, 102, 241, 0.35);
         }
 
-        [data-theme="trollllm"] .ai-session-item.active {
+        [data-theme="cyber"] .ai-session-item.active {
           background: rgba(16, 185, 129, 0.12);
           border-color: rgba(16, 185, 129, 0.4);
         }
@@ -2447,7 +2477,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           letter-spacing: -0.01em;
         }
 
-        [data-theme="trollllm"] .ai-header-main-title,
+        [data-theme="cyber"] .ai-header-main-title,
         [data-theme="cyber-light"] .ai-header-main-title {
           font-family: var(--cyber-mono-font, 'JetBrains Mono', monospace);
         }
@@ -2468,7 +2498,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
         }
 
-        [data-theme="trollllm"] .ai-config-btn {
+        [data-theme="cyber"] .ai-config-btn {
           background: #10b981;
           border-color: #10b981;
           color: #04130d;
@@ -2594,7 +2624,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         }
 
-        [data-theme="trollllm"] .ai-msg-bubble.bot-bubble {
+        [data-theme="cyber"] .ai-msg-bubble.bot-bubble {
           background: #0e0c1f;
           border-color: #1f1a3a;
           box-shadow: 0 0 12px rgba(14, 12, 31, 0.6);
@@ -2658,12 +2688,12 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
         }
 
-        [data-theme="trollllm"] .ai-suggestion-card {
+        [data-theme="cyber"] .ai-suggestion-card {
           background: #0d0a1b;
           border-color: #1e1736;
         }
 
-        [data-theme="trollllm"] .ai-suggestion-card:hover {
+        [data-theme="cyber"] .ai-suggestion-card:hover {
           border-color: rgba(16, 185, 129, 0.5);
           box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
         }
@@ -2787,14 +2817,14 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 4px 20px rgba(0, 0, 0, 0.06);
         }
 
-        [data-theme="trollllm"] .ai-chat-input-box {
+        [data-theme="cyber"] .ai-chat-input-box {
           background: #0f0c22;
           border-color: #2a2245;
           border-radius: 28px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
-        [data-theme="trollllm"] .ai-chat-input-box:focus-within {
+        [data-theme="cyber"] .ai-chat-input-box:focus-within {
           border-color: #10b981;
           box-shadow: 0 0 16px rgba(16, 185, 129, 0.22);
         }
@@ -2815,9 +2845,9 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
         .ai-textarea:focus,
         .ai-textarea:focus-visible,
         .ai-textarea:active,
-        [data-theme="trollllm"] .ai-textarea,
-        [data-theme="trollllm"] .ai-textarea:focus,
-        [data-theme="trollllm"] .ai-textarea:focus-visible,
+        [data-theme="cyber"] .ai-textarea,
+        [data-theme="cyber"] .ai-textarea:focus,
+        [data-theme="cyber"] .ai-textarea:focus-visible,
         [data-theme="cyber-light"] .ai-textarea,
         [data-theme="cyber-light"] .ai-textarea:focus,
         [data-theme="cyber-light"] .ai-textarea:focus-visible {
@@ -2835,7 +2865,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           margin: 0;
         }
 
-        [data-theme="trollllm"] .ai-textarea {
+        [data-theme="cyber"] .ai-textarea {
           color: #ffffff !important;
           font-family: var(--cyber-mono-font, 'JetBrains Mono', monospace);
         }
@@ -2868,7 +2898,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
         }
 
-        [data-theme="trollllm"] .ai-send-btn.active {
+        [data-theme="cyber"] .ai-send-btn.active {
           background: #10b981;
           color: #000000;
           box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
@@ -2927,7 +2957,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        [data-theme="trollllm"] .ai-config-modal-dialog,
+        [data-theme="cyber"] .ai-config-modal-dialog,
         [data-theme="cyber-light"] .ai-config-modal-dialog {
           border-radius: 0px;
         }
@@ -2973,7 +3003,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           font-size: 14px;
         }
 
-        [data-theme="trollllm"] .ai-config-modal-icon {
+        [data-theme="cyber"] .ai-config-modal-icon {
           background: rgba(16, 185, 129, 0.15);
           color: #10b981;
           border-radius: 0px;
@@ -3031,7 +3061,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           color: var(--neutral-dark);
         }
 
-        [data-theme="trollllm"] .ai-provider-card,
+        [data-theme="cyber"] .ai-provider-card,
         [data-theme="cyber-light"] .ai-provider-card {
           border-radius: 0px;
         }
@@ -3047,7 +3077,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           color: var(--primary-color);
         }
 
-        [data-theme="trollllm"] .ai-provider-card.active {
+        [data-theme="cyber"] .ai-provider-card.active {
           border-color: #10b981;
           background: rgba(16, 185, 129, 0.12);
           color: #10b981;
@@ -3078,7 +3108,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           color: var(--primary-color);
         }
 
-        [data-theme="trollllm"] .ai-prov-check {
+        [data-theme="cyber"] .ai-prov-check {
           color: #10b981;
         }
 
@@ -3118,7 +3148,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           border-radius: 4px;
         }
 
-        [data-theme="trollllm"] .ai-temp-badge {
+        [data-theme="cyber"] .ai-temp-badge {
           color: #10b981;
           background: rgba(16, 185, 129, 0.15);
           border-radius: 0px;
@@ -3136,7 +3166,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           cursor: pointer;
         }
 
-        [data-theme="trollllm"] .ai-slider {
+        [data-theme="cyber"] .ai-slider {
           accent-color: #10b981;
         }
 
@@ -3151,7 +3181,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           border-radius: 8px;
         }
 
-        [data-theme="trollllm"] .ai-n8n-config-box,
+        [data-theme="cyber"] .ai-n8n-config-box,
         [data-theme="cyber-light"] .ai-n8n-config-box {
           border-radius: 0px;
         }
@@ -3298,7 +3328,7 @@ ${idx + 1}. Project: ${p.name} (Key: ${p.project_key}) - Status: ${p.status} - E
           font-size: 12px;
           color: #38bdf8;
         }
-        [data-theme="trollllm"] .ai-inline-code {
+        [data-theme="cyber"] .ai-inline-code {
           color: #10b981;
           background: rgba(16, 185, 129, 0.1);
           border-color: rgba(16, 185, 129, 0.25);

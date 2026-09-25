@@ -324,5 +324,9 @@
       "edit_project",
       "manage_project_members"
     ]
-  }
+  },
+  "hidden_features": [
+    "chat",
+    "activity-logs"
+  ]
 }

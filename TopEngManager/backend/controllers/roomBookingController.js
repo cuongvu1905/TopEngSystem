@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const prisma = require('../config/prisma');
 const { sendMail, isMailConfigured } = require('../utils/mailer');
+const { getManagerEmails } = require('../config/mailSettings');
 
 // Meeting-room bookings are shared: everyone in the company sees the same schedule.
 // They used to live in each browser's localStorage, so a booking was only ever visible to
@@ -184,6 +185,18 @@ const MAIL_KINDS = {
   }
 };
 
+// Helper to format date YYYY-MM-DD to DD/MM for email subjects
+function formatDayMonth(dateStr) {
+  if (!dateStr) return '';
+  const parts = String(dateStr).split('-');
+  if (parts.length >= 3) {
+    const d = String(parts[2]).padStart(2, '0');
+    const m = String(parts[1]).padStart(2, '0');
+    return `${d}/${m}`;
+  }
+  return String(dateStr);
+}
+
 function buildMeetingEmail(booking, kind) {
   const shape = MAIL_KINDS[kind] || MAIL_KINDS.invite;
 
@@ -193,12 +206,15 @@ function buildMeetingEmail(booking, kind) {
     const flat = String(value ?? '').replace(/\s+/g, ' ').trim();
     return flat.length > max ? flat.slice(0, max - 1) + '…' : flat;
   };
+
+  const dateStr = formatDayMonth(booking.booking_date);
   const subject = [
     shape.prefix,
     oneLine(booking.team, 60),
     oneLine(booking.booker_name, 60),
     oneLine(booking.purpose, 120),
     `${booking.start_time}-${booking.end_time}`,
+    dateStr,
     '통역 요청 건 도착'
   ].filter(Boolean).join(' ');
 
@@ -239,13 +255,86 @@ function buildMeetingEmail(booking, kind) {
   return { subject, text, html };
 }
 
-// Tells the interpreters about a meeting, or about its cancellation. Deliberately never
-// throws: by the time this runs the room is already held, or already released, and a mail
-// server being unreachable must not undo either. The outcome comes back so the caller can
-// say plainly that the notification did not go out.
+function buildManagerMeetingEmail(booking, interpreters, kind) {
+  const shape = MAIL_KINDS[kind] || MAIL_KINDS.invite;
+  const isCancelled = kind === 'cancelled';
+  const oneLine = (value, max) => {
+    const flat = String(value ?? '').replace(/\s+/g, ' ').trim();
+    return flat.length > max ? flat.slice(0, max - 1) + '…' : flat;
+  };
+
+  const dateStr = formatDayMonth(booking.booking_date);
+  const interpreterNames = (interpreters || [])
+    .map(p => p.name || p.full_name || '')
+    .filter(Boolean)
+    .join(', ');
+
+  const subject = [
+    shape.prefix,
+    oneLine(booking.team, 60),
+    oneLine(booking.booker_name, 60),
+    oneLine(booking.purpose, 120),
+    `${booking.start_time}-${booking.end_time}`,
+    dateStr,
+    interpreterNames ? oneLine(interpreterNames, 80) : '',
+    '통역 요청 건 도착'
+  ].filter(Boolean).join(' ');
+
+  const interpreterDetails = (interpreters || []).map(p => {
+    const name = p.name || p.full_name || '';
+    const email = p.email ? ` <${p.email}>` : '';
+    return name ? `${name}${email}` : (p.email || 'N/A');
+  }).join(', ') || '(Chưa có thông tin)';
+
+  const leadHtml = isCancelled
+    ? 'Hệ thống xin thông báo: Cuộc họp sau có yêu cầu phiên dịch <strong style="color:#ef4444;">ĐÃ ĐƯỢC HUỶ</strong>:'
+    : 'Hệ thống xin thông báo: Đã có lịch đặt phòng họp mới kèm <strong style="color:#2563eb;">YÊU CẦU PHIÊN DỊCH</strong>:';
+
+  const rows = [
+    ['Thời gian', `${booking.start_time} - ${booking.end_time}, ${formatMeetingDate(booking.booking_date)}`],
+    ['Địa điểm', `${LOCATION_NAMES[booking.location] || booking.location} - ${ROOM_NAMES[booking.room_id] || booking.room_id}`],
+    ['Team / Bộ phận', booking.team],
+    ['Người đặt phòng', booking.booker_name],
+    ['Mức độ quan trọng', IMPORTANCE_NAMES[booking.importance] || '(không xác định)'],
+    ['Nội dung cuộc họp', booking.purpose || '(không có nội dung)'],
+    ['Phiên dịch được mời', interpreterDetails]
+  ];
+
+  const text = [
+    'Kính gửi Quản lý,',
+    '',
+    isCancelled ? 'Hệ thống xin thông báo: Cuộc họp sau có yêu cầu phiên dịch ĐÃ ĐƯỢC HUỶ:' : 'Hệ thống xin thông báo: Đã có lịch đặt phòng họp mới kèm YÊU CẦU PHIÊN DỊCH:',
+    '',
+    ...rows.map(([label, value]) => `- ${label}: ${value}`),
+    '',
+    'Email này được gửi tự động tới Quản lý từ hệ thống TopEng Manager.'
+  ].join('\n');
+
+  const html = `
+    <div style="font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#1f2937;line-height:1.55;">
+      <p>Kính gửi Quản lý,</p>
+      <p>${leadHtml}</p>
+      <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;width:100%;max-width:650px;">
+        ${rows.map(([label, value]) => `
+        <tr>
+          <td style="border:1px solid #e5e7eb;background:#f8fafc;font-weight:600;white-space:nowrap;width:180px;">${escapeHtml(label)}</td>
+          <td style="border:1px solid #e5e7eb;white-space:pre-wrap;">${escapeHtml(value)}</td>
+        </tr>`).join('')}
+      </table>
+      <p style="color:#6b7280;font-size:12px;margin-top:18px;">Email này được gửi tự động tới Quản lý từ hệ thống TopEng Manager.</p>
+    </div>
+  `;
+
+  return { subject, text, html };
+}
+
+// Tells the interpreters about a meeting, or about its cancellation, and sends a copy to managers.
+// Deliberately never throws: by the time this runs the room is already held, or already released.
 async function notifyInterpreters(booking, interpreters, kind) {
   const recipients = (interpreters || []).map(p => p && p.email).filter(Boolean);
-  if (recipients.length === 0) return null;
+  const managerEmails = getManagerEmails();
+
+  if (recipients.length === 0 && (!managerEmails || managerEmails.length === 0)) return null;
 
   if (!(await isMailConfigured())) {
     return {
@@ -255,14 +344,38 @@ async function notifyInterpreters(booking, interpreters, kind) {
     };
   }
 
-  const { subject, text, html } = buildMeetingEmail(booking, kind);
-  try {
-    await sendMail({ to: recipients, subject, text, html, fromName: 'TopEng Manager' });
-    return { sent: true, recipients };
-  } catch (err) {
-    console.error(`Interpreter ${kind} notification failed:`, err.message);
-    return { sent: false, recipients, error: err.message };
+  let mainSent = false;
+  let mainError = null;
+
+  if (recipients.length > 0) {
+    const { subject, text, html } = buildMeetingEmail(booking, kind);
+    try {
+      await sendMail({ to: recipients, subject, text, html, fromName: 'TopEng Manager' });
+      mainSent = true;
+    } catch (err) {
+      console.error(`Interpreter ${kind} notification failed:`, err.message);
+      mainError = err.message;
+    }
   }
+
+  // Also send a notification email to manager emails if configured
+  if (managerEmails && managerEmails.length > 0) {
+    try {
+      const mgrMail = buildManagerMeetingEmail(booking, interpreters, kind);
+      await sendMail({
+        to: managerEmails,
+        subject: mgrMail.subject,
+        text: mgrMail.text,
+        html: mgrMail.html,
+        fromName: 'TopEng Manager'
+      });
+      console.log(`Sent manager notification to ${managerEmails.join(', ')} for meeting ${booking.booking_id}`);
+    } catch (mErr) {
+      console.error(`Manager ${kind} notification failed:`, mErr.message);
+    }
+  }
+
+  return { sent: mainSent || (managerEmails && managerEmails.length > 0), recipients, error: mainError };
 }
 
 // Resolves the ids the client sent into real interpreters. An id that is not a flagged

@@ -68,10 +68,10 @@ export const THEMES = [
     preview: { bg: '#f1f5f9', card: '#ffffff', accent: '#059669', border: '#cbd5e1', text: '#0f172a' }
   },
   {
-    id: 'trollllm',
+    id: 'cyber',
     style: 'cyber',
     mode: 'dark',
-    nameKey: 'theme.trollllm',
+    nameKey: 'theme.cyber',
     defaultName: 'Cyber Tối (Cyber Midnight)',
     icon: 'fa-solid fa-bolt',
     badge: 'Cyber Dark',
@@ -81,14 +81,14 @@ export const THEMES = [
 
 export function getThemeIdFromStyleAndMode(style, mode) {
   if (style === 'cyber') {
-    return mode === 'light' ? 'cyber-light' : 'trollllm';
+    return mode === 'light' ? 'cyber-light' : 'cyber';
   }
   return mode === 'light' ? 'light' : 'dark';
 }
 
 export function parseThemeId(themeId) {
   if (themeId === 'cyber-light') return { style: 'cyber', mode: 'light' };
-  if (themeId === 'trollllm') return { style: 'cyber', mode: 'dark' };
+  if (themeId === 'cyber') return { style: 'cyber', mode: 'dark' };
   if (themeId === 'light') return { style: 'classic', mode: 'light' };
   return { style: 'classic', mode: 'dark' };
 }
@@ -112,9 +112,13 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      const savedTheme = localStorage.getItem('theme');
+      let savedTheme = localStorage.getItem('theme');
       let effectiveTheme = 'dark';
-      if (savedTheme && ['light', 'dark', 'trollllm', 'cyber-light'].includes(savedTheme)) {
+      if (savedTheme && savedTheme.includes('troll')) { 
+        savedTheme = 'cyber'; 
+        try { localStorage.setItem('theme', 'cyber'); } catch (e) {} 
+      }
+      if (savedTheme && ['light', 'dark', 'cyber', 'cyber-light'].includes(savedTheme)) {
         effectiveTheme = savedTheme;
       }
       const { style, mode } = parseThemeId(effectiveTheme);
