@@ -660,6 +660,156 @@ exports.deleteDocumentFolder = async (req, res, next) => {
   }
 };
 
+exports.copyDocumentFolder = async (req, res, next) => {
+  try {
+    const { sourceFolderId, sourceFolderIds, targetParentFolderId, targetProjectId, newName, createdBy } = req.body;
+
+    const idsToCopy = Array.isArray(sourceFolderIds) && sourceFolderIds.length > 0
+      ? sourceFolderIds
+      : (sourceFolderId ? [sourceFolderId] : []);
+
+    if (idsToCopy.length === 0) {
+      return res.status(400).json({ error: 'Thiếu thư mục cần sao chép' });
+    }
+
+    const allFolders = await prisma.documentfolder.findMany();
+
+    if (targetParentFolderId) {
+      const targetParent = allFolders.find(f => f.folder_id === targetParentFolderId);
+      if (!targetParent) {
+        return res.status(404).json({ error: 'Không tìm thấy thư mục đích' });
+      }
+      for (const srcId of idsToCopy) {
+        const subtreeIds = collectFolderSubtreeIds(allFolders, srcId);
+        if (subtreeIds.includes(targetParentFolderId)) {
+          return res.status(400).json({ error: 'Không thể sao chép thư mục vào chính nó hoặc thư mục con của nó.' });
+        }
+      }
+    }
+
+    const uploadsDir = path.join(__dirname, '../uploads/documents');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const oldDocToNewDocMap = new Map();
+
+    const copySubtree = async (srcFolder, newParentId, isRoot = false, customRootName = null) => {
+      let folderName = srcFolder.name;
+      if (isRoot) {
+        if (customRootName && customRootName.trim()) {
+          folderName = customRootName.trim();
+        } else if (newParentId === srcFolder.parent_folder_id) {
+          folderName = `${srcFolder.name} (Bản sao)`;
+        }
+      }
+
+      const resolvedProjectId = targetProjectId !== undefined ? targetProjectId : srcFolder.project_id;
+      if (!(await canManageProjectFolders(resolvedProjectId, createdBy))) {
+        throw new Error('Chỉ PM của dự án (hoặc Admin) mới có quyền sao chép thư mục.');
+      }
+
+      const newFolder = await prisma.documentfolder.create({
+        data: {
+          folder_id: 'fold-' + crypto.randomUUID(),
+          name: folderName,
+          parent_folder_id: newParentId,
+          project_id: resolvedProjectId || null,
+          created_by: createdBy || null,
+          folder_type: srcFolder.folder_type,
+          default_prefix: srcFolder.default_prefix,
+          allowed_extensions: srcFolder.allowed_extensions
+        }
+      });
+
+      // Copy all documents in this folder
+      const docs = await prisma.document.findMany({
+        where: { folder_id: srcFolder.folder_id }
+      });
+
+      for (const doc of docs) {
+        const newDocId = 'doc-' + crypto.randomUUID();
+        let newStoredName = doc.stored_name;
+        let newFilePath = doc.file_path;
+
+        if (doc.file_path) {
+          const oldDiskPath = path.join(__dirname, '..', doc.file_path);
+          if (fs.existsSync(oldDiskPath)) {
+            const extWithDot = doc.file_ext ? `.${doc.file_ext}` : path.extname(doc.stored_name || doc.original_name);
+            const uniqueStoredName = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${extWithDot}`;
+            const newDiskPath = path.join(uploadsDir, uniqueStoredName);
+            try {
+              await fs.promises.copyFile(oldDiskPath, newDiskPath);
+              newStoredName = uniqueStoredName;
+              newFilePath = `/uploads/documents/${uniqueStoredName}`;
+            } catch (copyErr) {
+              console.error('Failed to copy document file:', oldDiskPath, copyErr.message);
+            }
+          }
+        }
+
+        await prisma.document.create({
+          data: {
+            document_id: newDocId,
+            folder_id: newFolder.folder_id,
+            project_id: resolvedProjectId || null,
+            original_name: doc.original_name,
+            stored_name: newStoredName,
+            file_path: newFilePath,
+            file_size: doc.file_size,
+            file_ext: doc.file_ext,
+            uploaded_by: createdBy || doc.uploaded_by,
+            doc_type: doc.doc_type || 'upload'
+          }
+        });
+        oldDocToNewDocMap.set(doc.document_id, newDocId);
+      }
+
+      // Copy file slots if file_slot_table
+      if (srcFolder.folder_type === 'file_slot_table') {
+        const slots = await prisma.documentfileslot.findMany({
+          where: { folder_id: srcFolder.folder_id },
+          orderBy: { row_order: 'asc' }
+        });
+        for (const slot of slots) {
+          await prisma.documentfileslot.create({
+            data: {
+              folder_id: newFolder.folder_id,
+              row_order: slot.row_order,
+              prefix: slot.prefix,
+              document_id: slot.document_id ? (oldDocToNewDocMap.get(slot.document_id) || null) : null
+            }
+          });
+        }
+      }
+
+      // Recurse for child folders
+      const children = allFolders.filter(f => f.parent_folder_id === srcFolder.folder_id);
+      for (const child of children) {
+        await copySubtree(child, newFolder.folder_id, false);
+      }
+
+      return newFolder;
+    };
+
+    const createdFolders = [];
+    for (const srcId of idsToCopy) {
+      const srcFolder = allFolders.find(f => f.folder_id === srcId);
+      if (!srcFolder) continue;
+      const customName = idsToCopy.length === 1 ? newName : null;
+      const createdRoot = await copySubtree(srcFolder, targetParentFolderId || null, true, customName);
+      createdFolders.push(createdRoot);
+    }
+
+    if (idsToCopy.length === 1 && sourceFolderId) {
+      return res.json(createdFolders[0]);
+    }
+    res.json({ success: true, count: createdFolders.length, folders: createdFolders });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getDocuments = async (req, res, next) => {
   try {
     const { projectId, folderId, searchQuery } = req.body;

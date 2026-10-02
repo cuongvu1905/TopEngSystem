@@ -1922,6 +1922,17 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--primary-color);
   font-weight: 600;
 }
+.doc-folder-node.selected-for-copy {
+  background-color: rgba(59, 130, 246, 0.12);
+  border-left: 3px solid var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+.doc-folder-node.copied-in-clipboard {
+  opacity: 0.72;
+  outline: 1.5px dashed var(--primary-color);
+  background-color: rgba(59, 130, 246, 0.06);
+}
 .doc-folder-node.root-node {
   font-weight: 600;
   margin-bottom: 6px;
@@ -1978,6 +1989,12 @@ h1, h2, h3, h4, h5, h6 {
 .doc-folder-node-actions button:hover {
   background-color: var(--neutral-border);
   color: var(--neutral-dark);
+}
+.doc-context-menu-item {
+  transition: var(--transition-fast);
+}
+.doc-context-menu-item:hover {
+  background-color: var(--neutral-bg-hover) !important;
 }
 .doc-folder-children {
   border-left: 1px dashed var(--neutral-border);

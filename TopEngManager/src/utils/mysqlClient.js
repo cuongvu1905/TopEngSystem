@@ -136,6 +136,10 @@ export const MySQLAdapter = {
     return await callApi('createDocumentFolder', { name, parentFolderId, projectId, createdBy });
   },
 
+  copyDocumentFolder: async function({ sourceFolderId, sourceFolderIds, targetParentFolderId, targetProjectId, newName, createdBy }) {
+    return await callApi('copyDocumentFolder', { sourceFolderId, sourceFolderIds, targetParentFolderId, targetProjectId, newName, createdBy });
+  },
+
   renameDocumentFolder: async function(folderId, name) {
     return await callApi('renameDocumentFolder', { folderId, name });
   },
