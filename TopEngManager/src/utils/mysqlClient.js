@@ -151,6 +151,10 @@ export const MySQLAdapter = {
     return await callApi('deleteDocumentFolder', { folderId: folderIdOrPayload });
   },
 
+  reorderDocumentFolders: async function(orders) {
+    return await callApi('reorderDocumentFolders', { orders });
+  },
+
   // --- Overtime / leave approval requests ---
   // Every one of these re-checks the caller's role and org scope on the server; the
   // requesterId is only ever a claim about who is asking.

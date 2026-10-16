@@ -84,6 +84,7 @@ model documentfolder {
   folder_type      String?             @db.VarChar(30)
   default_prefix   String?             @db.VarChar(150)
   allowed_extensions String?           @db.VarChar(255)
+  sort_order         Int?                @default(0)
   parent           documentfolder?     @relation("FolderHierarchy", fields: [parent_folder_id], references: [folder_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_parent")
   children         documentfolder[]    @relation("FolderHierarchy")
   project          project?            @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: Restrict, map: "fk_folder_project")

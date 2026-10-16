@@ -49,6 +49,7 @@ router.post('/createDocumentFolder', documentController.createDocumentFolder);
 router.post('/copyDocumentFolder', documentController.copyDocumentFolder);
 router.post('/renameDocumentFolder', documentController.renameDocumentFolder);
 router.post('/deleteDocumentFolder', documentController.deleteDocumentFolder);
+router.post('/reorderDocumentFolders', documentController.reorderDocumentFolders);
 router.post('/getDocuments', documentController.getDocuments);
 router.post('/checkDocumentNameConflicts', documentController.checkDocumentNameConflicts);
 router.post('/getDocumentFileSlots', documentController.getDocumentFileSlots);

@@ -12,7 +12,7 @@ export default function TopvWiki() {
   if (!currentUser) return null;
 
   return (
-    <div className="scrollable-view">
+    <div className="scrollable-view topvwiki-view">
       <DocumentExplorer />
     </div>
   );

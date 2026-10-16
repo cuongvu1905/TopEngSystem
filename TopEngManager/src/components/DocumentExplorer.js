@@ -66,6 +66,22 @@ export default function DocumentExplorer({ projectId = null }) {
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedFolderIdsForCopy, setSelectedFolderIdsForCopy] = useState(new Set());
   const [treeWidth, setTreeWidth] = useState(260);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
+  const [selectedItemInView, setSelectedItemInView] = useState(null); // { type: 'folder' | 'doc', id }
+  const [draggedFolder, setDraggedFolder] = useState(null);
+  const [dragOverFolderId, setDragOverFolderId] = useState(null);
+  const [dragOverPosition, setDragOverPosition] = useState(null); // 'before' | 'after'
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('topv_wiki_view_mode');
+      if (saved === 'list' || saved === 'grid') setViewMode(saved);
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    setSelectedItemInView(null);
+  }, [selectedFolderId]);
 
   useEffect(() => {
     if (!uploadDropdownOpen) return;
@@ -154,7 +170,16 @@ export default function DocumentExplorer({ projectId = null }) {
     if (replaced) await loadFolders();
   }, [loadFileSlots, loadFolders]);
 
-  const getChildren = (parentId) => folders.filter(f => (f.parent_folder_id || null) === parentId);
+  const getChildren = (parentId) => {
+    return folders
+      .filter(f => (f.parent_folder_id || null) === parentId)
+      .sort((a, b) => {
+        const orderA = typeof a.sort_order === 'number' ? a.sort_order : 0;
+        const orderB = typeof b.sort_order === 'number' ? b.sort_order : 0;
+        if (orderA !== orderB) return orderA - orderB;
+        return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true });
+      });
+  };
 
   const toggleCollapse = (id) => {
     setCollapsedFolders(prev => {
@@ -172,6 +197,16 @@ export default function DocumentExplorer({ projectId = null }) {
       current = folders.find(f => f.folder_id === current.parent_folder_id);
     }
     return parts.join(' / ');
+  };
+
+  const getFolderBreadcrumbTrail = (folderId) => {
+    const trail = [];
+    let current = folders.find(f => f.folder_id === folderId);
+    while (current) {
+      trail.unshift(current);
+      current = folders.find(f => f.folder_id === current.parent_folder_id);
+    }
+    return trail;
   };
 
   const rootLabel = projectId ? t('documents.projectRoot', 'Tài liệu dự án') : t('documents.companyRoot', 'Tất cả tài liệu');
@@ -572,6 +607,185 @@ export default function DocumentExplorer({ projectId = null }) {
     setSelectedFolderIdsForCopy(allIds);
   };
 
+  // Move a single folder up or down among its siblings
+  const handleMoveFolder = async (folder, direction) => {
+    const parentId = folder.parent_folder_id || null;
+    const siblings = [...getChildren(parentId)];
+    const index = siblings.findIndex(f => f.folder_id === folder.folder_id);
+    if (index === -1) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= siblings.length) return;
+
+    // Swap positions
+    const [moved] = siblings.splice(index, 1);
+    siblings.splice(targetIndex, 0, moved);
+
+    const orders = siblings.map((f, idx) => ({
+      folder_id: f.folder_id,
+      sort_order: idx,
+      parent_folder_id: parentId
+    }));
+
+    const orderMap = new Map(orders.map(o => [o.folder_id, o.sort_order]));
+    setFolders(prev => prev.map(f => {
+      if (orderMap.has(f.folder_id)) {
+        return { ...f, sort_order: orderMap.get(f.folder_id) };
+      }
+      return f;
+    }));
+
+    try {
+      await db.reorderDocumentFolders(orders);
+    } catch (err) {
+      console.error('Failed to save folder order', err);
+    }
+  };
+
+  // Batch move selected folders up or down
+  const handleBatchMoveSelectedFolders = async (direction) => {
+    if (selectedFolderIdsForCopy.size === 0) return;
+    const selectedIds = Array.from(selectedFolderIdsForCopy);
+
+    const parentGroups = new Map();
+    for (const id of selectedIds) {
+      const f = folders.find(item => item.folder_id === id);
+      if (!f) continue;
+      const pid = f.parent_folder_id || null;
+      if (!parentGroups.has(pid)) parentGroups.set(pid, []);
+      parentGroups.get(pid).push(f);
+    }
+
+    let allUpdatedOrders = [];
+    let updatedFolders = [...folders];
+
+    parentGroups.forEach((groupFolders, parentId) => {
+      let siblings = [...getChildren(parentId)];
+      const selectedSet = new Set(groupFolders.map(f => f.folder_id));
+
+      if (direction === 'up') {
+        for (let i = 1; i < siblings.length; i++) {
+          if (selectedSet.has(siblings[i].folder_id) && !selectedSet.has(siblings[i - 1].folder_id)) {
+            const temp = siblings[i];
+            siblings[i] = siblings[i - 1];
+            siblings[i - 1] = temp;
+          }
+        }
+      } else {
+        for (let i = siblings.length - 2; i >= 0; i--) {
+          if (selectedSet.has(siblings[i].folder_id) && !selectedSet.has(siblings[i + 1].folder_id)) {
+            const temp = siblings[i];
+            siblings[i] = siblings[i + 1];
+            siblings[i + 1] = temp;
+          }
+        }
+      }
+
+      const orders = siblings.map((f, idx) => ({
+        folder_id: f.folder_id,
+        sort_order: idx,
+        parent_folder_id: parentId
+      }));
+
+      allUpdatedOrders.push(...orders);
+      const orderMap = new Map(orders.map(o => [o.folder_id, o.sort_order]));
+      updatedFolders = updatedFolders.map(f => {
+        if (orderMap.has(f.folder_id)) {
+          return { ...f, sort_order: orderMap.get(f.folder_id) };
+        }
+        return f;
+      });
+    });
+
+    setFolders(updatedFolders);
+
+    try {
+      await db.reorderDocumentFolders(allUpdatedOrders);
+    } catch (err) {
+      console.error('Failed to save batch folder order', err);
+    }
+  };
+
+  // Drag and Drop reordering handlers
+  const handleFolderDragStart = (e, folder) => {
+    if (!isMultiSelectMode) return;
+    setDraggedFolder(folder);
+    e.dataTransfer.effectAllowed = 'move';
+    try {
+      e.dataTransfer.setData('text/plain', folder.folder_id);
+    } catch (err) {}
+  };
+
+  const handleFolderDragOver = (e, targetFolder) => {
+    if (!isMultiSelectMode || !draggedFolder) return;
+    if (draggedFolder.folder_id === targetFolder.folder_id) return;
+
+    const draggedParent = draggedFolder.parent_folder_id || null;
+    const targetParent = targetFolder.parent_folder_id || null;
+    if (draggedParent !== targetParent) return;
+
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const position = e.clientY < midY ? 'before' : 'after';
+    if (dragOverFolderId !== targetFolder.folder_id || dragOverPosition !== position) {
+      setDragOverFolderId(targetFolder.folder_id);
+      setDragOverPosition(position);
+    }
+  };
+
+  const handleFolderDrop = async (e, targetFolder) => {
+    if (!isMultiSelectMode || !draggedFolder) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const draggedParent = draggedFolder.parent_folder_id || null;
+    const targetParent = targetFolder.parent_folder_id || null;
+
+    if (draggedParent === targetParent && draggedFolder.folder_id !== targetFolder.folder_id) {
+      const siblings = [...getChildren(draggedParent)];
+      const fromIdx = siblings.findIndex(f => f.folder_id === draggedFolder.folder_id);
+      if (fromIdx !== -1) {
+        const [removed] = siblings.splice(fromIdx, 1);
+        let toIdx = siblings.findIndex(f => f.folder_id === targetFolder.folder_id);
+        if (toIdx !== -1) {
+          if (dragOverPosition === 'after') toIdx += 1;
+          siblings.splice(toIdx, 0, removed);
+
+          const orders = siblings.map((f, idx) => ({
+            folder_id: f.folder_id,
+            sort_order: idx,
+            parent_folder_id: draggedParent
+          }));
+
+          const orderMap = new Map(orders.map(o => [o.folder_id, o.sort_order]));
+          setFolders(prev => prev.map(f => {
+            if (orderMap.has(f.folder_id)) {
+              return { ...f, sort_order: orderMap.get(f.folder_id) };
+            }
+            return f;
+          }));
+
+          try {
+            await db.reorderDocumentFolders(orders);
+          } catch (err) {
+            console.error('Failed to save folder order', err);
+          }
+        }
+      }
+    }
+
+    setDraggedFolder(null);
+    setDragOverFolderId(null);
+    setDragOverPosition(null);
+  };
+
+  const handleFolderDragEnd = () => {
+    setDraggedFolder(null);
+    setDragOverFolderId(null);
+    setDragOverPosition(null);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       const tag = document.activeElement?.tagName;
@@ -885,6 +1099,10 @@ export default function DocumentExplorer({ projectId = null }) {
 
   const isSlotTableFolder = currentFolder?.folder_type === 'file_slot_table';
   const rootFolders = getChildren(null);
+  const currentSubfolders = useMemo(() => {
+    if (activeSearch) return [];
+    return getChildren(selectedFolderId || null);
+  }, [folders, selectedFolderId, activeSearch]);
 
   // A folder's required-file upload progress = (filled required-prefix rows) / (total
   // required-prefix rows), counted across itself AND every descendant folder recursively.
@@ -914,17 +1132,49 @@ export default function DocumentExplorer({ projectId = null }) {
   const progressPercent = progressTotals.total > 0 ? Math.round((progressTotals.filled / progressTotals.total) * 100) : null;
 
   const renderFolderNode = (folder, depth = 0) => {
-    const children = getChildren(folder.folder_id);
-    const hasChildren = children.length > 0;
+    // 2-level limit for sidebar tree:
+    // depth 0 = Root folders (Level 1, e.g. 2024, 2025, PC Team)
+    // depth 1 = Immediate children (Level 2, e.g. LG, SDV, SEVT)
+    // Deeper levels (depth >= 1) do NOT expand in the sidebar; they are explored in the main pane.
+    const children = depth < 1 ? getChildren(folder.folder_id) : [];
+    const hasChildren = depth < 1 && children.length > 0;
     const isCollapsed = collapsedFolders.has(folder.folder_id);
     const isSelected = selectedFolderId === folder.folder_id;
     const isChecked = selectedFolderIdsForCopy.has(folder.folder_id);
     const isCopied = copiedFolderIds.has(folder.folder_id);
 
+    // Check if this folder is an ancestor of the currently selected folder
+    let isAncestor = false;
+    if (selectedFolderId && !isSelected) {
+      let cur = folders.find(f => f.folder_id === selectedFolderId);
+      while (cur) {
+        if (cur.parent_folder_id === folder.folder_id) {
+          isAncestor = true;
+          break;
+        }
+        cur = folders.find(f => f.folder_id === cur.parent_folder_id);
+      }
+    }
+
+    const isDragging = draggedFolder?.folder_id === folder.folder_id;
+    const isDragOver = dragOverFolderId === folder.folder_id;
+    const dragClass = isDragOver ? (dragOverPosition === 'before' ? 'drag-over-top' : 'drag-over-bottom') : '';
+
     return (
       <div key={folder.folder_id} style={{ marginLeft: depth > 0 ? '14px' : '0px' }}>
         <div
-          className={`doc-folder-node ${isSelected ? 'active' : ''} ${isChecked ? 'selected-for-copy' : ''} ${isCopied ? 'copied-in-clipboard' : ''}`}
+          className={`doc-folder-node ${isSelected ? 'active' : ''} ${isAncestor ? 'ancestor-active' : ''} ${isChecked ? 'selected-for-copy' : ''} ${isCopied ? 'copied-in-clipboard' : ''} ${isDragging ? 'is-dragging' : ''} ${dragClass} ${isMultiSelectMode ? 'multi-select-mode' : ''}`}
+          draggable={isMultiSelectMode}
+          onDragStart={(e) => handleFolderDragStart(e, folder)}
+          onDragOver={(e) => handleFolderDragOver(e, folder)}
+          onDragLeave={() => {
+            if (dragOverFolderId === folder.folder_id) {
+              setDragOverFolderId(null);
+              setDragOverPosition(null);
+            }
+          }}
+          onDrop={(e) => handleFolderDrop(e, folder)}
+          onDragEnd={handleFolderDragEnd}
           onClick={() => {
             if (isMultiSelectMode) {
               toggleFolderSelection(folder.folder_id);
@@ -946,6 +1196,15 @@ export default function DocumentExplorer({ projectId = null }) {
               setFolderContextMenu({ x: e.clientX, y: e.clientY, folder });
             }}
           >
+            {isMultiSelectMode && (
+              <span
+                className="doc-folder-drag-handle"
+                title={t('documents.dragToReorder', 'Kéo để đổi thứ tự')}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <i className="fa-solid fa-grip-vertical"></i>
+              </span>
+            )}
             {hasChildren ? (
               <i
                 className={`doc-folder-node-chevron ${isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-down'}`}
@@ -978,23 +1237,44 @@ export default function DocumentExplorer({ projectId = null }) {
             <span>{folder.name}</span>
           </div>
           <div className="doc-folder-node-actions">
-            {canCreateFolders && !isMultiSelectMode && (
-              <>
+            {isMultiSelectMode ? (
+              <div className="doc-folder-reorder-btns" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
-                  title={t('documents.copyToClipboardAction', 'Sao chép (Ctrl+C)')}
-                  onClick={(e) => handleCopyFolderToClipboard(folder, e)}
+                  className="doc-reorder-btn"
+                  title={t('documents.moveUp', 'Di chuyển lên')}
+                  onClick={(e) => { e.stopPropagation(); handleMoveFolder(folder, 'up'); }}
                 >
-                  <i className="fa-regular fa-copy"></i>
+                  <i className="fa-solid fa-arrow-up"></i>
                 </button>
                 <button
                   type="button"
-                  title={t('documents.newSubfolder', 'Thư mục con mới')}
-                  onClick={(e) => { e.stopPropagation(); handleCreateFolder(folder.folder_id, folder); }}
+                  className="doc-reorder-btn"
+                  title={t('documents.moveDown', 'Di chuyển xuống')}
+                  onClick={(e) => { e.stopPropagation(); handleMoveFolder(folder, 'down'); }}
                 >
-                  <i className="fa-solid fa-plus"></i>
+                  <i className="fa-solid fa-arrow-down"></i>
                 </button>
-              </>
+              </div>
+            ) : (
+              canCreateFolders && (
+                <>
+                  <button
+                    type="button"
+                    title={t('documents.copyToClipboardAction', 'Sao chép (Ctrl+C)')}
+                    onClick={(e) => handleCopyFolderToClipboard(folder, e)}
+                  >
+                    <i className="fa-regular fa-copy"></i>
+                  </button>
+                  <button
+                    type="button"
+                    title={t('documents.newSubfolder', 'Thư mục con mới')}
+                    onClick={(e) => { e.stopPropagation(); handleCreateFolder(folder.folder_id, folder); }}
+                  >
+                    <i className="fa-solid fa-plus"></i>
+                  </button>
+                </>
+              )
             )}
           </div>
         </div>
@@ -1038,6 +1318,44 @@ export default function DocumentExplorer({ projectId = null }) {
                 </button>
                 {selectedFolderIdsForCopy.size > 0 && (
                   <>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{
+                        padding: '3px 7px',
+                        fontSize: '11px',
+                        height: '26px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                        fontWeight: 500,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => handleBatchMoveSelectedFolders('up')}
+                      title={t('documents.moveSelectedUp', 'Di chuyển lên trên')}
+                    >
+                      <i className="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{
+                        padding: '3px 7px',
+                        fontSize: '11px',
+                        height: '26px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                        fontWeight: 500,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => handleBatchMoveSelectedFolders('down')}
+                      title={t('documents.moveSelectedDown', 'Di chuyển xuống dưới')}
+                    >
+                      <i className="fa-solid fa-arrow-down"></i>
+                    </button>
                     <button
                       type="button"
                       className="btn btn-primary"
@@ -1249,6 +1567,18 @@ export default function DocumentExplorer({ projectId = null }) {
                     <span>{t('documents.pasteFolderAction', 'Dán')} ({copiedFolders.length})</span>
                   </button>
                 )}
+                {canCreateFolders && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    onClick={() => handleCreateFolder(selectedFolderId, currentFolder)}
+                    title={selectedFolderId ? `Tạo thư mục con trong "${currentFolder?.name || ''}"` : t('documents.newFolder', 'Tạo thư mục')}
+                  >
+                    <i className="fa-solid fa-folder-plus"></i>
+                    <span>{t('documents.newFolder', 'Tạo thư mục')}</span>
+                  </button>
+                )}
                 <button type="button" className="btn btn-secondary" onClick={() => setTextEditorState({ doc: null, autoEdit: true })}>
                   <i className="fa-solid fa-file-circle-plus"></i> {t('documents.createDocument', 'Tạo tài liệu')}
                 </button>
@@ -1339,24 +1669,101 @@ export default function DocumentExplorer({ projectId = null }) {
           </div>
         )}
 
+        {/* Windows Explorer Navigation Bar: Up button, Clickable Breadcrumbs & View Mode Toggle */}
         <div className="doc-breadcrumb">
-          {activeSearch ? (
-            <span>
-              {t('documents.searchResultsFor', 'Kết quả tìm kiếm cho')} &quot;{activeSearch}&quot;
-              <button type="button" className="btn-text" onClick={clearSearch}>{t('documents.clearSearch', 'Xóa tìm kiếm')}</button>
-            </span>
-          ) : (
-            <span><i className="fa-solid fa-folder"></i> {currentFolder ? getFolderPath(currentFolder.folder_id) : rootLabel}</span>
-          )}
-          {!activeSearch && progressPercent !== null && (
-            <div className="doc-folder-progress" title={t('documents.folderProgressTitle', 'Tỉ lệ upload các file bắt buộc')}>
-              <span className="doc-folder-progress-bar">
-                <span className="doc-folder-progress-fill" style={{ width: `${progressPercent}%` }}></span>
+          <div className="doc-breadcrumb-left">
+            <button
+              type="button"
+              className="doc-nav-up-btn"
+              title={t('documents.upOneLevel', 'Lên một cấp (Thư mục cha)')}
+              disabled={!currentFolder}
+              onClick={() => {
+                if (currentFolder?.parent_folder_id) {
+                  setSelectedFolderId(currentFolder.parent_folder_id);
+                } else {
+                  setSelectedFolderId(null);
+                }
+              }}
+            >
+              <i className="fa-solid fa-arrow-up"></i>
+            </button>
+
+            {activeSearch ? (
+              <span className="doc-breadcrumb-search">
+                {t('documents.searchResultsFor', 'Kết quả tìm kiếm cho')} &quot;{activeSearch}&quot;
+                <button type="button" className="btn-text" onClick={clearSearch}>{t('documents.clearSearch', 'Xóa tìm kiếm')}</button>
               </span>
-              <span className="doc-folder-progress-label">{progressPercent}%</span>
+            ) : (
+              <div className="doc-breadcrumb-trail">
+                <span
+                  className={`doc-breadcrumb-segment ${!selectedFolderId ? 'active' : ''}`}
+                  onClick={() => setSelectedFolderId(null)}
+                  title={rootLabel}
+                >
+                  <i className="fa-solid fa-house-chimney" style={{ fontSize: '11px', marginRight: '4px' }}></i>
+                  {rootLabel}
+                </span>
+
+                {getFolderBreadcrumbTrail(selectedFolderId).map((crumb, idx, arr) => {
+                  const isLast = idx === arr.length - 1;
+                  return (
+                    <React.Fragment key={crumb.folder_id}>
+                      <span className="doc-breadcrumb-sep">/</span>
+                      <span
+                        className={`doc-breadcrumb-segment ${isLast ? 'active' : ''}`}
+                        onClick={() => {
+                          if (!isLast) setSelectedFolderId(crumb.folder_id);
+                        }}
+                        title={crumb.name}
+                      >
+                        <i className="fa-solid fa-folder" style={{ fontSize: '11px', marginRight: '4px' }}></i>
+                        {crumb.name}
+                      </span>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {!activeSearch && progressPercent !== null && (
+              <div className="doc-folder-progress" title={t('documents.folderProgressTitle', 'Tỉ lệ upload các file bắt buộc')}>
+                <span className="doc-folder-progress-bar">
+                  <span className="doc-folder-progress-fill" style={{ width: `${progressPercent}%` }}></span>
+                </span>
+                <span className="doc-folder-progress-label">{progressPercent}%</span>
+              </div>
+            )}
+
+            {/* View Mode Toggle: List vs Grid */}
+            <div className="doc-view-mode-toggle">
+              <button
+                type="button"
+                className={`doc-view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => {
+                  setViewMode('list');
+                  try { localStorage.setItem('topv_wiki_view_mode', 'list'); } catch (e) {}
+                }}
+                title={t('documents.listView', 'Dạng danh sách')}
+              >
+                <i className="fa-solid fa-list"></i>
+              </button>
+              <button
+                type="button"
+                className={`doc-view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                onClick={() => {
+                  setViewMode('grid');
+                  try { localStorage.setItem('topv_wiki_view_mode', 'grid'); } catch (e) {}
+                }}
+                title={t('documents.gridView', 'Dạng lưới')}
+              >
+                <i className="fa-solid fa-grip"></i>
+              </button>
             </div>
-          )}
+          </div>
         </div>
+
         {!activeSearch && (currentFolder?.default_prefix || currentFolder?.allowed_extensions) && (
           <div style={{ marginTop: '-8px', marginBottom: '12px' }}>
             {currentFolder?.default_prefix && (
@@ -1375,73 +1782,314 @@ export default function DocumentExplorer({ projectId = null }) {
         {isSlotTableFolder ? (
           <DocumentFileSlotTable folderId={selectedFolderId} projectId={projectId} currentUser={currentUser} canUpload={canUploadDocuments} allowedExtensions={currentFolder?.allowed_extensions} onSlotsChanged={handleSlotsChanged} />
         ) : (
-        <div className="doc-file-list">
-          {documents.length === 0 ? (
-            <div className="empty-widget-state">
-              <i className="fa-solid fa-folder-open" style={{ fontSize: '28px' }}></i>
-              {activeSearch
-                ? t('documents.noSearchResults', 'Không tìm thấy tài liệu phù hợp.')
-                : t('documents.noDocumentsInFolder', 'Chưa có tài liệu nào trong thư mục này.')}
-            </div>
-          ) : (
-            documents.map(doc => {
-              const uploader = users.find(u => u.id === doc.uploaded_by);
-              const icon = FILE_ICONS[doc.file_ext] || 'fa-file';
-              const isTextDoc = doc.doc_type === 'text';
-              const isPreviewableUpload = !isTextDoc && PREVIEWABLE_EXTENSIONS.includes(doc.file_ext);
-              const nameClickable = isTextDoc || isPreviewableUpload;
-              const handleNameClick = () => {
-                if (isTextDoc) setTextEditorState({ doc, autoEdit: false });
-                else if (isPreviewableUpload) setPreviewDoc(doc);
-              };
-              return (
-                <div className="document-item-card" key={doc.document_id}>
-                  <div className="doc-card-left">
-                    <div className="doc-icon-box"><i className={`fa-solid ${icon}`}></i></div>
-                    <div className="doc-info-box">
-                      {nameClickable ? (
-                        <h3 className="doc-name-link" onClick={handleNameClick}>{doc.original_name}</h3>
-                      ) : (
-                        <h3>{doc.original_name}</h3>
-                      )}
-                      <p>
-                        {formatFileSize(doc.file_size)} · {uploader?.name || t('documents.unknownUploader', 'Không rõ')} · {new Date(doc.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US')}
-                        {activeSearch && (
-                          <> · <i className="fa-solid fa-folder" style={{ fontSize: '10px' }}></i> {doc.folder_id ? getFolderPath(doc.folder_id) : rootLabel}</>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="doc-card-right">
-                    {isTextDoc && (
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        title={t('common.edit', 'Sửa')}
-                        onClick={() => setTextEditorState({ doc, autoEdit: true })}
-                      >
-                        <i className="fa-solid fa-pen"></i>
-                      </button>
-                    )}
-                    <a
-                      className="btn btn-secondary btn-sm"
-                      href={db.getDocumentDownloadUrl(doc.document_id)}
-                      title={t('common.download', 'Tải về')}
-                      onClick={() => handleDownloadClick(doc)}
-                    >
-                      <i className="fa-solid fa-download"></i>
-                    </a>
-                    {canManageDoc(doc) && (
-                      <button type="button" className="btn-reset-icon" title={t('common.delete', 'Xóa')} onClick={() => handleDeleteDocument(doc)}>
-                        <i className="fa-solid fa-trash-can"></i>
-                      </button>
-                    )}
-                  </div>
+          <div className="doc-explorer-content-panel">
+            {(!activeSearch && currentSubfolders.length === 0 && documents.length === 0) || (activeSearch && documents.length === 0) ? (
+              <div className="empty-widget-state">
+                <i className="fa-solid fa-folder-open" style={{ fontSize: '32px' }}></i>
+                {activeSearch
+                  ? t('documents.noSearchResults', 'Không tìm thấy tài liệu phù hợp.')
+                  : t('documents.noDocumentsInFolder', 'Chưa có thư mục hoặc tài liệu nào.')}
+              </div>
+            ) : viewMode === 'list' ? (
+              /* ================== LIST VIEW (Windows Explorer Details Style) ================== */
+              <div className="doc-explorer-table">
+                <div className="doc-explorer-table-header">
+                  <div className="doc-col-name">{t('documents.name', 'Tên')}</div>
+                  <div className="doc-col-date">{t('documents.dateModified', 'Ngày sửa đổi')}</div>
+                  <div className="doc-col-type">{t('documents.type', 'Loại')}</div>
+                  <div className="doc-col-size">{t('documents.size', 'Kích thước')}</div>
+                  <div className="doc-col-actions"></div>
                 </div>
-              );
-            })
-          )}
-        </div>
+
+                <div className="doc-explorer-table-body">
+                  {/* SUBFOLDERS FIRST */}
+                  {currentSubfolders.map(f => {
+                    const isSelected = selectedItemInView?.type === 'folder' && selectedItemInView?.id === f.folder_id;
+                    const subChildren = getChildren(f.folder_id);
+                    return (
+                      <div
+                        key={`folder-${f.folder_id}`}
+                        className={`doc-explorer-row doc-folder-row ${isSelected ? 'is-selected' : ''}`}
+                        onClick={() => setSelectedItemInView({ type: 'folder', id: f.folder_id })}
+                        onDoubleClick={() => {
+                          setSelectedFolderId(f.folder_id);
+                          setSelectedItemInView(null);
+                        }}
+                        onContextMenu={(e) => {
+                          if (!canManageFolder(f) && !canCreateFolders) return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setFolderContextMenu({ x: e.clientX, y: e.clientY, folder: f });
+                        }}
+                      >
+                        <div className="doc-col-name">
+                          <i className="fa-solid fa-folder doc-folder-icon-main"></i>
+                          <span className="doc-item-title" title={f.name}>{f.name}</span>
+                        </div>
+                        <div className="doc-col-date">
+                          {f.updated_at ? new Date(f.updated_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US') : (f.created_at ? new Date(f.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US') : '--')}
+                        </div>
+                        <div className="doc-col-type">
+                          {t('documents.typeFolder', 'Thư mục tệp')}
+                        </div>
+                        <div className="doc-col-size">
+                          {subChildren.length > 0 ? `${subChildren.length} ${t('documents.subfolders', 'thư mục')}` : '--'}
+                        </div>
+                        <div className="doc-col-actions" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="doc-row-action-btn"
+                            title={t('common.open', 'Mở thư mục')}
+                            onClick={() => setSelectedFolderId(f.folder_id)}
+                          >
+                            <i className="fa-solid fa-folder-open"></i>
+                          </button>
+                          {canCreateFolders && (
+                            <>
+                              <button
+                                type="button"
+                                className="doc-row-action-btn"
+                                title={t('common.rename', 'Đổi tên')}
+                                onClick={(e) => handleRenameFolder(f, e)}
+                              >
+                                <i className="fa-solid fa-pen"></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="doc-row-action-btn"
+                                title={t('common.copy', 'Sao chép')}
+                                onClick={(e) => handleCopyFolderToClipboard(f, e)}
+                              >
+                                <i className="fa-regular fa-copy"></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="doc-row-action-btn text-danger"
+                                title={t('common.delete', 'Xóa')}
+                                onClick={(e) => handleDeleteFolder(f, e)}
+                              >
+                                <i className="fa-solid fa-trash-can"></i>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* DOCUMENTS NEXT */}
+                  {documents.map(doc => {
+                    const isSelected = selectedItemInView?.type === 'doc' && selectedItemInView?.id === doc.document_id;
+                    const uploader = users.find(u => u.id === doc.uploaded_by);
+                    const icon = FILE_ICONS[doc.file_ext] || 'fa-file';
+                    const isTextDoc = doc.doc_type === 'text';
+                    const isPreviewableUpload = !isTextDoc && PREVIEWABLE_EXTENSIONS.includes(doc.file_ext);
+                    const handleOpenDoc = () => {
+                      if (isTextDoc) setTextEditorState({ doc, autoEdit: false });
+                      else if (isPreviewableUpload) setPreviewDoc(doc);
+                    };
+
+                    return (
+                      <div
+                        key={`doc-${doc.document_id}`}
+                        className={`doc-explorer-row doc-file-row ${isSelected ? 'is-selected' : ''}`}
+                        onClick={() => setSelectedItemInView({ type: 'doc', id: doc.document_id })}
+                        onDoubleClick={handleOpenDoc}
+                      >
+                        <div className="doc-col-name">
+                          <i className={`fa-solid ${icon} doc-file-icon-main ext-${doc.file_ext}`}></i>
+                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                            <span
+                              className={`doc-item-title ${(isTextDoc || isPreviewableUpload) ? 'clickable' : ''}`}
+                              onClick={(e) => {
+                                if (isTextDoc || isPreviewableUpload) {
+                                  e.stopPropagation();
+                                  handleOpenDoc();
+                                }
+                              }}
+                              title={doc.original_name}
+                            >
+                              {doc.original_name}
+                            </span>
+                            {activeSearch && (
+                              <span style={{ fontSize: '11px', color: 'var(--neutral-muted)' }}>
+                                <i className="fa-solid fa-folder" style={{ fontSize: '10px', marginRight: '3px' }}></i>
+                                {doc.folder_id ? getFolderPath(doc.folder_id) : rootLabel}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="doc-col-date">
+                          {new Date(doc.updated_at || doc.created_at).toLocaleDateString(currentLang === 'vi' ? 'vi-VN' : 'en-US')}
+                        </div>
+                        <div className="doc-col-type">
+                          {doc.file_ext ? `${doc.file_ext.toUpperCase()} File` : (isTextDoc ? 'Text Document' : 'File')}
+                        </div>
+                        <div className="doc-col-size">
+                          {formatFileSize(doc.file_size)}
+                        </div>
+                        <div className="doc-col-actions" onClick={(e) => e.stopPropagation()}>
+                          {(isTextDoc || isPreviewableUpload) && (
+                            <button
+                              type="button"
+                              className="doc-row-action-btn"
+                              title={isTextDoc ? t('common.edit', 'Chỉnh sửa') : t('common.preview', 'Xem trước')}
+                              onClick={handleOpenDoc}
+                            >
+                              <i className={isTextDoc ? 'fa-solid fa-pen-to-square' : 'fa-solid fa-eye'}></i>
+                            </button>
+                          )}
+                          {doc.file_path && (
+                            <a
+                              href={db.getDocumentDownloadUrl(doc.document_id)}
+                              download
+                              className="doc-row-action-btn"
+                              title={t('common.download', 'Tải xuống')}
+                              onClick={() => handleDownloadClick(doc)}
+                            >
+                              <i className="fa-solid fa-download"></i>
+                            </a>
+                          )}
+                          {canManageDoc(doc) && (
+                            <button
+                              type="button"
+                              className="doc-row-action-btn text-danger"
+                              title={t('common.delete', 'Xóa')}
+                              onClick={() => handleDeleteDocument(doc)}
+                            >
+                              <i className="fa-solid fa-trash-can"></i>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* ================== GRID VIEW (Windows Explorer Icons Style) ================== */
+              <div className="doc-explorer-grid">
+                {/* SUBFOLDERS FIRST */}
+                {currentSubfolders.map(f => {
+                  const isSelected = selectedItemInView?.type === 'folder' && selectedItemInView?.id === f.folder_id;
+                  const subChildren = getChildren(f.folder_id);
+                  return (
+                    <div
+                      key={`grid-folder-${f.folder_id}`}
+                      className={`doc-grid-card doc-folder-grid-card ${isSelected ? 'is-selected' : ''}`}
+                      onClick={() => setSelectedItemInView({ type: 'folder', id: f.folder_id })}
+                      onDoubleClick={() => {
+                        setSelectedFolderId(f.folder_id);
+                        setSelectedItemInView(null);
+                      }}
+                      onContextMenu={(e) => {
+                        if (!canManageFolder(f) && !canCreateFolders) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFolderContextMenu({ x: e.clientX, y: e.clientY, folder: f });
+                      }}
+                      title={`${f.name} (Nhấp đúp để mở)`}
+                    >
+                      <div className="doc-grid-icon-wrap">
+                        <i className="fa-solid fa-folder doc-grid-folder-icon"></i>
+                      </div>
+                      <div className="doc-grid-title" title={f.name}>
+                        {f.name}
+                      </div>
+                      <div className="doc-grid-meta">
+                        {subChildren.length > 0 ? `${subChildren.length} ${t('documents.subfolders', 'thư mục')}` : t('documents.typeFolder', 'Thư mục')}
+                      </div>
+                      <div className="doc-grid-hover-actions" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="doc-grid-action-btn"
+                          title={t('common.open', 'Mở thư mục')}
+                          onClick={() => setSelectedFolderId(f.folder_id)}
+                        >
+                          <i className="fa-solid fa-folder-open"></i>
+                        </button>
+                        {canCreateFolders && (
+                          <button
+                            type="button"
+                            className="doc-grid-action-btn text-danger"
+                            title={t('common.delete', 'Xóa')}
+                            onClick={(e) => handleDeleteFolder(f, e)}
+                          >
+                            <i className="fa-solid fa-trash-can"></i>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* DOCUMENTS NEXT */}
+                {documents.map(doc => {
+                  const isSelected = selectedItemInView?.type === 'doc' && selectedItemInView?.id === doc.document_id;
+                  const icon = FILE_ICONS[doc.file_ext] || 'fa-file';
+                  const isTextDoc = doc.doc_type === 'text';
+                  const isPreviewableUpload = !isTextDoc && PREVIEWABLE_EXTENSIONS.includes(doc.file_ext);
+                  const handleOpenDoc = () => {
+                    if (isTextDoc) setTextEditorState({ doc, autoEdit: false });
+                    else if (isPreviewableUpload) setPreviewDoc(doc);
+                  };
+
+                  return (
+                    <div
+                      key={`grid-doc-${doc.document_id}`}
+                      className={`doc-grid-card doc-file-grid-card ${isSelected ? 'is-selected' : ''}`}
+                      onClick={() => setSelectedItemInView({ type: 'doc', id: doc.document_id })}
+                      onDoubleClick={handleOpenDoc}
+                      title={`${doc.original_name} (${formatFileSize(doc.file_size)})`}
+                    >
+                      <div className="doc-grid-icon-wrap">
+                        <i className={`fa-solid ${icon} doc-grid-file-icon ext-${doc.file_ext}`}></i>
+                      </div>
+                      <div className="doc-grid-title" title={doc.original_name}>
+                        {doc.original_name}
+                      </div>
+                      <div className="doc-grid-meta">
+                        {formatFileSize(doc.file_size)}
+                      </div>
+                      <div className="doc-grid-hover-actions" onClick={(e) => e.stopPropagation()}>
+                        {(isTextDoc || isPreviewableUpload) && (
+                          <button
+                            type="button"
+                            className="doc-grid-action-btn"
+                            title={isTextDoc ? t('common.edit', 'Chỉnh sửa') : t('common.preview', 'Xem trước')}
+                            onClick={handleOpenDoc}
+                          >
+                            <i className={isTextDoc ? 'fa-solid fa-pen-to-square' : 'fa-solid fa-eye'}></i>
+                          </button>
+                        )}
+                        {doc.file_path && (
+                          <a
+                            href={db.getDocumentDownloadUrl(doc.document_id)}
+                            download
+                            className="doc-grid-action-btn"
+                            title={t('common.download', 'Tải về')}
+                            onClick={() => handleDownloadClick(doc)}
+                          >
+                            <i className="fa-solid fa-download"></i>
+                          </a>
+                        )}
+                        {canManageDoc(doc) && (
+                          <button
+                            type="button"
+                            className="doc-grid-action-btn text-danger"
+                            title={t('common.delete', 'Xóa')}
+                            onClick={() => handleDeleteDocument(doc)}
+                          >
+                            <i className="fa-solid fa-trash-can"></i>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
         </>
         )}
@@ -1496,6 +2144,18 @@ export default function DocumentExplorer({ projectId = null }) {
                 </>
               ) : (
                 <>
+                  <button
+                    type="button"
+                    className="doc-context-menu-item"
+                    onClick={() => {
+                      const f = folderContextMenu.folder;
+                      setFolderContextMenu(null);
+                      setSelectedFolderId(f.folder_id);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13px', cursor: 'pointer', textAlign: 'left', fontWeight: 600 }}
+                  >
+                    <i className="fa-solid fa-folder-open" style={{ width: '14px', color: '#eab308' }}></i> {t('common.open', 'Mở thư mục')}
+                  </button>
                   <button
                     type="button"
                     className="doc-context-menu-item"

@@ -203,11 +203,47 @@ exports.checkDocumentNameConflicts = async (req, res, next) => {
 exports.getDocumentFolders = async (req, res, next) => {
   try {
     const { projectId } = req.body;
-    const folders = await prisma.documentfolder.findMany({
-      where: { project_id: projectId || null },
-      orderBy: [{ name: 'asc' }, { id: 'asc' }]
-    });
+    let folders;
+    if (projectId) {
+      folders = await prisma.$queryRawUnsafe(
+        'SELECT * FROM documentfolder WHERE project_id = ? ORDER BY sort_order ASC, name ASC, id ASC',
+        projectId
+      );
+    } else {
+      folders = await prisma.$queryRawUnsafe(
+        'SELECT * FROM documentfolder WHERE project_id IS NULL ORDER BY sort_order ASC, name ASC, id ASC'
+      );
+    }
     res.json(folders);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.reorderDocumentFolders = async (req, res, next) => {
+  try {
+    const { orders } = req.body;
+    if (Array.isArray(orders) && orders.length > 0) {
+      for (const item of orders) {
+        if (!item.folder_id) continue;
+        const sortOrder = Number.isInteger(item.sort_order) ? item.sort_order : 0;
+        if (typeof item.parent_folder_id !== 'undefined') {
+          await prisma.$executeRawUnsafe(
+            'UPDATE documentfolder SET sort_order = ?, parent_folder_id = ? WHERE folder_id = ?',
+            sortOrder,
+            item.parent_folder_id || null,
+            item.folder_id
+          );
+        } else {
+          await prisma.$executeRawUnsafe(
+            'UPDATE documentfolder SET sort_order = ? WHERE folder_id = ?',
+            sortOrder,
+            item.folder_id
+          );
+        }
+      }
+    }
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }

@@ -1840,7 +1840,8 @@ h1, h2, h3, h4, h5, h6 {
   display: none;
 }
 .doc-folder-tree-panel {
-  position: relative;
+  position: sticky;
+  top: 0;
   background-color: var(--neutral-bg-card);
   border: 1px solid var(--neutral-border);
   border-radius: var(--border-radius);
@@ -1849,8 +1850,10 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 70vh;
+  height: calc(100vh - var(--header-height, 70px) - 48px);
+  max-height: calc(100vh - var(--header-height, 70px) - 48px);
   overflow: hidden;
+  box-sizing: border-box;
 }
 .doc-tree-resize-handle {
   position: absolute;
@@ -3332,6 +3335,9 @@ h1, h2, h3, h4, h5, h6 {
     padding: 12px 14px !important;
     box-sizing: border-box !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+    height: auto !important;
+    max-height: 65vh !important;
+    position: static !important;
   }
   .doc-folder-node {
     padding: 8px 10px !important;
@@ -7876,4 +7882,740 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #334155 !important;
   box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.5) !important;
 }
+
+/* ==========================================================================
+   TOPV WIKI / DOCUMENT EXPLORER: WINDOWS FILE EXPLORER STYLING
+   ========================================================================== */
+
+.doc-folder-node.ancestor-active {
+  color: var(--primary-color);
+  font-weight: 500;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.doc-breadcrumb-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.doc-nav-up-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius, 6px);
+  border: 1px solid var(--neutral-border);
+  background-color: var(--neutral-bg-card);
+  color: var(--neutral-dark);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.doc-nav-up-btn:hover:not(:disabled) {
+  background-color: var(--neutral-bg-hover);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.doc-nav-up-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.doc-breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 4px 10px;
+  background-color: var(--neutral-bg-card);
+  border: 1px solid var(--neutral-border);
+  border-radius: var(--border-radius, 6px);
+  font-size: 13px;
+  min-height: 32px;
+  flex: 1;
+  max-width: 100%;
+}
+
+.doc-breadcrumb-segment {
+  display: inline-flex;
+  align-items: center;
+  color: var(--neutral-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: var(--transition-fast);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-breadcrumb-segment:hover {
+  color: var(--primary-color);
+  background-color: var(--neutral-bg-hover);
+}
+
+.doc-breadcrumb-segment.active {
+  color: var(--neutral-dark);
+  font-weight: 600;
+  cursor: default;
+}
+
+.doc-breadcrumb-segment.active:hover {
+  background-color: transparent;
+}
+
+.doc-breadcrumb-sep {
+  color: var(--neutral-muted);
+  font-size: 12px;
+  user-select: none;
+  opacity: 0.6;
+}
+
+.doc-breadcrumb-search {
+  font-size: 13px;
+  color: var(--neutral-dark);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.doc-view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--neutral-bg-main);
+  border: 1px solid var(--neutral-border);
+  border-radius: var(--border-radius, 6px);
+  padding: 2px;
+  gap: 2px;
+}
+
+.doc-view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--neutral-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.doc-view-toggle-btn:hover {
+  color: var(--neutral-dark);
+}
+
+.doc-view-toggle-btn.active {
+  background-color: var(--neutral-bg-card);
+  color: var(--primary-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+
+.doc-explorer-content-panel {
+  width: 100%;
+}
+
+.doc-explorer-table {
+  width: 100%;
+  background-color: var(--neutral-bg-card);
+  border: 1px solid var(--neutral-border);
+  border-radius: var(--border-radius, 6px);
+  overflow: hidden;
+}
+
+.doc-explorer-table-header {
+  display: grid;
+  grid-template-columns: minmax(240px, 3fr) minmax(130px, 1.2fr) minmax(110px, 1fr) minmax(90px, 0.8fr) 110px;
+  gap: 8px;
+  padding: 8px 14px;
+  background-color: var(--neutral-bg-main);
+  border-bottom: 1px solid var(--neutral-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neutral-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+.doc-explorer-table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-explorer-row {
+  display: grid;
+  grid-template-columns: minmax(240px, 3fr) minmax(130px, 1.2fr) minmax(110px, 1fr) minmax(90px, 0.8fr) 110px;
+  gap: 8px;
+  padding: 8px 14px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--neutral-dark);
+  border-bottom: 1px solid var(--neutral-border);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  user-select: none;
+}
+
+.doc-explorer-row:last-child {
+  border-bottom: none;
+}
+
+.doc-explorer-row:hover {
+  background-color: var(--neutral-bg-hover);
+}
+
+.doc-explorer-row.is-selected {
+  background-color: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.doc-col-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.doc-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.doc-item-title.clickable:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.doc-col-date,
+.doc-col-type,
+.doc-col-size {
+  font-size: 12px;
+  color: var(--neutral-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-col-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  opacity: 0.35;
+  transition: var(--transition-fast);
+}
+
+.doc-explorer-row:hover .doc-col-actions {
+  opacity: 1;
+}
+
+.doc-row-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--neutral-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-decoration: none;
+}
+
+.doc-row-action-btn:hover {
+  background-color: var(--neutral-border);
+  color: var(--neutral-dark);
+}
+
+.doc-row-action-btn.text-danger:hover {
+  background-color: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.doc-folder-icon-main {
+  font-size: 18px;
+  color: #eab308;
+  flex-shrink: 0;
+}
+
+.doc-file-icon-main {
+  font-size: 16px;
+  color: var(--neutral-muted);
+  flex-shrink: 0;
+}
+
+.ext-pdf { color: #ef4444 !important; }
+.ext-doc, .ext-docx { color: #2563eb !important; }
+.ext-xls, .ext-xlsx, .ext-csv { color: #10b981 !important; }
+.ext-ppt, .ext-pptx { color: #f97316 !important; }
+.ext-png, .ext-jpg, .ext-jpeg { color: #8b5cf6 !important; }
+.ext-zip, .ext-rar { color: #d97706 !important; }
+.ext-dwg, .ext-zw1 { color: #06b6d4 !important; }
+.ext-drawio { color: #f97316 !important; }
+
+/* Grid View (Windows Explorer Icons) */
+.doc-explorer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.doc-grid-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 14px 10px 10px 10px;
+  border-radius: var(--border-radius, 6px);
+  background-color: var(--neutral-bg-card);
+  border: 1px solid var(--neutral-border);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  user-select: none;
+}
+
+.doc-grid-card:hover {
+  background-color: var(--neutral-bg-hover);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.doc-grid-card.is-selected {
+  background-color: rgba(59, 130, 246, 0.12);
+  border-color: var(--primary-color);
+}
+
+.doc-grid-icon-wrap {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.doc-grid-folder-icon {
+  font-size: 38px;
+  color: #eab308;
+}
+
+.doc-grid-file-icon {
+  font-size: 34px;
+  color: var(--neutral-muted);
+}
+
+.doc-grid-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--neutral-dark);
+  line-height: 1.35;
+  width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  margin-bottom: 4px;
+}
+
+.doc-grid-meta {
+  font-size: 11px;
+  color: var(--neutral-muted);
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-grid-hover-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: none;
+  align-items: center;
+  gap: 2px;
+  background-color: var(--neutral-bg-card);
+  border: 1px solid var(--neutral-border);
+  border-radius: 4px;
+  padding: 2px;
+  box-shadow: var(--shadow-sm);
+}
+
+.doc-grid-card:hover .doc-grid-hover-actions {
+  display: flex;
+}
+
+.doc-grid-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  border: none;
+  background: transparent;
+  color: var(--neutral-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-decoration: none;
+}
+
+.doc-grid-action-btn:hover {
+  background-color: var(--neutral-border);
+  color: var(--neutral-dark);
+}
+
+.doc-grid-action-btn.text-danger:hover {
+  background-color: var(--danger-light);
+  color: var(--danger-color);
+}
+
+/* ================== Theme Specific Fine-Tuning ================== */
+
+/* Cyber Dark */
+[data-theme="cyber"] .doc-nav-up-btn,
+[data-theme="cyber"] .doc-breadcrumb-trail,
+[data-theme="cyber"] .doc-view-mode-toggle,
+[data-theme="cyber"] .doc-view-toggle-btn,
+[data-theme="cyber"] .doc-explorer-table,
+[data-theme="cyber"] .doc-explorer-row,
+[data-theme="cyber"] .doc-grid-card,
+[data-theme="cyber"] .doc-grid-hover-actions {
+  border-radius: 0px !important;
+}
+
+[data-theme="cyber"] .doc-nav-up-btn {
+  background-color: #0d0a1a !important;
+  border-color: #1e1736 !important;
+  color: #10b981 !important;
+}
+
+[data-theme="cyber"] .doc-nav-up-btn:hover:not(:disabled) {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="cyber"] .doc-breadcrumb-trail {
+  background-color: #0d0a1a !important;
+  border-color: #1e1736 !important;
+}
+
+[data-theme="cyber"] .doc-breadcrumb-segment:hover {
+  color: #10b981 !important;
+}
+
+[data-theme="cyber"] .doc-breadcrumb-segment.active {
+  color: #10b981 !important;
+}
+
+[data-theme="cyber"] .doc-view-toggle-btn.active {
+  background-color: #1e1736 !important;
+  color: #10b981 !important;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="cyber"] .doc-explorer-table {
+  background-color: #0d0a1a !important;
+  border-color: #1e1736 !important;
+}
+
+[data-theme="cyber"] .doc-explorer-table-header {
+  background-color: #140f28 !important;
+  border-color: #1e1736 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="cyber"] .doc-explorer-row {
+  border-color: #1e1736 !important;
+}
+
+[data-theme="cyber"] .doc-explorer-row:hover {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+[data-theme="cyber"] .doc-explorer-row.is-selected {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  border-color: #10b981 !important;
+}
+
+[data-theme="cyber"] .doc-folder-icon-main,
+[data-theme="cyber"] .doc-grid-folder-icon {
+  color: #10b981 !important;
+}
+
+[data-theme="cyber"] .doc-grid-card {
+  background-color: #0d0a1a !important;
+  border-color: #1e1736 !important;
+}
+
+[data-theme="cyber"] .doc-grid-card:hover {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2) !important;
+}
+
+[data-theme="cyber"] .doc-grid-card.is-selected {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="cyber"] .doc-folder-node.ancestor-active {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+}
+
+/* Cyber Light */
+[data-theme="cyber-light"] .doc-nav-up-btn,
+[data-theme="cyber-light"] .doc-breadcrumb-trail,
+[data-theme="cyber-light"] .doc-view-mode-toggle,
+[data-theme="cyber-light"] .doc-view-toggle-btn,
+[data-theme="cyber-light"] .doc-explorer-table,
+[data-theme="cyber-light"] .doc-explorer-row,
+[data-theme="cyber-light"] .doc-grid-card,
+[data-theme="cyber-light"] .doc-grid-hover-actions {
+  border-radius: 0px !important;
+}
+
+[data-theme="cyber-light"] .doc-nav-up-btn:hover:not(:disabled) {
+  border-color: #059669 !important;
+  color: #059669 !important;
+}
+
+[data-theme="cyber-light"] .doc-view-toggle-btn.active {
+  color: #059669 !important;
+}
+
+[data-theme="cyber-light"] .doc-explorer-row.is-selected,
+[data-theme="cyber-light"] .doc-grid-card.is-selected {
+  background-color: rgba(5, 150, 105, 0.12) !important;
+  border-color: #059669 !important;
+}
+
+[data-theme="cyber-light"] .doc-folder-icon-main,
+[data-theme="cyber-light"] .doc-grid-folder-icon {
+  color: #059669 !important;
+}
+
+/* Classic Dark */
+[data-theme="dark"] .doc-nav-up-btn {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .doc-breadcrumb-trail {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .doc-explorer-table {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .doc-explorer-table-header {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .doc-explorer-row {
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .doc-explorer-row:hover {
+  background-color: #273549 !important;
+}
+
+[data-theme="dark"] .doc-grid-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .doc-grid-card:hover {
+  background-color: #273549 !important;
+  border-color: #3b82f6 !important;
+}
+
+[data-theme="dark"] .doc-folder-node.ancestor-active {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  color: #60a5fa !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .doc-explorer-table-header {
+    display: none;
+  }
+  .doc-explorer-row {
+    grid-template-columns: 1fr auto;
+    padding: 10px;
+  }
+  .doc-col-date,
+  .doc-col-type,
+  .doc-col-size {
+    display: none;
+  }
+  .doc-explorer-grid {
+    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+    gap: 8px;
+  }
+}
+
+/* TopV Wiki full-screen height refinement */
+.topvwiki-view {
+  padding: 20px 24px;
+}
+
+.topvwiki-view .doc-folder-tree-panel {
+  height: calc(100vh - var(--header-height, 70px) - 42px);
+  max-height: calc(100vh - var(--header-height, 70px) - 42px);
+}
+
+[data-theme="cyber"] .doc-folder-tree-panel,
+[data-theme="cyber-light"] .doc-folder-tree-panel {
+  border-radius: 0px !important;
+}
+
+[data-theme="cyber"] .doc-folder-tree-panel {
+  background-color: #0d0a1a !important;
+  border-color: #1e1736 !important;
+}
+
+[data-theme="dark"] .doc-folder-tree-panel {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* Multi-select and Drag & Drop Folder Reordering */
+.doc-folder-node.is-dragging {
+  opacity: 0.45;
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+.doc-folder-node.drag-over-top {
+  border-top: 2px solid var(--primary-color) !important;
+  box-shadow: 0 -2px 6px rgba(59, 130, 246, 0.3) !important;
+}
+
+.doc-folder-node.drag-over-bottom {
+  border-bottom: 2px solid var(--primary-color) !important;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3) !important;
+}
+
+.doc-folder-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-muted);
+  cursor: grab;
+  padding: 0 4px;
+  font-size: 11px;
+  opacity: 0.65;
+  transition: var(--transition-fast);
+  margin-right: 2px;
+}
+
+.doc-folder-drag-handle:hover {
+  opacity: 1;
+  color: var(--primary-color);
+}
+
+.doc-folder-drag-handle:active {
+  cursor: grabbing;
+}
+
+.doc-folder-node.multi-select-mode .doc-folder-node-actions {
+  display: flex !important;
+}
+
+.doc-folder-reorder-btns {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.doc-reorder-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--neutral-muted);
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.doc-reorder-btn:hover {
+  background-color: var(--neutral-border);
+  color: var(--primary-color);
+  border-color: var(--neutral-border);
+}
+
+/* Theme overrides for folder reordering */
+[data-theme="cyber"] .doc-folder-node.drag-over-top {
+  border-top: 2px solid #10b981 !important;
+  box-shadow: 0 -2px 6px rgba(16, 185, 129, 0.4) !important;
+}
+
+[data-theme="cyber"] .doc-folder-node.drag-over-bottom {
+  border-bottom: 2px solid #10b981 !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4) !important;
+}
+
+[data-theme="cyber"] .doc-reorder-btn {
+  border-radius: 0px !important;
+}
+
+[data-theme="cyber"] .doc-reorder-btn:hover {
+  background-color: #1e1736 !important;
+  color: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+[data-theme="cyber"] .doc-folder-drag-handle:hover {
+  color: #10b981 !important;
+}
+
+[data-theme="cyber-light"] .doc-folder-node.drag-over-top {
+  border-top: 2px solid #059669 !important;
+}
+
+[data-theme="cyber-light"] .doc-folder-node.drag-over-bottom {
+  border-bottom: 2px solid #059669 !important;
+}
+
+[data-theme="cyber-light"] .doc-reorder-btn:hover {
+  color: #059669 !important;
+}
+
 
