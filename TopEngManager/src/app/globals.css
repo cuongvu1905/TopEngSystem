@@ -4743,7 +4743,7 @@ h1, h2, h3, h4, h5, h6 {
   border-left: 3px solid #00ff88 !important;
 }
 
-[data-theme="cyber"] input:not(.ai-textarea):focus,
+[data-theme="cyber"] input:not(.ai-textarea):not(.hierarchical-trigger-input):focus,
 [data-theme="cyber"] select:focus,
 [data-theme="cyber"] textarea:not(.ai-textarea):focus {
   border-color: #00ff88 !important;
@@ -5625,7 +5625,7 @@ h1, h2, h3, h4, h5, h6 {
   border-left: 3px solid #059669 !important;
 }
 
-[data-theme="cyber-light"] input:not(.ai-textarea):focus,
+[data-theme="cyber-light"] input:not(.ai-textarea):not(.hierarchical-trigger-input):focus,
 [data-theme="cyber-light"] select:focus,
 [data-theme="cyber-light"] textarea:not(.ai-textarea):focus {
   border-color: #059669 !important;
@@ -5683,10 +5683,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Global Form Controls Dark Mode overrides (All dark themes) */
-[data-theme="dark"] input,
+[data-theme="dark"] input:not(.hierarchical-trigger-input),
 [data-theme="dark"] select,
 [data-theme="dark"] textarea,
-[data-theme="cyber"] input,
+[data-theme="cyber"] input:not(.hierarchical-trigger-input),
 [data-theme="cyber"] select,
 [data-theme="cyber"] textarea {
   background-color: var(--neutral-bg-card) !important;
@@ -7583,24 +7583,22 @@ h1, h2, h3, h4, h5, h6 {
 .hierarchical-select-trigger {
   width: 100%;
   min-height: 40px;
-  padding: 9px 12px;
+  padding: 0 8px 0 12px;
   border-radius: var(--border-radius, 6px);
   border: 1px solid var(--neutral-border);
   background-color: var(--neutral-bg-card);
-  color: var(--neutral-dark);
-  font-size: 13.5px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
   transition: all 0.15s ease;
-  user-select: none;
 }
 
 .hierarchical-select-trigger:hover:not(.is-disabled) {
   border-color: var(--primary-color);
 }
 
+.hierarchical-select-trigger:focus-within,
 .hierarchical-select-trigger.is-open {
   border: 1.5px solid var(--primary-color);
   box-shadow: 0 0 0 3px var(--primary-light);
@@ -7609,6 +7607,90 @@ h1, h2, h3, h4, h5, h6 {
 .hierarchical-select-trigger.is-disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.hierarchical-trigger-input,
+.hierarchical-trigger-input:focus,
+.hierarchical-trigger-input:hover,
+.hierarchical-trigger-input:active,
+[data-theme="cyber"] .hierarchical-trigger-input,
+[data-theme="cyber"] .hierarchical-trigger-input:focus,
+[data-theme="cyber-light"] .hierarchical-trigger-input,
+[data-theme="cyber-light"] .hierarchical-trigger-input:focus,
+[data-theme="dark"] .hierarchical-trigger-input,
+[data-theme="dark"] .hierarchical-trigger-input:focus,
+[data-theme="light"] .hierarchical-trigger-input,
+[data-theme="light"] .hierarchical-trigger-input:focus {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: var(--neutral-dark);
+  font-size: 13.5px;
+  font-family: inherit;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+
+.hierarchical-trigger-input:focus {
+  cursor: text;
+}
+
+.hierarchical-trigger-input::placeholder {
+  color: var(--neutral-muted);
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.hierarchical-trigger-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.hierarchical-chevron-btn,
+.hierarchical-chevron-btn:focus,
+.hierarchical-chevron-btn:hover,
+.hierarchical-chevron-btn:active,
+[data-theme="cyber"] .hierarchical-chevron-btn,
+[data-theme="cyber-light"] .hierarchical-chevron-btn,
+[data-theme="dark"] .hierarchical-chevron-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px 6px;
+  background: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.hierarchical-clear-btn {
+  color: var(--neutral-muted);
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hierarchical-clear-btn:hover {
+  color: var(--danger-color, #ef4444);
+  background-color: var(--danger-light, rgba(239, 68, 68, 0.1));
 }
 
 .hierarchical-select-dropdown {
@@ -7717,40 +7799,48 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 0;
 }
 
-.hierarchical-clear-btn {
-  color: var(--neutral-muted);
-  font-size: 16px;
-  padding: 2px 6px;
-  border-radius: 50%;
+.hierarchical-group-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.hierarchical-clear-btn:hover {
-  color: var(--danger-color, #ef4444);
-  background-color: var(--danger-light, rgba(239, 68, 68, 0.1));
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  border: 1px solid var(--neutral-border);
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
 }
 
 /* Specific Theme Fine-Tuning */
 [data-theme="cyber"] .hierarchical-select-trigger,
+[data-theme="cyber"] .hierarchical-trigger-input,
 [data-theme="cyber"] .hierarchical-select-dropdown,
 [data-theme="cyber"] .hierarchical-group-item,
 [data-theme="cyber"] .hierarchical-project-item,
 [data-theme="cyber"] .hierarchical-clear-btn,
+[data-theme="cyber"] .hierarchical-group-badge,
 [data-theme="cyber-light"] .hierarchical-select-trigger,
+[data-theme="cyber-light"] .hierarchical-trigger-input,
 [data-theme="cyber-light"] .hierarchical-select-dropdown,
 [data-theme="cyber-light"] .hierarchical-group-item,
 [data-theme="cyber-light"] .hierarchical-project-item,
-[data-theme="cyber-light"] .hierarchical-clear-btn {
+[data-theme="cyber-light"] .hierarchical-clear-btn,
+[data-theme="cyber-light"] .hierarchical-group-badge {
   border-radius: 0px !important;
 }
 
+[data-theme="cyber"] .hierarchical-select-trigger:focus-within,
 [data-theme="cyber"] .hierarchical-select-trigger.is-open {
   border-color: #10b981 !important;
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.28) !important;
+}
+
+[data-theme="cyber"] .hierarchical-trigger-input {
+  color: #e2e8f0 !important;
 }
 
 [data-theme="cyber"] .hierarchical-select-dropdown {
@@ -7759,14 +7849,26 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 24px rgba(9, 7, 18, 0.95), 0 0 1px #10b981 !important;
 }
 
+[data-theme="cyber"] .hierarchical-group-badge {
+  background-color: #1a1336 !important;
+  color: #10b981 !important;
+  border-color: #2e2159 !important;
+}
+
+[data-theme="cyber-light"] .hierarchical-select-trigger:focus-within,
 [data-theme="cyber-light"] .hierarchical-select-trigger.is-open {
   border-color: #059669 !important;
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
 }
 
+[data-theme="dark"] .hierarchical-select-trigger:focus-within,
 [data-theme="dark"] .hierarchical-select-trigger.is-open {
   border-color: #3b82f6 !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+}
+
+[data-theme="dark"] .hierarchical-trigger-input {
+  color: #f8fafc !important;
 }
 
 [data-theme="dark"] .hierarchical-select-dropdown {
