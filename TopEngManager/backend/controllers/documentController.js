@@ -632,16 +632,25 @@ exports.renameDocumentFolder = async (req, res, next) => {
 
 exports.deleteDocumentFolder = async (req, res, next) => {
   try {
-    const { folderId } = req.body;
-    if (!folderId) {
-      return res.status(400).json({ error: 'Thiếu folderId' });
+    const { folderId, folderIds } = req.body;
+    const targetFolderIds = Array.isArray(folderIds) && folderIds.length > 0
+      ? folderIds
+      : (folderId ? [folderId] : []);
+
+    if (targetFolderIds.length === 0) {
+      return res.status(400).json({ error: 'Thiếu folderId hoặc folderIds' });
     }
 
     const allFolders = await prisma.documentfolder.findMany();
-    const subtreeIds = collectFolderSubtreeIds(allFolders, folderId);
+    const allSubtreeIds = new Set();
+    for (const fid of targetFolderIds) {
+      const subtreeIds = collectFolderSubtreeIds(allFolders, fid);
+      subtreeIds.forEach(id => allSubtreeIds.add(id));
+    }
+    const subtreeIdArr = Array.from(allSubtreeIds);
 
     const docsToDelete = await prisma.document.findMany({
-      where: { folder_id: { in: subtreeIds } }
+      where: { folder_id: { in: subtreeIdArr } }
     });
 
     for (const doc of docsToDelete) {
@@ -651,8 +660,25 @@ exports.deleteDocumentFolder = async (req, res, next) => {
       });
     }
 
-    // DB cascade removes descendant folders + documents automatically
-    await prisma.documentfolder.delete({ where: { folder_id: folderId } });
+    // Filter targetFolderIds to keep only root targets among them so DB cascade deletes cleanly
+    const rootTargetIds = targetFolderIds.filter(fid => {
+      let curr = allFolders.find(f => f.folder_id === fid);
+      while (curr && curr.parent_folder_id) {
+        if (targetFolderIds.includes(curr.parent_folder_id)) {
+          return false;
+        }
+        curr = allFolders.find(f => f.folder_id === curr.parent_folder_id);
+      }
+      return true;
+    });
+
+    for (const fid of rootTargetIds) {
+      try {
+        await prisma.documentfolder.delete({ where: { folder_id: fid } });
+      } catch (err) {
+        if (err.code !== 'P2025') throw err;
+      }
+    }
 
     res.json({ success: true });
   } catch (err) {
@@ -855,13 +881,21 @@ exports.uploadDocument = async (req, res, next) => {
       return res.status(400).json({ error: 'Không tìm thấy tệp tải lên' });
     }
     const { folderId, projectId, uploadedBy } = req.body;
-    // Multipart form fields arrive as strings, so a plain truthiness test would read
-    // "false" as a yes.
     const replaceExisting = req.body.replaceExisting === true || req.body.replaceExisting === 'true';
 
+    let relativePaths = [];
+    if (req.body.relativePaths) {
+      try {
+        relativePaths = typeof req.body.relativePaths === 'string'
+          ? JSON.parse(req.body.relativePaths)
+          : req.body.relativePaths;
+      } catch (e) {
+        relativePaths = [];
+      }
+    }
+    const isFolderUpload = Array.isArray(relativePaths) && relativePaths.length > 0;
+
     const rejectBatch = async (error, status = 400, extra = {}) => {
-      // Multer already wrote these to disk before this handler ran — clean them up
-      // since the whole batch is being rejected, not just the offending files.
       for (const file of req.files) {
         const absolutePath = path.join(__dirname, '..', 'uploads', 'documents', file.filename);
         fs.unlink(absolutePath, (err) => {
@@ -871,7 +905,7 @@ exports.uploadDocument = async (req, res, next) => {
       return res.status(status).json({ error, ...extra });
     };
 
-    if (folderId) {
+    if (!isFolderUpload && folderId) {
       const targetFolder = await prisma.documentfolder.findUnique({ where: { folder_id: folderId } });
 
       if (targetFolder?.default_prefix) {
@@ -893,49 +927,117 @@ exports.uploadDocument = async (req, res, next) => {
       }
     }
 
-    // A folder of archived copies does not archive anything itself, so an upload there
-    // behaves exactly as it did before this feature existed.
-    const targetIsBackup = await isBackupFolder(folderId);
+    // Cache of folders created or found during this batch: `${parentId || 'root'}:${segment}` -> folder_id
+    const folderCache = new Map();
+    const resolveFolderIdForPath = async (relPath) => {
+      const parts = relPath.split(/[/\\]/).filter(Boolean);
+      const dirSegments = parts.slice(0, -1);
+      if (dirSegments.length === 0) return folderId || null;
 
-    // The folder's contents, kept current as the batch is processed so two files sharing a
-    // name inside one batch behave like two separate uploads.
-    let folderDocs = targetIsBackup ? [] : await documentsInFolder(folderId, projectId);
-    const clashFor = (name) => folderDocs.find(
-      doc => normalizeDocName(doc.original_name) === normalizeDocName(name)
-    );
+      let currentParentId = folderId || null;
+      for (const segment of dirSegments) {
+        const cacheKey = `${currentParentId || 'root'}:${segment}`;
+        if (folderCache.has(cacheKey)) {
+          currentParentId = folderCache.get(cacheKey);
+        } else {
+          let folder = await prisma.documentfolder.findFirst({
+            where: {
+              name: segment,
+              parent_folder_id: currentParentId,
+              project_id: projectId || null
+            }
+          });
+          if (!folder) {
+            folder = await prisma.documentfolder.create({
+              data: {
+                folder_id: 'fld-' + crypto.randomUUID(),
+                name: segment,
+                parent_folder_id: currentParentId,
+                project_id: projectId || null,
+                created_by: uploadedBy || null
+              }
+            });
+          }
+          folderCache.set(cacheKey, folder.folder_id);
+          currentParentId = folder.folder_id;
+        }
+      }
+      return currentParentId;
+    };
 
-    if (!targetIsBackup && !replaceExisting) {
-      // The confirmation dialog is not the enforcement: without an explicit yes the server
-      // refuses rather than quietly stacking a second file under the same name.
-      const conflicts = [...new Set(
-        req.files
-          .map(f => clashFor(fixOriginalName(f.originalname)))
-          .filter(Boolean)
-          .map(doc => doc.original_name)
-      )];
+    // If empty folder paths are passed, resolve/create them too
+    let emptyFolderPaths = [];
+    if (req.body.emptyFolderPaths) {
+      try {
+        emptyFolderPaths = typeof req.body.emptyFolderPaths === 'string'
+          ? JSON.parse(req.body.emptyFolderPaths)
+          : req.body.emptyFolderPaths;
+      } catch (e) {
+        emptyFolderPaths = [];
+      }
+    }
+    for (const emptyPath of emptyFolderPaths) {
+      await resolveFolderIdForPath(emptyPath + '/dummy.file');
+    }
+
+    // Pre-resolve target folder ID for each file if isFolderUpload
+    const targetFolderIds = [];
+    for (let i = 0; i < req.files.length; i++) {
+      const fid = isFolderUpload
+        ? await resolveFolderIdForPath(relativePaths[i] || req.files[i].originalname)
+        : (folderId || null);
+      targetFolderIds.push(fid);
+    }
+
+    // Cache documents in folders: folderId -> { isBackup, docs }
+    const folderDocsMap = new Map();
+    const getDocsInFolder = async (fid) => {
+      const key = fid || 'root';
+      if (!folderDocsMap.has(key)) {
+        const isBackup = fid ? await isBackupFolder(fid) : false;
+        const docs = isBackup ? [] : await documentsInFolder(fid, projectId);
+        folderDocsMap.set(key, { isBackup, docs });
+      }
+      return folderDocsMap.get(key);
+    };
+
+    // Check conflicts if !replaceExisting
+    if (!replaceExisting) {
+      const conflicts = [];
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
+        const fid = targetFolderIds[i];
+        const { isBackup, docs } = await getDocsInFolder(fid);
+        if (!isBackup) {
+          const originalName = fixOriginalName(file.originalname);
+          const hit = docs.find(d => normalizeDocName(d.original_name) === normalizeDocName(originalName));
+          if (hit && !conflicts.includes(hit.original_name)) {
+            conflicts.push(hit.original_name);
+          }
+        }
+      }
       if (conflicts.length > 0) {
         return rejectBatch(`Thư mục đã có tệp cùng tên: ${conflicts.join(', ')}`, 409, { conflicts });
       }
     }
 
     const created = [];
-    for (const file of req.files) {
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
+      const fid = targetFolderIds[i];
+      const { isBackup, docs } = await getDocsInFolder(fid);
       const originalName = fixOriginalName(file.originalname);
       const ext = path.extname(file.originalname).slice(1).toLowerCase();
-      const clash = targetIsBackup ? null : clashFor(originalName);
+      const clash = isBackup ? null : docs.find(d => normalizeDocName(d.original_name) === normalizeDocName(originalName));
 
-      // One transaction per file: the old copy is never left renamed without its
-      // replacement in place, nor the other way round.
       const doc = await prisma.$transaction(async (tx) => {
         let slotIds = [];
         if (clash) {
           const backupFolder = await ensureBackupFolder(tx, {
-            parentFolderId: folderId, projectId, createdBy: uploadedBy
+            parentFolderId: fid, projectId, createdBy: uploadedBy
           });
           const baseName = backupNamePrefix(clash.created_at) + clash.original_name;
           const archivedName = await uniqueBackupName(tx, backupFolder.folder_id, baseName);
-          // A required-file row has to follow whichever copy is current, so remember the
-          // rows pointing at the old one and re-point them once the new one exists.
           slotIds = (await tx.documentfileslot.findMany({
             where: { document_id: clash.document_id }, select: { id: true }
           })).map(slot => slot.id);
@@ -948,7 +1050,7 @@ exports.uploadDocument = async (req, res, next) => {
         const fresh = await tx.document.create({
           data: {
             document_id: 'doc-' + crypto.randomUUID(),
-            folder_id: folderId || null,
+            folder_id: fid || null,
             project_id: projectId || null,
             original_name: originalName,
             stored_name: file.filename,
@@ -968,8 +1070,11 @@ exports.uploadDocument = async (req, res, next) => {
         return fresh;
       });
 
-      if (clash) folderDocs = folderDocs.filter(doc => doc.document_id !== clash.document_id);
-      folderDocs.push(doc);
+      if (clash) {
+        const idx = docs.findIndex(d => d.document_id === clash.document_id);
+        if (idx !== -1) docs.splice(idx, 1);
+      }
+      docs.push(doc);
       created.push(doc);
     }
     res.json(created);

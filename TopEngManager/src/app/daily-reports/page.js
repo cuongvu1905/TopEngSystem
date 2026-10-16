@@ -7,6 +7,7 @@ import { db } from '@/utils/db';
 import { getSwal } from '@/utils/swal';
 import { getDepartmentDepth, getScopeDepartmentIds, getOwningTeamId } from '@/utils/orgScope';
 import TimeField from '@/components/TimeField';
+import HierarchicalProjectSelect from '@/components/HierarchicalProjectSelect';
 
 
 // Default Timeframe per card position: card 1 = morning, card 2 = afternoon,
@@ -1075,25 +1076,12 @@ export default function DailyReportsPage() {
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: 'var(--neutral-dark)' }}>
                         {t('reports.selectProject', 'Chọn dự án')}
                       </label>
-                      <select
+                      <HierarchicalProjectSelect
                         value={card.projectId}
-                        onChange={(e) => updateCardProject(card.id, e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '10px',
-                          borderRadius: '4px',
-                          border: '1px solid var(--neutral-border)',
-                          backgroundColor: 'var(--neutral-bg-card)',
-                          outline: 'none',
-                          fontSize: '13.5px',
-                          color: 'var(--neutral-dark)'
-                        }}
-                      >
-                        <option value="">{t('reports.selectProjectOptional', '-- Chọn dự án (Không bắt buộc) --')}</option>
-                        {manpowerProjects.map(p => (
-                          <option key={p.manpower_project_id} value={p.manpower_project_id}>{p.name}</option>
-                        ))}
-                      </select>
+                        projects={manpowerProjects}
+                        onChange={(projectId) => updateCardProject(card.id, projectId)}
+                        placeholder={t('reports.selectProjectOptional', '-- Chọn dự án (Bắt buộc) --')}
+                      />
                       {projectsLoaded && manpowerProjects.length === 0 && (
                         <div style={{ fontSize: '11.5px', color: 'var(--warning-color)', marginTop: '6px' }}>
                           <i className="fa-solid fa-circle-info"></i>{' '}

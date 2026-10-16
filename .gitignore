@@ -5,3 +5,11 @@ mariadb.zip
 *.zip
 mysql-8.4.9-winx64/
 ~$*
+askpass.bat
+pve_exec.py
+get_cts.py
+find_netwalker.py
+SERVER_OVERVIEW.md
+HUONG_DAN_SU_DUNG_*.md
+*.sql
+TopEngManager/scratch/

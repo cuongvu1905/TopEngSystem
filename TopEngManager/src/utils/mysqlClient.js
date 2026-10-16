@@ -144,8 +144,11 @@ export const MySQLAdapter = {
     return await callApi('renameDocumentFolder', { folderId, name });
   },
 
-  deleteDocumentFolder: async function(folderId) {
-    return await callApi('deleteDocumentFolder', { folderId });
+  deleteDocumentFolder: async function(folderIdOrPayload) {
+    if (typeof folderIdOrPayload === 'object' && folderIdOrPayload !== null) {
+      return await callApi('deleteDocumentFolder', folderIdOrPayload);
+    }
+    return await callApi('deleteDocumentFolder', { folderId: folderIdOrPayload });
   },
 
   // --- Overtime / leave approval requests ---
@@ -206,7 +209,7 @@ export const MySQLAdapter = {
     return `${backendUrl}/downloadDocument/${documentId}?inline=1`;
   },
 
-  uploadDocuments: async function(files, { folderId, projectId, uploadedBy, replaceExisting = false }) {
+  uploadDocuments: async function(files, { folderId, projectId, uploadedBy, replaceExisting = false, relativePaths = null, emptyFolderPaths = null, isFolderUpload = false } = {}) {
     const formData = new FormData();
     for (const file of files) {
       formData.append('files', file);
@@ -216,9 +219,20 @@ export const MySQLAdapter = {
     if (uploadedBy) formData.append('uploadedBy', uploadedBy);
     // Only sent when the user actually agreed; the server refuses a silent overwrite.
     if (replaceExisting) formData.append('replaceExisting', 'true');
+    if (relativePaths && Array.isArray(relativePaths)) {
+      formData.append('relativePaths', JSON.stringify(relativePaths));
+    }
+    if (emptyFolderPaths && Array.isArray(emptyFolderPaths)) {
+      formData.append('emptyFolderPaths', JSON.stringify(emptyFolderPaths));
+    }
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:5000/api';
+    const headers = {};
+    if (isFolderUpload) {
+      headers['x-folder-upload'] = 'true';
+    }
     const res = await fetch(`${backendUrl}/uploadDocument`, {
       method: 'POST',
+      headers,
       body: formData
     });
     const data = await res.json();

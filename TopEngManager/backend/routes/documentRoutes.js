@@ -27,10 +27,17 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  limits: { fileSize: 100 * 1024 * 1024, files: 1000 }, // 100MB per file, up to 1000 files
   fileFilter: function (req, file, cb) {
     const ext = path.extname(file.originalname).slice(1).toLowerCase();
+    const baseName = path.basename(file.originalname).toLowerCase();
+    if (baseName === '.ds_store' || baseName === 'thumbs.db' || baseName === 'desktop.ini') {
+      return cb(null, false);
+    }
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      if (req.headers['x-folder-upload'] === 'true') {
+        return cb(null, false);
+      }
       return cb(new Error(`Định dạng tệp .${ext} không được hỗ trợ`));
     }
     cb(null, true);
@@ -77,7 +84,7 @@ router.post('/lockDocument', documentController.lockDocument);
 router.post('/unlockDocument', documentController.unlockDocument);
 
 router.post('/uploadDocument', (req, res, next) => {
-  upload.array('files', 10)(req, res, (err) => {
+  upload.array('files', 1000)(req, res, (err) => {
     if (err) {
       return res.status(400).json({ error: err.message });
     }

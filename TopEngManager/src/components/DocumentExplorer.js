@@ -43,6 +43,8 @@ export default function DocumentExplorer({ projectId = null }) {
   const { currentUser, users, projectMembers, hasPermission } = useApp();
   const { t, currentLang } = useLanguage();
   const fileInputRef = useRef(null);
+  const folderInputRef = useRef(null);
+  const uploadDropdownRef = useRef(null);
   const layoutRef = useRef(null);
   const resizeStateRef = useRef(null);
 
@@ -54,6 +56,7 @@ export default function DocumentExplorer({ projectId = null }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadDropdownOpen, setUploadDropdownOpen] = useState(false);
   const [mobileTreeOpen, setMobileTreeOpen] = useState(false);
   const [textEditorState, setTextEditorState] = useState(null); // { doc, autoEdit } | null
   const [previewDoc, setPreviewDoc] = useState(null);
@@ -63,6 +66,17 @@ export default function DocumentExplorer({ projectId = null }) {
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedFolderIdsForCopy, setSelectedFolderIdsForCopy] = useState(new Set());
   const [treeWidth, setTreeWidth] = useState(260);
+
+  useEffect(() => {
+    if (!uploadDropdownOpen) return;
+    const handleOutsideClick = (e) => {
+      if (uploadDropdownRef.current && !uploadDropdownRef.current.contains(e.target)) {
+        setUploadDropdownOpen(false);
+      }
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [uploadDropdownOpen]);
 
   const copiedFolderIds = useMemo(() => new Set(copiedFolders.map(f => f.folder_id)), [copiedFolders]);
   const currentFolder = folders.find(f => f.folder_id === selectedFolderId);
@@ -361,6 +375,61 @@ export default function DocumentExplorer({ projectId = null }) {
     }
   };
 
+  const handleDeleteMultipleFolders = async (e) => {
+    if (e) {
+      e.stopPropagation?.();
+      e.currentTarget?.blur?.();
+    }
+    const ids = Array.from(selectedFolderIdsForCopy);
+    if (ids.length === 0) return;
+
+    const selectedList = folders.filter(f => ids.includes(f.folder_id));
+    const unauthorized = selectedList.filter(f => !canManageFolder(f));
+    const Swal = await getSwal();
+
+    if (unauthorized.length > 0) {
+      Swal.fire({
+        icon: 'error',
+        title: t('common.permissionDenied', 'Không có quyền'),
+        text: `Bạn không có quyền xóa một số thư mục đã chọn (${unauthorized.map(f => f.name).join(', ')}).`
+      });
+      return;
+    }
+
+    const count = ids.length;
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: t('documents.deleteMultiFoldersConfirmTitle', 'Xóa {count} thư mục đã chọn?').replace('{count}', count),
+      text: t('documents.deleteMultiFoldersConfirmText', 'Toàn bộ thư mục con và tài liệu bên trong {count} thư mục này sẽ bị xóa vĩnh viễn.').replace('{count}', count),
+      showCancelButton: true,
+      confirmButtonText: t('common.delete', 'Xóa'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--danger-color)'
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await db.deleteDocumentFolder({ folderIds: ids });
+      if (selectedFolderId && ids.includes(selectedFolderId)) {
+        setSelectedFolderId(null);
+      }
+      setSelectedFolderIdsForCopy(new Set());
+      setIsMultiSelectMode(false);
+      await loadFolders();
+      await loadDocuments();
+      await db.logActivity(
+        currentUser.id,
+        'DELETE_FOLDERS',
+        'Document',
+        ids.join(','),
+        `đã xóa ${count} thư mục (${selectedList.map(f => f.name).join(', ')})`,
+        { project_id: projectId, count }
+      );
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    }
+  };
+
   const getDescendantFolderIds = (folderIdOrIds) => {
     const startIds = Array.isArray(folderIdOrIds) ? folderIdOrIds : (folderIdOrIds ? [folderIdOrIds] : []);
     const ids = new Set(startIds);
@@ -532,15 +601,26 @@ export default function DocumentExplorer({ projectId = null }) {
         }
       }
 
-      // Escape: clear clipboard
-      if (e.key === 'Escape' && copiedFolders.length > 0) {
-        setCopiedFolders([]);
+      // Delete: Delete selected folders in multi-select mode
+      if (e.key === 'Delete' && isMultiSelectMode && selectedFolderIdsForCopy.size > 0) {
+        e.preventDefault();
+        handleDeleteMultipleFolders();
+      }
+
+      // Escape: clear clipboard or exit multi-select mode
+      if (e.key === 'Escape') {
+        if (copiedFolders.length > 0) {
+          setCopiedFolders([]);
+        } else if (isMultiSelectMode) {
+          setIsMultiSelectMode(false);
+          setSelectedFolderIdsForCopy(new Set());
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFolderId, selectedFolderIdsForCopy, isMultiSelectMode, copiedFolders, folders, canCreateFolders, currentFolder]);
+  }, [selectedFolderId, selectedFolderIdsForCopy, isMultiSelectMode, copiedFolders, folders, canCreateFolders, currentFolder, handleDeleteMultipleFolders]);
 
   const handleTreeResizeStart = (e) => {
     e.preventDefault();
@@ -661,6 +741,103 @@ export default function DocumentExplorer({ projectId = null }) {
       }
     } catch (err) {
       const Swal = await getSwal();
+      Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleFolderSelected = async (e) => {
+    const rawFiles = Array.from(e.target.files || []);
+    if (rawFiles.length === 0) return;
+
+    const validFiles = [];
+    const validPaths = [];
+    let skippedCount = 0;
+
+    for (const file of rawFiles) {
+      const baseName = file.name.toLowerCase();
+      if (baseName === '.ds_store' || baseName === 'thumbs.db' || baseName === 'desktop.ini') {
+        continue;
+      }
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!UPLOAD_EXTENSIONS.includes(ext)) {
+        skippedCount++;
+        continue;
+      }
+      validFiles.push(file);
+      validPaths.push(file.webkitRelativePath || file.name);
+    }
+
+    if (validFiles.length === 0) {
+      const Swal = await getSwal();
+      Swal.fire({
+        icon: 'warning',
+        title: t('common.warning', 'Cảnh báo'),
+        text: t('documents.noValidFilesFoundInFolder', 'Không tìm thấy tệp hợp lệ nào trong thư mục được chọn để tải lên.')
+      });
+      e.target.value = '';
+      return;
+    }
+
+    const firstRelPath = validPaths[0] || '';
+    const rootFolderName = firstRelPath.split(/[/\\]/)[0] || 'Thư mục mới';
+
+    const Swal = await getSwal();
+    const confirmResult = await Swal.fire({
+      icon: 'question',
+      title: t('documents.uploadFolderConfirmTitle', 'Tải lên thư mục?'),
+      text: t('documents.uploadFolderConfirmText', 'Bạn có muốn tải lên thư mục "{name}" ({count} tệp) không?')
+        .replace('{name}', rootFolderName)
+        .replace('{count}', validFiles.length)
+        + (skippedCount > 0 ? ` (Đã bỏ qua ${skippedCount} tệp không được hỗ trợ)` : ''),
+      showCancelButton: true,
+      confirmButtonText: t('common.upload', 'Tải lên'),
+      cancelButtonText: t('common.cancel', 'Hủy'),
+      confirmButtonColor: 'var(--primary-color)'
+    });
+    if (!confirmResult.isConfirmed) {
+      e.target.value = '';
+      return;
+    }
+
+    setUploading(true);
+    try {
+      await db.uploadDocuments(validFiles, {
+        folderId: selectedFolderId,
+        projectId,
+        uploadedBy: currentUser.id,
+        relativePaths: validPaths,
+        isFolderUpload: true,
+        replaceExisting: true
+      });
+
+      await loadFolders();
+      await loadDocuments();
+
+      const folderPath = selectedFolderId ? getFolderPath(selectedFolderId) : rootLabel;
+      await db.logActivity(
+        currentUser.id,
+        'UPLOAD_FOLDER',
+        'Document',
+        selectedFolderId || projectId || 'root',
+        `đã tải lên thư mục '${rootFolderName}' (${validFiles.length} tệp) vào '${folderPath}'`,
+        { project_id: projectId, count: validFiles.length }
+      );
+
+      Swal.fire({
+        icon: 'success',
+        title: t('common.success', 'Thành công'),
+        text: t('documents.uploadFolderSuccess', 'Đã tải lên thư mục "{name}" ({count} tệp) thành công.')
+          .replace('{name}', rootFolderName)
+          .replace('{count}', validFiles.length),
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+      });
+    } catch (err) {
       Swal.fire({ icon: 'error', title: t('common.failed', 'Thất bại'), text: err.message });
     } finally {
       setUploading(false);
@@ -860,26 +1037,55 @@ export default function DocumentExplorer({ projectId = null }) {
                   <i className={selectedFolderIdsForCopy.size > 0 && selectedFolderIdsForCopy.size === folders.length ? 'fa-solid fa-square-check' : 'fa-regular fa-square-check'}></i>
                 </button>
                 {selectedFolderIdsForCopy.size > 0 && (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    style={{
-                      padding: '3px 8px',
-                      fontSize: '11.5px',
-                      height: '26px',
-                      borderRadius: '4px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontWeight: 500,
-                      whiteSpace: 'nowrap'
-                    }}
-                    onClick={handleCopyMultipleFoldersToClipboard}
-                    title={t('documents.copySelectedFolders', 'Sao chép (Ctrl+C)')}
-                  >
-                    <i className="fa-regular fa-copy"></i>
-                    <span>{t('documents.copy', 'Sao chép')} ({selectedFolderIdsForCopy.size})</span>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{
+                        padding: '3px 8px',
+                        fontSize: '11.5px',
+                        height: '26px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer'
+                      }}
+                      onClick={handleCopyMultipleFoldersToClipboard}
+                      title={t('documents.copySelectedFolders', 'Sao chép (Ctrl+C)')}
+                    >
+                      <i className="fa-regular fa-copy"></i>
+                      <span>{t('documents.copy', 'Sao chép')}</span>
+                    </button>
+                    {canCreateFolders && (
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        style={{
+                          padding: '3px 8px',
+                          fontSize: '11.5px',
+                          height: '26px',
+                          borderRadius: '4px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          background: 'var(--danger-color, #dc3545)',
+                          color: '#fff',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                        onClick={handleDeleteMultipleFolders}
+                        title={t('documents.deleteSelectedFoldersAction', 'Xóa thư mục đã chọn (Delete)')}
+                      >
+                        <i className="fa-solid fa-trash-can"></i>
+                        <span>{t('common.delete', 'Xóa')}</span>
+                      </button>
+                    )}
+                  </>
                 )}
                 <button
                   type="button"
@@ -1015,6 +1221,15 @@ export default function DocumentExplorer({ projectId = null }) {
                   style={{ display: 'none' }}
                   onChange={handleFilesSelected}
                 />
+                <input
+                  ref={folderInputRef}
+                  type="file"
+                  webkitdirectory=""
+                  directory=""
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={handleFolderSelected}
+                />
                 {canCreateFolders && copiedFolders.length > 0 && (
                   <button
                     type="button"
@@ -1037,9 +1252,88 @@ export default function DocumentExplorer({ projectId = null }) {
                 <button type="button" className="btn btn-secondary" onClick={() => setTextEditorState({ doc: null, autoEdit: true })}>
                   <i className="fa-solid fa-file-circle-plus"></i> {t('documents.createDocument', 'Tạo tài liệu')}
                 </button>
-                <button type="button" className="btn btn-primary" onClick={handleUploadClick} disabled={uploading}>
-                  <i className="fa-solid fa-upload"></i> {uploading ? t('documents.uploading', 'Đang tải lên...') : t('common.upload', 'Tải lên')}
-                </button>
+                <div ref={uploadDropdownRef} style={{ position: 'relative', display: 'inline-flex' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setUploadDropdownOpen(prev => !prev)}
+                    disabled={uploading}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <i className="fa-solid fa-cloud-arrow-up"></i>
+                    <span>{uploading ? t('documents.uploading', 'Đang tải lên...') : t('common.upload', 'Tải lên')}</span>
+                    <i className="fa-solid fa-chevron-down" style={{ fontSize: '10px', marginLeft: '2px', transition: 'transform 0.2s', transform: uploadDropdownOpen ? 'rotate(180deg)' : 'none' }}></i>
+                  </button>
+                  {uploadDropdownOpen && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 4px)',
+                        right: 0,
+                        background: 'var(--neutral-bg-card, #fff)',
+                        borderRadius: '6px',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                        border: '1px solid var(--neutral-border, #e2e8f0)',
+                        zIndex: 1000,
+                        minWidth: '175px',
+                        padding: '4px 0'
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="doc-context-menu-item"
+                        onClick={() => {
+                          setUploadDropdownOpen(false);
+                          fileInputRef.current?.click();
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          width: '100%',
+                          padding: '8px 14px',
+                          border: 'none',
+                          background: 'none',
+                          color: 'var(--neutral-dark, #1e293b)',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <i className="fa-solid fa-file-arrow-up" style={{ width: '16px', color: 'var(--primary-color)' }}></i>
+                        <span>{t('documents.uploadFiles', 'Tải tệp lên')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="doc-context-menu-item"
+                        onClick={() => {
+                          setUploadDropdownOpen(false);
+                          folderInputRef.current?.click();
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          width: '100%',
+                          padding: '8px 14px',
+                          border: 'none',
+                          background: 'none',
+                          color: 'var(--neutral-dark, #1e293b)',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <i className="fa-solid fa-folder-arrow-up" style={{ width: '16px', color: '#eab308' }}></i>
+                        <span>{t('documents.uploadFolder', 'Tải thư mục lên')}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -1176,44 +1470,59 @@ export default function DocumentExplorer({ projectId = null }) {
           {canCreateFolders && (
             <>
               {isMultiSelectMode && selectedFolderIdsForCopy.size > 0 ? (
-                <button
-                  type="button"
-                  className="doc-context-menu-item"
-                  onClick={(e) => {
-                    setFolderContextMenu(null);
-                    handleCopyMultipleFoldersToClipboard(e);
-                  }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
-                >
-                  <i className="fa-solid fa-copy" style={{ width: '14px', color: 'var(--primary-color)' }}></i> {t('documents.copySelectedFolders', 'Sao chép thư mục đã chọn')} ({selectedFolderIdsForCopy.size})
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="doc-context-menu-item"
+                    onClick={(e) => {
+                      setFolderContextMenu(null);
+                      handleCopyMultipleFoldersToClipboard(e);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    <i className="fa-solid fa-copy" style={{ width: '14px', color: 'var(--primary-color)' }}></i> {t('documents.copySelectedFolders', 'Sao chép thư mục đã chọn')} ({selectedFolderIdsForCopy.size})
+                  </button>
+                  <button
+                    type="button"
+                    className="doc-context-menu-item"
+                    onClick={(e) => {
+                      setFolderContextMenu(null);
+                      handleDeleteMultipleFolders(e);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--danger-color)', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    <i className="fa-solid fa-trash-can" style={{ width: '14px', color: 'var(--danger-color)' }}></i> {t('documents.deleteSelectedFoldersAction', 'Xóa thư mục đã chọn')} ({selectedFolderIdsForCopy.size})
+                  </button>
+                </>
               ) : (
-                <button
-                  type="button"
-                  className="doc-context-menu-item"
-                  onClick={(e) => {
-                    const f = folderContextMenu.folder;
-                    setFolderContextMenu(null);
-                    handleCopyFolderToClipboard(f, e);
-                  }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
-                >
-                  <i className="fa-regular fa-copy" style={{ width: '14px', color: 'var(--primary-color)' }}></i> {t('documents.copyToClipboardAction', 'Sao chép (Copy)')}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="doc-context-menu-item"
+                    onClick={(e) => {
+                      const f = folderContextMenu.folder;
+                      setFolderContextMenu(null);
+                      handleCopyFolderToClipboard(f, e);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    <i className="fa-regular fa-copy" style={{ width: '14px', color: 'var(--primary-color)' }}></i> {t('documents.copyToClipboardAction', 'Sao chép (Copy)')}
+                  </button>
+                  <button
+                    type="button"
+                    className="doc-context-menu-item"
+                    onClick={(e) => {
+                      const f = folderContextMenu.folder;
+                      setFolderContextMenu(null);
+                      setIsMultiSelectMode(true);
+                      setSelectedFolderIdsForCopy(prev => new Set([...prev, f.folder_id]));
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    <i className="fa-solid fa-list-check" style={{ width: '14px', color: 'var(--primary-color)' }}></i> {t('documents.selectFoldersMode', 'Chọn nhiều thư mục')}
+                  </button>
+                </>
               )}
-              <button
-                type="button"
-                className="doc-context-menu-item"
-                onClick={(e) => {
-                  const f = folderContextMenu.folder;
-                  setFolderContextMenu(null);
-                  setIsMultiSelectMode(true);
-                  setSelectedFolderIdsForCopy(prev => new Set([...prev, f.folder_id]));
-                }}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
-              >
-                <i className="fa-solid fa-list-check" style={{ width: '14px', color: 'var(--primary-color)' }}></i> {t('documents.selectFoldersMode', 'Chọn nhiều thư mục')}
-              </button>
               {copiedFolders.length > 0 && !getDescendantFolderIds(copiedFolders.map(f => f.folder_id)).has(folderContextMenu.folder.folder_id) && (
                 <button
                   type="button"
@@ -1240,12 +1549,27 @@ export default function DocumentExplorer({ projectId = null }) {
               >
                 <i className="fa-solid fa-folder-plus" style={{ width: '14px' }}></i> {t('documents.newSubfolder', 'Thư mục con mới')}
               </button>
+              {canUploadDocuments && !isMultiSelectMode && (
+                <button
+                  type="button"
+                  className="doc-context-menu-item"
+                  onClick={(e) => {
+                    const f = folderContextMenu.folder;
+                    setFolderContextMenu(null);
+                    setSelectedFolderId(f.folder_id);
+                    setTimeout(() => folderInputRef.current?.click(), 50);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 14px', border: 'none', background: 'none', color: 'var(--neutral-dark)', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  <i className="fa-solid fa-folder-arrow-up" style={{ width: '14px', color: '#eab308' }}></i> {t('documents.uploadFolderToHere', 'Tải thư mục vào đây')}
+                </button>
+              )}
               {canManageFolder(folderContextMenu.folder) && (
                 <div style={{ height: '1px', background: 'var(--neutral-border)', margin: '4px 0' }} />
               )}
             </>
           )}
-          {canManageFolder(folderContextMenu.folder) && (
+          {(!isMultiSelectMode || selectedFolderIdsForCopy.size === 0) && canManageFolder(folderContextMenu.folder) && (
             <>
               <button
                 type="button"
